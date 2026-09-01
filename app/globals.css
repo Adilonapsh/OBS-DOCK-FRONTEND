@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@import "@heroui/styles"; 
-
+@import "@heroui/styles";
+@import "goey-toast/styles.css";
 
 :root {
   --background: #ffffff;

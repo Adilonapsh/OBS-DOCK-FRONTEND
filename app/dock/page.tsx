@@ -13,8 +13,12 @@ import { updateTitle, createPoll } from "../actions/streamerBotActions";
 import { obsStatusColors } from "../enums/enumColors";
 import { Label } from "@heroui/react/label";
 import { TextArea } from "@heroui/react/textarea";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 import Polling, { PollingRef } from "../components/Polling";
 import { ChatMessage, DockStatus } from "../types/dockTypes";
+import { decrypt } from "../utils/encryption";
+import { gooeyToast } from "goey-toast";
 
 function TwitchIcon({ className }: { className?: string }) {
     return (
@@ -150,6 +154,230 @@ export default function Home() {
         });
     }, [tiktokRoomViewerCount]);
 
+    // private key gate — bisa via login Supabase ATAU bypass pakai private_key tanpa login
+    useEffect(() => {
+        const initPrivateKey = async () => {
+            // ?key= di URL — bypass tanpa login, prioritas tertinggi (langsung verified, tidak tunggu RPC)
+            const keyFromUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("key")?.trim() : null;
+            if (keyFromUrl) {
+                const isHex = /^[a-f0-9]{32,64}$/i.test(keyFromUrl) || keyFromUrl.startsWith("guest_") || keyFromUrl.length >= 16;
+                if (!isHex) {
+                    setPrivateKeyError("Private key di URL tidak valid (format hex).");
+                } else {
+                    // langsung verified biar tidak alert "Akses dock butuh private key" saat klik Connect
+                    setPrivateKey(keyFromUrl);
+                    setPrivateKeyInput(keyFromUrl);
+                    setPrivateKeyVerified(true);
+                    if (typeof window !== "undefined") {
+                        sessionStorage.setItem("bypass_private_key", keyFromUrl);
+                        sessionStorage.setItem("dock_private_verified", keyFromUrl);
+                    }
+                    setPrivateKeyLoading(false);
+                    // background: fetch config (DB terenkripsi, dock tampil plain via decrypt)
+                    (async () => {
+                        try {
+                            const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: keyFromUrl });
+                            if (all && !all.error) {
+                                if (all.obs_config) {
+                                    const dec = all.obs_config.password ? await decrypt(all.obs_config.password, keyFromUrl).catch(() => all.obs_config.password) : "";
+                                    setObsConfig((prev: any) => ({ ...prev, address: all.obs_config.address, port: all.obs_config.port, password: dec || all.obs_config.password || "", auto_connect: all.obs_config.auto_connect }));
+                                }
+                                if (all.tiktok_config) setTiktokConfig((prev: any) => ({ ...prev, ...all.tiktok_config }));
+                                if (all.streamerbot_config) {
+                                    const dec = all.streamerbot_config.password ? await decrypt(all.streamerbot_config.password, keyFromUrl).catch(() => all.streamerbot_config.password) : "";
+                                    setSbConfig((prev: any) => ({ ...prev, address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: dec || all.streamerbot_config.password || "", auto_connect: all.streamerbot_config.auto_connect }));
+                                }
+                                if (all.dashboard_layout) setSectionVisible((prev: any) => ({ ...prev, ...all.dashboard_layout }));
+                                if (all.briefing) setBriefing((prev: any) => ({ ...prev, ...all.briefing }));
+                            }
+                        } catch {}
+                    })();
+                    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("key")) router.replace("/dock");
+                    return;
+                }
+            }
+
+            const { data: { session } } = await supabase.auth.getSession();
+            // cek bypass yang sudah terverifikasi di sessionStorage
+            const bypassKey = typeof window !== "undefined" ? sessionStorage.getItem("bypass_private_key") : null;
+            if (bypassKey) {
+                try {
+                    const { data: isValid } = await (supabase as any).rpc("verify_private_key", { p_key: bypassKey });
+                    if (isValid) {
+                        setPrivateKey(bypassKey);
+                        setPrivateKeyVerified(true);
+                        // fetch semua config tanpa login (decrypt biar tampil plain sama kayak Config)
+                        try {
+                            const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: bypassKey });
+                            if (all && !all.error) {
+                                if (all.obs_config) {
+                                    const dec = all.obs_config.password ? await decrypt(all.obs_config.password, bypassKey).catch(() => all.obs_config.password) : "";
+                                    setObsConfig((prev: any) => ({ ...prev, address: all.obs_config.address, port: all.obs_config.port, password: dec || all.obs_config.password || "", auto_connect: all.obs_config.auto_connect }));
+                                }
+                                if (all.tiktok_config) setTiktokConfig((prev: any) => ({ ...prev, ...all.tiktok_config }));
+                                if (all.streamerbot_config) {
+                                    const dec = all.streamerbot_config.password ? await decrypt(all.streamerbot_config.password, bypassKey).catch(() => all.streamerbot_config.password) : "";
+                                    setSbConfig((prev: any) => ({ ...prev, address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: dec || all.streamerbot_config.password || "", auto_connect: all.streamerbot_config.auto_connect }));
+                                }
+                                if (all.dashboard_layout) setSectionVisible((prev: any) => ({ ...prev, ...all.dashboard_layout }));
+                                if (all.briefing) setBriefing((prev: any) => ({ ...prev, ...all.briefing }));
+                            }
+                        } catch {}
+                        setPrivateKeyLoading(false);
+                        return;
+                    }
+                } catch {}
+            }
+            if (!session) {
+                const guestKey = typeof window !== "undefined" ? sessionStorage.getItem("guest_private_key") : null;
+                const guestVerified = typeof window !== "undefined" ? sessionStorage.getItem("dock_private_verified") : null;
+                if (guestKey && guestVerified === guestKey) {
+                    setPrivateKey(guestKey);
+                    setPrivateKeyVerified(true);
+                    setPrivateKeyLoading(false);
+                    return;
+                }
+                // tidak redirect langsung — tampilkan gate bypass (private key tanpa login)
+                setPrivateKeyLoading(false);
+                return;
+            }
+            let key: string | null = null;
+            try {
+                const { data: profile } = await supabase.from("profiles").select("private_key").eq("id", session.user.id).single();
+                key = (profile as any)?.private_key || null;
+            } catch {}
+            if (!key) {
+                try {
+                    const { data: sec } = await supabase.from("user_private_keys").select("private_key").eq("user_id", session.user.id).single();
+                    key = (sec as any)?.private_key || null;
+                } catch {}
+            }
+            if (!key) {
+                try {
+                    const { data: newKey } = await (supabase as any).rpc("regenerate_private_key");
+                    if (newKey) key = newKey as string;
+                } catch {}
+            }
+            // fallback client-side generate jika RPC / trigger belum ada (misal DB belum migrasi)
+            if (!key) {
+                try {
+                    const newKey = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
+                    // upsert profile (buat jika belum ada)
+                    await supabase.from("profiles").upsert(
+                        { id: session.user.id, email: session.user.email, username: (session.user.user_metadata as any)?.username || session.user.email?.split("@")[0], private_key: newKey } as any,
+                        { onConflict: "id" }
+                    );
+                    // simpan ke tabel aman juga
+                    try {
+                        await supabase.from("user_private_keys").upsert({ user_id: session.user.id, private_key: newKey } as any);
+                    } catch {}
+                    key = newKey;
+                } catch {}
+            }
+            if (key) {
+                setPrivateKey(key);
+                setPrivateKeyInput(key);
+                const verified = typeof window !== "undefined" ? sessionStorage.getItem("dock_private_verified") : null;
+                if (verified === key || !verified) {
+                    setPrivateKeyVerified(true);
+                    if (typeof window !== "undefined") sessionStorage.setItem("dock_private_verified", key);
+                }
+                // background fetch config (decrypt biar sama kayak Config) + simpan ke localStorage biar sinkron
+                (async () => {
+                    try {
+                        const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: key });
+                        if (all && !all.error) {
+                            if (all.obs_config) {
+                                const dec = all.obs_config.password ? await decrypt(all.obs_config.password, key).catch(() => all.obs_config.password) : "";
+                                const obsFromDb = { address: all.obs_config.address, port: all.obs_config.port, password: dec || all.obs_config.password || "", autoConnect: all.obs_config.auto_connect };
+                                setObsConfig(obsFromDb as any);
+                                localStorage.setItem("obs-config", JSON.stringify(obsFromDb));
+                            }
+                            if (all.tiktok_config) {
+                                const t = { username: all.tiktok_config.username || "", autoConnect: all.tiktok_config.auto_connect };
+                                setTiktokConfig(t as any);
+                                localStorage.setItem("tiktok-config", JSON.stringify(t));
+                            }
+                            if (all.streamerbot_config) {
+                                const dec = all.streamerbot_config.password ? await decrypt(all.streamerbot_config.password, key).catch(() => all.streamerbot_config.password) : "";
+                                const sbFromDb = { address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: dec || all.streamerbot_config.password || "", autoConnect: all.streamerbot_config.auto_connect };
+                                setSbConfig(sbFromDb as any);
+                                localStorage.setItem("sb-config", JSON.stringify(sbFromDb));
+                            }
+                        }
+                    } catch {}
+                })();
+            } else {
+                setPrivateKeyError("Gagal membuat private key. Jalankan supabase/fix_register.sql di SQL Editor.");
+            }
+            setPrivateKeyLoading(false);
+        };
+        initPrivateKey();
+    }, []);
+
+    const handleVerifyPrivateKey = async () => {
+        const input = privateKeyInput.trim();
+        if (!input) {
+            setPrivateKeyError("Masukkan private key.");
+            return;
+        }
+        // jika sudah ada privateKey dari login, cek langsung
+        if (privateKey && input === privateKey) {
+            setPrivateKeyVerified(true);
+            if (typeof window !== "undefined") sessionStorage.setItem("dock_private_verified", privateKey);
+            setPrivateKeyError("");
+            return;
+        }
+        // bypass tanpa login: coba verifikasi via Supabase RPC, fallback terima hex apa saja jika RPC belum ada
+        let verified = false;
+        try {
+            const { data: isValid, error } = await (supabase as any).rpc("verify_private_key", { p_key: input });
+            if (error && error.message?.includes("not exist")) verified = /^[a-f0-9]{32,64}$/i.test(input) || input.startsWith("guest_") || input.length >= 16;
+            else verified = !!isValid;
+        } catch {
+            verified = /^[a-f0-9]{32,64}$/i.test(input) || input.startsWith("guest_") || input.length >= 16;
+        }
+        if (verified) {
+            setPrivateKey(input);
+            setPrivateKeyVerified(true);
+            if (typeof window !== "undefined") {
+                sessionStorage.setItem("bypass_private_key", input);
+                sessionStorage.setItem("dock_private_verified", input);
+            }
+            // fetch semua config tanpa login (opsional, jangan block jika gagal)
+            try {
+                const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: input });
+                if (all && !all.error) {
+                    if (all.obs_config) setObsConfig((prev: any) => ({ ...prev, ...all.obs_config }));
+                    if (all.tiktok_config) setTiktokConfig((prev: any) => ({ ...prev, ...all.tiktok_config }));
+                    if (all.streamerbot_config) setSbConfig((prev: any) => ({ ...prev, ...all.streamerbot_config }));
+                    if (all.dashboard_layout) setSectionVisible((prev: any) => ({ ...prev, ...all.dashboard_layout }));
+                    if (all.briefing) setBriefing((prev: any) => ({ ...prev, ...all.briefing }));
+                }
+                } catch {}
+                setPrivateKeyError("");
+                return;
+            }
+        setPrivateKeyError("Private key tidak valid. Cek di Dashboard → Private Key atau Supabase profiles.private_key.");
+    };
+
+    const handleCopyPrivateKey = async () => {
+        if (privateKey && typeof navigator !== "undefined") {
+            await navigator.clipboard.writeText(privateKey);
+        }
+    };
+
+    const handleRegeneratePrivateKey = async () => {
+        if (!confirm("Regenerate private key? Koneksi TikTok lama yang pakai key lama akan terputus.")) return;
+        const { data, error } = await (supabase as any).rpc("regenerate_private_key");
+        if (!error && data) {
+            setPrivateKey(data as string);
+            setPrivateKeyVerified(false);
+            setPrivateKeyInput("");
+            if (typeof window !== "undefined") sessionStorage.removeItem("dock_private_verified");
+        }
+    };
+
     const twitchViewerCount = Object.values(viewerData).filter(item => item.platform === "twitch").length;
     const youtubeViewerCount = Object.values(viewerData).filter(item => item.platform === "youtube").length;
     const tiktokViewerCount = Object.values(viewerData).filter(item => item.platform === "tiktok").length;
@@ -227,6 +455,13 @@ export default function Home() {
     const hasInitialTkConnectRef = useRef(false);
 
     const [tiktokStatus, setTiktokStatus] = useState<"DISCONNECTED" | "CONNECTING" | "CONNECTED" | "ERROR">("DISCONNECTED");
+    const router = useRouter();
+    const supabase = createClient();
+    const [privateKey, setPrivateKey] = useState<string | null>(null);
+    const [privateKeyVerified, setPrivateKeyVerified] = useState(false);
+    const [privateKeyInput, setPrivateKeyInput] = useState("");
+    const [privateKeyError, setPrivateKeyError] = useState("");
+    const [privateKeyLoading, setPrivateKeyLoading] = useState(true);
 
     const headerControlClass = "dock-control-btn flex items-center justify-center gap-2";
     const connectButtonClass = "system-connect-btn flex items-center justify-center rounded-lg text-white shadow-[0_0_10px_rgba(59,130,246,0.2)]";
@@ -467,7 +702,7 @@ export default function Home() {
     const unpinMessage = () => {
         setPinnedChat(null);
         if (tkSocketRef.current && tkSocketRef.current.connected) {
-            tkSocketRef.current.emit("unpin-chat");
+            tkSocketRef.current.emit("unpin-chat", privateKey ? { privateKey } : {});
         }
     }
 
@@ -477,6 +712,7 @@ export default function Home() {
         if (tkSocketRef.current && tkSocketRef.current.connected) {
             tkSocketRef.current.emit("pin-chat", {
                 username: tiktokConfig.username || "global",
+                privateKey: privateKey || undefined,
                 chat: { nickname: user, comment: text, profilePictureUrl: avatar, platform: platform }
             });
         }
@@ -488,6 +724,13 @@ export default function Home() {
             alert("Silakan masukkan username TikTok!");
             return;
         }
+        const effectiveKey = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null);
+        const isVerified = privateKeyVerified || !!effectiveKey;
+        if (!effectiveKey || !isVerified) {
+            alert("Akses dock butuh private key. Silakan verifikasi private key di atas.");
+            setPrivateKeyError("Verifikasi private key diperlukan untuk koneksi TikTok.");
+            return;
+        }
 
         // simpan username biar persist (mirip legacy localStorage.setItem('tiktokUsername', ...))
         if (typeof window !== "undefined") {
@@ -495,12 +738,15 @@ export default function Home() {
             localStorage.setItem("tiktok-config", JSON.stringify(tiktokConfig));
         }
 
+        const effectivePrivateKey = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null) || privateKey;
+        const payload = { username, privateKey: effectivePrivateKey };
+
         if (!tkSocketRef.current) {
             tkSocketRef.current = io("http://localhost:3000");
 
             tkSocketRef.current.on("connect", () => {
                 addSystemLog("Terhubung ke server TikTok lokal.", "info");
-                tkSocketRef.current?.emit("connect-tiktok", username);
+                tkSocketRef.current?.emit("connect-tiktok", payload);
             });
 
             tkSocketRef.current.on("tiktok-connecting", () => {
@@ -559,13 +805,13 @@ export default function Home() {
                 if (typeof totalUser === "number") setTiktokTotalUser(totalUser);
             });
         } else {
-            // socket sudah ada — langsung emit (mirip legacy else branch)
+            // socket sudah ada — langsung emit (isolasi per privateKey)
             if (tkSocketRef.current.connected) {
-                tkSocketRef.current.emit("connect-tiktok", username);
+                tkSocketRef.current.emit("connect-tiktok", payload);
             } else {
                 tkSocketRef.current.connect();
                 tkSocketRef.current.once("connect", () => {
-                    tkSocketRef.current?.emit("connect-tiktok", username);
+                    tkSocketRef.current?.emit("connect-tiktok", payload);
                 });
             }
         }
@@ -573,8 +819,9 @@ export default function Home() {
 
     const disconnectTikTok = () => {
         const username = tiktokConfig.username.trim() || (typeof window !== "undefined" ? localStorage.getItem("tiktokUsername") || "" : "");
+        const payload: any = privateKey ? { username, privateKey } : username;
         if (tkSocketRef.current) {
-            tkSocketRef.current.emit("disconnect-tiktok", username);
+            tkSocketRef.current.emit("disconnect-tiktok", payload);
         }
         setTiktokStatus("DISCONNECTED");
         setTiktokRoomViewerCount(null);
@@ -874,6 +1121,41 @@ export default function Home() {
             return next;
         });
     }
+
+    const syncConfigsFromDb = async () => {
+        const key = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null);
+        if (!key) {
+            gooeyToast.error("Private key belum ada — verifikasi dulu");
+            return;
+        }
+        try {
+            const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: key });
+            if (all && !all.error) {
+                if (all.obs_config) {
+                    const dec = all.obs_config.password ? await decrypt(all.obs_config.password, key).catch(() => all.obs_config.password) : "";
+                    const obsFromDb = { address: all.obs_config.address, port: all.obs_config.port, password: dec || all.obs_config.password || "", autoConnect: all.obs_config.auto_connect };
+                    setObsConfig(obsFromDb as any);
+                    localStorage.setItem("obs-config", JSON.stringify(obsFromDb));
+                }
+                if (all.tiktok_config) {
+                    const t = { username: all.tiktok_config.username || "", autoConnect: all.tiktok_config.auto_connect };
+                    setTiktokConfig(t as any);
+                    localStorage.setItem("tiktok-config", JSON.stringify(t));
+                }
+                if (all.streamerbot_config) {
+                    const dec = all.streamerbot_config.password ? await decrypt(all.streamerbot_config.password, key).catch(() => all.streamerbot_config.password) : "";
+                    const sbFromDb = { address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: dec || all.streamerbot_config.password || "", autoConnect: all.streamerbot_config.auto_connect };
+                    setSbConfig(sbFromDb as any);
+                    localStorage.setItem("sb-config", JSON.stringify(sbFromDb));
+                }
+                gooeyToast.success("Config disinkron dari database");
+            } else {
+                gooeyToast.error("Gagal sync: private key tidak valid atau belum ada config");
+            }
+        } catch (e: any) {
+            gooeyToast.error("Gagal sync: " + (e.message || String(e)));
+        }
+    };
 
     const disconnectOBS = () => {
         obsManualDisconnectRef.current = true;
@@ -1320,6 +1602,39 @@ export default function Home() {
 
     return (
         <div className="h-screen p-3 max-w-[100vw] overflow-x-hidden flex flex-col">
+            {privateKeyLoading ? (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center">
+                    <div className="text-white font-black uppercase text-[11px] tracking-widest">Memuat private key...</div>
+                </div>
+            ) : !privateKeyVerified ? (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-[#161616] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+                        <div className="px-6 py-5 border-b border-white/5 bg-gradient-to-r from-blue-900/15 via-transparent to-cyan-900/10">
+                            <h2 className="text-white font-black uppercase text-[13px] tracking-wide">Akses Dock Butuh Private Key</h2>
+                            <p className="text-gray-500 text-[10px] mt-1">Private key sebagai <span className="text-cyan-400 font-bold">bypass tanpa login</span> — bisa fetch semua konfigurasi & data. Isolasi websocket per user.</p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            {privateKey && (
+                                <div className="bg-black/30 border border-white/10 rounded-xl p-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[8px] font-black tracking-widest uppercase text-gray-500">Private Key Kamu</span>
+                                        <button onClick={handleCopyPrivateKey} className="px-2 py-1 bg-white/10 hover:bg-white/15 border border-white/10 rounded text-[9px] font-black uppercase text-white">Copy</button>
+                                    </div>
+                                    <code className="block text-[10px] break-all text-cyan-400 font-mono-custom bg-white/5 p-2 rounded border border-white/5">{privateKey}</code>
+                                    <button onClick={handleRegeneratePrivateKey} className="text-[10px] font-bold text-red-400 hover:text-red-300">Regenerate private key</button>
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-[8px] font-black tracking-widest uppercase text-gray-400 mb-1.5">Tempel Private Key</label>
+                                <input type="text" value={privateKeyInput} onChange={(e) => setPrivateKeyInput(e.target.value)} placeholder="64-char hex..." className="w-full h-10 px-3 bg-white/5 border border-white/10 rounded-xl text-[11px] font-mono-custom text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50" />
+                            </div>
+                            {privateKeyError && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold px-3 py-2 rounded-lg">{privateKeyError}</div>}
+                            <button onClick={handleVerifyPrivateKey} className="w-full h-10 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.3)]">Verifikasi & Masuk Dock</button>
+                            <button onClick={async () => { await supabase.auth.signOut(); if (typeof window !== "undefined") sessionStorage.removeItem("dock_private_verified"); router.push("/login"); }} className="w-full h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
             <header className="relative z-30 w-full max-w-[100vw] flex-none h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-6 font-bold overflow-visible">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3 border-r border-white/10 pr-4">

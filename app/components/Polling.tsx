@@ -1,103 +1,81 @@
-'use client'
-
-import { Button } from '@heroui/react/button';
-import { Input } from '@heroui/react/input';
-import { MinusIcon, PlusIcon } from 'lucide-react';
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
+'use client';
+import { useState, forwardRef, useImperativeHandle } from "react";
 
 export interface PollingRef {
-    getData: () => { question: string; options: string[] };
-    reset: () => void;
+  getData: () => { question: string; options: string[] };
+  reset: () => void;
 }
 
-export default forwardRef<PollingRef>(function Polling(_, ref) {
-    const [question, setQuestion] = useState('')
-    const [options, setOptions] = useState(['Pilihan pertama', 'Pilihan kedua'])
-    const optionRefs = useRef<Array<HTMLInputElement | null>>([])
-    const previousOptionCount = useRef(options.length)
+const Polling = forwardRef<PollingRef>((_, ref) => {
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState<string[]>(["", ""]);
 
-    useEffect(() => {
-        if (options.length > previousOptionCount.current) {
-            optionRefs.current[options.length - 1]?.focus()
-        }
-        previousOptionCount.current = options.length
-    }, [options.length])
+  useImperativeHandle(ref, () => ({
+    getData: () => ({ question, options }),
+    reset: () => {
+      setQuestion("");
+      setOptions(["", ""]);
+    },
+  }));
 
-    useImperativeHandle(ref, () => ({
-        getData: () => ({
-            question,
-            options: options.filter(opt => opt.trim() !== ''),
-        }),
-        reset: () => {
-            setQuestion('')
-            setOptions(['Pilihan pertama', 'Pilihan kedua'])
-        },
-    }))
+  const updateOption = (idx: number, val: string) => {
+    setOptions(prev => prev.map((o, i) => (i === idx ? val : o)));
+  };
 
-    function addOption() {
-        setOptions((current) => [...current, ''])
-    }
+  const addOption = () => {
+    if (options.length < 5) setOptions([...options, ""]);
+  };
 
-    function removeOption(index: number) {
-        setOptions((current) => current.filter((_, optionIndex) => optionIndex !== index))
-        requestAnimationFrame(() => {
-            optionRefs.current[Math.max(0, index - 1)]?.focus()
-        })
-    }
+  const removeOption = (idx: number) => {
+    if (options.length <= 2) return;
+    setOptions(prev => prev.filter((_, i) => i !== idx));
+  };
 
-    function updateOption(index: number, value: string) {
-        setOptions((current) => current.map((option, optionIndex) => (optionIndex === index ? value : option)))
-    }
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="block text-gray-400 font-bold uppercase text-[9px] mb-1.5">Pertanyaan Poll</label>
+        <input
+          type="text"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Masukkan pertanyaan poll..."
+          className="w-full rounded-lg px-3 py-2 text-sm font-medium bg-white/5 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+        />
+      </div>
+      <div>
+        <label className="block text-gray-400 font-bold uppercase text-[9px] mb-1.5">Opsi (2-5)</label>
+        <div className="space-y-2">
+          {options.map((opt, idx) => (
+            <div key={idx} className="flex gap-2">
+              <input
+                type="text"
+                value={opt}
+                onChange={(e) => updateOption(idx, e.target.value)}
+                placeholder={`Opsi ${idx + 1}`}
+                className="flex-1 rounded-lg px-3 py-2 text-sm font-medium bg-white/5 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+              />
+              {options.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => removeOption(idx)}
+                  className="px-2 py-1 text-red-400 hover:text-red-300 text-[10px] font-bold"
+                >
+                  Hapus
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        {options.length < 5 && (
+          <button type="button" onClick={addOption} className="mt-2 text-[10px] font-bold text-purple-400 hover:text-purple-300">
+            + Tambah Opsi
+          </button>
+        )}
+      </div>
+    </div>
+  );
+});
 
-    return (
-        <main className="text-foreground">
-            <section className="mx-auto flex w-full max-w-xl flex-col gap-8">
-
-                <div className="flex flex-col gap-3">
-                    <label htmlFor="poll-question" className="text-sm font-medium">Pertanyaan</label>
-                    <Input
-                        id="poll-question"
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        placeholder="Tulis pertanyaan polling..."
-                        className="h-11 rounded-lg border border-gray-600 px-3 text-sm outline-none transition bg-transparent text-white"
-                    />
-                </div>
-
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium" htmlFor="poll-option-0">Pilihan jawaban</label>
-                        <span className="text-xs text-muted-foreground">{options.length} opsi</span>
-                    </div>
-                    <div className="flex flex-col gap-3" role="group" aria-label="Opsi polling">
-                        {options.map((option, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-xs text-muted-foreground" aria-hidden="true">{index + 1}</span>
-                                <Input
-                                    ref={(element) => { optionRefs.current[index] = element }}
-                                    id={`poll-option-${index}`}
-                                    type="text"
-                                    value={option}
-                                    onChange={(event) => updateOption(index, event.target.value)}
-                                    placeholder={`Opsi ${index + 1}`}
-                                    aria-label={`Opsi polling ${index + 1}`}
-                                    className="h-11 min-w-0 flex-1 rounded-lg border border-gray-600 px-3 text-sm outline-none transition bg-transparent text-white"
-                                />
-                                {index === options.length - 1 &&
-                                    <Button type="button" size="md" variant="outline" onClick={() => removeOption(index)} isDisabled={options.length <= 2} aria-label={`Hapus opsi polling ${index + 1}`} className="text-white border border-gray-600">
-                                        <MinusIcon />
-                                    </Button>
-                                }
-                                {index === options.length - 1 &&
-                                    <Button type="button" size="md" variant="outline" onClick={addOption} aria-label="Tambah opsi polling" className="text-white border border-gray-600">
-                                        <PlusIcon />
-                                    </Button>
-                                }
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-        </main>
-    )
-})
+Polling.displayName = "Polling";
+export default Polling;
