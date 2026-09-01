@@ -160,11 +160,13 @@ async function startServer() {
       io.emit('sb-actions-config', sbActions);
     });
 
-    socket.on("pin-chat", ({ username, chat }) => {
-      io.to(username).emit("pinned-chat", chat);
-      io.to("all").emit("pinned-chat", chat); // Broadcast pinned chat ke AllChatOverlay
+    socket.on("pin-chat", (payload: any) => {
+      const room = payload.privateKey || payload.username;
+      const chat = payload.chat || payload;
+      const username = payload.username || "global";
+      if (room) io.to(room).emit("pinned-chat", chat);
+      io.to("all").emit("pinned-chat", chat);
 
-      // Send to Streamer.bot
       sendToStreamerBot(sbActions.pin, {
         type: 'pin',
         chatNickname: chat.nickname,
@@ -173,26 +175,38 @@ async function startServer() {
       });
     });
 
-    socket.on("unpin-chat", ({ username }) => {
-      io.to(username).emit("unpin-chat");
-      io.to("all").emit("unpin-chat"); // Broadcast unpin ke AllChatOverlay
+    socket.on("unpin-chat", (payload: any) => {
+      const room = payload?.privateKey || payload?.username;
+      if (room) io.to(room).emit("unpin-chat");
+      io.to("all").emit("unpin-chat");
     });
 
-    socket.on("update-theme", ({ username, theme, customTheme }) => {
-      io.to(username).emit("theme-updated", { theme, customTheme });
+    socket.on("update-theme", (payload: any) => {
+      const room = payload.privateKey || payload.username;
+      if (room) io.to(room).emit("theme-updated", { theme: payload.theme, customTheme: payload.customTheme });
     });
 
-    socket.on("connect-tiktok", async (username) => {
-      socket.join(username);
+    socket.on("connect-tiktok", async (payload: any) => {
+      const rawUsername = typeof payload === "string" ? payload : payload?.username;
+      const privateKey = typeof payload === "object" ? String(payload?.privateKey || "").trim() : "";
+      const username = String(rawUsername || "").trim().replace(/^@/, "");
+      if (!username) return;
+      const room = privateKey || username;
+      if (privateKey) {
+        // verifikasi privateKey bisa ditambah di sini jika mau cek Supabase
+        socket.join(room);
+      } else {
+        socket.join(username);
+      }
 
-      if (connections.has(username)) {
-        // Already connected
+      const connKey = privateKey ? `${privateKey}:${username}` : username;
+      if (connections.has(connKey)) {
         socket.emit("tiktok-connected", "already-connected");
         return;
       }
 
-      console.log("Connecting to TikTok live for:", username);
-      io.to(username).emit("tiktok-connecting", username);
+      console.log(`Connecting to TikTok live for: ${username} | room=${room.slice(0, 8)}...`);
+      io.to(room).emit("tiktok-connecting", username);
 
       const tiktokLiveConnection = new WebcastPushConnection(username, {
         processInitialData: false,
@@ -202,25 +216,25 @@ async function startServer() {
         disableEulerFallbacks: true
       });
 
-      connections.set(username, tiktokLiveConnection);
+      connections.set(connKey, tiktokLiveConnection);
 
       tiktokLiveConnection.connect().then((state: any) => {
-        console.log(`Connected to room ${state.roomId}`);
-        io.to(username).emit("tiktok-connected", state.roomId);
+        console.log(`Connected to room ${state.roomId} | ${room.slice(0, 8)}...`);
+        io.to(room).emit("tiktok-connected", state.roomId);
       }).catch((err: any) => {
         console.error("Failed to connect", err);
-        connections.delete(username);
+        connections.delete(connKey);
         let errorMsg = err.message || "Failed to connect";
         if (errorMsg.includes("user_not_found") || errorMsg.includes("liveRoomUserInfo")) {
           errorMsg = "User not found or not currently live.";
         } else if (errorMsg.includes("Unexpected server response: 200")) {
           errorMsg = "TikTok connection failed (Websocket 200). The proxy/network might be blocking the connection or user is offline.";
         }
-        io.to(username).emit("tiktok-error", errorMsg);
+        io.to(room).emit("tiktok-error", errorMsg);
       });
 
       tiktokLiveConnection.on("chat", (data: any) => {
-        io.to(username).emit("tiktok-chat", data);
+        io.to(room).emit("tiktok-chat", data);
         io.to("all").emit("tiktok-chat", data); // Broadcast ke AllChatOverlay
 
         // Send to Streamer.bot
@@ -236,7 +250,7 @@ async function startServer() {
         if (data.giftType === 1 && !data.repeatEnd) {
           // Streak gift in progress, wait for repeatEnd
         } else {
-          io.to(username).emit("tiktok-gift", data);
+          io.to(room).emit("tiktok-gift", data);
 
           // Send to Streamer.bot
           sendToStreamerBot(sbActions.gift, {
@@ -250,7 +264,7 @@ async function startServer() {
       });
 
       tiktokLiveConnection.on("like", (data: any) => {
-        io.to(username).emit("tiktok-like", data);
+        io.to(room).emit("tiktok-like", data);
 
         // Send to Streamer.bot
         sendToStreamerBot(sbActions.like, {
@@ -262,11 +276,11 @@ async function startServer() {
       });
 
       tiktokLiveConnection.on("social", (data: any) => {
-        io.to(username).emit("tiktok-social", data);
+        io.to(room).emit("tiktok-social", data);
       });
 
       tiktokLiveConnection.on("member", (data: any) => {
-        io.to(username).emit("tiktok-member", data);
+        io.to(room).emit("tiktok-member", data);
 
         // Send to Streamer.bot
         sendToStreamerBot(sbActions.member, {
@@ -277,22 +291,31 @@ async function startServer() {
       });
 
       tiktokLiveConnection.on("roomUser", (data: any) => {
-        io.to(username).emit("tiktok-roomUser", data);
+        io.to(room).emit("tiktok-roomUser", data);
         console.log("Room user data:", data);
       });
 
       tiktokLiveConnection.on("streamEnd", () => {
-        io.to(username).emit("tiktok-streamEnd");
-        connections.delete(username);
+        io.to(room).emit("tiktok-streamEnd");
+        connections.delete(connKey);
       });
     });
 
-    socket.on("disconnect-tiktok", (username) => {
-      const conn = connections.get(username);
+    socket.on("disconnect-tiktok", (payload: any) => {
+      const rawUsername = typeof payload === "string" ? payload : payload?.username;
+      const pKey = typeof payload === "object" ? String(payload?.privateKey || "").trim() : "";
+      const u = String(rawUsername || "").trim().replace(/^@/, "");
+      const r = pKey || u;
+      const cKey = pKey ? `${pKey}:${u}` : u;
+      const conn = connections.get(cKey);
       if (conn) {
         conn.disconnect();
-        connections.delete(username);
-        io.to(username).emit("tiktok-disconnected");
+        connections.delete(cKey);
+        io.to(r).emit("tiktok-disconnected");
+      } else if (connections.has(u)) {
+        // fallback legacy username-only
+        const c2 = connections.get(u);
+        if (c2) { c2.disconnect(); connections.delete(u); io.to(u).emit("tiktok-disconnected"); }
       }
     });
 

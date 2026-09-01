@@ -53,6 +53,8 @@ export default function Home() {
         diskSpace: "200 GB",
         recordStatus: "STOPPED",
         streamStatus: "STOPPED",
+        virtualCamStatus: "STOPPED",
+        replayBufferStatus: "STOPPED",
     });
 
     const streamBitrateValue = Number.parseFloat((status.bitrate ?? "0 kbps").replace(/[^\d.]/g, "")) || 0;
@@ -154,17 +156,14 @@ export default function Home() {
         });
     }, [tiktokRoomViewerCount]);
 
-    // private key gate — bisa via login Supabase ATAU bypass pakai private_key tanpa login
     useEffect(() => {
         const initPrivateKey = async () => {
-            // ?key= di URL — bypass tanpa login, prioritas tertinggi (langsung verified, tidak tunggu RPC)
             const keyFromUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("key")?.trim() : null;
             if (keyFromUrl) {
                 const isHex = /^[a-f0-9]{32,64}$/i.test(keyFromUrl) || keyFromUrl.startsWith("guest_") || keyFromUrl.length >= 16;
                 if (!isHex) {
                     setPrivateKeyError("Private key di URL tidak valid (format hex).");
                 } else {
-                    // langsung verified biar tidak alert "Akses dock butuh private key" saat klik Connect
                     setPrivateKey(keyFromUrl);
                     setPrivateKeyInput(keyFromUrl);
                     setPrivateKeyVerified(true);
@@ -173,7 +172,6 @@ export default function Home() {
                         sessionStorage.setItem("dock_private_verified", keyFromUrl);
                     }
                     setPrivateKeyLoading(false);
-                    // background: fetch config (DB terenkripsi, dock tampil plain via decrypt)
                     (async () => {
                         try {
                             const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: keyFromUrl });
@@ -198,7 +196,6 @@ export default function Home() {
             }
 
             const { data: { session } } = await supabase.auth.getSession();
-            // cek bypass yang sudah terverifikasi di sessionStorage
             const bypassKey = typeof window !== "undefined" ? sessionStorage.getItem("bypass_private_key") : null;
             if (bypassKey) {
                 try {
@@ -206,7 +203,6 @@ export default function Home() {
                     if (isValid) {
                         setPrivateKey(bypassKey);
                         setPrivateKeyVerified(true);
-                        // fetch semua config tanpa login (decrypt biar tampil plain sama kayak Config)
                         try {
                             const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: bypassKey });
                             if (all && !all.error) {
@@ -237,7 +233,6 @@ export default function Home() {
                     setPrivateKeyLoading(false);
                     return;
                 }
-                // tidak redirect langsung — tampilkan gate bypass (private key tanpa login)
                 setPrivateKeyLoading(false);
                 return;
             }
@@ -461,7 +456,7 @@ export default function Home() {
     const [privateKeyVerified, setPrivateKeyVerified] = useState(false);
     const [privateKeyInput, setPrivateKeyInput] = useState("");
     const [privateKeyError, setPrivateKeyError] = useState("");
-    const [privateKeyLoading, setPrivateKeyLoading] = useState(true);
+    const [privateKeyLoading, setPrivateKeyLoading] = useState(false);
 
     const headerControlClass = "dock-control-btn flex items-center justify-center gap-2";
     const connectButtonClass = "system-connect-btn flex items-center justify-center rounded-lg text-white shadow-[0_0_10px_rgba(59,130,246,0.2)]";
@@ -638,6 +633,34 @@ export default function Home() {
             },
         }));
     }
+
+    const toggleVirtualCam = () => {
+        if (!obsSocketRef.current || obsSocketRef.current.readyState !== WebSocket.OPEN) {
+            alert("OBS tidak terhubung!");
+            return;
+        }
+        obsSocketRef.current.send(JSON.stringify({
+            op: 6,
+            d: {
+                requestType: "ToggleVirtualCam",
+                requestId: "toggle_virtual_cam",
+            },
+        }));
+    };
+
+    const toggleReplayBuffer = () => {
+        if (!obsSocketRef.current || obsSocketRef.current.readyState !== WebSocket.OPEN) {
+            alert("OBS tidak terhubung!");
+            return;
+        }
+        obsSocketRef.current.send(JSON.stringify({
+            op: 6,
+            d: {
+                requestType: "ToggleReplayBuffer",
+                requestId: "toggle_replay_buffer",
+            },
+        }));
+    };
 
     const parseEmotes = (text: string, emotes?: Array<{ name: string; imageUrl: string }>) => {
         if (!emotes || emotes.length === 0) return text;
@@ -1125,7 +1148,7 @@ export default function Home() {
     const syncConfigsFromDb = async () => {
         const key = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null);
         if (!key) {
-            gooeyToast.error("Private key belum ada — verifikasi dulu");
+            gooeyToast.error("Private key belum ada, verifikasi terlebih dahulu");
             return;
         }
         try {
@@ -1226,6 +1249,8 @@ export default function Home() {
                     setStatus(prev => ({ ...prev, obsStatus: "CONNECTED" }));
                     socket.send(JSON.stringify({ op: 6, d: { requestType: "GetVideoSettings", requestId: "get_fps" } }));
                     socket.send(JSON.stringify({ op: 6, d: { requestType: "GetStudioModeEnabled", requestId: "get_studio_mode" } }));
+                    socket.send(JSON.stringify({ op: 6, d: { requestType: "GetVirtualCamStatus", requestId: "get_virtual_cam" } }));
+                    socket.send(JSON.stringify({ op: 6, d: { requestType: "GetReplayBufferStatus", requestId: "get_replay_buffer" } }));
                     socket.send(JSON.stringify({ op: 6, d: { requestType: "GetStreamStatus", requestId: "get_stream_status" } }));
                     socket.send(JSON.stringify({ op: 6, d: { requestType: "GetRecordStatus", requestId: "get_record_status" } }));
                     if (obsPollIntervalRef.current) clearInterval(obsPollIntervalRef.current);
@@ -1233,6 +1258,8 @@ export default function Home() {
                         if (socket.readyState === WebSocket.OPEN) {
                             socket.send(JSON.stringify({ op: 6, d: { requestType: "GetStreamStatus", requestId: "get_stream_status" } }));
                             socket.send(JSON.stringify({ op: 6, d: { requestType: "GetRecordStatus", requestId: "get_record_status" } }));
+                            socket.send(JSON.stringify({ op: 6, d: { requestType: "GetVirtualCamStatus", requestId: "get_virtual_cam" } }));
+                            socket.send(JSON.stringify({ op: 6, d: { requestType: "GetReplayBufferStatus", requestId: "get_replay_buffer" } }));
                             socket.send(JSON.stringify({ op: 6, d: { requestType: "GetStats", requestId: "poll_stats" } }));
                         }
                     }, 1000);
@@ -1269,6 +1296,14 @@ export default function Home() {
 
                     if (eventType === "StudioModeStateChanged") {
                         setStatus(prev => ({ ...prev, obsStudioMode: !!eventData.studioModeEnabled, obsStatus: "CONNECTED" }));
+                    }
+
+                    if (eventType === "VirtualCamStateChanged") {
+                        setStatus(prev => ({ ...prev, virtualCamStatus: eventData.outputState === "OBS_WEBSOCKET_OUTPUT_STARTED" ? "STARTED" : "STOPPED", obsStatus: "CONNECTED" }));
+                    }
+
+                    if (eventType === "ReplayBufferStateChanged") {
+                        setStatus(prev => ({ ...prev, replayBufferStatus: eventData.outputActive ? "STARTED" : "STOPPED", obsStatus: "CONNECTED" }));
                     }
                 }
 
@@ -1397,6 +1432,29 @@ export default function Home() {
 
                     if (requestId === "toggle_studio" && responseData.studioModeEnabled !== undefined) {
                         setStatus(prev => ({ ...prev, obsStudioMode: !!responseData.studioModeEnabled }));
+                    }
+
+                    if (requestId === "get_virtual_cam") {
+                        const active = !!(responseData.outputActive ?? responseData.outputState === "OBS_WEBSOCKET_OUTPUT_STARTED");
+                        setStatus(prev => ({ ...prev, virtualCamStatus: active ? "STARTED" : "STOPPED", obsStatus: "CONNECTED" }));
+                    }
+
+                    if (requestId === "get_replay_buffer") {
+                        setStatus(prev => ({ ...prev, replayBufferStatus: responseData.outputActive ? "STARTED" : "STOPPED", obsStatus: "CONNECTED" }));
+                    }
+
+                    if (requestId === "toggle_virtual_cam") {
+                        const active = !!(responseData.outputActive ?? responseData.outputState === "OBS_WEBSOCKET_OUTPUT_STARTED");
+                        setStatus(prev => ({ ...prev, virtualCamStatus: active ? "STARTED" : "STOPPED" }));
+                    }
+
+                    if (requestId === "toggle_replay_buffer") {
+                        const active = !!responseData.outputActive;
+                        setStatus(prev => ({ ...prev, replayBufferStatus: active ? "STARTED" : "STOPPED" }));
+                    }
+                    if (data.d?.requestStatus?.code === 100) {
+                        const errMsg = data.d?.requestStatus?.comment || "OBS request gagal";
+                        // if (requestId.startsWith("toggle_")) gooeyToast.error(errMsg);
                     }
                 }
             } catch (error) {
@@ -1602,11 +1660,7 @@ export default function Home() {
 
     return (
         <div className="h-screen p-3 max-w-[100vw] overflow-x-hidden flex flex-col">
-            {privateKeyLoading ? (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center">
-                    <div className="text-white font-black uppercase text-[11px] tracking-widest">Memuat private key...</div>
-                </div>
-            ) : !privateKeyVerified ? (
+            {!privateKeyVerified ? (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-[#161616] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
                         <div className="px-6 py-5 border-b border-white/5 bg-gradient-to-r from-blue-900/15 via-transparent to-cyan-900/10">
@@ -1637,22 +1691,54 @@ export default function Home() {
             ) : null}
             <header className="relative z-30 w-full max-w-[100vw] flex-none h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-6 font-bold overflow-visible">
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 border-r border-white/10 pr-4">
-                        <div className="flex items-center gap-2">
-                            <Image src="/assets/logo/obs.png" alt="Logo" width={15} height={15} className={`filter invert ${status.obsStatus === "CONNECTED" ? "opacity-100" : "opacity-50"}`} />
-                            <span className="font-black uppercase tracking-tighter text-gray-500 text-[8px]">OBS: <span className="text-white">{status.obsStatus}</span></span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Image src="/assets/logo/sbot.png" alt="Logo" width={15} height={15} className={`filter  ${status.sbotStatus === "CONNECTED" ? "opacity-100" : "opacity-50 grayscale"}`} />
-                            <span className="font-black uppercase tracking-tighter text-gray-500 text-[8px]">SBOT: <span className="text-white">{status.sbotStatus}</span></span>
-                        </div>
-                    </div>
+                    {(() => {
+                        const isObsOk = status.obsStatus === "CONNECTED";
+                        const isSbotOk = status.sbotStatus === "CONNECTED";
+                        const isTiktokOk = tiktokStatus === "CONNECTED";
+                        const allConnected = isObsOk && isSbotOk && isTiktokOk;
+                        const noneConnected = !isObsOk && !isSbotOk && !isTiktokOk;
+                        const dotClass = allConnected ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : noneConnected ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]";
+                        return (
+                            <div className="relative group flex items-center gap-2 border-r border-white/10 pr-4 cursor-pointer">
+                                <span className={`w-3 h-3 rounded-full shrink-0 ${dotClass}`}></span>
+                                <span className="hidden sm:inline text-[9px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">{allConnected ? "Connected" : noneConnected ? "Disconnected" : "Partial"}</span>
+                                <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-50 min-w-[200px] bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl shadow-black/50 p-2">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/5">
+                                            <div className="flex items-center gap-2">
+                                                <Image src="/assets/logo/obs.png" alt="OBS" width={14} height={14} className="invert" />
+                                                <span className="text-[10px] font-bold text-white">OBS</span>
+                                            </div>
+                                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${isObsOk ? "bg-green-500/20 text-green-400" : status.obsStatus === "SIMULATED" ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>{status.obsStatus}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/5">
+                                            <div className="flex items-center gap-2">
+                                                <Image src="/assets/logo/sbot.png" alt="SBOT" width={14} height={14} className={`${isSbotOk ? "" : "grayscale opacity-60"}`} />
+                                                <span className="text-[10px] font-bold text-white">SBOT</span>
+                                            </div>
+                                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${isSbotOk ? "bg-green-500/20 text-green-400" : status.sbotStatus === "SIMULATED" ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>{status.sbotStatus}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/5">
+                                            <div className="flex items-center gap-2">
+                                                <Image src="/assets/logo/tik-tok.png" alt="TIKTOK" width={14} height={14} className="invert" />
+                                                <span className="text-[10px] font-bold text-white">TIKTOK</span>
+                                            </div>
+                                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${isTiktokOk ? "bg-green-500/20 text-green-400" : tiktokStatus === "CONNECTING" ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>{tiktokStatus}</span>
+                                        </div>
+                                        <div className="border-t border-white/5 mt-1 pt-1 px-2">
+                                            <span className="text-[8px] font-bold text-gray-500 uppercase">{allConnected ? "✓ Semua terhubung" : noneConnected ? "✗ Tidak ada yang terhubung" : "◐ Sebagian terhubung"}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     <div className="flex items-center gap-2">
-                        <button onClick={toggleSimulation} className={`${headerControlClass}`}>
+                        {/* <button onClick={toggleSimulation} className={`${headerControlClass}`}>
                             <UserCog className="w-3 h-3" />
                             Simulasi
-                        </button>
+                        </button> */}
                         <button
                             onClick={toggleStudioMode}
                             aria-pressed={status.obsStudioMode}
@@ -1668,6 +1754,20 @@ export default function Home() {
                             className={`${headerControlClass} ${status.obsStudioMode ? "" : "opacity-50 cursor-not-allowed"} ${status.obsStudioMode ? "active" : ""}`}>
                             <MoveRight className="w-3 h-3" />
                             Transition
+                        </button>
+                        <button
+                            onClick={toggleVirtualCam}
+                            title={status.virtualCamStatus === "STARTED" ? "Virtual Camera Aktif" : "Virtual Camera Off"}
+                            className={`${headerControlClass} ${status.virtualCamStatus === "STARTED" ? "active" : ""}`}>
+                            <Video className="w-3 h-3" />
+                            Virtual Cam
+                        </button>
+                        <button
+                            onClick={toggleReplayBuffer}
+                            title={status.replayBufferStatus === "STARTED" ? "Replay Buffer Aktif" : "Replay Buffer Off"}
+                            className={`${headerControlClass} ${status.replayBufferStatus === "STARTED" ? "active" : ""}`}>
+                            <Radio className="w-3 h-3" />
+                            Replay Buffer
                         </button>
                     </div>
                 </div>
@@ -2283,6 +2383,37 @@ export default function Home() {
                                             className="w-3 h-3 accent-blue-500 cursor-pointer"
                                         />
                                     </div>
+                                </div>
+
+                                <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">OBS Outputs</h4>
+                                <div className="stat-card space-y-3">
+                                    <div className="flex items-center justify-between py-1">
+                                        <div className="flex items-center gap-2">
+                                            <Video className="w-3 h-3 text-blue-400" />
+                                            <span className="text-white font-black uppercase text-[10px]">Virtual Camera</span>
+                                            <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${status.virtualCamStatus === "STARTED" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}>{status.virtualCamStatus || "STOPPED"}</span>
+                                        </div>
+                                        <button
+                                            onClick={toggleVirtualCam}
+                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${status.virtualCamStatus === "STARTED" ? "bg-red-600 hover:bg-red-500 text-white" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
+                                        >
+                                            {status.virtualCamStatus === "STARTED" ? "Stop" : "Activate"}
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-between py-1 border-t border-white/5">
+                                        <div className="flex items-center gap-2">
+                                            <Radio className="w-3 h-3 text-cyan-400" />
+                                            <span className="text-white font-black uppercase text-[10px]">Replay Buffer</span>
+                                            <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${status.replayBufferStatus === "STARTED" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}>{status.replayBufferStatus || "STOPPED"}</span>
+                                        </div>
+                                        <button
+                                            onClick={toggleReplayBuffer}
+                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${status.replayBufferStatus === "STARTED" ? "bg-red-600 hover:bg-red-500 text-white" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
+                                        >
+                                            {status.replayBufferStatus === "STARTED" ? "Stop" : "Activate"}
+                                        </button>
+                                    </div>
+                                    <p className="text-[9px] text-gray-600 leading-relaxed">Virtual Camera & Replay Buffer butuh diaktifkan di OBS Settings → Output. Tombol di header juga bisa.</p>
                                 </div>
 
                                 <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">Streamer.bot System Info</h4>

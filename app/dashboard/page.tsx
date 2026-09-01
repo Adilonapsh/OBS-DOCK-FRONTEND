@@ -64,9 +64,8 @@ export default function DashboardPage() {
         router.push("/login");
     };
 
-    if (loading) {
-        return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white text-xs font-black uppercase tracking-widest">Memuat dashboard...</div>;
-    }
+    // jangan block full page saat pindah — tampilkan dashboard langsung, private key load di background
+    const isInitialLoading = loading && !user && !privateKey;
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex">

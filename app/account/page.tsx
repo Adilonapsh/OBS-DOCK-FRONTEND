@@ -138,7 +138,8 @@ export default function AccountPage() {
         router.push("/login");
     };
 
-    if (loading) return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white text-xs font-black uppercase tracking-widest">Memuat akun...</div>;
+    // jangan block full page — tampilkan layout, data load background
+    const isInitialLoading = loading && !user;
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex">

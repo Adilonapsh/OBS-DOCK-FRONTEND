@@ -12,6 +12,8 @@ export interface DockStatus {
     diskSpace?: string;
     recordStatus?: "STARTED" | "PAUSED" | "STOPPED" | "RECORDING";
     streamStatus?: "STARTED" | "STOPPED" | "LIVE";
+    virtualCamStatus?: "STARTED" | "STOPPED";
+    replayBufferStatus?: "STARTED" | "STOPPED";
 }
 
 
