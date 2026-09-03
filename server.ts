@@ -17,6 +17,44 @@ async function startServer() {
 
   const connections = new Map<string, any>();
   const mockIntervals = new Map<string, NodeJS.Timeout>();
+  const polls = new Map<string, any>(); // room -> poll state
+
+  function getPollRoom(payload: any): string {
+    if (typeof payload === 'string') return payload || 'global';
+    return (payload?.privateKey || payload?.room || payload?.key || 'global').toString() || 'global';
+  }
+  function parseVote(comment: string, optionCount: number): number | null {
+    const t = (comment || '').trim();
+    // only exact 1..6
+    if (/^[1-6]$/.test(t)) {
+      const idx = parseInt(t, 10) - 1;
+      if (idx >= 0 && idx < optionCount) return idx;
+    }
+    return null;
+  }
+  function handlePollVote(room: string, userId: string, comment: string) {
+    const poll = polls.get(room) || polls.get('global');
+    const targetRoom = polls.get(room) ? room : (polls.get('global') ? 'global' : null);
+    if (!targetRoom || !poll || poll.ended || poll.paused) return;
+    const idx = parseVote(comment, poll.options.length);
+    if (idx === null) return;
+    const uid = (userId || '').toLowerCase();
+    if (!uid) return;
+    const prev = poll.voterMap[uid];
+    if (prev !== undefined) {
+      if (prev === idx) return; // same vote ignore
+      poll.votes[prev] = Math.max(0, (poll.votes[prev] || 0) - 1);
+    } else {
+      poll.total = (poll.total || 0) + 1;
+    }
+    poll.votes[idx] = (poll.votes[idx] || 0) + 1;
+    poll.voterMap[uid] = idx;
+    polls.set(targetRoom, poll);
+    io.to(targetRoom).emit('poll-update', poll);
+    if (targetRoom !== 'global') io.to('global').emit('poll-update', poll);
+    // also broadcast to all for preview without room
+    io.emit('poll-update', poll);
+  }
 
   // Streamer.bot integration
   let sbWs: WebSocket | null = null;
@@ -102,6 +140,12 @@ async function startServer() {
 
             // Broadcast to all clients
             io.emit('tiktok-chat', chatData);
+            try {
+              handlePollVote('global', chatData.uniqueId, chatData.comment);
+              for (const r of polls.keys()) {
+                if (r !== 'global') handlePollVote(r, chatData.uniqueId, chatData.comment);
+              }
+            } catch (e) { console.error('poll vote error sb', e); }
             console.log(`Chat from Streamer.bot (${platform}): ${user}: ${msg}`);
           }
         }
@@ -152,6 +196,95 @@ async function startServer() {
 
     socket.on("join-room", (username) => {
       socket.join(username);
+      // send existing poll for this room if any
+      const poll = polls.get(username) || polls.get('global');
+      if (poll) socket.emit('poll-update', poll);
+    });
+
+    // Polling widget events
+    socket.on("poll-create", (payload: any) => {
+      const room = getPollRoom(payload);
+      socket.join(room);
+      const q = (payload.question || '').toString().trim().slice(0, 120);
+      const opts = Array.isArray(payload.options) ? payload.options.map((o: any) => String(o).trim()).filter(Boolean).slice(0, 6) : [];
+      if (!q || opts.length < 2) return;
+      const poll = {
+        id: Date.now().toString(),
+        room,
+        question: q,
+        options: opts,
+        votes: Array(opts.length).fill(0),
+        voterMap: {} as Record<string, number>,
+        total: 0,
+        theme: payload.theme || 'bar',
+        duration: Math.min(600, Math.max(10, parseInt(payload.duration) || 60)),
+        createdAt: Date.now(),
+        ended: false,
+        paused: false,
+        visible: payload.visible !== false,
+      };
+      polls.set(room, poll);
+      io.to(room).emit('poll-update', poll);
+      io.emit('poll-update', poll);
+      if (room !== 'global') io.to('global').emit('poll-update', poll);
+      // auto-end after duration (respect pause)
+      setTimeout(() => {
+        const cur = polls.get(room);
+        if (cur && cur.id === poll.id && !cur.ended && !cur.paused) {
+          cur.ended = true;
+          polls.set(room, cur);
+          io.to(room).emit('poll-update', cur);
+          io.emit('poll-update', cur);
+        }
+      }, poll.duration * 1000);
+    });
+    socket.on("poll-end", (payload: any) => {
+      const room = getPollRoom(payload);
+      const p = polls.get(room);
+      if (p) { p.ended = true; polls.set(room, p); io.to(room).emit('poll-update', p); io.emit('poll-update', p); }
+    });
+    socket.on("poll-pause", (payload: any) => {
+      const room = getPollRoom(payload);
+      const p = polls.get(room);
+      if (p && !p.ended && !p.paused) { p.paused = true; p.pausedAt = Date.now(); polls.set(room, p); io.to(room).emit('poll-update', p); io.emit('poll-update', p); }
+    });
+    socket.on("poll-resume", (payload: any) => {
+      const room = getPollRoom(payload);
+      const p = polls.get(room);
+      if (p && p.paused && !p.ended) {
+        const pausedDur = Date.now() - (p.pausedAt || Date.now());
+        p.createdAt += pausedDur;
+        p.paused = false; delete p.pausedAt;
+        polls.set(room, p); io.to(room).emit('poll-update', p); io.emit('poll-update', p);
+        // re-schedule auto-end with remaining time
+        const remain = p.duration * 1000 - (Date.now() - p.createdAt);
+        setTimeout(() => {
+          const cur = polls.get(room);
+          if (cur && cur.id === p.id && !cur.ended && !cur.paused) { cur.ended = true; polls.set(room, cur); io.to(room).emit('poll-update', cur); io.emit('poll-update', cur); }
+        }, Math.max(1000, remain));
+      }
+    });
+    socket.on("poll-visibility", (payload: any) => {
+      const room = getPollRoom(payload);
+      const p = polls.get(room);
+      if (p) { p.visible = !!payload.visible; polls.set(room, p); io.to(room).emit('poll-update', p); io.emit('poll-update', p); }
+    });
+    socket.on("poll-clear", (payload: any) => {
+      const room = payload ? getPollRoom(payload) : 'global';
+      polls.delete(room);
+      io.to(room).emit('poll-clear', { room });
+      io.emit('poll-clear', { room });
+    });
+    socket.on("poll-get", (payload: any) => {
+      const room = getPollRoom(payload || {});
+      const p = polls.get(room) || polls.get('global');
+      if (p) socket.emit('poll-update', p);
+    });
+    socket.on("poll-vote", (payload: any) => {
+      // manual vote via API (for testing)
+      const room = getPollRoom(payload);
+      const uid = (payload.userId || payload.nickname || 'manual').toString();
+      handlePollVote(room, uid, String(payload.vote ?? ''));
     });
 
     // Streamer.bot action configuration
@@ -236,8 +369,13 @@ async function startServer() {
       tiktokLiveConnection.on("chat", (data: any) => {
         io.to(room).emit("tiktok-chat", data);
         io.to("all").emit("tiktok-chat", data); // Broadcast ke AllChatOverlay
-
+        try {
+          const uid = (data.uniqueId || data.nickname || '').toString();
+          handlePollVote(room, uid, data.comment);
+          handlePollVote('global', uid, data.comment);
+        } catch (e) { console.error('poll vote error', e); }
         // Send to Streamer.bot
+
         sendToStreamerBot(sbActions.chat, {
           type: 'chat',
           nickname: data.nickname,
@@ -433,6 +571,10 @@ async function startServer() {
 
       // Broadcast ke semua client
       io.emit('tiktok-chat', chatData);
+      try {
+        handlePollVote('global', chatData.uniqueId, chatData.comment);
+        for (const r of polls.keys()) if (r !== 'global') handlePollVote(r, chatData.uniqueId, chatData.comment);
+      } catch (e) { console.error('poll vote error api', e); }
 
       res.json({ success: true, data: chatData });
     } else {

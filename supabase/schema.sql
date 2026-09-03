@@ -1,5 +1,5 @@
 -- ============================================
--- OBS Overlays — Supabase Database Schema
+-- OBS Overlays - Supabase Database Schema
 -- Jalankan di Supabase Dashboard → SQL Editor → New query → Paste & Run
 -- Project: https://tdsbidgbhltmjjdrdkla.supabase.co
 -- ============================================
@@ -143,7 +143,7 @@ create table if not exists public.dashboard_layouts (
 );
 
 -- ============================================
--- RLS (Row Level Security) — aktif + policy per user
+-- RLS (Row Level Security) - aktif + policy per user
 -- ============================================
 alter table public.profiles enable row level security;
 alter table public.stream_briefings enable row level security;

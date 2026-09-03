@@ -30,7 +30,7 @@ begin
 end;
 $$;
 
--- 3. (REKOMENDASI) tabel terpisah lebih aman — private_key hanya owner bisa baca
+-- 3. (REKOMENDASI) tabel terpisah lebih aman - private_key hanya owner bisa baca
 --    Jika mau column-level aman, pakai tabel ini daripada kolom di profiles (profiles_select_all expose ke semua)
 create table if not exists public.user_private_keys (
   user_id uuid primary key references auth.users(id) on delete cascade,

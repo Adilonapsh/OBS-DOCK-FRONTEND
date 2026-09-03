@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Monitor, UserCog, Settings, LogOut, X, SlidersHorizontal, Video } from "lucide-react";
+import { LayoutDashboard, Monitor, UserCog, Settings, LogOut, X, SlidersHorizontal, Video, Layers, Grid2x2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -13,6 +13,8 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, active: true },
     { href: "/dock", label: "Dock", icon: Monitor },
     { href: "/monitor", label: "Monitor", icon: Video },
+    // { href: "/overlay", label: "Overlay", icon: Layers },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
   ],
@@ -20,6 +22,8 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dock", label: "Dock", icon: Monitor, active: true },
     { href: "/monitor", label: "Monitor", icon: Video },
+    // { href: "/overlay", label: "Overlay", icon: Layers },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
   ],
@@ -27,6 +31,8 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dock", label: "Dock", icon: Monitor },
     { href: "/monitor", label: "Monitor", icon: Video, active: true },
+    // { href: "/overlay", label: "Overlay", icon: Layers },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
   ],
@@ -34,6 +40,8 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dock", label: "Dock", icon: Monitor },
     { href: "/monitor", label: "Monitor", icon: Video },
+    // { href: "/overlay", label: "Overlay", icon: Layers },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     { href: "/account", label: "Account", icon: UserCog, active: true },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
   ],
@@ -41,8 +49,28 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dock", label: "Dock", icon: Monitor },
     { href: "/monitor", label: "Monitor", icon: Video },
+    // { href: "/overlay", label: "Overlay", icon: Layers },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal, active: true },
+  ],
+  overlay: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dock", label: "Dock", icon: Monitor },
+    { href: "/monitor", label: "Monitor", icon: Video },
+    // { href: "/overlay", label: "Overlay", icon: Layers, active: true },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/account", label: "Account", icon: UserCog },
+    { href: "/config", label: "Config", icon: SlidersHorizontal },
+  ],
+  widgets: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dock", label: "Dock", icon: Monitor },
+    { href: "/monitor", label: "Monitor", icon: Video },
+    // { href: "/overlay", label: "Overlay", icon: Layers },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2, active: true },
+    { href: "/account", label: "Account", icon: UserCog },
+    { href: "/config", label: "Config", icon: SlidersHorizontal },
   ],
 };
 
@@ -52,7 +80,7 @@ export default function Sidebar({
   onClose,
   user,
 }: {
-  active?: "dashboard" | "dock" | "account" | "config" | "monitor";
+  active?: "dashboard" | "dock" | "account" | "config" | "monitor" | "overlay" | "widgets";
   open: boolean;
   onClose: () => void;
   user?: any;

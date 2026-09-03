@@ -284,7 +284,7 @@ export default function ConfigPage() {
             const res = await fetch(srv.apiUrl, { headers, method: "GET" });
             if (res.ok) {
                 const data = await res.json().catch(() => null);
-                gooeyToast.success(`MediaMTX "${srv.serverName}" OK${data ? ` — ${Array.isArray(data) ? data.length : Object.keys(data).length} paths` : ""}`);
+                gooeyToast.success(`MediaMTX "${srv.serverName}" OK${data ? ` - ${Array.isArray(data) ? data.length : Object.keys(data).length} paths` : ""}`);
             } else {
                 gooeyToast.error(`MediaMTX gagal: ${res.status} ${res.statusText}`);
             }
@@ -332,7 +332,7 @@ export default function ConfigPage() {
                 <main className="flex-1 p-4 md:p-6 max-w-[900px] w-full mx-auto space-y-6">
                     <div>
                         <h1 className="text-white font-black text-[16px] uppercase tracking-wide">Konfigurasi</h1>
-                        <p className="text-gray-500 text-[11px] mt-1">Ambil & simpan semua dari <span className="text-white font-bold">database Supabase</span> — support <code className="bg-white/10 px-1 rounded">?key=private_key</code> bypass tanpa login.</p>
+                        <p className="text-gray-500 text-[11px] mt-1">Ambil & simpan semua dari <span className="text-white font-bold">database Supabase</span> - support <code className="bg-white/10 px-1 rounded">?key=private_key</code> bypass tanpa login.</p>
                     </div>
 
                     {/* OBS */}
@@ -456,7 +456,7 @@ export default function ConfigPage() {
                                 <div className="text-center py-6 border border-dashed border-white/10 rounded-xl">
                                     <Server className="w-6 h-6 text-gray-600 mx-auto" />
                                     <p className="text-[11px] text-gray-500 mt-2">Belum ada server MediaMTX</p>
-                                    <p className="text-[10px] text-gray-600">Tambah server untuk akses beberapa MediaMTX — field: Server Name, Path API URL, Player URL Base, Basic Auth</p>
+                                    <p className="text-[10px] text-gray-600">Tambah server untuk akses beberapa MediaMTX - field: Server Name, Path API URL, Player URL Base, Basic Auth</p>
                                 </div>
                             ) : (
                                 mtxServers.map(srv => {
@@ -469,7 +469,7 @@ export default function ConfigPage() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-white font-black text-[11px] truncate">{srv.serverName || "Tanpa Nama"}</div>
-                                                    <div className="text-[10px] font-mono-custom text-gray-500 truncate">{srv.apiUrl || "— belum ada API URL —"}</div>
+                                                    <div className="text-[10px] font-mono-custom text-gray-500 truncate">{srv.apiUrl || "- belum ada API URL -"}</div>
                                                     {srv.playerUrlBase ? <div className="text-[9px] text-gray-600 truncate">▶ {srv.playerUrlBase}</div> : null}
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0">
@@ -524,7 +524,7 @@ export default function ConfigPage() {
                                         </div>
                                         {srv.apiUrl && srv.playerUrlBase && (
                                             <div className="bg-blue-600/5 border border-blue-600/10 rounded-lg p-2">
-                                                <p className="text-[9px] font-mono-custom text-blue-300 break-all">Player: {srv.playerUrlBase.replace(/\/$/, "")}/{"{stream}"} — API: {srv.apiUrl}</p>
+                                                <p className="text-[9px] font-mono-custom text-blue-300 break-all">Player: {srv.playerUrlBase.replace(/\/$/, "")}/{"{stream}"} - API: {srv.apiUrl}</p>
                                             </div>
                                         )}
                                     </div>

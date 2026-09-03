@@ -21,6 +21,7 @@ export default function AccountPage() {
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
     const [showPrivate, setShowPrivate] = useState(false);
+    const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
     const [form, setForm] = useState({ username: "", email: "", avatar_url: "", timezone: "Asia/Jakarta", private_key: "" });
     const [pass, setPass] = useState({ current: "", next: "", confirm: "", show: false });
     const [uploading, setUploading] = useState(false);
@@ -138,7 +139,7 @@ export default function AccountPage() {
         router.push("/login");
     };
 
-    // jangan block full page — tampilkan layout, data load background
+    // jangan block full page - tampilkan layout, data load background
     const isInitialLoading = loading && !user;
 
     return (
@@ -271,9 +272,9 @@ export default function AccountPage() {
                                 <div className="bg-black/30 border border-white/10 rounded-xl p-3">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[8px] font-black tracking-widest uppercase text-gray-500">Private Key</span>
-                                        <button onClick={() => setShowPrivate(!showPrivate)} className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1">{showPrivate ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />} {showPrivate ? "Hide" : "Show"}</button>
+                                        <button onClick={() => { if (!showPrivate) setShowPrivateConfirm(true); else setShowPrivate(false); }} className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1">{showPrivate ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />} {showPrivate ? "Hide" : "Show"}</button>
                                     </div>
-                                    <code className="block text-[10px] font-mono-custom break-all p-2 bg-white/5 rounded border border-white/5 text-cyan-400">{showPrivate ? form.private_key : "•".repeat(32)}</code>
+                                    <code className={`block text-[10px] font-mono-custom break-all p-2 bg-white/5 rounded border border-white/5 ${showPrivate ? "text-cyan-400" : "text-white blur-[4px] select-none"}`}>{showPrivate ? form.private_key : form.private_key ? "•".repeat(32) : "- belum ada -"}</code>
                                     <div className="flex gap-2 mt-3">
                                         <button onClick={async () => { await navigator.clipboard.writeText(form.private_key); setMsg({ type: "success", text: "Private key dicopy." }); }} className="flex-1 h-8 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-[10px] font-black uppercase text-white flex items-center justify-center gap-1"><Copy className="w-3 h-3" /> Copy</button>
                                         <button onClick={async () => { if (!confirm("Regenerate? Key lama tidak bisa dipakai.")) return; const { data } = await (supabase as any).rpc("regenerate_private_key"); if (data) { setForm(prev => ({ ...prev, private_key: data as string })); setMsg({ type: "success", text: "Private key baru dibuat." }); } }} className="flex-1 h-8 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-[10px] font-black uppercase text-red-400 flex items-center justify-center gap-1"><RefreshCw className="w-3 h-3" /> Regenerate</button>
@@ -283,6 +284,18 @@ export default function AccountPage() {
                                 </div>
                             </div>
 
+                {showPrivateConfirm && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={() => setShowPrivateConfirm(false)}>
+                        <div onClick={e => e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[360px] space-y-4 text-center">
+                            <h2 className="text-white font-black">Tampilkan Private Key?</h2>
+                            <p className="text-[11px] text-gray-400 leading-relaxed">Private key bersifat <span className="text-white font-bold">rahasia</span>. Jangan bagikan ke orang lain.</p>
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowPrivateConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Batal</button>
+                                <button onClick={() => { setShowPrivate(true); setShowPrivateConfirm(false); }} className="flex-1 h-9 bg-white text-black border border-white rounded-xl text-sm font-black">Tampilkan</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                             <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-blue-600/10">
                                     <h3 className="text-white font-black uppercase text-[11px] tracking-widest">Akun</h3>

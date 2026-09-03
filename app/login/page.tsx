@@ -1,29 +1,39 @@
 'use client';
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { User, Lock, Eye, EyeOff, LogIn, Monitor, Sparkles } from "lucide-react";
+import { User, Lock, Eye, EyeOff, LogIn, Monitor, Sparkles, AlertCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Logo from "../../components/Logo";
 
-export default function LoginPage() {
+function LoginContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const next = searchParams.get("next") || "/dashboard";
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [info, setInfo] = useState("");
     const [form, setForm] = useState({ email: "", password: "", remember: true });
     const supabase = createClient();
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) router.replace("/dashboard");
+        // cek session yang valid - getUser lebih reliable daripada getSession (hit server)
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) router.replace(next);
         });
+        // dengarkan perubahan auth (mis. setelah signIn, cookie ter-set)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) router.replace(next);
+        });
+        return () => subscription.unsubscribe();
     }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+        setInfo("");
 
         if (!form.email.trim() || !form.password.trim()) {
             setError("Email dan password wajib diisi.");
@@ -37,16 +47,49 @@ export default function LoginPage() {
         });
 
         if (authError) {
-            setError(authError.message === "Invalid login credentials" ? "Email atau password salah." : authError.message);
+            let msg = authError.message;
+            if (msg === "Invalid login credentials") msg = "Email atau password salah.";
+            else if (msg.toLowerCase().includes("email not confirmed")) msg = "Email belum dikonfirmasi. Cek inbox/spam untuk link konfirmasi, atau matikan 'Confirm email' di Supabase Auth settings.";
+            else if (msg.toLowerCase().includes("database error")) msg = "Database error: trigger private_key belum terpasang. Jalankan supabase/schema.sql di SQL Editor.";
+            setError(msg);
             setLoading(false);
             return;
         }
 
+        // Supabase bisa return user tanpa session jika email belum confirm
+        if (data.user && !data.session) {
+            setError("Login berhasil tapi session tidak terbentuk. Cek apakah email sudah dikonfirmasi (cek inbox/spam) atau 'Confirm email' aktif di Supabase Dashboard → Authentication → Providers → Email.");
+            setLoading(false);
+            return;
+        }
+
+        // verifikasi session benar-benar tersimpan (cookie + localStorage)
+        const { data: { user: verifyUser }, error: verifyError } = await supabase.auth.getUser();
+        if (verifyError || !verifyUser) {
+            // fallback cek session
+            const { data: { session: verifySession } } = await supabase.auth.getSession();
+            if (!verifySession) {
+                setError("Login berhasil tapi sesi tidak tersimpan. Coba refresh halaman, cek cookies tidak diblokir, dan pastikan middleware.ts ada (sudah diperbaiki). Jika tetap, coba clear cookies lalu login ulang.");
+                console.error("verifyUser error", verifyError, "verifySession", verifySession, "data", data);
+                setLoading(false);
+                return;
+            }
+        }
+
         // simpan info tambahan untuk dock (opsional)
-        localStorage.setItem("obs-login", JSON.stringify({ email: form.email.trim(), loginAt: new Date().toISOString(), userId: data.user?.id }));
-        localStorage.setItem("isLoggedIn", "true");
+        try {
+            localStorage.setItem("obs-login", JSON.stringify({ email: form.email.trim(), loginAt: new Date().toISOString(), userId: data.user?.id }));
+            localStorage.setItem("isLoggedIn", "true");
+            if (data.session) sessionStorage.setItem("dock_private_verified", data.session.access_token.slice(0, 32));
+        } catch {}
+        setInfo("Login berhasil! Mengalihkan...");
+        // beri waktu cookie ter-set via middleware, lalu hard navigasi
+        setTimeout(() => {
+            router.replace(next);
+            // fallback hard reload jika router.replace tidak bawa cookie
+            setTimeout(() => { if (window.location.pathname === "/login") window.location.href = next; }, 800);
+        }, 300);
         setLoading(false);
-        router.push("/dashboard");
     };
 
     return (
@@ -83,13 +126,19 @@ export default function LoginPage() {
 
                     <form onSubmit={handleLogin} className="p-6 space-y-4">
                         {error && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold px-3 py-2 rounded-lg">
-                                {error}
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold px-3 py-2 rounded-lg flex items-start gap-2">
+                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <span>{error}</span>
+                            </div>
+                        )}
+                        {info && (
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold px-3 py-2 rounded-lg">
+                                {info}
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-400 mb-1.5">Email Supabase</label>
+                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-400 mb-1.5">Email</label>
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
                                 <input
@@ -133,7 +182,7 @@ export default function LoginPage() {
                             className="w-full h-10 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(59,130,246,0.35)] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                         >
                             {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <LogIn className="w-3.5 h-3.5" />}
-                            {loading ? "Memproses..." : "Masuk ke Dock"}
+                            {loading ? "Memproses..." : "Masuk"}
                         </button>
 
                         <div className="flex items-center gap-3 py-1">
@@ -158,5 +207,13 @@ export default function LoginPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a] grid place-items-center text-gray-500 text-sm">Memuat…</div>}>
+            <LoginContent />
+        </Suspense>
     );
 }

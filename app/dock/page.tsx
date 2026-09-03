@@ -6,7 +6,7 @@ import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2,
     RefreshCcw, ChevronDown, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus,
-    Share2, ListPlus, Search
+    Share2, ListPlus, Search, Pause, Play, Square, Trash2, EyeOff
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -145,6 +145,14 @@ export default function Home() {
     const [tiktokRoomViewerCount, setTiktokRoomViewerCount] = useState<number | null>(null); // viewerCount -> Realtime Penonton
     const [tiktokTotalUser, setTiktokTotalUser] = useState<number | null>(null); // totalUser -> Total User
     const pollingRef = useRef<PollingRef>(null);
+    const [activePoll,setActivePoll]=useState<any>(null);
+    const [pollTick,setPollTick]=useState(0);
+    const [showPoll,setShowPoll]=useState(() => {
+        if (typeof window === 'undefined') return true;
+        try { const v = localStorage.getItem('dock-showPoll'); return v === null ? true : v === 'true'; } catch { return true; }
+    });
+    useEffect(()=>{ try{ localStorage.setItem('dock-showPoll', String(showPoll)); }catch{} },[showPoll]);
+    useEffect(()=>{ if(!activePoll || activePoll.ended) return; const t=setInterval(()=>setPollTick(v=>v+1),1000); return ()=>clearInterval(t); },[activePoll]);
 
     // grafik TikTok realtime dari viewerCount (roomUser)
     useEffect(() => {
@@ -448,6 +456,13 @@ export default function Home() {
 
     const tkSocketRef = useRef<Socket | null>(null);
     const hasInitialTkConnectRef = useRef(false);
+    const pollSocketRef = useRef<Socket | null>(null);
+    const getSocketUrl = () => {
+        if (typeof window === 'undefined') return 'http://localhost:3000';
+        const h = window.location.hostname;
+        if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000';
+        return window.location.origin;
+    };
 
     const [tiktokStatus, setTiktokStatus] = useState<"DISCONNECTED" | "CONNECTING" | "CONNECTED" | "ERROR">("DISCONNECTED");
     const router = useRouter();
@@ -457,6 +472,29 @@ export default function Home() {
     const [privateKeyInput, setPrivateKeyInput] = useState("");
     const [privateKeyError, setPrivateKeyError] = useState("");
     const [privateKeyLoading, setPrivateKeyLoading] = useState(false);
+
+    useEffect(() => {
+        const s = io(getSocketUrl(), { transports: ['websocket','polling'] as const });
+        pollSocketRef.current = s;
+        const getRoom = () => privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        s.on('connect', () => {
+            const room = getRoom();
+            s.emit('join-room', room);
+            s.emit('poll-get', { privateKey: room });
+        });
+        s.on('poll-update', (p:any)=> { setActivePoll(p); if(typeof p.visible==='boolean') setShowPoll(p.visible); });
+        s.on('poll-clear', ()=> setActivePoll(null));
+        // also join when privateKey changes
+        const t = setInterval(()=>{ if(s.connected){ const room=getRoom(); s.emit('poll-get',{privateKey:room}); } }, 3000);
+        return () => { clearInterval(t); s.disconnect(); pollSocketRef.current = null; };
+    }, []);
+    useEffect(()=>{
+        if(pollSocketRef.current?.connected){
+            const room = privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+            pollSocketRef.current.emit('join-room', room);
+            pollSocketRef.current.emit('poll-get', { privateKey: room });
+        }
+    },[privateKey]);
 
     const headerControlClass = "dock-control-btn flex items-center justify-center gap-2";
     const connectButtonClass = "system-connect-btn flex items-center justify-center rounded-lg text-white shadow-[0_0_10px_rgba(59,130,246,0.2)]";
@@ -547,11 +585,44 @@ export default function Home() {
 
         sbSocketRef.current.send(JSON.stringify(payload));
         createPoll(question, options, duration);
+        // also emit to poll widget (real OBS data)
+        const room = privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        if (pollSocketRef.current?.connected) {
+            pollSocketRef.current.emit('poll-create', { privateKey: room, question, options, duration, theme: 'bar', visible: showPoll });
+        } else {
+            const tmp = io(getSocketUrl(), { transports: ['websocket','polling'] as const });
+            tmp.on('connect', () => {
+                tmp.emit('poll-create', { privateKey: room, question, options, duration, theme: 'bar', visible: showPoll });
+                setTimeout(() => tmp.disconnect(), 1500);
+            });
+        }
 
         pollingRef.current?.reset();
         setPollDuration(60);
         setLayout({ ...layout, createPoll: false });
     }
+    const handlePausePoll = () => {
+        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        if (!pollSocketRef.current) return;
+        if (activePoll?.paused) pollSocketRef.current.emit('poll-resume', { privateKey: room });
+        else pollSocketRef.current.emit('poll-pause', { privateKey: room });
+    };
+    const handleStopPoll = () => {
+        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        if (!confirm('Stop polling? Hasil akhir akan tetap tampil di OBS sampai poll baru.')) return;
+        pollSocketRef.current?.emit('poll-end', { privateKey: room });
+    };
+    const handleClearPoll = () => {
+        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        pollSocketRef.current?.emit('poll-clear', { privateKey: room });
+        setActivePoll(null);
+    };
+    const handleToggleShowPoll = () => {
+        const next = !showPoll;
+        setShowPoll(next);
+        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        pollSocketRef.current?.emit('poll-visibility', { privateKey: room, visible: next });
+    };
 
     const closeUpdateTitle = () => {
         setTitleValue("");
@@ -828,7 +899,7 @@ export default function Home() {
                 if (typeof totalUser === "number") setTiktokTotalUser(totalUser);
             });
         } else {
-            // socket sudah ada — langsung emit (isolasi per privateKey)
+            // socket sudah ada - langsung emit (isolasi per privateKey)
             if (tkSocketRef.current.connected) {
                 tkSocketRef.current.emit("connect-tiktok", payload);
             } else {
@@ -1665,7 +1736,7 @@ export default function Home() {
                     <div className="bg-[#161616] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
                         <div className="px-6 py-5 border-b border-white/5 bg-gradient-to-r from-blue-900/15 via-transparent to-cyan-900/10">
                             <h2 className="text-white font-black uppercase text-[13px] tracking-wide">Akses Dock Butuh Private Key</h2>
-                            <p className="text-gray-500 text-[10px] mt-1">Private key sebagai <span className="text-cyan-400 font-bold">bypass tanpa login</span> — bisa fetch semua konfigurasi & data. Isolasi websocket per user.</p>
+                            <p className="text-gray-500 text-[10px] mt-1">Private key sebagai <span className="text-cyan-400 font-bold">bypass tanpa login</span> - bisa fetch semua konfigurasi & data. Isolasi websocket per user.</p>
                         </div>
                         <div className="p-6 space-y-4">
                             {privateKey && (
@@ -2617,6 +2688,60 @@ export default function Home() {
                 </div>
             </div>
 
+            {/* Active Poll Bar - muncul saat polling berjalan */}
+            {activePoll && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[96%] max-w-[720px] bg-[#1a1a1a] border border-violet-500/30 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden">
+                    <div className="px-4 py-3 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-b border-white/10 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${activePoll.ended ? 'bg-gray-500' : activePoll.paused ? 'bg-yellow-500' : 'bg-green-500 animate-pulse'}`} />
+                            <span className="text-white font-black uppercase text-[11px] tracking-widest">
+                                {activePoll.visible===false ? 'HIDDEN' : activePoll.ended ? 'SELESAI' : activePoll.paused ? 'PAUSED' : 'POLLING LIVE'}
+                            </span>
+                            {!activePoll.ended && !activePoll.paused && (()=>{ const remain=Math.max(0, activePoll.duration - Math.floor((Date.now() - activePoll.createdAt)/1000)); return <span className="text-white font-mono font-black text-[11px] bg-black/30 border border-white/10 rounded-full px-2 py-0.5">{String(Math.floor(remain/60)).padStart(2,'0')}:{String(remain%60).padStart(2,'0')}</span>; })()}
+                            {activePoll.paused && <span className="text-yellow-400 font-black text-[10px] uppercase">Paused</span>}
+                            <span className="hidden sm:inline text-gray-400 text-[10px] font-bold">{activePoll.total} votes • ketik 1-{activePoll.options.length} di chat</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            <button onClick={handleToggleShowPoll} className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 border ${showPoll ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`} title={showPoll ? 'Sembunyikan di OBS' : 'Tampilkan di OBS'}>
+                                {showPoll ? <><EyeOff className="w-3 h-3" /> Hide</> : <><Eye className="w-3 h-3" /> Show</>}
+                            </button>
+                            {!activePoll.ended && (
+                                <button onClick={handlePausePoll} className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 border ${activePoll.paused ? 'bg-green-600 hover:bg-green-500 text-white border-green-500' : 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border-yellow-500/30'}`}>
+                                    {activePoll.paused ? <><Play className="w-3 h-3" /> Resume</> : <><Pause className="w-3 h-3" /> Pause</>}
+                                </button>
+                            )}
+                            {!activePoll.ended ? (
+                                <button onClick={handleStopPoll} className="h-7 px-3 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-xl text-red-400 text-[10px] font-black uppercase flex items-center gap-1.5"><Square className="w-3 h-3" /> Stop</button>
+                            ) : (
+                                <button onClick={handleClearPoll} className="h-7 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 text-[10px] font-black uppercase flex items-center gap-1.5"><Trash2 className="w-3 h-3" /> Hapus</button>
+                            )}
+                            <button onClick={()=>setActivePoll(null)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400"><X className="w-3 h-3" /></button>
+                        </div>
+                    </div>
+                    <div className="p-3">
+                        <div className="text-white font-black text-[13px] leading-tight truncate">{activePoll.question}</div>
+                        <div className="mt-2 space-y-1.5">
+                            {activePoll.options.map((opt:string,i:number)=>{
+                                const v=activePoll.votes[i]||0;
+                                const pct= activePoll.total? Math.round((v/activePoll.total)*100):0;
+                                const colors=['#8b5cf6','#06b6d4','#f59e0b','#ec4899','#10b981','#f43f5e'];
+                                const isWin = !activePoll.ended && v===Math.max(...activePoll.votes) && v>0;
+                                return (
+                                    <div key={i} className="relative overflow-hidden rounded-xl border flex items-center gap-2 px-2.5 py-2" style={{ borderColor: isWin? colors[i%colors.length]:'rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.04)' }}>
+                                        <div className="absolute inset-y-0 left-0 transition-all duration-500" style={{ width:`${pct}%`, background: colors[i%colors.length], opacity:0.9 }} />
+                                        <span className="relative w-6 h-6 rounded-full bg-white text-black flex items-center justify-center font-black text-[11px] shrink-0">{i+1}</span>
+                                        <span className="relative flex-1 text-white font-bold text-[12px] truncate">{opt}</span>
+                                        <span className="relative text-white font-black text-[11px] bg-black/30 border border-white/10 rounded-full px-1.5 py-0.5">{v}</span>
+                                        <span className="relative text-white font-black text-[11px] w-8 text-right">{pct}%</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="mt-2 text-[10px] text-gray-500 text-center">Vote via chat TikTok & Streamer.bot (YT/Twitch/Kick) - ketik angka opsi</div>
+                    </div>
+                </div>
+            )}
+
             {/* Create Poll Modal */}
             <div
                 className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${layout.createPoll ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -2659,7 +2784,12 @@ export default function Home() {
                         </div>
                     </div>
 
-                    <div className="px-6 py-4 border-t border-white/10 bg-black/20 flex gap-3 justify-end">
+                    <div className="px-6 py-4 border-t border-white/10 bg-black/20 flex items-center gap-3 justify-between">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" checked={showPoll} onChange={handleToggleShowPoll} className="w-4 h-4 accent-violet-600" />
+                            <span className="text-[11px] font-bold text-gray-300 flex items-center gap-1">{showPoll ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} Show poll di OBS</span>
+                        </label>
+                        <div className="flex gap-3">
                         <button onClick={closeCreatePoll} className="px-4 py-2 rounded-lg font-bold text-gray-400 text-[10px] uppercase hover:bg-white/5 transition-colors">
                             Batal
                         </button>
@@ -2669,6 +2799,7 @@ export default function Home() {
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
+        </div>
     );
 }
