@@ -1,0 +1,17 @@
+.task-minimal-theme .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.task-minimal-theme .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+.task-minimal-theme .task-text { position: relative; display: inline-block; }
+.task-minimal-theme .completed .task-text::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 2px;
+  width: 100%;
+  background: rgba(255,255,255,0.85);
+  transform-origin: left center;
+  animation: strikeDraw 0.36s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+@keyframes strikeDraw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes checkPop { 0% { transform: scale(0) rotate(-10deg); } 55% { transform: scale(1.25) rotate(3deg); } 100% { transform: scale(1) rotate(0); } }
+.task-check { animation: checkPop 0.42s cubic-bezier(0.34,1.56,0.64,1) both; }
