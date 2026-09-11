@@ -332,7 +332,7 @@ export default function ConfigPage() {
                 <main className="flex-1 p-4 md:p-6 max-w-[900px] w-full mx-auto space-y-6">
                     <div>
                         <h1 className="text-white font-black text-[16px] uppercase tracking-wide">Konfigurasi</h1>
-                        <p className="text-gray-500 text-[11px] mt-1">Ambil & simpan semua dari <span className="text-white font-bold">database Supabase</span> - support <code className="bg-white/10 px-1 rounded">?key=private_key</code> bypass tanpa login.</p>
+                        <p className="text-gray-500 text-[11px] mt-1">Mengambil dan menyimpan seluruh konfigurasi dari <span className="text-white font-bold">database</span>. Mendukung parameter <code className="bg-white/10 px-1 rounded">?key=private_key</code> untuk akses tanpa autentikasi.</p>
                     </div>
 
                     {/* OBS */}
@@ -436,7 +436,6 @@ export default function ConfigPage() {
                                 <span className="text-[11px] font-bold text-gray-400">Auto Connect</span>
                             </label>
                             <button onClick={saveTiktok} disabled={saving === "tt"} className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60"><Save className="w-3.5 h-3.5" /> {saving === "tt" ? "Menyimpan..." : "Simpan TikTok"}</button>
-                            <p className="text-[10px] text-gray-600">Koneksi TikTok pakai <code className="bg-white/10 px-1 rounded">private_key</code> sebagai room agar tidak bentrok. Pastikan <code className="bg-white/10 px-1 rounded">tiktok-server</code> jalan di :3000.</p>
                         </div>
                     </div>
 

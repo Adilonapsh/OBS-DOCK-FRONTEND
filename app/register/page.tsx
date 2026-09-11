@@ -117,9 +117,9 @@ export default function RegisterPage() {
                 <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden shadow-2xl shadow-black/60">
                     <div className="px-6 py-5 border-b border-white/5 bg-gradient-to-r from-blue-900/15 via-transparent to-cyan-900/10">
                         <h1 className="text-white font-black text-[14px] uppercase tracking-wide flex items-center gap-2">
-                            <UserPlus className="w-4 h-4 text-blue-400" /> Daftar Akun Supabase
+                            <UserPlus className="w-4 h-4 text-blue-400" /> Daftar Akun
                         </h1>
-                        <p className="text-gray-500 text-[10px] mt-1">Akun akan disimpan di Supabase Authentication. Cek email jika konfirmasi aktif.</p>
+                        <p className="text-gray-500 text-[10px] mt-1">Cek email jika konfirmasi aktif.</p>
                     </div>
 
                     <form onSubmit={handleRegister} className="p-6 space-y-4">
@@ -141,7 +141,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div>
-                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-400 mb-1.5">Email Supabase</label>
+                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-400 mb-1.5">Email</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
                                 <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@contoh.com" className="w-full h-10 pl-9 pr-3 bg-white/5 border border-white/10 rounded-xl text-[13px] font-bold text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-colors" />
@@ -170,7 +170,7 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
-                        <button type="submit" disabled={loading} className="w-full h-10 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(59,130,246,0.35)] disabled:opacity-60 disabled:cursor-not-allowed transition-all">
+                        <button type="submit" disabled={loading} className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all">
                             {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
                             {loading ? "Memproses..." : "Buat Akun"}
                         </button>

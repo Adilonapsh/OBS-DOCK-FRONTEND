@@ -390,7 +390,7 @@ function OverlayListing() {
             <span className="hidden md:inline text-[11px] text-gray-500 font-bold">{filtered.length} template • {privateKey ? `${privateKey.slice(0, 8)}…` : "butuh private key"}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Link href={privateKey ? `/overlay/display?key=${privateKey}` : "/overlay/display"} target="_blank" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl text-[10px] font-black uppercase text-white">
+            <Link href={privateKey ? `/overlay/display?key=${privateKey}` : "/overlay/display"} target="_blank" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-200 rounded-xl text-[10px] font-black uppercase text-black">
               <Eye className="w-3 h-3" /> Preview Full
             </Link>
             <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">
@@ -509,7 +509,7 @@ function OverlayListing() {
                       <Link href={urlPreview} target="_blank" className="h-8 flex items-center justify-center gap-1 bg-white text-black rounded-xl text-[9px] font-black uppercase hover:bg-gray-100">
                         <Eye className="w-3 h-3" /> Preview
                       </Link>
-                      <Link href={`/overlay/editor?id=${item.id}&key=${privateKey || ""}`} className="h-8 flex items-center justify-center gap-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-[9px] font-black uppercase">
+                      <Link href={`/overlay/editor?id=${item.id}&key=${privateKey || ""}`} className="h-8 flex items-center justify-center gap-1 bg-white hover:bg-zinc-200 text-black rounded-xl text-[9px] font-black uppercase">
                         <Palette className="w-3 h-3" /> Edit Tema
                       </Link>
                       <button onClick={() => handleCopy(item.id, urlObs)} className="h-8 flex items-center justify-center gap-1 bg-[#FE2C55] hover:bg-[#E62254] text-white rounded-xl text-[9px] font-black uppercase">
@@ -557,7 +557,7 @@ function OverlayListing() {
             <div className="bg-black/30 border border-white/10 rounded-xl p-3 flex flex-col">
               <div className="text-white font-black uppercase text-[11px] flex items-center gap-2"><Palette className="w-4 h-4 text-violet-400" /> Edit Tema Dulu</div>
               <p className="text-gray-500 text-[11px] mt-1 leading-relaxed">Klik <span className="text-white font-bold">Edit Tema</span> di card overlay sebelum masuk OBS - atur warna, radius, blur, font & posisi dengan live preview.</p>
-              <Link href={privateKey ? `/overlay/editor?id=full&key=${privateKey}` : "/overlay/editor?id=full"} className="mt-3 h-8 flex items-center justify-center gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-[10px] font-black uppercase">
+              <Link href={privateKey ? `/overlay/editor?id=full&key=${privateKey}` : "/overlay/editor?id=full"} className="mt-3 h-8 flex items-center justify-center gap-1.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-[10px] font-black uppercase">
                 <Pencil className="w-3 h-3" /> Buka Editor Tema
               </Link>
             </div>

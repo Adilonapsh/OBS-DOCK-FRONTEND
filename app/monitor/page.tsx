@@ -436,7 +436,7 @@ export default function MonitorPage() {
             })()}
           </div>
 
-          <StreamDetailModal stream={selectedStream} onClose={() => setSelectedStream(null)} />
+          <StreamDetailModal key={selectedStream?._id ?? "none"} stream={selectedStream ? (streams.find((s) => s._id === selectedStream._id) ?? selectedStream) : null} onClose={() => setSelectedStream(null)} />
         </div>
       </div>
     </div>

@@ -108,7 +108,7 @@ export default function DashboardPage() {
             <main className="flex-1 p-4 md:p-6 max-w-[1100px] w-full mx-auto space-y-6">
                 <div className="bg-[#161616] border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-white font-black text-[18px] tracking-tight">Halo, {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "Streamer"} 👋</h1>
+                        <h1 className="text-white font-black text-[18px] tracking-tight">Halo, {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "Streamer"}</h1>
                         <p className="text-gray-500 text-[11px] mt-1">Kelola dock, private key, dan akses websocket isolasi per user.</p>
                     </div>
                     <Link href={`/dock?key=${privateKey}`} className="inline-flex items-center gap-2 px-5 py-3 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl font-black text-[11px] uppercase tracking-widest">

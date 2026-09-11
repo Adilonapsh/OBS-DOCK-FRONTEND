@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { User, Mail, Lock, Image as ImageIcon, Globe, Key, Copy, RefreshCw, Save, LogOut, LayoutDashboard, Monitor, Eye, EyeOff, Upload, CheckCircle2, Menu } from "lucide-react";
+import { User, Mail, Lock, Globe, Key, Copy, RefreshCw, Save, LogOut, LayoutDashboard, Monitor, Eye, EyeOff, Camera, CheckCircle2, Menu } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Sidebar from "../components/Sidebar";
 
@@ -114,6 +114,7 @@ export default function AccountPage() {
         await supabase.from("profiles").update({ avatar_url: publicUrl } as any).eq("id", user.id);
         setMsg({ type: "success", text: "Avatar diupload." });
         setUploading(false);
+        e.target.value = "";
     };
 
     const handleCopyPrivate = async () => {
@@ -166,7 +167,7 @@ export default function AccountPage() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
                         <div className="lg:col-span-2 space-y-4">
                             <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-blue-600/10">
@@ -174,6 +175,28 @@ export default function AccountPage() {
                                     <span className="text-[9px] font-bold text-gray-500">Supabase</span>
                                 </div>
                                 <div className="p-5 space-y-4">
+
+                                <div className="flex flex-col items-center gap-1.5">
+                                    <label className="relative cursor-pointer group" title="Klik untuk ganti foto">
+                                        {form.avatar_url ? (
+                                            <img src={form.avatar_url} alt="avatar" className="w-20 h-20 rounded-full object-cover border border-white/10" />
+                                        ) : (
+                                            <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 grid place-items-center">
+                                                <User className="w-8 h-8 text-gray-500" />
+                                            </div>
+                                        )}
+                                        <span className="absolute inset-0 rounded-full bg-black/50 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Camera className="w-5 h-5 text-white" />
+                                        </span>
+                                        {uploading && (
+                                            <span className="absolute inset-0 rounded-full bg-black/60 grid place-items-center">
+                                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            </span>
+                                        )}
+                                        <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                                    </label>
+                                    <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">{uploading ? "Mengupload..." : "Klik foto untuk ganti"}</span>
+                                </div>
 
                                 <div>
                                     <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1.5">Username</label>
@@ -194,31 +217,6 @@ export default function AccountPage() {
                                     </div>
                                     <p className="text-[9px] text-gray-600 mt-1">Ganti email butuh konfirmasi via inbox.</p>
                                 </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1.5">Avatar URL</label>
-                                        <div className="relative">
-                                            <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                                            <input value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} placeholder="https://..." className="w-full h-10 pl-9 pr-3 bg-white/5 border border-white/10 rounded-xl text-[11px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1.5">Upload Avatar (max 2MB)</label>
-                                        <label className="flex items-center gap-2 h-10 px-3 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10">
-                                            <Upload className="w-3.5 h-3.5 text-gray-500" />
-                                            <span className="text-[11px] font-bold text-gray-400">{uploading ? "Mengupload..." : "Pilih file"}</span>
-                                            <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {form.avatar_url && (
-                                    <div className="flex items-center gap-3 bg-black/20 border border-white/5 rounded-xl p-3">
-                                        <img src={form.avatar_url} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-white/10" />
-                                        <span className="text-[11px] text-gray-400 truncate">{form.avatar_url}</span>
-                                    </div>
-                                )}
 
                                 <div>
                                     <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1.5">Timezone</label>

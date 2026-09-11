@@ -49,8 +49,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Jika sudah login tapi akses /login atau /register, redirect ke dashboard
-  if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register') && user) {
+  // Jika sudah login tapi akses /login, /register, atau /forgot-password, redirect ke dashboard
+  // Catatan: /reset-password TIDAK dimasukkan — user yang klik link recovery
+  // memang punya session sementara dan harus bisa buka halaman itu.
+  if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register' || request.nextUrl.pathname === '/forgot-password') && user) {
     const next = request.nextUrl.searchParams.get('next') || '/dashboard'
     const url = request.nextUrl.clone()
     url.pathname = next
@@ -76,5 +78,8 @@ export const config = {
     '/widgets/:path*',
     '/login',
     '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/auth/:path*',
   ],
 }

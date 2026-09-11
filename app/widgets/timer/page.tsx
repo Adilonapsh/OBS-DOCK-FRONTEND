@@ -66,17 +66,8 @@ function TimerSettingsInner() {
               <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview — {state.theme} • simulate • pos:{normalizePosition((state as unknown as {pos:string}).pos || 'center')}</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.focusMinutes}m • {normalizePosition((state as unknown as {pos:string}).pos || 'center')}</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px] grid place-items-center">
-              {/* faint 9-grid reference biar align t,l,b,r terlihat — langsung tersimulasi di live preview (iframe) */}
-              <div className="absolute inset-2 border border-white/5 rounded-xl pointer-events-none opacity-20">
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-px p-1">
-                  {(['tl','t','tr','l','center','r','bl','b','br'] as const).map((p) => (
-                    <div key={p} className={`rounded-md ${normalizePosition((state as unknown as {pos:string}).pos || 'center') === p ? 'bg-white/10 border border-white/20' : 'bg-white/[0.03]'}`} />
-                  ))}
-                </div>
-              </div>
-              <iframe key={simulateUrl} src={simulateUrl} className="relative w-full h-full border-0 bg-transparent" title="timer-preview" />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULATE • {state.theme} • {state.font} • pos:{normalizePosition((state as unknown as {pos:string}).pos || 'center')}</div>
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px]">
+              <iframe key={simulateUrl} src={simulateUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="timer-preview" />
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">Posisi global (t,l,b,r, tl/tr/bl/br, center) — langsung tersimulasi di live preview & OBS pakai <code className="bg-white/10 px-1 rounded text-white">.../timer/display?pos=...</code> yang sama + <code className="bg-white/10 px-1 rounded text-white">simulate=1</code>.</div>
           </>

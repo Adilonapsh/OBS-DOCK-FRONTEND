@@ -27,15 +27,15 @@ interface StreamDetailModalProps {
 }
 
 export default function StreamDetailModal({ stream, onClose }: StreamDetailModalProps) {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<{ time: string; bitrate: number }[]>([]);
   const [uptimeStr, setUptimeStr] = useState("--:--:--");
-  const [liveStream, setLiveStream] = useState<StreamItem | null>(null);
   const [copiedType, setCopiedType] = useState<string | null>(null);
   const prevBytesRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
+  // stream prop sudah fresh dari parent (polling 5 detik) — tidak perlu mirror state
 
   const getStreamUrl = () => {
-    const s = liveStream || stream;
+    const s = stream;
     if (!s) return "";
     let base = s.hlsUrlBase;
     if (!base && s.serverUrl) {
@@ -55,7 +55,7 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
   };
 
   const getHost = () => {
-    const s = liveStream || stream;
+    const s = stream;
     if (!s) return "";
     let base = s.hlsUrlBase;
     if (!base && s.serverUrl) base = s.serverUrl;
@@ -75,33 +75,8 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
   };
   
   useEffect(() => {
-    setLiveStream(stream);
-  }, [stream]);
-
-  useEffect(() => {
-    if (!stream) return;
-    const poll = async () => {
-      try {
-        const res = await fetch("/api/paths", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        if (res.ok) {
-          const obj = await res.json();
-          const found = obj.items?.find((i: any) => i._id === stream._id);
-          if (found) setLiveStream(found);
-        }
-      } catch (e) {}
-    };
-    const int = setInterval(poll, 2000);
-    return () => clearInterval(int);
-  }, [stream]);
-
-  useEffect(() => {
-    const s = liveStream || stream;
-    if (!s?.ready || !s?.readyTime) {
-      setUptimeStr("--:--:--");
-      return;
-    }
+    const s = stream;
+    if (!s?.ready || !s?.readyTime) return;
     const readyDate = new Date(s.readyTime).getTime();
     
     const updateUptime = () => {
@@ -118,51 +93,43 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
     updateUptime();
     const int = setInterval(updateUptime, 1000);
     return () => clearInterval(int);
-  }, [stream?.ready, stream?.readyTime, liveStream]);
+  }, [stream?.ready, stream?.readyTime, stream]);
 
+  // snapshot stream terbaru untuk dibaca interval sampler
+  const streamRef = useRef(stream);
   useEffect(() => {
-    const s = liveStream || stream;
-    if (s && s.ready) {
+    streamRef.current = stream;
+  }, [stream]);
+
+  // sampler realtime tiap 5 detik (mengikuti ritme polling monitor)
+  useEffect(() => {
+    const tick = () => {
+      const s = streamRef.current;
       const now = Date.now();
+      const label = new Date(now).toLocaleTimeString([], { hour12: false });
+      if (!s || !s.ready) {
+        prevBytesRef.current = null;
+        lastTimeRef.current = null;
+        setData(prev => (prev.length === 0 ? prev : [...prev.slice(-19), { time: label, bitrate: 0 }]));
+        return;
+      }
       const currentBytes = s.bytesReceived || 0;
       let bitrate = 0;
-
       if (prevBytesRef.current !== null && lastTimeRef.current !== null && currentBytes >= prevBytesRef.current) {
-        const deltaBytes = currentBytes - prevBytesRef.current;
         const deltaMs = now - lastTimeRef.current;
         if (deltaMs > 0) {
-           const bytesPerSec = (deltaBytes / deltaMs) * 1000;
-           bitrate = (bytesPerSec * 8) / 1000000; // Mbps
+          bitrate = ((currentBytes - prevBytesRef.current) / deltaMs) * 1000 * 8 / 1000000; // Mbps
         }
       }
-
-      setData(prev => {
-        let newChart = [...prev];
-        if (newChart.length === 0) {
-           newChart = Array.from({ length: 20 }).map((_, i) => ({
-             time: new Date(Date.now() - (20 - i) * 5000).toLocaleTimeString([], { hour12: false }),
-             bitrate: 0
-           }));
-        }
-        
-        const newPoint = {
-           time: new Date().toLocaleTimeString([], { hour12: false }),
-           bitrate: bitrate.toFixed(2),
-        };
-
-        return [...newChart.slice(1), newPoint];
-      });
-
       prevBytesRef.current = currentBytes;
       lastTimeRef.current = now;
-    } else if (!liveStream?.ready) {
-      setData([]);
-      prevBytesRef.current = null;
-      lastTimeRef.current = null;
-    }
-  }, [liveStream]);
+      setData(prev => [...prev.slice(-19), { time: label, bitrate: Number(bitrate.toFixed(2)) }]);
+    };
+    const id = setInterval(tick, 5000);
+    return () => clearInterval(id);
+  }, []);
 
-  const s = liveStream || stream;
+  const s = stream;
   if (!s) return null;
 
   const formatBytes = (bytes: number) => {
@@ -226,7 +193,7 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
                 <Clock size={14} className="text-gray-500" />
               </div>
               <p className="text-lg font-mono font-black mt-1 text-white">
-                {uptimeStr}
+                {s.ready ? uptimeStr : "--:--:--"}
               </p>
             </div>
           </div>
@@ -376,9 +343,17 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4 border border-white/10 rounded-xl p-4 bg-white/5">
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-white">Trafik Jaringan (Bitrate)</h3>
-                <p className="text-xs text-gray-500">Data live bitrate berdasarkan koneksi aktif.</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-white">Trafik Jaringan (Bitrate)</h3>
+                  <p className="text-xs text-gray-500">Update realtime mengikuti polling monitor.</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-lg font-mono font-black text-white leading-none">
+                    {data.length ? data[data.length - 1].bitrate.toFixed(2) : "0.00"}
+                  </div>
+                  <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mt-1">Mbps</div>
+                </div>
               </div>
               <div className="h-64 w-full pt-4">
                 <ResponsiveContainer width="100%" height="100%">

@@ -173,13 +173,13 @@ function LoginContent() {
                                 <input type="checkbox" checked={form.remember} onChange={(e) => setForm({ ...form, remember: e.target.checked })} className="w-3 h-3 accent-blue-600" />
                                 <span className="text-[10px] font-bold text-gray-400">Ingat saya</span>
                             </label>
-                            <button type="button" className="text-[10px] font-bold text-blue-400 hover:text-blue-300">Lupa password?</button>
+                            <Link href="/forgot-password" className="text-[10px] font-bold text-blue-400 hover:text-blue-300">Lupa password?</Link>
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-10 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(59,130,246,0.35)] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                            className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                         >
                             {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <LogIn className="w-3.5 h-3.5" />}
                             {loading ? "Memproses..." : "Masuk"}

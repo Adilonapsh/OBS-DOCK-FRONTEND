@@ -225,7 +225,7 @@ function EditorContent() {
             <button onClick={handleSave} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${saved ? "bg-green-500 text-white border-green-500" : "bg-white text-black border-white hover:bg-gray-100"}`}>
               {saved ? <Check className="w-3 h-3" /> : <Save className="w-3 h-3" />} {saved ? "Tersimpan" : "Simpan"}
             </button>
-            <button onClick={handleCopy} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-xl text-[10px] font-black uppercase text-white">
+            <button onClick={handleCopy} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-200 rounded-xl text-[10px] font-black uppercase text-black">
               {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} Copy OBS
             </button>
           </div>
@@ -798,7 +798,7 @@ function EditorContent() {
               <Link href={`/overlay/display?key=${privateKey || ""}&${currentParams}&${themeQuery}`} target="_blank" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">
                 <ExternalLink className="w-3 h-3" /> Tanpa OBS
               </Link>
-              <button onClick={handleCopy} className="h-9 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">
+              <button onClick={handleCopy} className="h-9 bg-white hover:bg-zinc-200 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-black">
                 <Monitor className="w-3 h-3" /> Pakai di OBS
               </button>
             </div>

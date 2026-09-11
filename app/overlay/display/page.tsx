@@ -312,7 +312,7 @@ function OverlayContent() {
             <button onClick={handleTestPin} className="h-8 px-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/20 rounded-xl text-[10px] font-black uppercase text-cyan-400 flex items-center gap-1.5">
               <Pin className="w-3 h-3" /> Pin
             </button>
-            <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="h-8 px-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-xl text-[10px] font-black uppercase text-white flex items-center gap-1.5">
+            <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="h-8 px-3 bg-white hover:bg-zinc-200 rounded-xl text-[10px] font-black uppercase text-black flex items-center gap-1.5">
               <ExternalLink className="w-3 h-3" /> Dock
             </Link>
             <button onClick={() => setShowControls(false)} className="h-8 px-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400">

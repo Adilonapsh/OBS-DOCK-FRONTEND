@@ -10,7 +10,6 @@ import { buildInfoSlidesUrl } from './config';
 import { WidgetShell } from '../_shared/components/WidgetShell';
 import { UrlBar } from '../_shared/components/UrlBar';
 import { InfoSlidesSettingsForm } from './components/InfoSlidesSettingsForm';
-import { InfoSlidesPreview } from './components/InfoSlidesPreview';
 import { KEYFRAMES_CSS } from '../_shared/constants/animations';
 
 function InfoSlidesInner() {
@@ -67,9 +66,8 @@ function InfoSlidesInner() {
               <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview — {state.theme} • {state.anim} • {state.duration}s</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.autoRotate ? 'auto' : 'manual'}</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[260px] p-6 grid place-items-center">
-              <InfoSlidesPreview state={state} />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">PREVIEW • {state.theme}</div>
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[260px]">
+              <iframe key={previewUrl} src={previewUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="info-slides-preview" />
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">Copy OBS URL & tambah sebagai Browser Source (transparent). 5-10 slide loop.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">

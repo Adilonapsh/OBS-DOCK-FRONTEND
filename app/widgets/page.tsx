@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  Layers, Monitor, Search, Copy, Check, Eye, EyeOff, ExternalLink, Sparkles,
-  MessageSquare, Gift, Heart, UserPlus, Pin, Zap, LayoutGrid, Filter,
-  Settings2, Activity, AlertCircle, Menu, Plus, Palette, Pencil, Trophy,
-  Clock3, Hash, Target, ShoppingBag, Timer, Music, Mic2, Cog, GripVertical, BarChart3, Volume2, Share2
+  Layers, Monitor, Search, Eye, EyeOff, ExternalLink, Sparkles,
+  Gift, Heart, UserPlus, Zap, LayoutGrid, Filter,
+  Settings2, AlertCircle, Menu, Palette, Pencil,
+  Music, Cog, GripVertical, Volume2
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { createClient } from "@/utils/supabase/client";
@@ -67,7 +67,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "task",
     title: "Task List",
-    desc: "Task list — Dark Slate #1a2233, 2 tema, inline/horizontal, animasi masuk/keluar. Pisah dari Timer.",
+    desc: "Task list — 2 tema, inline/horizontal, animasi masuk/keluar. Pisah dari Timer.",
     category: "progress",
     tags: ["Task", "List", "Todo"],
     layout: "task",
@@ -179,11 +179,10 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
     return (
       <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
         <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-full border border-white/10 shadow w-fit mx-auto">
-          <div className="w-6 h-6 rounded-full bg-[#FE2C55] grid place-items-center text-white font-black text-[10px]">♪</div>
+          <div className="w-6 h-6 rounded-full bg-black grid place-items-center text-white font-black text-[10px]">♪</div>
           <span className="text-black font-black text-[8px]">@adilonapsh</span>
           <span className="text-black/50 font-bold text-[6px] uppercase">TikTok</span>
         </div>
-        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center justify-center gap-1"><Share2 className="w-2 h-2" /> 4 tema • Pill/Glass/Boxed • 4s</div>
       </div>
     );
   }
@@ -191,76 +190,68 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
     return (
       <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
         <div className="flex items-center gap-2 px-3 py-2 bg-white/[0.06] border border-white/10 rounded-xl">
-          <span className="px-1.5 py-0.5 bg-violet-600 text-white rounded-full text-[6px] font-black">SPONSOR</span>
+          <span className="px-1.5 py-0.5 bg-white text-black rounded-full text-[6px] font-black">SPONSOR</span>
           <span className="text-white font-black text-[7px] truncate">TrueNAP — Ultra Low Latency</span>
         </div>
         <div className="flex gap-1 justify-center"><span className="w-4 h-1 bg-white rounded-full" /><span className="w-1 h-1 bg-white/30 rounded-full" /><span className="w-1 h-1 bg-white/30 rounded-full" /></div>
-        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1"><Layers className="w-2 h-2" /> 3 tema • 5-10 slides • 6s</div>
       </div>
     );
   }
   if (type === "follow") {
     return (
       <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
-        <div className="flex items-center gap-2 px-2 py-1.5 bg-[#1e1d2b] border border-pink-500/30 rounded-xl">
-          <div className="w-7 h-7 rounded-xl bg-pink-500 flex items-center justify-center"><Heart className="w-4 h-4 text-white fill-white" /></div>
+        <div className="flex items-center gap-2 px-2 py-1.5 bg-white/[0.06] border border-white/10 rounded-xl">
+          <div className="w-7 h-7 rounded-xl bg-white flex items-center justify-center"><Heart className="w-4 h-4 text-black fill-black" /></div>
           <div className="flex-1 min-w-0">
             <div className="text-white font-black text-[7px] leading-none">Rizky_JR</div>
-            <div className="text-pink-200 text-[6px] font-bold">followed you • welcome! 🎉</div>
+            <div className="text-gray-400 text-[6px] font-bold">followed you • welcome!</div>
           </div>
-          <Volume2 className="w-3 h-3 text-pink-400" />
+          <Volume2 className="w-3 h-3 text-gray-400" />
         </div>
-        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1"><Heart className="w-2 h-2 fill-pink-400" /> 3 tema • suara MP3</div>
       </div>
     );
   }
   if (type === "timer") {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center p-2 gap-1">
-        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[#fff] text-[5px] font-black tracking-widest uppercase shadow-sm">
-          <svg className="w-2 h-2 fill-current" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg> 2X • POWER-UP
-        </div>
-        <div className="w-[132px] px-2.5 py-1.5 flex items-center justify-between gap-1 rounded-[14px] border bg-[rgba(147,158,255,0.55)] backdrop-blur shadow-sm" style={{ borderWidth: '1.5px', borderColor: 'rgba(255,255,255,0.5)' }}>
+        <div className="w-[132px] px-2.5 py-1.5 flex items-center justify-between gap-1 rounded-[14px] border bg-white/10 backdrop-blur shadow-sm" style={{ borderWidth: '1.5px', borderColor: 'rgba(255,255,255,0.5)' }}>
           <div className="w-4 h-4 rounded-full border-[1.5px] border-white/90 grid place-items-center shrink-0 bg-white/10">
             <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2.5 2.5" /></svg>
           </div>
           <span className="text-white font-black text-[10px] tracking-tight">13:20:05</span>
           <span className="px-1.5 py-0.5 rounded-full bg-white/25 border border-white/70 text-white text-[5px] font-black leading-none">+5m</span>
         </div>
-        <div className="text-[5px] font-black uppercase tracking-widest text-white/90 flex items-center gap-1"><Clock3 className="w-2 h-2" /> Glass • 4 tema • sync dock</div>
       </div>
     );
   }
   if (type === "task") {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center p-2">
-        <div className="w-[80px] rounded-[8px] bg-[#1a2233] p-2 space-y-1">
+        <div className="w-[80px] rounded-[8px] bg-white/[0.06] border border-white/10 p-2 space-y-1">
           <div className="text-white font-black text-[6px] text-center uppercase tracking-widest">TASKS</div>
-          <div className="h-2 rounded-full bg-[#232d42]" />
-          <div className="h-2 rounded-full bg-[#232d42]/60" />
-          <div className="h-2 rounded-full bg-[#232d42]" />
+          <div className="h-2 rounded-full bg-white/15" />
+          <div className="h-2 rounded-full bg-white/10" />
+          <div className="h-2 rounded-full bg-white/15" />
         </div>
-        <div className="text-[6px] font-black uppercase tracking-widest text-[#594d4a] mt-1">Task List</div>
       </div>
     );
   }
   if (type === "gift") {
     return (
       <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
-        <div className="flex items-center gap-2 px-2 py-1.5 bg-[#1e1d2b] border border-white/10 rounded-xl">
-          <div className="w-6 h-6 rounded-full bg-[#FE2C55] flex items-center justify-center"><Gift className="w-3 h-3 text-white" /></div>
+        <div className="flex items-center gap-2 px-2 py-1.5 bg-white/[0.06] border border-white/10 rounded-xl">
+          <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center"><Gift className="w-3 h-3 text-black" /></div>
           <div className="flex-1 min-w-0">
             <div className="text-white font-black text-[6px] leading-none">SitiPlay • GIFT</div>
             <div className="text-white/70 text-[6px]">Rose ×5 • ♦5</div>
           </div>
-          <Heart className="w-3 h-3 text-pink-400 fill-pink-400" />
+          <Heart className="w-3 h-3 text-white fill-white" />
         </div>
         <div className="flex items-center gap-2 px-2 py-1 bg-white/[0.06] border border-white/10 rounded-full">
-          <UserPlus className="w-3 h-3 text-green-400" />
+          <UserPlus className="w-3 h-3 text-white" />
           <span className="text-white font-black text-[6px]">BudiSantuy joined</span>
           <span className="ml-auto text-[6px] text-gray-500">+12 likes</span>
         </div>
-        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1"><Gift className="w-2 h-2" /> 3 tema • Join/Gift/Like</div>
       </div>
     );
   }
@@ -268,20 +259,19 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
     return (
       <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-violet-600 shrink-0" />
+          <div className="w-6 h-6 rounded-full bg-white shrink-0" />
           <div className="flex-1 min-w-0 px-2 py-1 bg-white/[0.06] border border-white/10 rounded-xl">
             <div className="text-white font-black text-[7px] leading-none">Rizky_JR</div>
-            <div className="text-white/70 text-[6px]">Gass keun bang! 🔥</div>
+            <div className="text-white/70 text-[6px]">Gass keun bang!</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-[#FE2C55] shrink-0" />
+          <div className="w-6 h-6 rounded-full bg-white/25 border border-white/40 shrink-0" />
           <div className="flex-1 min-w-0 px-2 py-1 bg-white border border-black/10 rounded-[12px] rounded-bl-[4px]">
-            <div className="text-violet-600 font-black text-[6px]">SitiPlay</div>
-            <div className="text-black/70 text-[6px]">Seru banget anjir</div>
+            <div className="text-black font-black text-[6px]">SitiPlay</div>
+            <div className="text-black/70 text-[6px]">Seru banget</div>
           </div>
         </div>
-        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1"><MessageSquare className="w-2 h-2" /> 4 tema • TikTok + Streamer.bot</div>
       </div>
     );
   }
@@ -291,15 +281,14 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
         <div className="text-white font-black text-[9px] leading-tight truncate">Mana turnamen selanjutnya?</div>
         <div className="space-y-1">
           <div className="h-5 rounded-full bg-white/10 border border-white/10 relative overflow-hidden flex items-center px-2">
-            <div className="absolute inset-y-0 left-0 bg-violet-600 w-[42%]" />
+            <div className="absolute inset-y-0 left-0 bg-white w-[42%]" />
             <span className="relative text-white font-black text-[7px]">1. Mobile Legends - 42%</span>
           </div>
           <div className="h-5 rounded-full bg-white/10 border border-white/10 relative overflow-hidden flex items-center px-2">
-            <div className="absolute inset-y-0 left-0 bg-cyan-500 w-[28%]" />
+            <div className="absolute inset-y-0 left-0 bg-white/40 w-[28%]" />
             <span className="relative text-white font-black text-[7px]">2. Valorant - 28%</span>
           </div>
         </div>
-        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1"><BarChart3 className="w-2 h-2" /> 124 votes • ketik 1-4 di chat</div>
       </div>
     );
   }
@@ -308,7 +297,6 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       <div className="w-full h-full bg-black flex flex-col items-center justify-center p-3 gap-0">
         <div className="text-white font-black text-[18px] leading-none tracking-tight">06:40:06 PM</div>
         <div className="text-white/90 font-bold text-[10px] tracking-widest uppercase">THU 3 SEP 26</div>
-        <div className="mt-1.5 flex items-center gap-1 text-[7px] font-black uppercase tracking-widest text-white border border-white/20 rounded-full px-2 py-0.5 bg-white/5"><Clock3 className="w-2.5 h-2.5" /> Asia/Jakarta • 3 lines</div>
       </div>
     );
   }
@@ -321,21 +309,12 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
           <div className="h-2 w-16 bg-white/60 rounded" />
           <div className="mt-1.5 h-1 w-full bg-white/20 rounded-full overflow-hidden"><div className="h-full w-[42%] bg-white rounded-full" /></div>
         </div>
-          <div className="hidden sm:flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-white border border-white/20 rounded-full px-2 py-1 bg-white/5">SMTC • VINYL</div>
       </div>
     );
   }
   if (type === "lyrics") {
     return (
       <div className="w-full h-full bg-black flex flex-col justify-center p-3 gap-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white shrink-0 flex items-center justify-center"><Mic2 className="w-5 h-5 text-black" /></div>
-          <div className="flex-1 min-w-0">
-            <div className="h-2 w-20 bg-white rounded mb-1" />
-            <div className="h-1.5 w-14 bg-white/60 rounded" />
-          </div>
-          <span className="hidden sm:inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-white border border-white/20 rounded-full px-2 py-1 bg-white/5"><Music className="w-3 h-3" /> LRCLIB</span>
-        </div>
         <div className="bg-white/5 border border-white/10 rounded-xl p-2 space-y-1">
           <div className="h-2 w-full bg-white/20 rounded opacity-40" />
           <div className="h-2.5 w-3/4 bg-white rounded" />
@@ -348,11 +327,11 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
   return (
     <div className="w-full h-full bg-black relative p-2 overflow-hidden">
       <div className="absolute top-2 left-2 flex gap-1">
-        <div className="px-1.5 py-0.5 bg-red-500 rounded-full w-8 h-1.5" />
-        <div className="px-1.5 py-0.5 bg-[#FE2C55] rounded-full w-10 h-1.5" />
+        <div className="px-1.5 py-0.5 bg-white rounded-full w-8 h-1.5" />
+        <div className="px-1.5 py-0.5 bg-white/40 rounded-full w-10 h-1.5" />
       </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2 px-3 py-2 bg-[#0f0f0f] border border-cyan-500/20 rounded-2xl scale-75">
-        <div className="w-7 h-7 rounded-lg bg-cyan-500/30" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2 px-3 py-2 bg-[#0f0f0f] border border-white/20 rounded-2xl scale-75">
+        <div className="w-7 h-7 rounded-lg bg-white/20" />
         <div className="h-2 w-16 bg-white rounded mt-1" />
       </div>
       <div className="absolute bottom-2 left-2 flex flex-col gap-1">
@@ -368,7 +347,6 @@ function WidgetsListing() {
   const supabase = createClient();
   const [user, setUser] = useState<any>(null);
   const [privateKey, setPrivateKey] = useState<string>(searchParams.get("key") || "");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | WidgetItem["category"]>("all");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -493,12 +471,6 @@ function WidgetsListing() {
     return transparent ? `${base}&obs=1` : base;
   };
 
-  const handleCopy = async (id: string, url: string) => {
-    await navigator.clipboard.writeText(url);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1500);
-  };
-
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
       <Sidebar active="widgets" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
@@ -593,37 +565,15 @@ function WidgetsListing() {
               const urlObs = getWidgetUrl(item, true);
               const urlPreview = getWidgetUrl(item, false);
               return (
-                <div key={item.id} className="group bg-[#161616] border border-white/10 rounded-2xl overflow-hidden hover:border-white/15 hover:bg-[#1a1a1a] transition-colors flex flex-col">
+                <div key={item.id} className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden hover:border-white/15 hover:bg-[#1a1a1a] transition-colors flex flex-col">
                   {/* thumb */}
                   <div className="aspect-video bg-black relative overflow-hidden border-b border-white/5">
                     <PreviewThumb type={item.preview} />
-                    <div className="absolute top-2 left-2 flex gap-1">
-                      <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${item.recommended ? "bg-white text-black border-white" : "bg-black/60 backdrop-blur text-white border-white/10"}`}>
-                        {item.category}
-                      </span>
-                      {item.recommended && <span className="px-1.5 py-0.5 bg-yellow-500 text-black rounded-full text-[8px] font-black uppercase flex items-center gap-1"><Sparkles className="w-2.5 h-2.5" /> Recommended</span>}
-                    </div>
-                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 backdrop-blur border border-white/10 rounded-full text-[8px] font-mono text-gray-400">
-                      {item.w}×{item.h}
-                    </div>
-                    <div className="absolute bottom-2 right-2 hidden group-hover:flex items-center gap-1">
-                      <Link href={urlPreview} target="_blank" className="w-7 h-7 bg-white text-black rounded-full grid place-items-center hover:bg-gray-100 shadow-lg">
-                        <Eye className="w-3.5 h-3.5" />
-                      </Link>
-                      {/* <button onClick={() => handleCopy(item.id, urlObs)} className="w-7 h-7 bg-white text-black rounded-full grid place-items-center hover:bg-zinc-100 shadow-lg">
-                        {copiedId === item.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button> */}
-                    </div>
                   </div>
 
                   <div className="p-4 flex-1 flex flex-col">
                     <h3 className="text-white font-black text-[12px] uppercase tracking-wide leading-none">{item.title}</h3>
                     <p className="text-gray-500 text-[11px] leading-relaxed mt-1.5 line-clamp-2">{item.desc}</p>
-                    <div className="flex flex-wrap gap-1 mt-2.5">
-                      {item.tags.map(t => (
-                        <span key={t} className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded-full text-[8px] font-bold uppercase tracking-wide text-gray-400">{t}</span>
-                      ))}
-                    </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-1.5">
                       <Link href={urlPreview} target="_blank" className="h-8 flex items-center justify-center gap-1 bg-white text-black rounded-xl text-[9px] font-black uppercase hover:bg-gray-100">
@@ -674,7 +624,7 @@ function WidgetsListing() {
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'custom' ? (
-                        <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 hover:opacity-90 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Layers className="w-3 h-3" /> Open Editor
                         </Link>
                       ) : item.id === 'task' ? (
@@ -698,11 +648,6 @@ function WidgetsListing() {
                         <GripVertical className="w-3 h-3" /> Drag ke OBS
                       </a>
                     )}
-
-                    <div className="mt-2.5 flex items-center justify-between text-[9px] font-bold uppercase tracking-wide">
-                      <span className="text-gray-600 flex items-center gap-1"><Activity className="w-3 h-3" /> {item.layout}</span>
-                      <Link href={urlPreview} target="_blank" className="text-white hover:text-zinc-300 flex items-center gap-1">Buka <ExternalLink className="w-3 h-3" /></Link>
-                    </div>
                   </div>
                 </div>
               );
@@ -754,7 +699,7 @@ function WidgetsListing() {
               </ol>
             </div>
             <div>
-              <div className="text-white font-black uppercase text-[11px] flex items-center gap-2"><Zap className="w-4 h-4 text-yellow-400" /> Bedanya dengan Overlay</div>
+              <div className="text-white font-black uppercase text-[11px] flex items-center gap-2"><Zap className="w-4 h-4 text-white" /> Bedanya dengan Overlay</div>
               <ul className="mt-2 space-y-1.5 text-[11px] text-gray-400 leading-relaxed list-disc list-inside">
                 <li><span className="text-white font-bold">Overlay</span> = canvas full 1920×1080 gabungan</li>
                 <li><span className="text-white font-bold">Widget</span> = satuan kecil modular, 1 source = 1 fungsi</li>

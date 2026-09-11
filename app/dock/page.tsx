@@ -130,14 +130,7 @@ export default function Home() {
     const [titleValue, setTitleValue] = useState("");
     const [gameValue, setGameValue] = useState("");
     const [pollDuration, setPollDuration] = useState(60);
-    const [chatMessages, setChatMessages] = useState<Array<ChatMessage>>([
-        {
-            id: 1,
-            user: "Rizky_JR",
-            text: "Lagi main apa nih?",
-            platform: "twitch",
-        },
-    ]);
+    const [chatMessages, setChatMessages] = useState<Array<ChatMessage>>([]);
     const [pinnedChat, setPinnedChat] = useState<{ user: string; text: string; platform: string; avatar?: string } | null>(null);
     const [viewerData, setViewerData] = useState<Record<string, { platform: string; avatar?: string; initials: string }>>({});
     const [chatSearch, setChatSearch] = useState("");
@@ -1860,7 +1853,7 @@ export default function Home() {
                                 <input type="text" value={privateKeyInput} onChange={(e) => setPrivateKeyInput(e.target.value)} placeholder="64-char hex..." className="w-full h-10 px-3 bg-white/5 border border-white/10 rounded-xl text-[11px] font-mono-custom text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50" />
                             </div>
                             {privateKeyError && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold px-3 py-2 rounded-lg">{privateKeyError}</div>}
-                            <button onClick={handleVerifyPrivateKey} className="w-full h-10 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.3)]">Verifikasi & Masuk Dock</button>
+                            <button onClick={handleVerifyPrivateKey} className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[11px] uppercase tracking-widest">Verifikasi & Masuk Dock</button>
                             <button onClick={async () => { await supabase.auth.signOut(); if (typeof window !== "undefined") sessionStorage.removeItem("dock_private_verified"); router.push("/login"); }} className="w-full h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest">Logout</button>
                         </div>
                     </div>
@@ -2341,20 +2334,20 @@ export default function Home() {
                                 <div className="flex-1 bg-[#161616] border border-white/5 rounded-xl p-4 flex flex-col overflow-hidden min-h-62.5">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-gray-400 text-[9px] font-black uppercase">Siapa yang Datang</h3>
-                                        <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[8px] font-bold">1</span>
+                                        <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[8px] font-bold"></span>
                                     </div>
                                     <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
-                                        <div className="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/5 animate-in slide-in-from-right-2">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center font-black text-[10px] text-white">RI</div>
+                                        {/* <div className="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/5 animate-in slide-in-from-right-2">
+                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-black text-[10px] text-black">RI</div>
                                             <div>
                                                 <div className="font-bold text-white text-[10px]">Rizky_JR</div>
                                                 <div className="flex items-center gap-1 text-[8px] text-gray-500 uppercase">
                                                     <Image src="/assets/logo/twitch.png" alt="twitch" width={10} height={10} className="w-2.5 h-2.5 object-contain invert" /> twitch
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> */}
                                     </div>
-                                    <div className="mt-4 bg-blue-600 rounded-xl p-4 flex items-center justify-between shadow-lg shadow-blue-900/20">
+                                                                        <div className="mt-4 bg-blue-600 rounded-xl p-4 flex items-center justify-between shadow-lg shadow-blue-900/20">
                                         <div>
                                             <div className="text-[8px] font-black uppercase opacity-70">Total Penonton Chat</div>
                                             <div className="text-3xl font-black font-mono-custom leading-none mt-1">1</div>
@@ -2369,7 +2362,7 @@ export default function Home() {
                             <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
                                 <div className="flex items-center justify-between px-1">
                                     <h4 className="text-gray-500 text-[9px] font-black uppercase">Stream Briefing</h4>
-                                    <button onClick={requestAIBriefing} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 text-[8px] font-black uppercase hover:from-blue-500 hover:to-purple-500 transition-all shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+                                    <button onClick={requestAIBriefing} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white text-black text-[8px] font-black uppercase hover:bg-zinc-200 transition-all">
                                         <Sparkles className="w-3 h-3" />
                                         AI Sync
                                     </button>
@@ -2812,7 +2805,7 @@ export default function Home() {
                         <button onClick={closeUpdateTitle} className="px-4 py-2 rounded-lg font-bold text-gray-400 text-[10px] uppercase hover:bg-white/5 transition-colors">
                             Batal
                         </button>
-                        <button onClick={handleUpdateTitle} className="px-6 py-2 rounded-lg font-black text-white text-[10px] uppercase bg-gradient-to-r from-green-600 to-green-600 hover:from-green-500 hover:to-green-500 transition-all flex items-center gap-2">
+                        <button onClick={handleUpdateTitle} className="px-6 py-2 rounded-lg font-black text-black text-[10px] uppercase bg-white hover:bg-zinc-200 transition-all flex items-center gap-2">
                             Update
                         </button>
                     </div>
@@ -3007,7 +3000,7 @@ export default function Home() {
                         <button onClick={closeCreatePoll} className="px-4 py-2 rounded-lg font-bold text-gray-400 text-[10px] uppercase hover:bg-white/5 transition-colors">
                             Batal
                         </button>
-                        <button onClick={handleCreatePoll} className="px-6 py-2 rounded-lg font-black text-white text-[10px] uppercase bg-gradient-to-r from-green-600 to-green-600 transition-all flex items-center gap-2">
+                        <button onClick={handleCreatePoll} className="px-6 py-2 rounded-lg font-black text-black text-[10px] uppercase bg-white hover:bg-zinc-200 transition-all flex items-center gap-2">
                             Start Poll
                         </button>
                     </div>
