@@ -3,7 +3,8 @@ import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
-import { createClient } from '@/utils/supabase/client';
+import { useWidgetPageShell } from '../_shared/hooks/useWidgetPage';
+import { WidgetPageModals, toggleShowKey } from '../_shared/components/WidgetPageModals';
 import { Copy, Check, ExternalLink, Monitor, Palette, Music, Image as ImageIcon, Sparkles, ArrowLeft, RefreshCw, Settings2, Menu, Mic2, GripVertical, Eye, EyeOff } from 'lucide-react';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import { getPositionStyle } from '../_shared/constants/positions';
@@ -97,25 +98,27 @@ const defaults = {
 
 function LyricsSettingsInner() {
   const searchParams = useSearchParams();
-  const supabase = createClient();
-  const [user, setUser] = useState<any>(null);
   const [privateKey, setPrivateKey] = useState<string>('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [showLoadPopup, setShowLoadPopup] = useState(false);
-  const [loadUrl, setLoadUrl] = useState('');
   const [state, setState] = useState<any>({...defaults});
-  const [showDefaultsConfirm, setShowDefaultsConfirm] = useState(false);
-  const [showKey, setShowKey] = useState(false);
-  const [showKeyConfirm, setShowKeyConfirm] = useState(false);
-  const maskUrl = (url: string) => url.replace(/key=[^&]+/, 'key=••••••••••••••••');
-  const toggleShowKey = () => {
-    if (!showKey && obsUrl.includes('key=')) { setShowKeyConfirm(true); return; }
-    setShowKey(v => !v);
+  const loadFromUrl = (urlStr: string) => {
+    const url = new URL(urlStr);
+    const p = url.searchParams;
+    const s: any = { ...defaults };
+    for (const k of Object.keys(defaults)) {
+      const v = p.get(k);
+      if (v !== null) {
+        const def = (defaults as any)[k];
+        if (typeof def === 'boolean') s[k] = v === 'true' || v === '1';
+        else if (typeof def === 'number') s[k] = parseInt(v) || def;
+        else s[k] = v;
+      }
+    }
+    setState(s);
   };
+  const shell = useWidgetPageShell(loadFromUrl);
+  const reset = () => setState({...defaults});
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
     const pk = searchParams.get('key') || (typeof window !== 'undefined' ? sessionStorage.getItem('dock_private_verified') || '' : '');
     if (pk) setPrivateKey(pk);
     const hasParams = searchParams.get('theme');
@@ -152,37 +155,16 @@ function LyricsSettingsInner() {
 
   const update = (k: string, v: any) => setState((prev: any) => ({ ...prev, [k]: v }));
 
-  const copyUrl = async () => {
-    await navigator.clipboard.writeText(obsUrl);
-    setCopied(true); setTimeout(() => setCopied(false), 1500);
-  };
-
-  const loadFromUrl = () => {
-    try {
-      const url = new URL(loadUrl);
-      const p = url.searchParams;
-      const s: any = { ...defaults };
-      for (const k of Object.keys(defaults)) {
-        const v = p.get(k);
-        if (v !== null) {
-          const def = (defaults as any)[k];
-          if (typeof def === 'boolean') s[k] = v === 'true' || v === '1';
-          else if (typeof def === 'number') s[k] = parseInt(v) || def;
-          else s[k] = v;
-        }
-      }
-      setState(s); setShowLoadPopup(false);
-    } catch { alert('URL tidak valid'); }
-  };
+  const handleCopy = () => shell.copy(obsUrl);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
-      <Sidebar active="widgets" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
+      <Sidebar active="widgets" open={shell.sidebarOpen} onClose={() => shell.setSidebarOpen(false)} user={shell.user} />
       <div className="flex-1 flex flex-col min-w-0 lg:pl-[240px]">
         {/* Header */}
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
+            <button onClick={() => shell.setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
             <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><Mic2 className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
@@ -191,8 +173,8 @@ function LyricsSettingsInner() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
-            <button onClick={() => setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load Settings</button>
+            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
+            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load Settings</button>
             <a href={iframeSrc} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
           </div>
         </header>
@@ -201,16 +183,16 @@ function LyricsSettingsInner() {
         <div className="bg-[#161616] border-b border-white/5 px-4 md:px-6 py-3 flex flex-col sm:flex-row gap-2 sm:items-center">
           <div className="flex-1 min-w-0">
             <div className="text-[9px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1.5"><Settings2 className="w-3 h-3" /> Widget URL - Click to copy (paste ke OBS Browser Source)</div>
-            <div onClick={copyUrl} className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 cursor-pointer hover:border-white/20 group">
-              <code className={`flex-1 text-[11px] font-mono truncate ${showKey ? "text-white" : "text-white blur-[3px] select-none"}`}>{showKey ? obsUrl : maskUrl(obsUrl)}</code>
-              <button type="button" onClick={(e) => { e.stopPropagation(); toggleShowKey(); }} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white" title={showKey ? "Sembunyikan key" : "Tampilkan key (konfirmasi)"}>
-                {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            <div onClick={handleCopy} className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 cursor-pointer hover:border-white/20 group">
+              <code className={`flex-1 text-[11px] font-mono truncate ${shell.showKey ? "text-white" : "text-white blur-[3px] select-none"}`}>{shell.showKey ? obsUrl : obsUrl.replace(/key=[^&]+/, 'key=••••••••••••••••')}</code>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggleShowKey(shell, obsUrl); }} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white" title={shell.showKey ? "Sembunyikan key" : "Tampilkan key (konfirmasi)"}>
+                {shell.showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
-              <span className={`shrink-0 w-7 h-7 grid place-items-center rounded-lg ${copied ? 'bg-emerald-500 text-white' : 'bg-white text-black group-hover:bg-zinc-100'}`}>{copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}</span>
+              <span className={`shrink-0 w-7 h-7 grid place-items-center rounded-lg ${shell.copied ? 'bg-emerald-500 text-white' : 'bg-white text-black group-hover:bg-zinc-100'}`}>{shell.copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}</span>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button onClick={copyUrl} className="h-9 px-4 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center gap-2 border border-white"><Copy className="w-3.5 h-3.5" /> {copied ? 'Copied!' : 'Copy URL'}</button>
+            <button onClick={handleCopy} className="h-9 px-4 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center gap-2 border border-white"><Copy className="w-3.5 h-3.5" /> {shell.copied ? 'Copied!' : 'Copy URL'}</button>
             <a href={obsUrl} target="_blank" className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3 h-3" /> OBS</a>
             <a
               href={obsUrl}
@@ -305,7 +287,7 @@ function LyricsSettingsInner() {
 
               <div className="flex gap-2">
                 <button onClick={() => setState({...defaults})} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-                <button onClick={copyUrl} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
+                <button onClick={handleCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
               </div>
             </div>
           </div>
@@ -328,44 +310,7 @@ function LyricsSettingsInner() {
           </div>
         </div>
 
-        {/* Load Settings Popup */}
-        {showLoadPopup && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={() => setShowLoadPopup(false)}>
-            <div onClick={e => e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[480px] space-y-4">
-              <h2 className="text-white font-black">Load Settings</h2>
-              <p className="text-xs text-gray-500">Paste in your existing widget URL</p>
-              <input value={loadUrl} onChange={e => setLoadUrl(e.target.value)} placeholder="https://.../widgets/lyrics/display?..." className="w-full h-10 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" />
-              <div className="flex gap-3">
-                <button onClick={() => setShowLoadPopup(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Cancel</button>
-                <button onClick={loadFromUrl} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-sm font-black text-black border border-white">Load Settings</button>
-              </div>
-            </div>
-          </div>
-        )}
-        {showDefaultsConfirm && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={() => setShowDefaultsConfirm(false)}>
-            <div onClick={e => e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[380px] space-y-4 text-center">
-              <h2 className="text-white font-black">Load Defaults?</h2>
-              <p className="text-xs text-gray-500">Reset semua setting ke default?</p>
-              <div className="flex gap-3">
-                <button onClick={() => setShowDefaultsConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">No</button>
-                <button onClick={() => { setState({...defaults}); setShowDefaultsConfirm(false); }} className="flex-1 h-9 bg-white rounded-xl text-sm font-black text-black border border-white">Yes</button>
-              </div>
-            </div>
-          </div>
-        )}
-        {showKeyConfirm && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={() => setShowKeyConfirm(false)}>
-            <div onClick={e => e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[380px] space-y-4 text-center">
-              <h2 className="text-white font-black">Tampilkan Private Key?</h2>
-              <p className="text-[11px] text-gray-400 leading-relaxed">URL mengandung <span className="text-white font-bold">private key</span> rahasia. Yakin ingin menampilkan?</p>
-              <div className="flex gap-3">
-                <button onClick={() => setShowKeyConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Batal</button>
-                <button onClick={() => { setShowKey(true); setShowKeyConfirm(false); }} className="flex-1 h-9 bg-white text-black border border-white rounded-xl text-sm font-black">Tampilkan</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <WidgetPageModals shell={shell} onReset={reset} />
       </div>
     </div>
   );

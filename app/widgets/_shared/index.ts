@@ -12,5 +12,7 @@ export * from './types/baseTheme';
 export * from './hooks/useCopy';
 export * from './hooks/useWidgetSocket';
 export * from './hooks/useWidgetSettings';
+export * from './hooks/useWidgetPage';
 export * from './components/WidgetShell';
+export * from './components/WidgetPageModals';
 export * from './components/UrlBar';

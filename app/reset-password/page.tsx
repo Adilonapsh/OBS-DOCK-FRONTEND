@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, Eye, EyeOff, KeyRound, CheckCircle2, AlertCircle, Sparkles, LogIn } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
-import Logo from "../../components/Logo";
+import AuthLayout from "../components/AuthLayout";
 
 export default function ResetPasswordPage() {
     const router = useRouter();
@@ -66,39 +66,17 @@ export default function ResetPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen w-full bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden">
-            {/* background glow */}
-            <div className="pointer-events-none absolute inset-0">
-                <div className="absolute -top-32 -left-32 w-[480px] h-[480px] bg-blue-600/20 blur-[120px] rounded-full" />
-                <div className="absolute -bottom-32 -right-32 w-[480px] h-[480px] bg-cyan-500/15 blur-[120px] rounded-full" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[640px] h-[640px] bg-[#FE2C55]/5 blur-[120px] rounded-full" />
-            </div>
-
-            <div className="relative w-full max-w-[420px]">
-                {/* header branding */}
-                <div className="flex flex-col items-center gap-3 mb-6">
-                    <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-lg">
-                            <Logo />
-                        </div>
-                        <span className="font-black tracking-tighter text-white text-[18px]">STREAM CONTROLS</span>
-                        <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10 text-[8px] font-black tracking-widest text-white">DOCK</span>
-                    </div>
-                    <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
-                        <Sparkles className="w-3 h-3 text-blue-400" /> TruOverlay • Stream Control
-                    </p>
-                </div>
-
-                <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden shadow-2xl shadow-black/60">
-                    <div className="px-6 py-5 border-b border-white/5 bg-gradient-to-r from-blue-900/15 via-transparent to-cyan-900/10">
-                        <h1 className="text-white font-black text-[14px] uppercase tracking-wide flex items-center gap-2">
-                            <KeyRound className="w-4 h-4 text-blue-400" /> Password Baru
-                        </h1>
-                        <p className="text-gray-500 text-[10px] mt-1">Buat password baru untuk akunmu.</p>
-                    </div>
-
-                    <div className="p-6 space-y-4">
-                        {checking ? (
+        <AuthLayout
+            icon={<KeyRound className="w-4 h-4 text-blue-400" />}
+            title="Password Baru"
+            subtitle="Buat password baru untuk akunmu."
+            tagline={
+                <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Sparkles className="w-3 h-3 text-blue-400" /> TruOverlay • Stream Control
+                </p>
+            }
+        >
+                    {checking ? (
                             <p className="text-gray-500 text-[12px] font-bold text-center py-4">Memverifikasi link reset...</p>
                         ) : !hasSession ? (
                             <>
@@ -169,14 +147,6 @@ export default function ResetPasswordPage() {
                                 </button>
                             </form>
                         )}
-                    </div>
-
-                    <div className="px-6 py-3 bg-black/20 border-t border-white/5 flex items-center justify-between">
-                        <span className="text-[8px] font-bold text-gray-600 uppercase">© 2026 OBS Overlays</span>
-                        <span className="text-[8px] font-bold text-gray-500 uppercase">v1.0 • TruOverlay</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </AuthLayout>
     );
 }

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { ExternalLink, Monitor, RefreshCw, GripVertical, Share2 } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
 import { useSocialRotatorSettings } from './hooks/useSocialRotatorSettings';
-import { useCopy } from '../_shared/hooks/useCopy';
+import { useWidgetPageShell } from '../_shared/hooks/useWidgetPage';
+import { WidgetPageModals, toggleShowKey } from '../_shared/components/WidgetPageModals';
 import { buildSocialRotatorUrl } from './config';
 import { WidgetShell } from '../_shared/components/WidgetShell';
 import { UrlBar } from '../_shared/components/UrlBar';
@@ -14,46 +14,34 @@ import { KEYFRAMES_CSS } from '../_shared/constants/animations';
 import { getPositionStyle } from '../_shared/constants/positions';
 
 function SocialRotatorInner() {
-  const supabase = createClient();
   const { state, update, reset, privateKey, loadFromUrl } = useSocialRotatorSettings();
-  const { copied, copy } = useCopy();
-  const [user, setUser] = useState<unknown>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showLoadPopup, setShowLoadPopup] = useState(false);
-  const [loadUrl, setLoadUrl] = useState('');
-  const [showDefaultsConfirm, setShowDefaultsConfirm] = useState(false);
-  const [showKey, setShowKey] = useState(false);
-  const [showKeyConfirm, setShowKeyConfirm] = useState(false);
-
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => setUser(data.user)); }, [supabase]);
+  const shell = useWidgetPageShell(loadFromUrl);
 
   const widgetUrl = useMemo(() => buildSocialRotatorUrl(typeof window !== 'undefined' ? `${window.location.origin}/widgets/social-rotator/display` : '', state) + (privateKey ? `&key=${privateKey}` : ''), [state, privateKey]);
   const obsUrl = useMemo(() => `${widgetUrl}&obs=1`, [widgetUrl]);
   const previewUrl = useMemo(() => buildSocialRotatorUrl('/widgets/social-rotator/display', state), [state]);
   const simulateUrl = useMemo(() => `${previewUrl}${previewUrl.includes('?') ? '&' : '?'}simulate=1`, [previewUrl]);
 
-  const handleCopy = () => copy(obsUrl);
-  const handleLoad = () => { try { loadFromUrl(loadUrl); setShowLoadPopup(false); } catch { alert('URL tidak valid'); } };
-  const toggleShowKey = () => { if (!showKey && obsUrl.includes('key=')) setShowKeyConfirm(true); else setShowKey((v) => !v); };
+  const handleCopy = () => shell.copy(obsUrl);
 
   return (
     <>
       <style>{KEYFRAMES_CSS}</style>
       <WidgetShell
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        user={user}
+        sidebarOpen={shell.sidebarOpen}
+        setSidebarOpen={shell.setSidebarOpen}
+        user={shell.user}
         headerIcon={<Share2 className="w-4 h-4 text-white" />}
         title={<>Social Rotator <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white text-black rounded-full">Rotasi</span></>}
         subtitle="Rotasi handle sosial — Instagram/TikTok/YouTube/Twitch/Discord, 4 tema, interval 2-20s, posisi global"
         headerActions={
           <>
-            <button onClick={() => setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
-            <button onClick={() => setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
+            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
+            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
             <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
           </>
         }
-        urlBar={<UrlBar obsUrl={obsUrl} showKey={showKey} onToggleKey={toggleShowKey} copied={copied} onCopy={handleCopy} />}
+        urlBar={<UrlBar obsUrl={obsUrl} showKey={shell.showKey} onToggleKey={() => toggleShowKey(shell, obsUrl)} copied={shell.copied} onCopy={handleCopy} />}
         settingsPanel={<SocialRotatorSettingsForm state={state} update={update} />}
         previewPanel={
           <>
@@ -76,41 +64,7 @@ function SocialRotatorInner() {
           </>
         }
       />
-      {showLoadPopup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={() => setShowLoadPopup(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[480px] space-y-4">
-            <h2 className="text-white font-black">Load Settings</h2>
-            <input value={loadUrl} onChange={(e) => setLoadUrl(e.target.value)} placeholder="https://.../widgets/social-rotator/display?..." className="w-full h-10 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" />
-            <div className="flex gap-3">
-              <button onClick={() => setShowLoadPopup(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Cancel</button>
-              <button onClick={handleLoad} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-sm font-black text-black border border-white">Load</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showDefaultsConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={() => setShowDefaultsConfirm(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[380px] space-y-4 text-center">
-            <h2 className="text-white font-black">Load Defaults?</h2>
-            <div className="flex gap-3">
-              <button onClick={() => setShowDefaultsConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">No</button>
-              <button onClick={() => { reset(); setShowDefaultsConfirm(false); }} className="flex-1 h-9 bg-white rounded-xl text-sm font-black text-black border border-white">Yes</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showKeyConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={() => setShowKeyConfirm(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[380px] space-y-4 text-center">
-            <h2 className="text-white font-black">Tampilkan Private Key?</h2>
-            <p className="text-[11px] text-gray-400 leading-relaxed">URL mengandung <span className="text-white font-bold">private key</span> rahasia.</p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowKeyConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Batal</button>
-              <button onClick={() => { setShowKey(true); setShowKeyConfirm(false); }} className="flex-1 h-9 bg-white text-black border border-white rounded-xl text-sm font-black">Tampilkan</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <WidgetPageModals shell={shell} onReset={reset} />
     </>
   );
 }

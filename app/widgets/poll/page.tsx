@@ -3,7 +3,8 @@ import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
-import { createClient } from '@/utils/supabase/client';
+import { useWidgetPageShell } from '../_shared/hooks/useWidgetPage';
+import { WidgetPageModals, toggleShowKey } from '../_shared/components/WidgetPageModals';
 import { io, Socket } from 'socket.io-client';
 import { Copy, Check, ExternalLink, Monitor, BarChart3, Palette, Type, Settings2, Menu, Eye, EyeOff, Sparkles, ArrowLeft, RefreshCw, GripVertical, Image as ImageIcon } from 'lucide-react';
 import BarTheme from './themes/Bar';
@@ -76,23 +77,24 @@ function SimulatedPollPreview({ state }: { state: any }){
 
 function PollSettingsInner(){
   const searchParams=useSearchParams();
-  const supabase=createClient();
-  const [user,setUser]=useState<any>(null);
   const [privateKey,setPrivateKey]=useState(searchParams.get('key')||'');
-  const [sidebarOpen,setSidebarOpen]=useState(false);
-  const [copied,setCopied]=useState(false);
-  const [showLoadPopup,setShowLoadPopup]=useState(false);
-  const [loadUrl,setLoadUrl]=useState('');
-  const [showDefaultsConfirm,setShowDefaultsConfirm]=useState(false);
-  const [showKey,setShowKey]=useState(false);
-  const [showKeyConfirm,setShowKeyConfirm]=useState(false);
   const [state,setState]=useState<any>({...defaults});
   const [activePoll,setActivePoll]=useState<any>(null);
   const [connected,setConnected]=useState(false);
-  const maskUrl=(url:string)=>url.replace(/key=[^&]+/, 'key=••••••••••••••••');
-  const toggleShowKey=()=>{ if(!showKey && obsUrl.includes('key=')){ setShowKeyConfirm(true); return; } setShowKey(v=>!v); };
+  const loadFromUrl=(urlStr:string)=>{
+    const url=new URL(urlStr);
+    const p=url.searchParams; const s:any={...defaults};
+    for(const k of Object.keys(defaults)){
+      const v=p.get(k);
+      if(v!==null){ const def=(defaults as any)[k]; if(typeof def==='boolean') s[k]=v==='true'||v==='1'; else s[k]=v; }
+    }
+    setState(s);
+    if(p.get('key')) setPrivateKey(p.get('key')||'');
+  };
+  const shell = useWidgetPageShell(loadFromUrl);
+  const reset = () => setState({...defaults});
 
-  useEffect(()=>{ supabase.auth.getUser().then(({data})=>setUser(data.user)); const pk=searchParams.get('key')|| (typeof window!=='undefined'? sessionStorage.getItem('dock_private_verified')||'':''); if(pk) setPrivateKey(pk);
+  useEffect(()=>{ const pk=searchParams.get('key')|| (typeof window!=='undefined'? sessionStorage.getItem('dock_private_verified')||'':''); if(pk) setPrivateKey(pk);
     const has = searchParams.get('theme')||searchParams.get('font')||searchParams.get('accent');
     if(has){
       const s:any={...defaults};
@@ -123,28 +125,16 @@ function PollSettingsInner(){
   const obsUrl = useMemo(()=> `${widgetUrl}${widgetUrl.includes('?')?'&':'?'}obs=1`,[widgetUrl]);
   const previewUrl = useMemo(()=> buildUrl('/widgets/poll/display', state),[state]);
 
-  const copyUrl=async()=>{ await navigator.clipboard.writeText(obsUrl); setCopied(true); setTimeout(()=>setCopied(false),1500); };
-  const loadFromUrl=()=>{
-    try{
-      const url=new URL(loadUrl);
-      const p=url.searchParams; const s:any={...defaults};
-      for(const k of Object.keys(defaults)){
-        const v=p.get(k);
-        if(v!==null){ const def=(defaults as any)[k]; if(typeof def==='boolean') s[k]=v==='true'||v==='1'; else s[k]=v; }
-      }
-      setState(s); setShowLoadPopup(false);
-      if(p.get('key')) setPrivateKey(p.get('key')||'');
-    }catch{ alert('URL tidak valid'); }
-  };
+  const handleCopy = () => shell.copy(obsUrl);
   const update=(k:string,v:any)=> setState((prev:any)=>({...prev,[k]:v}));
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
-      <Sidebar active="widgets" open={sidebarOpen} onClose={()=>setSidebarOpen(false)} user={user} />
+      <Sidebar active="widgets" open={shell.sidebarOpen} onClose={()=>shell.setSidebarOpen(false)} user={shell.user} />
       <div className="flex-1 flex flex-col min-w-0 lg:pl-[240px]">
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <button onClick={()=>setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
+            <button onClick={()=>shell.setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
             <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><BarChart3 className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
@@ -153,8 +143,8 @@ function PollSettingsInner(){
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={()=>setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
-            <button onClick={()=>setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
+            <button onClick={()=>shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
+            <button onClick={()=>shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
             <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
           </div>
         </header>
@@ -162,10 +152,10 @@ function PollSettingsInner(){
         <div className="bg-[#161616] border-b border-white/5 px-4 md:px-6 py-3 flex flex-col sm:flex-row gap-2 sm:items-center">
           <div className="flex-1 min-w-0">
             <div className="text-[9px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1.5"><Settings2 className="w-3 h-3" /> Widget URL - paste ke OBS Browser Source (transparent)</div>
-            <div onClick={copyUrl} className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 cursor-pointer hover:border-white/20 group">
-              <code className={`flex-1 text-[11px] font-mono truncate ${showKey?'text-white':'text-white blur-[3px] select-none'}`}>{showKey? obsUrl: obsUrl.replace(/key=[^&]+/, 'key=••••••••••••••••')}</code>
-              <button type="button" onClick={(e)=>{e.stopPropagation(); toggleShowKey();}} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white">{showKey? <EyeOff className="w-3.5 h-3.5"/>:<Eye className="w-3.5 h-3.5"/>}</button>
-              <span className={`shrink-0 w-7 h-7 grid place-items-center rounded-lg ${copied?'bg-emerald-500 text-white':'bg-white text-black group-hover:bg-zinc-100'}`}>{copied? <Check className="w-3.5 h-3.5"/>:<Copy className="w-3.5 h-3.5"/>}</span>
+            <div onClick={handleCopy} className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 cursor-pointer hover:border-white/20 group">
+              <code className={`flex-1 text-[11px] font-mono truncate ${shell.showKey?'text-white':'text-white blur-[3px] select-none'}`}>{shell.showKey? obsUrl: obsUrl.replace(/key=[^&]+/, 'key=••••••••••••••••')}</code>
+              <button type="button" onClick={(e)=>{e.stopPropagation(); toggleShowKey(shell, obsUrl);}} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white">{shell.showKey? <EyeOff className="w-3.5 h-3.5"/>:<Eye className="w-3.5 h-3.5"/>}</button>
+              <span className={`shrink-0 w-7 h-7 grid place-items-center rounded-lg ${shell.copied?'bg-emerald-500 text-white':'bg-white text-black group-hover:bg-zinc-100'}`}>{shell.copied? <Check className="w-3.5 h-3.5"/>:<Copy className="w-3.5 h-3.5"/>}</span>
             </div>
           </div>
           <div className="flex self-end gap-2 shrink-0">
@@ -243,7 +233,7 @@ function PollSettingsInner(){
 
               <div className="flex gap-2">
                 <button onClick={()=>setState({...defaults})} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-                <button onClick={copyUrl} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5"/> Copy URL</button>
+                <button onClick={handleCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5"/> Copy URL</button>
               </div>
             </div>
           </div>
@@ -266,43 +256,7 @@ function PollSettingsInner(){
           </div>
         </div>
 
-        {showLoadPopup && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={()=>setShowLoadPopup(false)}>
-            <div onClick={e=>e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[480px] space-y-4">
-              <h2 className="text-white font-black">Load Settings</h2>
-              <p className="text-xs text-gray-500">Paste widget URL yang sudah ada</p>
-              <input value={loadUrl} onChange={e=>setLoadUrl(e.target.value)} placeholder="https://.../widgets/poll/display?..." className="w-full h-10 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" />
-              <div className="flex gap-3">
-                <button onClick={()=>setShowLoadPopup(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Cancel</button>
-                <button onClick={loadFromUrl} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-sm font-black text-black border border-white">Load</button>
-              </div>
-            </div>
-          </div>
-        )}
-        {showDefaultsConfirm && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={()=>setShowDefaultsConfirm(false)}>
-            <div onClick={e=>e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[380px] space-y-4 text-center">
-              <h2 className="text-white font-black">Load Defaults?</h2>
-              <p className="text-xs text-gray-500">Reset style ke defaults?</p>
-              <div className="flex gap-3">
-                <button onClick={()=>setShowDefaultsConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">No</button>
-                <button onClick={()=>{setState({...defaults}); setShowDefaultsConfirm(false);}} className="flex-1 h-9 bg-white rounded-xl text-sm font-black text-black border border-white">Yes</button>
-              </div>
-            </div>
-          </div>
-        )}
-        {showKeyConfirm && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm grid place-items-center z-50 p-4" onClick={()=>setShowKeyConfirm(false)}>
-            <div onClick={e=>e.stopPropagation()} className="bg-[#161616] border border-white/10 rounded-2xl p-6 w-full max-w-[380px] space-y-4 text-center">
-              <h2 className="text-white font-black">Tampilkan Private Key?</h2>
-              <p className="text-[11px] text-gray-400 leading-relaxed">URL mengandung <span className="text-white font-bold">private key</span> rahasia.</p>
-              <div className="flex gap-3">
-                <button onClick={()=>setShowKeyConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Batal</button>
-                <button onClick={()=>{setShowKey(true); setShowKeyConfirm(false);}} className="flex-1 h-9 bg-white text-black border border-white rounded-xl text-sm font-black">Tampilkan</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <WidgetPageModals shell={shell} onReset={reset} />
       </div>
     </div>
   );
