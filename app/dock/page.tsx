@@ -313,28 +313,8 @@ export default function Home() {
                     key = (sec as any)?.private_key || null;
                 } catch {}
             }
-            if (!key) {
-                try {
-                    const { data: newKey } = await (supabase as any).rpc("regenerate_private_key");
-                    if (newKey) key = newKey as string;
-                } catch {}
-            }
-            // fallback client-side generate jika RPC / trigger belum ada (misal DB belum migrasi)
-            if (!key) {
-                try {
-                    const newKey = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
-                    // upsert profile (buat jika belum ada)
-                    await supabase.from("profiles").upsert(
-                        { id: session.user.id, email: session.user.email, username: (session.user.user_metadata as any)?.username || session.user.email?.split("@")[0], private_key: newKey } as any,
-                        { onConflict: "id" }
-                    );
-                    // simpan ke tabel aman juga
-                    try {
-                        await supabase.from("user_private_keys").upsert({ user_id: session.user.id, private_key: newKey } as any);
-                    } catch {}
-                    key = newKey;
-                } catch {}
-            }
+            // Private key HANYA dibaca di sini — dibuat saat register (DB trigger)
+            // atau via tombol Regenerate. Jangan generate otomatis saat login.
             if (key) {
                 setPrivateKey(key);
                 setPrivateKeyInput(key);
@@ -934,7 +914,7 @@ export default function Home() {
         const payload = { username, privateKey: effectivePrivateKey };
 
         if (!tkSocketRef.current) {
-            tkSocketRef.current = io("http://localhost:3000");
+            tkSocketRef.current = io(getSocketUrl());
 
             tkSocketRef.current.on("connect", () => {
                 addSystemLog("Terhubung ke server TikTok lokal.", "info");
@@ -963,8 +943,9 @@ export default function Home() {
                 addSystemLog("TikTok terputus.", "warn");
             });
 
-            tkSocketRef.current.on("tiktok-chat", (data: { nickname: string; comment: string; profilePictureUrl?: string }) => {
-                handleIncomingMessage(data.nickname, data.comment, "tiktok", data.profilePictureUrl, []);
+            tkSocketRef.current.on("tiktok-chat", (data: { nickname: string; comment: string; profilePictureUrl?: string; platform?: string }) => {
+                const pf = (data.platform === "twitch" || data.platform === "youtube" || data.platform === "kick" ? data.platform : "tiktok") as ChatMessage["platform"];
+                handleIncomingMessage(data.nickname, data.comment, pf, data.profilePictureUrl, []);
             });
 
             tkSocketRef.current.on("tiktok-gift", (data: { nickname: string; giftName: string; repeatCount: number; profilePictureUrl?: string }) => {
@@ -1700,7 +1681,7 @@ export default function Home() {
                 request: "Subscribe",
                 id: "dock",
                 events: {
-                    Twitch: ["ChatMessage", "StreamOnline", "StreamOffline", "Cheer", "Sub", "GiftSub", "RewardRedemption"],
+                    Twitch: ["ChatMessage", "Follow", "StreamOnline", "StreamOffline", "Cheer", "Sub", "GiftSub", "RewardRedemption"],
                     YouTube: ["Message", "BroadcastStarted", "BroadcastUpdated", "BroadcastEnded", "StatisticsUpdated", "PresentViewers", "SuperChat", "SuperSticker", "NewSponsor"],
                 },
             }));
@@ -1746,15 +1727,58 @@ export default function Home() {
                     if (["ChatMessage", "Message"].includes(type)) {
                         const user = data.message?.username || data.user?.name || "User";
                         const message = data.message?.text || data.message || "";
-                        console.log(`[${platform}] ${user}: ${message}`);
+                        const avatar = data.user?.profileImageUrl || data.user?.avatar || null;
+                        const pf = (platform === "youtube" || platform === "kick" ? platform : "twitch") as ChatMessage["platform"];
+                        if (!message) return;
+                        // tampil lokal + broadcast ke server agar overlay kebagian
+                        // (server echo ke semua kecuali pengirim, jadi tidak dobel)
+                        handleIncomingMessage(user, message, pf, avatar, []);
+                        if (tkSocketRef.current?.connected) {
+                            tkSocketRef.current.emit("sb-chat", {
+                                uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
+                                nickname: user,
+                                comment: message,
+                                profilePictureUrl: avatar,
+                                platform: pf,
+                            });
+                        }
                     }
 
-                    if (["Cheer", "Sub", "GiftSub", "RewardRedemption", "SuperChat", "SuperSticker", "NewSponsor"].includes(type)) {
+                    if (["Follow", "Sub", "ReSub", "NewSponsor", "MembershipGift"].includes(type)) {
                         const user = data.user?.name || data.userName || data.user?.login || "User";
+                        const avatar = data.user?.profileImageUrl || data.user?.avatar || null;
+                        const pf = (platform === "youtube" || platform === "kick" ? platform : "twitch") as ChatMessage["platform"];
+                        addActivityLog(`➕ ${user} mengikuti (${type})`, pf);
+                        addSystemLog(`➕ [SB ${type?.toUpperCase()}] ${user}`, "success");
+                        if (tkSocketRef.current?.connected) {
+                            tkSocketRef.current.emit("sb-event", {
+                                eventType: type,
+                                uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
+                                nickname: user,
+                                profilePictureUrl: avatar,
+                                platform: pf,
+                            });
+                        }
+                    }
+
+                    if (["Cheer", "GiftSub", "GiftBomb", "RewardRedemption", "SuperChat", "SuperSticker"].includes(type)) {
+                        const user = data.user?.name || data.userName || data.user?.login || "User";
+                        const avatar = data.user?.profileImageUrl || data.user?.avatar || null;
                         const amount = data.bits ?? data.amount ?? data.displayString ?? data.tier ?? "";
                         const text = amount ? `${type}: ${amount}` : type;
-                        addGiftLog(user, text, platform || "twitch", { amount: String(amount), giftName: type });
+                        addGiftLog(user, text, platform || "twitch", { amount: String(amount), giftName: type, avatar: avatar || undefined });
                         addSystemLog(`🎁 [GIFT ${platform}] ${user}: ${text}`, "info");
+                        if (tkSocketRef.current?.connected) {
+                            tkSocketRef.current.emit("sb-event", {
+                                eventType: type,
+                                uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
+                                nickname: user,
+                                profilePictureUrl: avatar,
+                                platform: platform || "twitch",
+                                giftName: text,
+                                repeatCount: 1,
+                            });
+                        }
                     }
                 }
             } catch (error) {

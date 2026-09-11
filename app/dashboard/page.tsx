@@ -37,8 +37,6 @@ export default function DashboardPage() {
                 setUser(authUser);
             }
             const userId = currentUser?.id;
-            const userEmail = currentUser?.email;
-            const userMeta = (currentUser?.user_metadata as any);
             if (!userId) { setLoading(false); return; }
             let key: string | null = null;
             try {
@@ -51,19 +49,8 @@ export default function DashboardPage() {
                     key = (s as any)?.private_key || null;
                 } catch {}
             }
-            if (!key) {
-                try {
-                    const { data: rpc } = await (supabase as any).rpc("regenerate_private_key");
-                    if (rpc) key = rpc as string;
-                } catch {}
-            }
-            if (!key) {
-                const newKey = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
-                try {
-                    await supabase.from("profiles").upsert({ id: userId, email: userEmail, username: userMeta?.username, private_key: newKey } as any, { onConflict: "id" });
-                    key = newKey;
-                } catch {}
-            }
+            // Private key HANYA dibaca di sini — dibuat saat register (DB trigger)
+            // atau via tombol Regenerate. Jangan generate otomatis saat login.
             setPrivateKey(key);
             setLoading(false);
         };
