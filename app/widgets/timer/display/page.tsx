@@ -154,7 +154,9 @@ function TimerInner() {
   };
   const themeProps = { font, fontSize, accent, bg, bgOpacity, textColor, pos, timerSeconds: totalSeconds, isRunning, currentSession, totalSessions, onToggleTimer: () => setIsRunning((v) => !v), onResetTimer: () => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); }, onNextSession: () => { setCurrentSession((c) => (c < totalSessions ? c + 1 : 1)); setTotalSeconds(focusMinutes * 60); setIsRunning(false); }, onAddTime: handleAddTime, anim: animName, subathonMode, addedSeconds } as const;
   const Theme = getTimerTheme(theme);
-  const displayKey = `${theme}-${accent}-${bg}-${textColor}-${bgOpacity}-${font}-${anim}-${pos}-${subathonMode}`;
+  // subathonMode sengaja tidak dimasukkan ke displayKey — mode diubah dari dock tidak boleh
+  // menyebabkan Theme remount (yang akan memicu ulang animasi entry dan membuat timer tampak reset)
+  const displayKey = `${theme}-${accent}-${bg}-${textColor}-${bgOpacity}-${font}-${anim}-${pos}`;
 
   return (
     <>

@@ -3,6 +3,7 @@ import type { TaskItem } from './themes/types';
 
 export const TASK_THEMES = [
   { value: 'focus', label: 'Focus — Moka & Dark Slate ✨' },
+  { value: 'glass', label: 'Glass — Blur Premium (seperti Timer Glass)' },
   { value: 'minimal', label: 'Minimal — Clean' },
 ] as const;
 
@@ -55,11 +56,14 @@ export const TASK_DEFAULTS = {
   accent: '#1a2233',
   bg: 'transparent',
   bgOpacity: 100,
+  textColor: '#ffffff',
   anim: 'elegant',
   hideAnim: 'fade',
   horizontal: false,
   horizontalAnim: 'elegant',
   inline: false,
+  autoCollapse: false,
+  collapseAfter: 3,
   tasks: [
     { id: '1', text: '10 Pushups', completed: false, user: 'GamerPro' },
     { id: '2', text: 'Drink water!', completed: true, user: 'StreamFan' },
@@ -81,11 +85,14 @@ export function buildTaskUrl(base: string, s: TaskSettings): string {
   p.set('accent', s.accent);
   if (s.bg && s.bg !== 'transparent') p.set('bg', s.bg);
   p.set('bgOpacity', String(s.bgOpacity));
+  p.set('textColor', (s as unknown as { textColor: string }).textColor || '#ffffff');
   p.set('anim', s.anim);
   p.set('hideAnim', (s as unknown as { hideAnim: string }).hideAnim || 'fade');
   p.set('horizontal', (s as unknown as { horizontal: boolean }).horizontal ? '1' : '0');
   p.set('horizontalAnim', (s as unknown as { horizontalAnim: string }).horizontalAnim || 'elegant');
   p.set('inline', (s as unknown as { inline: boolean }).inline ? '1' : '0');
+  p.set('autoCollapse', (s as unknown as { autoCollapse: boolean }).autoCollapse ? '1' : '0');
+  p.set('collapseAfter', String((s as unknown as { collapseAfter: number }).collapseAfter ?? 3));
   p.set('tasks', encodeURIComponent(JSON.stringify(s.tasks)));
   return `${base}?${p.toString()}`;
 }

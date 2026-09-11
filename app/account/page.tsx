@@ -303,7 +303,7 @@ export default function AccountPage() {
                                 </div>
                                 <div className="p-5 space-y-3">
                                 <div className="space-y-2 text-[11px]">
-                                    <div className="flex justify-between"><span className="text-gray-500">User ID</span><span className="text-gray-400 font-mono-custom text-[9px]">{user?.id.slice(0, 8)}…</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">User ID</span><span className="text-gray-400 font-mono-custom text-[9px]">{user?.id?.slice(0, 8) ?? '-'}…</span></div>
                                     <div className="flex justify-between"><span className="text-gray-500">Email</span><span className="text-white font-bold truncate ml-2">{user?.email}</span></div>
                                 </div>
                                 <button onClick={handleLogout} className="w-full mt-4 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-400 font-black text-[10px] uppercase flex items-center justify-center gap-2"><LogOut className="w-3.5 h-3.5" /> Logout</button>

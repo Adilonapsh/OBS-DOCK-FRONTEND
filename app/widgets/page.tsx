@@ -151,7 +151,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "social-rotator",
     title: "Social Rotator",
-    desc: "Rotasi handle sosial — Instagram/TikTok/YouTube/Twitch/Discord, 4 tema Pill/Clean/Glass/Boxed, interval 2-20s, posisi global 9-titik, warna per platform.",
+    desc: "Rotasi handle sosial — Instagram/TikTok/YouTube/Twitch/Discord, 5 tema Pill/Clean/Glass/Boxed/Badge Space Mono, interval 2-20s, posisi global 9-titik.",
     category: "info",
     tags: ["Social", "Rotator", "Instagram", "TikTok", "OBS"],
     layout: "social",
@@ -159,6 +159,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "social",
     recommended: true,
     w: 420, h: 160,
+  },
+  {
+    id: "custom",
+    title: "Custom Overlay",
+    desc: "StreamElements-like — canvas 1920×1080, drag-drop layers (chat {{username}}/{{message}}, timer {{timer}}, clock {{clock}}, polls {{polls}}, social {{handle}}), template {{date}} + custom CSS per layer, 1 URL obs.",
+    category: "minimal",
+    tags: ["Custom", "StreamElements", "DragDrop", "Template"],
+    layout: "full",
+    params: "custom=1",
+    preview: "full",
+    recommended: true,
+    w: 1920, h: 1080,
   },
 ];
 
@@ -455,6 +467,17 @@ function WidgetsListing() {
       const base = `${window.location.origin}/widgets/social-rotator/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
+    if (item.id === 'custom') {
+      try {
+        const raw = localStorage.getItem('custom-overlay-layers');
+        const layers = raw ? encodeURIComponent(raw) : '';
+        const base = `${window.location.origin}/widgets/custom/display?layers=${layers}${privateKey ? `&key=${privateKey}` : ''}`;
+        return transparent ? `${base}&obs=1` : base;
+      } catch {
+        const base = `${window.location.origin}/widgets/custom/display?${privateKey ? `key=${privateKey}` : ''}`;
+        return transparent ? `${base}&obs=1` : base;
+      }
+    }
     let themeQ = "";
     let cssQ = "";
     try {
@@ -650,6 +673,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/social-rotator${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'custom' ? (
+                        <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 hover:opacity-90 rounded-xl text-[9px] font-black uppercase">
+                          <Layers className="w-3 h-3" /> Open Editor
+                        </Link>
                       ) : item.id === 'task' ? (
                         <Link href={`/widgets/task${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
@@ -660,7 +687,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

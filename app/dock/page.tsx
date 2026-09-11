@@ -153,27 +153,39 @@ export default function Home() {
         try { const v = localStorage.getItem('dock-showPoll'); return v === null ? true : v === 'true'; } catch { return true; }
     });
     const [pollMinimized,setPollMinimized]=useState(() => {
-        if (typeof window === 'undefined') return false;
-        try { return localStorage.getItem('dock-pollMinimized') === 'true'; } catch { return false; }
+        if (typeof window === 'undefined') return true;
+        try { const v=localStorage.getItem('dock-pollMinimized'); return v===null ? true : v==='true'; } catch { return true; }
     });
     const [activeTasks,setActiveTasks]=useState<any>(null);
     const [taskMinimized,setTaskMinimized]=useState(() => {
-        if (typeof window === 'undefined') return false;
-        try { return localStorage.getItem('dock-taskMinimized') === 'true'; } catch { return false; }
+        if (typeof window === 'undefined') return true;
+        try { const v=localStorage.getItem('dock-taskMinimized'); return v===null ? true : v==='true'; } catch { return true; }
     });
     const [newTaskText,setNewTaskText]=useState("");
     const [activeTimer,setActiveTimer]=useState<any>(null);
     const [timerTick,setTimerTick]=useState(0);
     const [timerMinimized,setTimerMinimized]=useState(() => {
-        if (typeof window === 'undefined') return false;
-        try { return localStorage.getItem('dock-timerMinimized') === 'true'; } catch { return false; }
+        if (typeof window === 'undefined') return true;
+        try { const v=localStorage.getItem('dock-timerMinimized'); return v===null ? true : v==='true'; } catch { return true; }
     });
     const [dockSwiperIndex,setDockSwiperIndex]=useState(0);
     const [dockTouchStart,setDockTouchStart]=useState<number|null>(null);
     const [dockSwiperMinimized,setDockSwiperMinimized]=useState(() => {
-        if (typeof window === 'undefined') return false;
-        try { return localStorage.getItem('dock-swiperMinimized') === 'true'; } catch { return false; }
+        if (typeof window === 'undefined') return true;
+        try { const v=localStorage.getItem('dock-swiperMinimized'); return v===null ? true : v==='true'; } catch { return true; }
     });
+    const [autoMinimizeEnabled,setAutoMinimizeEnabled]=useState(() => {
+        if (typeof window === 'undefined') return false;
+        try { return localStorage.getItem('dock-autoMinimizeEnabled')==='true'; } catch { return false; }
+    });
+    const [autoMinimizeDelay,setAutoMinimizeDelay]=useState(() => {
+        if (typeof window === 'undefined') return 5;
+        try { const v=parseInt(localStorage.getItem('dock-autoMinimizeDelay')||'5',10); return isNaN(v)?5:Math.max(2,Math.min(60,v)); } catch { return 5; }
+    });
+    const [lastActivity,setLastActivity]=useState(()=>Date.now());
+    const bumpActivity = () => setLastActivity(Date.now());
+    useEffect(()=>{ try{ localStorage.setItem('dock-autoMinimizeEnabled', String(autoMinimizeEnabled)); }catch{} },[autoMinimizeEnabled]);
+    useEffect(()=>{ try{ localStorage.setItem('dock-autoMinimizeDelay', String(autoMinimizeDelay)); }catch{} },[autoMinimizeDelay]);
     useEffect(()=>{ try{ localStorage.setItem('dock-showPoll', String(showPoll)); }catch{} },[showPoll]);
     useEffect(()=>{ try{ localStorage.setItem('dock-pollMinimized', String(pollMinimized)); }catch{} },[pollMinimized]);
     useEffect(()=>{ try{ localStorage.setItem('dock-taskMinimized', String(taskMinimized)); }catch{} },[taskMinimized]);
@@ -181,6 +193,31 @@ export default function Home() {
     useEffect(()=>{ try{ localStorage.setItem('dock-swiperMinimized', String(dockSwiperMinimized)); }catch{} },[dockSwiperMinimized]);
     useEffect(()=>{ if(!activePoll || activePoll.ended) return; const t=setInterval(()=>setPollTick(v=>v+1),1000); return ()=>clearInterval(t); },[activePoll]);
     useEffect(()=>{ if(!activeTimer?.isRunning) return; const t=setInterval(()=>setTimerTick(v=>v+1),1000); return ()=>clearInterval(t); },[activeTimer]);
+    // auto minimize — reset timer kalau ada aktivitas di dock, kalau sudah tidak ada aktivitas baru minimize
+    useEffect(()=>{
+        if(!autoMinimizeEnabled) return;
+        const onActivity = () => setLastActivity(Date.now());
+        window.addEventListener('mousemove', onActivity);
+        window.addEventListener('click', onActivity);
+        window.addEventListener('keydown', onActivity);
+        return ()=>{ window.removeEventListener('mousemove', onActivity); window.removeEventListener('click', onActivity); window.removeEventListener('keydown', onActivity); };
+    },[autoMinimizeEnabled]);
+    useEffect(()=>{
+        if(!autoMinimizeEnabled) return;
+        const id = setInterval(()=>{
+            if(Date.now() - lastActivity >= autoMinimizeDelay*1000){
+                if(!pollMinimized) setPollMinimized(true);
+                if(!taskMinimized) setTaskMinimized(true);
+                if(!timerMinimized) setTimerMinimized(true);
+                if(!dockSwiperMinimized) setDockSwiperMinimized(true);
+            }
+        }, 1000);
+        return ()=>clearInterval(id);
+    },[autoMinimizeEnabled, autoMinimizeDelay, lastActivity, pollMinimized, taskMinimized, timerMinimized, dockSwiperMinimized]);
+    // aktivitas baru (poll/task/timer) -> expand dulu + reset timer
+    useEffect(()=>{ if(!autoMinimizeEnabled || !activePoll || activePoll.ended) return; setPollMinimized(false); setLastActivity(Date.now()); },[activePoll?.id, activePoll?.ended]);
+    useEffect(()=>{ if(!autoMinimizeEnabled || !activeTasks) return; setTaskMinimized(false); setLastActivity(Date.now()); },[activeTasks?.items?.length]);
+    useEffect(()=>{ if(!autoMinimizeEnabled || !activeTimer) return; setTimerMinimized(false); setLastActivity(Date.now()); },[activeTimer?.totalSeconds]);
 
     // grafik TikTok realtime dari viewerCount (roomUser)
     useEffect(() => {
@@ -845,7 +882,8 @@ export default function Home() {
 
         setViewerData(prev => {
             const next = { ...prev };
-            next[user] = { platform, avatar, initials: user.slice(0, 2).toUpperCase() };
+            const safeUser = String(user || '??');
+            next[safeUser] = { platform, avatar, initials: safeUser.slice(0, 2).toUpperCase() };
             return next;
         });
     }
@@ -946,17 +984,18 @@ export default function Home() {
                 addSystemLog(`❤️ [TIKTOK LIKE] ${data.nickname} menyukai live! (${data.likeCount} likes)`, "info");
             });
 
-            tkSocketRef.current.on("tiktok-member", (data: { nickname: string; profilePictureUrl?: string }) => {
-                addActivityLog(`👋 ${data.nickname} telah bergabung`, "tiktok");
+            tkSocketRef.current.on("tiktok-member", (data: { nickname?: string; uniqueId?: string; profilePictureUrl?: string }) => {
+                const nick = data.nickname || (data as any).uniqueId || '??';
+                addActivityLog(`👋 ${nick} telah bergabung`, "tiktok");
                 setViewerData(prev => ({
                     ...prev,
-                    [data.nickname]: {
+                    [nick]: {
                         platform: "tiktok",
                         avatar: data.profilePictureUrl,
-                        initials: data.nickname.slice(0, 2).toUpperCase(),
+                        initials: String(nick).slice(0, 2).toUpperCase(),
                     },
                 }));
-                addSystemLog(`👋 [TIKTOK JOIN] ${data.nickname} telah bergabung.`, "info");
+                addSystemLog(`👋 [TIKTOK JOIN] ${nick} telah bergabung.`, "info");
             });
 
             tkSocketRef.current.on("tiktok-roomUser", (data: any) => {
@@ -2681,6 +2720,25 @@ export default function Home() {
                                     </div>
                                 </div>
 
+                                <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">Dock Auto Minimize</h4>
+                                <div className="stat-card space-y-3">
+                                    <label className="flex items-center justify-between p-2.5 bg-white/5 border border-white/10 rounded-xl cursor-pointer">
+                                        <div>
+                                            <div className="text-white font-black uppercase text-[10px] flex items-center gap-2"><Minimize2 className="w-3 h-3 text-violet-400" /> Auto Minimize</div>
+                                            <div className="text-gray-500 text-[9px]">Minimize Poll/Task/Timer/Swiper otomatis setelah delay</div>
+                                        </div>
+                                        <input type="checkbox" checked={autoMinimizeEnabled} onChange={e=>setAutoMinimizeEnabled(e.target.checked)} className="w-4 h-4 accent-violet-500 cursor-pointer" />
+                                    </label>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="text-gray-400 uppercase font-bold text-[8px]">Delay (detik)</span>
+                                        <div className="flex items-center gap-2">
+                                            <input type="range" min={2} max={60} step={1} value={autoMinimizeDelay} onChange={e=>setAutoMinimizeDelay(parseInt(e.target.value)||5)} disabled={!autoMinimizeEnabled} className="w-24 accent-violet-500 cursor-pointer disabled:opacity-30" />
+                                            <span className="text-white font-black text-[11px] w-8 text-center">{autoMinimizeDelay}s</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[9px] text-gray-600 leading-relaxed">Default minimize sudah aktif. Jika Auto Minimize ON, panel yang di-expand akan minimize otomatis setelah {autoMinimizeDelay}s. Poll/task/timer baru akan expand dulu lalu minimize lagi.</p>
+                                </div>
+
                                 <div className="flex-1 bg-black border border-white/5 rounded-xl p-4 flex flex-col overflow-hidden">
                                     <h3 className="text-blue-400 text-[9px] font-black uppercase flex items-center gap-2 mb-3">
                                         <Terminal className="w-3 h-3" /> Log Sistem
@@ -2859,7 +2917,7 @@ export default function Home() {
                                                 <input value={newTaskText} onChange={(e)=>setNewTaskText(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleAddTask(); }} placeholder="Tambah task..." className="flex-1 h-8 bg-white/5 border border-white/10 rounded-full px-3 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50" />
                                                 <button onClick={handleAddTask} className="h-8 px-4 bg-cyan-600 hover:bg-cyan-500 rounded-full text-white text-[11px] font-black uppercase flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>
                                             </div>
-                                            <div className="text-[10px] text-gray-500 leading-relaxed">Sinkron ke OBS via <code className="bg-white/10 px-1 rounded text-white">task widget</code> — toggle/hapus langsung update overlay.</div>
+                                            {/* <div className="text-[10px] text-gray-500 leading-relaxed">Sinkron ke OBS via <code className="bg-white/10 px-1 rounded text-white">task widget</code> — toggle/hapus langsung update overlay.</div> */}
                                         </div>
                                     )}
                                     {tab.id === 'timer' && (

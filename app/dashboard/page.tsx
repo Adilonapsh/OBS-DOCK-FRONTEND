@@ -137,7 +137,7 @@ export default function DashboardPage() {
                         <h3 className="text-white font-black text-[11px] uppercase tracking-widest">Akun</h3>
                         <div className="space-y-2 text-[11px]">
                             <div className="flex justify-between"><span className="text-gray-500">Email</span><span className="text-white font-bold truncate ml-2">{user?.email}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">User ID</span><span className="text-gray-400 font-mono-custom text-[9px] truncate ml-2">{user?.id.slice(0, 8)}…</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">User ID</span><span className="text-gray-400 font-mono-custom text-[9px] truncate ml-2">{user?.id?.slice(0, 8) ?? '-'}…</span></div>
                             <div className="flex justify-between"><span className="text-gray-500">Username</span><span className="text-white font-bold">{(user?.user_metadata as any)?.username || "-"}</span></div>
                         </div>
                         <div className="pt-3 border-t border-white/5 flex gap-2">

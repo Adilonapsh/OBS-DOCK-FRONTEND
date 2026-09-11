@@ -12,7 +12,7 @@ import DonutTheme from './themes/Donut';
 import MinimalTheme from './themes/Minimal';
 import AnimeTheme from './themes/Anime';
 import FlowerTheme from './themes/Flower';
-import VoteTheme from './themes/Vote';
+import EditorialTheme from './themes/Editorial';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import { getSocketUrl } from '../_shared/utils/socket';
 import { PositionPicker } from '../_shared/components/PositionPicker';
@@ -26,6 +26,7 @@ const pollThemes = [
   { value:'minimal', label:'Minimal' },
   { value:'anime', label:'Anime' },
   { value:'flower', label:'Flower Timer' },
+  { value:'editorial', label:'Editorial' },
 ];
 
 const defaults = {
@@ -69,6 +70,7 @@ function SimulatedPollPreview({ state }: { state: any }){
   if(state.theme==='donut') return <DonutTheme {...props} />;
   if(state.theme==='minimal') return <MinimalTheme {...props} />;
   if(state.theme==='card') return <CardTheme {...props} />;
+  if(state.theme==='editorial') return <EditorialTheme {...props} />;
   return <BarTheme {...props} />;
 }
 

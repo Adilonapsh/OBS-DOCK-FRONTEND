@@ -12,13 +12,11 @@ export type TaskThemeProps = {
   accent: string;
   bg: string;
   bgOpacity: number;
+  textColor?: string;
   timerSeconds?: number;
   isRunning?: boolean;
   currentSession?: number;
   totalSessions?: number;
-  onToggleTimer?: () => void;
-  onResetTimer?: () => void;
-  onNextSession?: () => void;
   onToggleTask?: (id: string) => void;
   onAddTask?: (text: string) => void;
   anim?: string;
@@ -27,4 +25,8 @@ export type TaskThemeProps = {
   horizontal?: boolean;
   inline?: boolean;
   exitingIds?: Set<string>;
+  autoCollapse?: boolean;
+  collapseAfter?: number;
+  collapsedIds?: Set<string>;
+  isExpanded?: boolean;
 };

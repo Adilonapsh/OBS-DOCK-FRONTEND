@@ -46,7 +46,7 @@ export default function SubathonTheme({
   return (
     <div className="subathon-theme w-full max-w-[360px] flex flex-col items-center gap-3 select-none" style={{ fontFamily: `'Nunito','${font}', sans-serif` }}>
       <div
-        className="timer-capsule w-full h-[56px] px-3.5 flex items-center justify-between overflow-hidden"
+        className="timer-capsule w-full h-[56px] px-3.5 flex items-center gap-20 justify-between overflow-hidden"
         style={{ animation: animStyle, background: capsuleBg }}
       >
         <div key={mode} className="flex items-center gap-2 will-change-transform" style={{ animation: modeAnim }}>

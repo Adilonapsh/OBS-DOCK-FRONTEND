@@ -6,6 +6,7 @@ import Sidebar from '../../components/Sidebar';
 import { createClient } from '@/utils/supabase/client';
 import { Copy, Check, ExternalLink, Monitor, Clock3, Palette, Type, Settings2, Menu, Eye, EyeOff, Image as ImageIcon, Sparkles, ArrowLeft, RefreshCw, GripVertical } from 'lucide-react';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { PositionPicker } from '../_shared/components/PositionPicker';
 
 const fontsList = [...WIDGET_FONTS];
 
@@ -196,6 +197,9 @@ function ClockEditorInner() {
                   <div className="grid grid-cols-2 gap-3">
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Gap antar baris</span><input type="number" value={state.gap} onChange={e=>update('gap', parseInt(e.target.value)||0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-2"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={e=>update('bg', e.target.value)} className="w-9 h-9 bg-black/40 border border-white/10 rounded-xl p-1" /><button onClick={()=>update('bg','transparent')} className={`flex-1 h-9 rounded-xl text-[11px] font-black uppercase border ${state.bg==='transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
+                  </div>
+                  <div className="bg-black/30 border border-white/5 rounded-xl p-2">
+                    <PositionPicker value={state.pos || 'bl'} onChange={(v) => update('pos', v)} />
                   </div>
                   {/* <label className="block"><span className="text-[11px] font-bold text-gray-300">Private Key (optional, untuk isolasi OBS)</span><input value={privateKey} onChange={e=>setPrivateKey(e.target.value)} placeholder="YOUR_PRIVATE_KEY" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" /></label> */}
                 </div>

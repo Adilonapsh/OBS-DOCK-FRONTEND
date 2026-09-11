@@ -47,7 +47,7 @@ export default function GlassTheme({ font, fontSize, timerSeconds, isRunning, on
         {mode === 'paused' && <><svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> {modeLabel}</>}
       </div>
 
-      <div className="timer-overlay-card w-full px-10 py-5 sm:px-8 sm:py-6 flex items-center justify-between relative overflow-hidden mt-2" style={{ background: glassBg, borderColor: glassBorder }}>
+      <div className="timer-overlay-card w-full px-10 gap-20 py-5 sm:px-8 sm:py-6 flex items-center justify-between relative overflow-hidden mt-2" style={{ background: glassBg, borderColor: glassBorder }}>
         <div className="clock-badge w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0" style={{ borderColor: `${color}D9` }}>
           <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" fill="none" stroke={color} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2.5 2.5" />

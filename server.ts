@@ -366,8 +366,19 @@ async function startServer() {
     // Timer widget — Dock control: start/stop, +/- time, mode, reset/next
     socket.on("timer-get", (payload: any) => {
       const room = getTimerRoom(payload || {});
-      const t = timers.get(room) || timers.get('global');
-      if (t) socket.emit('timer-update', t);
+      const raw = timers.get(room) || timers.get('global');
+      if (!raw) return;
+      // sync elapsed sebelum kirim agar totalSeconds akurat di client
+      const t = { ...raw };
+      if (t.isRunning && t.updatedAt) {
+        const elapsed = Math.floor((Date.now() - t.updatedAt) / 1000);
+        if (elapsed > 0) t.totalSeconds = Math.max(0, t.totalSeconds - elapsed);
+        t.updatedAt = Date.now();
+        // simpan update ke Map agar state server ikut akurat
+        timers.set(room, { ...raw, totalSeconds: t.totalSeconds, updatedAt: t.updatedAt });
+        if (timers.has('global')) timers.set('global', { ...raw, totalSeconds: t.totalSeconds, updatedAt: t.updatedAt });
+      }
+      socket.emit('timer-update', t);
     });
     socket.on("timer-set", (payload: any) => {
       const room = getTimerRoom(payload);
@@ -388,8 +399,11 @@ async function startServer() {
     socket.on("timer-control", (payload: any) => {
       const room = getTimerRoom(payload);
       const action = String(payload.action || '').toLowerCase();
-      let cur = timers.get(room) || timers.get('global') || { room, focusMinutes: 50, totalSessions: 3, totalSeconds: 50*60, isRunning: false, currentSession: 1, mode: 'powerup', updatedAt: Date.now() };
-      if (!timers.has(room) && timers.has('global')) cur = { ...timers.get('global'), room };
+      // Selalu buat spread copy agar tidak ada shared mutable reference antar room dan global
+      const existing = timers.get(room) || timers.get('global');
+      let cur: any = existing
+        ? { ...existing, room }
+        : { room, focusMinutes: 50, totalSessions: 3, totalSeconds: 50*60, isRunning: false, currentSession: 1, mode: 'powerup', updatedAt: Date.now() };
       // sinkron live seconds sebelum aksi jika sedang running — biar pause/add akurat
       if (cur.isRunning && cur.updatedAt) {
         const elapsed = Math.floor((Date.now() - cur.updatedAt) / 1000);
@@ -406,9 +420,10 @@ async function startServer() {
       else if (action === 'mode' && payload.mode) cur.mode = String(payload.mode).slice(0,20);
       else if (action === 'set' && typeof payload.totalSeconds === 'number') cur.totalSeconds = payload.totalSeconds;
       cur.updatedAt = Date.now();
+      // simpan sebagai copy terpisah agar room dan global tidak saling share reference
       timers.set(room, cur);
-      timers.set('global', cur);
-      const out = delta !== null ? { ...cur, addedSeconds: delta } : cur;
+      timers.set('global', { ...cur });
+      const out = delta !== null ? { ...cur, addedSeconds: delta } : { ...cur };
       io.to(room).emit('timer-update', out);
       io.emit('timer-update', out);
       if (room !== 'global') io.to('global').emit('timer-update', out);
@@ -465,7 +480,7 @@ async function startServer() {
         return;
       }
 
-      console.log(`Connecting to TikTok live for: ${username} | room=${room.slice(0, 8)}...`);
+      console.log(`Connecting to TikTok live for: ${username} | room=${String(room).slice(0, 8)}...`);
       io.to(room).emit("tiktok-connecting", username);
 
       const tiktokLiveConnection = new WebcastPushConnection(username, {
@@ -479,7 +494,7 @@ async function startServer() {
       connections.set(connKey, tiktokLiveConnection);
 
       tiktokLiveConnection.connect().then((state: any) => {
-        console.log(`Connected to room ${state.roomId} | ${room.slice(0, 8)}...`);
+        console.log(`Connected to room ${state.roomId} | ${String(room).slice(0, 8)}...`);
         io.to(room).emit("tiktok-connected", state.roomId);
       }).catch((err: any) => {
         console.error("Failed to connect", err);
