@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { io, Socket } from "socket.io-client";
 import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2,
@@ -16,6 +17,7 @@ import { TextArea } from "@heroui/react/textarea";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Polling, { PollingRef } from "../components/Polling";
+import { useTtSbMap } from "../hooks/useTtSbMap";
 import { ChatMessage, DockStatus } from "../types/dockTypes";
 import { decrypt } from "../utils/encryption";
 import { gooeyToast } from "goey-toast";
@@ -186,7 +188,7 @@ export default function Home() {
     useEffect(()=>{ try{ localStorage.setItem('dock-swiperMinimized', String(dockSwiperMinimized)); }catch{} },[dockSwiperMinimized]);
     useEffect(()=>{ if(!activePoll || activePoll.ended) return; const t=setInterval(()=>setPollTick(v=>v+1),1000); return ()=>clearInterval(t); },[activePoll]);
     useEffect(()=>{ if(!activeTimer?.isRunning) return; const t=setInterval(()=>setTimerTick(v=>v+1),1000); return ()=>clearInterval(t); },[activeTimer]);
-    // auto minimize — reset timer kalau ada aktivitas di dock, kalau sudah tidak ada aktivitas baru minimize
+    // auto minimize - reset timer kalau ada aktivitas di dock, kalau sudah tidak ada aktivitas baru minimize
     useEffect(()=>{
         if(!autoMinimizeEnabled) return;
         const onActivity = () => setLastActivity(Date.now());
@@ -313,7 +315,7 @@ export default function Home() {
                     key = (sec as any)?.private_key || null;
                 } catch {}
             }
-            // Private key HANYA dibaca di sini — dibuat saat register (DB trigger)
+            // Private key HANYA dibaca di sini - dibuat saat register (DB trigger)
             // atau via tombol Regenerate. Jangan generate otomatis saat login.
             if (key) {
                 setPrivateKey(key);
@@ -465,6 +467,27 @@ export default function Home() {
             autoConnect: false,
         })
     );
+
+    // Pemetaan event TikTok → action Streamer.bot. Dikelola di halaman
+    // /integrations, dieksekusi di sini. Hook sinkron via localStorage.
+    const { map: ttSbMap } = useTtSbMap();
+    // mirror ref agar listener socket (didaftarkan sekali) selalu baca mapping terbaru
+    const ttSbMapRef = useRef(ttSbMap);
+    ttSbMapRef.current = ttSbMap;
+
+    // Kirim DoAction ke Streamer.bot. Diam jika action kosong / SB tidak konek.
+    const fireSbAction = (actionName: string, args: Record<string, unknown>) => {
+        const name = actionName.trim();
+        if (!name) return false;
+        if (!sbSocketRef.current || sbSocketRef.current.readyState !== WebSocket.OPEN) return false;
+        sbSocketRef.current.send(JSON.stringify({
+            request: "DoAction",
+            action: { name },
+            args,
+            id: `ttp_${Date.now()}`,
+        }));
+        return true;
+    };
 
     const [briefing, setBriefing] = useState(() =>
         readStoredConfig("streamBriefing", {
@@ -946,16 +969,29 @@ export default function Home() {
             tkSocketRef.current.on("tiktok-chat", (data: { nickname: string; comment: string; profilePictureUrl?: string; platform?: string }) => {
                 const pf = (data.platform === "twitch" || data.platform === "youtube" || data.platform === "kick" ? data.platform : "tiktok") as ChatMessage["platform"];
                 handleIncomingMessage(data.nickname, data.comment, pf, data.profilePictureUrl, []);
+                const m = ttSbMapRef.current.chat;
+                if (m.enabled) fireSbAction(m.action, { type: "chat", nickname: data.nickname, comment: data.comment, profilePictureUrl: data.profilePictureUrl });
             });
 
-            tkSocketRef.current.on("tiktok-gift", (data: { nickname: string; giftName: string; repeatCount: number; profilePictureUrl?: string }) => {
+            tkSocketRef.current.on("tiktok-gift", (data: { nickname: string; giftName: string; repeatCount: number; profilePictureUrl?: string; diamondCount?: number }) => {
                 addGiftLog(data.nickname, `mengirim ${data.giftName} x${data.repeatCount}`, "tiktok", { giftName: data.giftName, count: data.repeatCount, avatar: data.profilePictureUrl });
                 addSystemLog(`🎁 [TIKTOK GIFT] ${data.nickname} mengirim ${data.giftName} x${data.repeatCount}`, "info");
+                const m = ttSbMapRef.current.gift;
+                if (m.enabled) fireSbAction(m.action, { type: "gift", nickname: data.nickname, giftName: data.giftName, repeatCount: data.repeatCount, diamondCount: data.diamondCount, profilePictureUrl: data.profilePictureUrl });
             });
 
-            tkSocketRef.current.on("tiktok-like", (data: { nickname: string; likeCount: number }) => {
+            tkSocketRef.current.on("tiktok-like", (data: { nickname: string; likeCount: number; totalLikeCount?: number }) => {
                 addActivityLog(`❤️ ${data.nickname} menyukai live! (${data.likeCount} likes)`, "tiktok");
                 addSystemLog(`❤️ [TIKTOK LIKE] ${data.nickname} menyukai live! (${data.likeCount} likes)`, "info");
+                const m = ttSbMapRef.current.like;
+                if (m.enabled) fireSbAction(m.action, { type: "like", nickname: data.nickname, likeCount: data.likeCount, totalLikeCount: data.totalLikeCount });
+            });
+
+            tkSocketRef.current.on("tiktok-follow", (data: { nickname?: string; uniqueId?: string; profilePictureUrl?: string }) => {
+                const nick = data.nickname || (data as any).uniqueId || "??";
+                addActivityLog(`💖 ${nick} mengikuti`, "tiktok");
+                const m = ttSbMapRef.current.follow;
+                if (m.enabled) fireSbAction(m.action, { type: "follow", nickname: nick, profilePictureUrl: data.profilePictureUrl });
             });
 
             tkSocketRef.current.on("tiktok-member", (data: { nickname?: string; uniqueId?: string; profilePictureUrl?: string }) => {
@@ -970,6 +1006,8 @@ export default function Home() {
                     },
                 }));
                 addSystemLog(`👋 [TIKTOK JOIN] ${nick} telah bergabung.`, "info");
+                const m = ttSbMapRef.current.member;
+                if (m.enabled) fireSbAction(m.action, { type: "member", nickname: nick, profilePictureUrl: data.profilePictureUrl });
             });
 
             tkSocketRef.current.on("tiktok-roomUser", (data: any) => {
@@ -2737,6 +2775,20 @@ export default function Home() {
                                     </div>
                                 </div>
 
+                                <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">TikTok → Streamer.bot</h4>
+                                <div className="stat-card space-y-2">
+                                    <p className="text-[9px] text-gray-600 leading-relaxed">Pemetaan event dikelola di halaman Integrasi (tersimpan di database).</p>
+                                    <Link href="/integrations" className="h-9 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white">
+                                        <Zap className="w-3 h-3" /> Kelola Integrasi
+                                    </Link>
+                                    <div className="flex justify-between items-center py-1 border-t border-white/5">
+                                        <span className="text-gray-400 uppercase font-bold text-[8px]">Event aktif</span>
+                                        <span className="text-white font-black uppercase text-[10px]">
+                                            {(["chat", "gift", "like", "follow", "member"] as const).filter((k) => ttSbMap[k].enabled).length}/5
+                                        </span>
+                                    </div>
+                                </div>
+
                                 <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">Dock Auto Minimize</h4>
                                 <div className="stat-card space-y-3">
                                     <label className="flex items-center justify-between p-2.5 bg-white/5 border border-white/10 rounded-xl cursor-pointer">
@@ -2837,7 +2889,7 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* Dock Control Swiper — Poll / Task / Timer swipeable, tidak menumpuk — card asli tetap */}
+            {/* Dock Control Swiper - Poll / Task / Timer swipeable, tidak menumpuk - card asli tetap */}
             {(() => {
                 const hasPoll = !!activePoll;
                 const hasTaskItems = (activeTasks as { items?: unknown[] })?.items?.length || 0;
@@ -2927,14 +2979,14 @@ export default function Home() {
                                             ) : (
                                                 <div className="py-6 flex flex-col items-center gap-2 text-center border border-dashed border-white/10 rounded-xl bg-white/[0.02]">
                                                     <ListChecks className="w-6 h-6 text-gray-600" />
-                                                    <span className="text-gray-500 text-[11px] font-bold">Belum ada task — tambah di bawah</span>
+                                                    <span className="text-gray-500 text-[11px] font-bold">Belum ada task - tambah di bawah</span>
                                                 </div>
                                             )}
                                             <div className="flex gap-2 pt-1">
                                                 <input value={newTaskText} onChange={(e)=>setNewTaskText(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleAddTask(); }} placeholder="Tambah task..." className="flex-1 h-8 bg-white/5 border border-white/10 rounded-full px-3 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50" />
                                                 <button onClick={handleAddTask} className="h-8 px-4 bg-cyan-600 hover:bg-cyan-500 rounded-full text-white text-[11px] font-black uppercase flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>
                                             </div>
-                                            {/* <div className="text-[10px] text-gray-500 leading-relaxed">Sinkron ke OBS via <code className="bg-white/10 px-1 rounded text-white">task widget</code> — toggle/hapus langsung update overlay.</div> */}
+                                            {/* <div className="text-[10px] text-gray-500 leading-relaxed">Sinkron ke OBS via <code className="bg-white/10 px-1 rounded text-white">task widget</code> - toggle/hapus langsung update overlay.</div> */}
                                         </div>
                                     )}
                                     {tab.id === 'timer' && (

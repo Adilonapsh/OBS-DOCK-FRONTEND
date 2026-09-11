@@ -22,7 +22,7 @@ export default function GlassTheme({ font, fontSize, timerSeconds, isRunning, on
   const animStyle = `${eff} ${dur} cubic-bezier(0.16,1,0.3,1) both`;
   const { h, m, sTens, sOnes } = formatHMS(timerSeconds);
   const color = resolveTextColor(textColor, '#ffffff');
-  // Glass: bg & accent now themable — default tint pakai accent jika ada, fallback ke ungu muda lama
+  // Glass: bg & accent now themable - default tint pakai accent jika ada, fallback ke ungu muda lama
   const glassBg = bg && bg !== 'transparent' ? hexToRgba(bg, bgOpacity) : accent && accent !== 'transparent' ? hexToRgba(accent, Math.round(bgOpacity * 0.45)) : hexToRgba('#939eff', Math.round(bgOpacity * 0.45));
   const glassBorder = `${color}66`;
   const sOnesColor = accent && accent !== '#594d4a' && accent !== 'transparent' ? accent : (textColor && textColor !== '#ffffff' ? textColor : '#c3d3ff');

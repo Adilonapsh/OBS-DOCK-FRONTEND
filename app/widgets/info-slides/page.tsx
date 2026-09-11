@@ -31,7 +31,7 @@ function InfoSlidesInner() {
         user={shell.user}
         headerIcon={<Layers className="w-4 h-4 text-white" />}
         title={<>Info Slides <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white text-black rounded-full"><span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />Loop</span></>}
-        subtitle="Sponsor / Rules Loop — 5-10 slide auto-rotate 2-30s, 3 tema (Clean/Boxed/Glass)"
+        subtitle="Sponsor / Rules Loop - 5-10 slide auto-rotate 2-30s, 3 tema (Clean/Boxed/Glass)"
         headerActions={
           <>
             <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
@@ -44,7 +44,7 @@ function InfoSlidesInner() {
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview — {state.theme} • {state.anim} • {state.duration}s</div>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • {state.anim} • {state.duration}s</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.autoRotate ? 'auto' : 'manual'}</span>
             </div>
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[260px]">

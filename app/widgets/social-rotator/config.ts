@@ -1,11 +1,11 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 
 export const SOCIAL_ROTATOR_THEMES = [
-  { value: 'pill', label: 'Pill — Rounded Badge (Recommended)' },
-  { value: 'clean', label: 'Clean — Minimal' },
-  { value: 'glass', label: 'Glass — Blur Premium' },
-  { value: 'boxed', label: 'Boxed — Card' },
-  { value: 'badge', label: 'Badge — Space Mono + Speech Bubble' },
+  { value: 'pill', label: 'Pill - Rounded Badge (Recommended)' },
+  { value: 'clean', label: 'Clean - Minimal' },
+  { value: 'glass', label: 'Glass - Blur Premium' },
+  { value: 'boxed', label: 'Boxed - Card' },
+  { value: 'badge', label: 'Badge - Space Mono + Speech Bubble' },
 ] as const;
 
 export const SOCIAL_ROTATOR_ANIMS = [

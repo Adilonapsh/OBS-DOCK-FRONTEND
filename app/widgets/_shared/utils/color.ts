@@ -1,4 +1,4 @@
-// Shared color helpers — agar semua tema konsisten respect accent/bg/textColor + bgOpacity
+// Shared color helpers - agar semua tema konsisten respect accent/bg/textColor + bgOpacity
 // Fix bug lama: jangan pakai opacity di container (ikut memudarkan text), tapi rgba di background
 
 export function hexToRgba(hex: string, opacityPercent: number): string {

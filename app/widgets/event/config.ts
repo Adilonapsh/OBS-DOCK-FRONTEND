@@ -2,18 +2,18 @@ import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import type { EventItem } from './themes/types';
 
 export const EVENT_THEMES = [
-  { value: 'standard', label: 'Standard — Card' },
-  { value: 'minimal', label: 'Minimal — Pill' },
-  { value: 'cute', label: 'Cute — Lavender Pastel' },
+  { value: 'standard', label: 'Standard - Card' },
+  { value: 'minimal', label: 'Minimal - Pill' },
+  { value: 'cute', label: 'Cute - Lavender Pastel' },
 ] as const;
 
 export const EVENT_FONTS = WIDGET_FONTS;
 
 export const EVENT_ANIMS = [
   { value: 'elegant', label: 'Elegant (Recommended)' },
-  { value: 'softPop', label: 'Soft Pop — Halus' },
-  { value: 'blur', label: 'Blur In — Minimal' },
-  { value: 'luxe', label: 'Luxe — Editorial' },
+  { value: 'softPop', label: 'Soft Pop - Halus' },
+  { value: 'blur', label: 'Blur In - Minimal' },
+  { value: 'luxe', label: 'Luxe - Editorial' },
   { value: 'slideUp', label: 'Slide Up' },
   { value: 'slideLeft', label: 'Slide Left' },
   { value: 'slideRight', label: 'Slide Right' },
@@ -36,7 +36,7 @@ export const EVENT_HORIZONTAL_ANIMS = [
 ] as const;
 
 export const EVENT_HIDE_ANIMS = [
-  { value: 'fade', label: 'Fade — Halus (default)' },
+  { value: 'fade', label: 'Fade - Halus (default)' },
   { value: 'elegant', label: 'Elegant Out' },
   { value: 'blur', label: 'Blur Out' },
   { value: 'softPop', label: 'Soft Pop Out' },

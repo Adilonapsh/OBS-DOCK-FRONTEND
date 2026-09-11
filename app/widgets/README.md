@@ -1,11 +1,11 @@
-# Widgets — Clean Code Guide
+# Widgets - Clean Code Guide
 
 Folder `app/widgets/*` mengikuti best-practice clean code setelah refactor.
 
 ## Struktur Folder
 ```
 app/widgets/
-  _shared/              # DRY layer — jangan duplikasi
+  _shared/              # DRY layer - jangan duplikasi
     utils/socket.ts, url.ts, font.ts, storage.ts
     hooks/useWidgetSocket.ts, useCopy.ts
     constants/fonts.ts, animations.ts

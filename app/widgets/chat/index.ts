@@ -1,4 +1,4 @@
-// Chat widget public API — clean barrel
+// Chat widget public API - clean barrel
 export * from './config';
 export * from './themes/types';
 export { useChatSettings } from './hooks/useChatSettings';

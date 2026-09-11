@@ -86,16 +86,16 @@ export function InfoSlidesSettingsForm({ state, update, reset }: { state: InfoSl
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi — Global</h2>
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
           <PositionPicker value={(state as unknown as { pos: string }).pos || 'bl'} onChange={(v) => update('pos' as keyof InfoSlidesSettings, v)} />
         </div>
       </div>
 
-      {/* Slides editor — orderable via drag + ↑↓ */}
+      {/* Slides editor - orderable via drag + ↑↓ */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-white font-black uppercase text-[11px] tracking-widest">Slides (max 10) — {slides.length}/10</div>
+          <div className="text-white font-black uppercase text-[11px] tracking-widest">Slides (max 10) - {slides.length}/10</div>
           <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1"><GripVertical className="w-3 h-3" /> drag untuk urutkan</span>
         </div>
         <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">

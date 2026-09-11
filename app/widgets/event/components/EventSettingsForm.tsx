@@ -45,7 +45,7 @@ export function EventSettingsForm({
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" min={10} max={26} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 14)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof EventSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter — default fade halus</span></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof EventSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade halus</span></label>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ export function EventSettingsForm({
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi — Global</h2>
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
           <PositionPicker value={(state as unknown as { pos: string }).pos || 'bl'} onChange={(v) => update('pos' as keyof EventSettings, v)} />
         </div>
@@ -107,14 +107,14 @@ export function EventSettingsForm({
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" /> Suara — Beda per Event</h2>
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" /> Suara - Beda per Event</h2>
         <div className="space-y-4 bg-white/5 border border-white/10 rounded-2xl p-3">
           {/* Join */}
           <div className="space-y-2 pb-3 border-b border-white/5">
             <div className="flex items-center gap-2 text-white font-black text-[11px]"><UserPlus className="w-3 h-3 text-green-400" /> Join</div>
             <label className="flex items-center justify-between p-2 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pakai Suara</span><input type="checkbox" checked={(state as unknown as { joinSoundEnabled: boolean }).joinSoundEnabled} onChange={(e) => update('joinSoundEnabled' as keyof EventSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
             <label className="block"><span className="text-[10px] font-bold text-gray-300">URL</span><input value={(state as unknown as { joinSoundUrl: string }).joinSoundUrl} onChange={(e) => update('joinSoundUrl' as keyof EventSettings, e.target.value)} placeholder="https://.../join.mp3" className="mt-1 w-full h-8 bg-black/40 border border-white/10 rounded-xl px-2 text-[11px] font-mono text-white placeholder:text-gray-500" /></label>
-            <label className="block"><span className="text-[10px] font-bold text-gray-300">Volume — {(state as unknown as { joinSoundVolume: number }).joinSoundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { joinSoundVolume: number }).joinSoundVolume} onChange={(e) => update('joinSoundVolume' as keyof EventSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
+            <label className="block"><span className="text-[10px] font-bold text-gray-300">Volume - {(state as unknown as { joinSoundVolume: number }).joinSoundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { joinSoundVolume: number }).joinSoundVolume} onChange={(e) => update('joinSoundVolume' as keyof EventSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
             <button onClick={() => { const a=new Audio((state as unknown as { joinSoundUrl: string }).joinSoundUrl); a.volume=(state as unknown as { joinSoundVolume: number }).joinSoundVolume/100; a.play().catch(()=>{}); }} className="w-full h-7 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white flex items-center justify-center gap-1.5"><Volume2 className="w-3 h-3" /> Test Join</button>
           </div>
           {/* Gift */}
@@ -122,7 +122,7 @@ export function EventSettingsForm({
             <div className="flex items-center gap-2 text-white font-black text-[11px]"><Gift className="w-3 h-3 text-pink-400" /> Gift</div>
             <label className="flex items-center justify-between p-2 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pakai Suara</span><input type="checkbox" checked={(state as unknown as { giftSoundEnabled: boolean }).giftSoundEnabled} onChange={(e) => update('giftSoundEnabled' as keyof EventSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
             <label className="block"><span className="text-[10px] font-bold text-gray-300">URL</span><input value={(state as unknown as { giftSoundUrl: string }).giftSoundUrl} onChange={(e) => update('giftSoundUrl' as keyof EventSettings, e.target.value)} placeholder="https://.../gift.mp3" className="mt-1 w-full h-8 bg-black/40 border border-white/10 rounded-xl px-2 text-[11px] font-mono text-white placeholder:text-gray-500" /></label>
-            <label className="block"><span className="text-[10px] font-bold text-gray-300">Volume — {(state as unknown as { giftSoundVolume: number }).giftSoundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { giftSoundVolume: number }).giftSoundVolume} onChange={(e) => update('giftSoundVolume' as keyof EventSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
+            <label className="block"><span className="text-[10px] font-bold text-gray-300">Volume - {(state as unknown as { giftSoundVolume: number }).giftSoundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { giftSoundVolume: number }).giftSoundVolume} onChange={(e) => update('giftSoundVolume' as keyof EventSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
             <button onClick={() => { const a=new Audio((state as unknown as { giftSoundUrl: string }).giftSoundUrl); a.volume=(state as unknown as { giftSoundVolume: number }).giftSoundVolume/100; a.play().catch(()=>{}); }} className="w-full h-7 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white flex items-center justify-center gap-1.5"><Volume2 className="w-3 h-3" /> Test Gift</button>
           </div>
           {/* Like */}
@@ -130,7 +130,7 @@ export function EventSettingsForm({
             <div className="flex items-center gap-2 text-white font-black text-[11px]"><Heart className="w-3 h-3 text-pink-400 fill-pink-400" /> Like</div>
             <label className="flex items-center justify-between p-2 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pakai Suara</span><input type="checkbox" checked={(state as unknown as { likeSoundEnabled: boolean }).likeSoundEnabled} onChange={(e) => update('likeSoundEnabled' as keyof EventSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
             <label className="block"><span className="text-[10px] font-bold text-gray-300">URL</span><input value={(state as unknown as { likeSoundUrl: string }).likeSoundUrl} onChange={(e) => update('likeSoundUrl' as keyof EventSettings, e.target.value)} placeholder="https://.../like.mp3" className="mt-1 w-full h-8 bg-black/40 border border-white/10 rounded-xl px-2 text-[11px] font-mono text-white placeholder:text-gray-500" /></label>
-            <label className="block"><span className="text-[10px] font-bold text-gray-300">Volume — {(state as unknown as { likeSoundVolume: number }).likeSoundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { likeSoundVolume: number }).likeSoundVolume} onChange={(e) => update('likeSoundVolume' as keyof EventSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
+            <label className="block"><span className="text-[10px] font-bold text-gray-300">Volume - {(state as unknown as { likeSoundVolume: number }).likeSoundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { likeSoundVolume: number }).likeSoundVolume} onChange={(e) => update('likeSoundVolume' as keyof EventSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
             <button onClick={() => { const a=new Audio((state as unknown as { likeSoundUrl: string }).likeSoundUrl); a.volume=(state as unknown as { likeSoundVolume: number }).likeSoundVolume/100; a.play().catch(()=>{}); }} className="w-full h-7 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white flex items-center justify-center gap-1.5"><Volume2 className="w-3 h-3" /> Test Like</button>
           </div>
           <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Masing-masing event punya suara terpisah • OBS Browser Source perlu centang <b className="text-white">Control audio via OBS</b></div>
@@ -140,7 +140,7 @@ export function EventSettingsForm({
       <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-3">
         <div className="text-violet-300 font-black uppercase text-[10px]">Sumber Event</div>
         <div className="text-gray-400 text-[11px] leading-relaxed mt-1">Join <code className="bg-white/10 px-1 rounded text-white">tiktok-member</code> • Gift <code className="bg-white/10 px-1 rounded text-white">tiktok-gift</code> • Like <code className="bg-white/10 px-1 rounded text-white">tiktok-like</code> dari <code className="bg-white/10 px-1 rounded text-white">server.ts</code> via TikTok Live + Streamer.bot. Suara Join diputar di OBS (allow audio).</div>
-        <Link href={privateKey ? `/dock?key=${privateKey}` : '/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Buka Dock — Connect TikTok</Link>
+        <Link href={privateKey ? `/dock?key=${privateKey}` : '/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Buka Dock - Connect TikTok</Link>
       </div>
 
       <div className="flex gap-2">

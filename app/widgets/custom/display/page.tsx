@@ -48,7 +48,7 @@ function CustomInner() {
               <div className="layer-content w-full h-full text-white text-sm" dangerouslySetInnerHTML={{ __html: renderTemplate(l.template, demo as any) }} />
             </div>
           ))}
-          {layers.length===0 && <div className="absolute inset-0 grid place-items-center text-white/40 text-sm">No layers — add di /widgets/editor</div>}
+          {layers.length===0 && <div className="absolute inset-0 grid place-items-center text-white/40 text-sm">No layers - add di /widgets/editor</div>}
         </div>
       </div>
     </>

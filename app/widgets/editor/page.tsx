@@ -15,8 +15,8 @@ type Layer = {
   x: number; y: number; w: number; h: number; // 0-100 %
   template: string;
   css: string;
-  js: string; // JS animation — el.animate(...) — pakai JS biar bisa custom easing/timeline
-  anim: string; // CSS anim name (elegantIn etc) — kalau js kosong pakai ini
+  js: string; // JS animation - el.animate(...) - pakai JS biar bisa custom easing/timeline
+  anim: string; // CSS anim name (elegantIn etc) - kalau js kosong pakai ini
   opacity: number; // 0-100
   rotate: number; // deg
   scale: number; // 0.5-2
@@ -35,7 +35,7 @@ const DEFAULT_TEMPLATES: Record<LayerType, string> = {
   clock: '<div class="clock">{{clock}}</div>',
   poll: '<div class="poll">{{polls}}</div>',
   social: '<div class="social"><span>{{platform}}</span> {{handle}}</div>',
-  custom: '<div class="custom">{{username}} — {{message}} — {{timer}} — {{clock}}</div>',
+  custom: '<div class="custom">{{username}} - {{message}} - {{timer}} - {{clock}}</div>',
 };
 
 const LAYER_ICON: Record<LayerType, any> = {
@@ -214,7 +214,7 @@ function EditorContent() {
                 </div>
               ))}
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">Drag layer di canvas • gunakan PositionPicker di kanan untuk snap ke t/l/b/r/center/tl — live preview iframe di kanan pakai 1 file `/widgets/custom/display`</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">Drag layer di canvas • gunakan PositionPicker di kanan untuk snap ke t/l/b/r/center/tl - live preview iframe di kanan pakai 1 file `/widgets/custom/display`</div>
           </div>
 
           {/* Right: Properties + Template */}
@@ -251,10 +251,10 @@ function EditorContent() {
                     <label className="block"><span className="text-[9px] font-bold text-gray-400">Background</span><div className="flex gap-1.5 mt-1"><input type="color" value={selLayer.bg === 'transparent' ? '#000000' : selLayer.bg} onChange={e=>updateLayer(selLayer.id,{bg:e.target.value})} className="w-8 h-8 rounded-lg p-1 bg-black/40 border border-white/10" /><button onClick={()=>updateLayer(selLayer.id,{bg:'transparent'})} className={`flex-1 h-8 rounded-lg text-[10px] font-black uppercase border ${selLayer.bg==='transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
                   </div>
                   <div className="space-y-2">
-                    <div className="text-white font-black uppercase text-[10px] tracking-widest">Template — drag variable</div>
+                    <div className="text-white font-black uppercase text-[10px] tracking-widest">Template - drag variable</div>
                     <div className="flex flex-wrap gap-1.5">
                       {TEMPLATE_VARS.map(v => (
-                        <button key={v.key} draggable onDragStart={e=>e.dataTransfer.setData('text/plain', `{{${v.key}}}`)} onClick={()=>insertVar(v.key)} className="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-[10px] font-bold text-white" title={`${v.desc} — ${v.example}`}>{'{{'}<span className="text-violet-300">{v.key}</span>{'}}'}</button>
+                        <button key={v.key} draggable onDragStart={e=>e.dataTransfer.setData('text/plain', `{{${v.key}}}`)} onClick={()=>insertVar(v.key)} className="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-[10px] font-bold text-white" title={`${v.desc} - ${v.example}`}>{'{{'}<span className="text-violet-300">{v.key}</span>{'}}'}</button>
                       ))}
                     </div>
                     <textarea id="custom-template" value={selLayer.template} onChange={e=>updateLayer(selLayer.id,{template:e.target.value})} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault(); const txt=e.dataTransfer.getData('text/plain'); if(txt) updateLayer(selLayer.id,{template: selLayer.template + txt});}} placeholder="<div>{{username}}: {{message}}</div>" className="w-full h-28 bg-black/40 border border-white/10 rounded-xl p-2 text-xs font-mono text-white" />
@@ -265,12 +265,12 @@ function EditorContent() {
                     <textarea value={selLayer.css} onChange={e=>updateLayer(selLayer.id,{css:e.target.value})} placeholder=".chat-bubble{...}" className="w-full h-28 bg-black/40 border border-white/10 rounded-xl p-2 text-xs font-mono text-white" />
                   </div>
                   <div className="space-y-2">
-                    <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center justify-between"><span>Animasi — CSS atau JS</span><span className="text-[9px] font-normal normal-case text-gray-500">{selLayer.js ? 'JS' : 'CSS'}</span></div>
+                    <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center justify-between"><span>Animasi - CSS atau JS</span><span className="text-[9px] font-normal normal-case text-gray-500">{selLayer.js ? 'JS' : 'CSS'}</span></div>
                     <select value={selLayer.anim || 'elegantIn'} onChange={e=>updateLayer(selLayer.id,{anim:e.target.value, js: ''})} className="w-full h-8 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white">
-                      <option value="elegantIn" className="bg-zinc-900">CSS — Elegant In (blur + slide)</option>
-                      <option value="softPopIn" className="bg-zinc-900">CSS — Soft Pop</option>
-                      <option value="slideUp" className="bg-zinc-900">CSS — Slide Up</option>
-                      <option value="fadeIn" className="bg-zinc-900">CSS — Fade</option>
+                      <option value="elegantIn" className="bg-zinc-900">CSS - Elegant In (blur + slide)</option>
+                      <option value="softPopIn" className="bg-zinc-900">CSS - Soft Pop</option>
+                      <option value="slideUp" className="bg-zinc-900">CSS - Slide Up</option>
+                      <option value="fadeIn" className="bg-zinc-900">CSS - Fade</option>
                     </select>
                     <div className="grid grid-cols-3 gap-1.5">
                       {[
@@ -281,8 +281,8 @@ function EditorContent() {
                         <button key={p.label} onClick={()=>updateLayer(selLayer.id,{js:p.code, anim: ''})} className={`h-8 rounded-lg border text-[10px] font-bold ${selLayer.js===p.code ? 'bg-violet-600 text-white border-violet-600' : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'}`}>{p.label}</button>
                       ))}
                     </div>
-                    <textarea value={selLayer.js || ''} onChange={e=>updateLayer(selLayer.id,{js:e.target.value})} placeholder="JS: el.animate([...], {duration:500}) — pakai 'el' untuk layer element" className="w-full h-20 bg-black/40 border border-white/10 rounded-xl p-2 text-xs font-mono text-white" />
-                    <div className="text-[10px] text-gray-500">Kosongkan JS untuk pakai CSS anim di atas. Pakai <code className="bg-white/10 px-1 rounded">el</code> di JS — contoh: <code className="bg-white/10 px-1 rounded">el.animate([{`{opacity:0}`},{`{opacity:1}`}],{"{duration:400}"})</code></div>
+                    <textarea value={selLayer.js || ''} onChange={e=>updateLayer(selLayer.id,{js:e.target.value})} placeholder="JS: el.animate([...], {duration:500}) - pakai 'el' untuk layer element" className="w-full h-20 bg-black/40 border border-white/10 rounded-xl p-2 text-xs font-mono text-white" />
+                    <div className="text-[10px] text-gray-500">Kosongkan JS untuk pakai CSS anim di atas. Pakai <code className="bg-white/10 px-1 rounded">el</code> di JS - contoh: <code className="bg-white/10 px-1 rounded">el.animate([{`{opacity:0}`},{`{opacity:1}`}],{"{duration:400}"})</code></div>
                     {selLayer.js ? <button onClick={()=>updateLayer(selLayer.id,{js:''})} className="text-[10px] text-red-400 underline">Hapus JS, pakai CSS</button> : null}
                   </div>
                   <div className="space-y-2">

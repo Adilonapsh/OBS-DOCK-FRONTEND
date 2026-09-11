@@ -1,5 +1,5 @@
 'use client';
-// DEPRECATED: Live preview sekarang 1 file dengan OBS — app/widgets/timer/display/page.tsx?simulate=1
+// DEPRECATED: Live preview sekarang 1 file dengan OBS - app/widgets/timer/display/page.tsx?simulate=1
 // File ini dipertahankan untuk backward-compat, tapi settings page sekarang pakai iframe ke display+simulate.
 // Jika butuh preview tanpa iframe, import getTimerTheme + color helpers dan pakai pattern yang sama.
 import type { TimerSettings } from '../config';

@@ -32,7 +32,7 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
   const [copiedType, setCopiedType] = useState<string | null>(null);
   const prevBytesRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
-  // stream prop sudah fresh dari parent (polling 5 detik) — tidak perlu mirror state
+  // stream prop sudah fresh dari parent (polling 5 detik) - tidak perlu mirror state
 
   const getStreamUrl = () => {
     const s = stream;

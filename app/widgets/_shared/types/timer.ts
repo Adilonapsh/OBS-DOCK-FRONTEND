@@ -1,4 +1,4 @@
-// Shared timer core — generalisasi untuk semua widget yang butuh kontrol waktu
+// Shared timer core - generalisasi untuk semua widget yang butuh kontrol waktu
 // Dipakai oleh timer/widget lain (mis. subathon, focus, countdown) agar field konsisten
 
 export type TimerMode = 'powerup' | 'sleep' | 'locked' | 'paused' | string;
@@ -16,7 +16,7 @@ export type TimerRuntimeState = TimerCoreConfig & {
   addedSeconds?: number | null;
 };
 
-// Helper untuk membangun URL timer yang konsisten — dipakai semua widget timer
+// Helper untuk membangun URL timer yang konsisten - dipakai semua widget timer
 export function timerUrlKeys() {
   return {
     stringKeys: ['theme', 'font', 'accent', 'textColor', 'pos', 'anim', 'subathonMode'] as const,

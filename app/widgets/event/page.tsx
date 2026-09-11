@@ -33,7 +33,7 @@ function EventSettingsInner() {
         user={shell.user}
         headerIcon={<Gift className="w-4 h-4 text-white" />}
         title={<>Event Overlay <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white text-black rounded-full"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />Live</span></>}
-        subtitle="Join • Gift • Like — dari server.ts tiktok-member/gift/like (TikTok + Streamer.bot)"
+        subtitle="Join • Gift • Like - dari server.ts tiktok-member/gift/like (TikTok + Streamer.bot)"
         headerActions={
           <>
             <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
@@ -46,14 +46,14 @@ function EventSettingsInner() {
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview — {state.theme} • {state.anim} <span className="hidden sm:inline-flex gap-1">{state.showJoin && <UserPlus className="w-3 h-3 text-green-400" />}{state.showGift && <Gift className="w-3 h-3 text-[#FE2C55]" />}{state.showLike && <Heart className="w-3 h-3 text-pink-400" />}</span></div>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • {state.anim} <span className="hidden sm:inline-flex gap-1">{state.showJoin && <UserPlus className="w-3 h-3 text-green-400" />}{state.showGift && <Gift className="w-3 h-3 text-[#FE2C55]" />}{state.showLike && <Heart className="w-3 h-3 text-pink-400" />}</span></div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.maxEvents} events</span>
             </div>
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px] flex p-4" style={getPositionStyle((state as any).pos || (state as any).verticalAlignment || 'bl') as any}>
               <EventPreview state={state} />
               <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULASI • {state.theme} • {state.font} • {(state as any).pos || 'bl'}</div>
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">Preview simulasi — data real di OBS (<code className="bg-white/10 px-1 rounded text-white">…/event/display?obs=1</code>) via socket.</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">Preview simulasi - data real di OBS (<code className="bg-white/10 px-1 rounded text-white">…/event/display?obs=1</code>) via socket.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
               <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>

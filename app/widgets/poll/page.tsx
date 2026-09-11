@@ -181,9 +181,9 @@ function PollSettingsInner(){
                 </div>
               </div>
 
-              {/* Posisi — Global */}
+              {/* Posisi - Global */}
               <div className="space-y-3">
-                <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi — Global</h2>
+                <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
                   <PositionPicker value={state.pos || 'bl'} onChange={(v)=>update('pos', v)} />
                 </div>

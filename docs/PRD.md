@@ -1,6 +1,6 @@
-# PRD — OBS Overlays (TikTok + Streamer.bot → OBS Browser Source)
+# PRD - OBS Overlays (TikTok + Streamer.bot → OBS Browser Source)
 
-> **Product Requirements Document untuk Agent AI — sumber kebenaran tunggal.**
+> **Product Requirements Document untuk Agent AI - sumber kebenaran tunggal.**
 > Versi: `1.4` | Tanggal: `2026-09-08` | Stack: `Next.js 16 + Socket.IO + TikTok Live Connector + Streamer.bot WS + Supabase`
 > Owner: `obs-overlays` | File: `docs/PRD.md` (agent wajib baca sebelum coding)
 
@@ -40,19 +40,19 @@
 - **Streamer.bot:** WS `ws://192.168.18.11:8080/streamerbot` → `GetActions` + `Subscribe Twitch:ChatMessage, YouTube:Message` → broadcast `tiktok-chat` `server.ts:60,77,142`
 - **HTTP API:** `POST /api/chat` `server.ts:560` untuk test/SBOT
 - **Widgets:**
-  - `chat` — 5 tema (Standard/Bubble/Clean/Boxed/Cute Lavender Pastel), `horizontal/inline`, 6 animasi elegant, `maxMessages 1-30`, `hideAfter`, `showAvatar/Platform/Timestamp`, cute warna kustom 7 picker (tanpa `bg` container) `app/widgets/chat/*`
-  - `poll` — 6 tema (Bar/Card/Donut/Minimal/Anime/Flower), vote `1-6`, `total/percent/count/timer`, auto-end `duration 10-600s`, pause/resume/visibility `server.ts:205, poll/*`
-  - `clock` — 3 baris, `dayjs` format, `Asia/Jakarta`, opacity/size/color per baris `app/widgets/clock/*`
-  - `media-player` — 11 tema (Standard/Matte/MatteDark/Compact/.../Vinyl/ColorPalette), SMTC `127.0.0.1:5000/now-playing`, `node-vibrant` palette, `autoHide` `app/widgets/media-player/*`
-  - `lyrics` — 11 tema sama, hanya lirik synced LRCLIB `app/widgets/lyrics/*`
-  - `timer` — 4 tema (Focus/Minimal/Glass/Subathon), `focusMinutes 1-120` + `totalSessions`, `subathonMode powerup/sleep/locked/paused`, semua tema respect `accent/bg/bgOpacity/textColor/fontSize` via `resolveBg`/`resolveTextColor`, registry `getTimerTheme` untuk tambah tema 3 langkah `app/widgets/timer/*`
-  - `task` — 2 tema (Focus/Minimal), shared timer core `app/widgets/task/*`
-  - `display` — legacy full-combined (chat+gift+pinned/like/counter/goal/ticker) `app/widgets/display/page.tsx:699`
-  - `editor` — theme editor + `CssEditor` + Monaco `app/widgets/editor/page.tsx:1157`
+  - `chat` - 5 tema (Standard/Bubble/Clean/Boxed/Cute Lavender Pastel), `horizontal/inline`, 6 animasi elegant, `maxMessages 1-30`, `hideAfter`, `showAvatar/Platform/Timestamp`, cute warna kustom 7 picker (tanpa `bg` container) `app/widgets/chat/*`
+  - `poll` - 6 tema (Bar/Card/Donut/Minimal/Anime/Flower), vote `1-6`, `total/percent/count/timer`, auto-end `duration 10-600s`, pause/resume/visibility `server.ts:205, poll/*`
+  - `clock` - 3 baris, `dayjs` format, `Asia/Jakarta`, opacity/size/color per baris `app/widgets/clock/*`
+  - `media-player` - 11 tema (Standard/Matte/MatteDark/Compact/.../Vinyl/ColorPalette), SMTC `127.0.0.1:5000/now-playing`, `node-vibrant` palette, `autoHide` `app/widgets/media-player/*`
+  - `lyrics` - 11 tema sama, hanya lirik synced LRCLIB `app/widgets/lyrics/*`
+  - `timer` - 4 tema (Focus/Minimal/Glass/Subathon), `focusMinutes 1-120` + `totalSessions`, `subathonMode powerup/sleep/locked/paused`, semua tema respect `accent/bg/bgOpacity/textColor/fontSize` via `resolveBg`/`resolveTextColor`, registry `getTimerTheme` untuk tambah tema 3 langkah `app/widgets/timer/*`
+  - `task` - 2 tema (Focus/Minimal), shared timer core `app/widgets/task/*`
+  - `display` - legacy full-combined (chat+gift+pinned/like/counter/goal/ticker) `app/widgets/display/page.tsx:699`
+  - `editor` - theme editor + `CssEditor` + Monaco `app/widgets/editor/page.tsx:1157`
 - **Dock:** connect TikTok `connect-tiktok`, mock-events, gift/like/member preview `app/dock/*`
 - **Widget System:** `app/widgets/page.tsx:529` listing + `getWidgetUrl(transparent)` + drag-to-OBS
-- **Shared Layer:** `BaseThemeProps`, `hexToRgba/resolveBg`, `defineWidgetConfig`, `createUseWidgetSettings`, `WIDGET_POSITIONS` global, `PositionPicker` 3x3, `KEYFRAMES_CSS` — semua widget pakai `_shared` `app/widgets/_shared/*`
-- **Preview System:** 1 file untuk OBS + live preview — `display/page.tsx` handle `?obs=1` dan `?simulate=1` (dummy tick tanpa socket), settings page iframe `simulate=1` biar 1 source, langsung sync saat setting berubah
+- **Shared Layer:** `BaseThemeProps`, `hexToRgba/resolveBg`, `defineWidgetConfig`, `createUseWidgetSettings`, `WIDGET_POSITIONS` global, `PositionPicker` 3x3, `KEYFRAMES_CSS` - semua widget pakai `_shared` `app/widgets/_shared/*`
+- **Preview System:** 1 file untuk OBS + live preview - `display/page.tsx` handle `?obs=1` dan `?simulate=1` (dummy tick tanpa socket), settings page iframe `simulate=1` biar 1 source, langsung sync saat setting berubah
 
 ### Out of Scope
 - Transcoding, recording, analytics historis, AI moderation, donation gateway.
@@ -85,7 +85,7 @@
 - `FR-4.2` Palette `node-vibrant` dari `Thumbnail` → `AccentPalette` `Vibrant/Muted/DarkVibrant...` `media-player/display/page.tsx:42`.
 
 ### FR-5 Overlay & Editor (Legacy)
-- `FR-5.1` `display/page.tsx` & `editor/page.tsx` pakai `OverlayTheme` (`queryToTheme/themeToQuery`) dari `app/overlay/components/theme.ts` — jangan hapus folder `app/overlay`.
+- `FR-5.1` `display/page.tsx` & `editor/page.tsx` pakai `OverlayTheme` (`queryToTheme/themeToQuery`) dari `app/overlay/components/theme.ts` - jangan hapus folder `app/overlay`.
 - `FR-5.2` `editor` pakai `Monaco` + `CssEditor` + `themePresets` `app/overlay/themes/presets`.
 
 ### FR-6 Dock & Mock
@@ -93,15 +93,15 @@
 - `FR-6.2` `tiktok-connected/connecting/error/disconnected`, `sb-connected` status.
 
 ### FR-7 Timer (Generalisasi)
-- `FR-7.1` Timer core `TimerCoreConfig { focusMinutes 1-120, totalSessions 1-10, subathonMode }` + runtime `timerSeconds/isRunning/currentSession` — shared via `app/widgets/_shared/types/timer.ts` dan `baseTheme.ts: TimerBaseProps`, dipakai `timer` dan `task` agar field konsisten.
-- `FR-7.2` Tema timer via registry `app/widgets/timer/themes/registry.ts: getTimerTheme(theme)` + `TIMER_THEMES` config — tambah tema baru 3 langkah (buat `MyTheme.tsx` + daftar di registry + entry di `TIMER_THEMES`) tanpa ubah `display`/`page.tsx`.
-- `FR-7.3` Semua tema timer WAJIB pakai `resolveBg(bg,accent,fallback,bgOpacity)` dan `resolveTextColor(textColor)` dari `app/widgets/_shared/utils/color.ts` — tidak boleh hardcode hex di CSS/TSX, tidak boleh pakai `opacity` di container (harus `rgba`). Fix: `Focus`/`Minimal`/`Glass`/`Subathon` sudah respect `accent/bg/bgOpacity/textColor/fontSize`.
-- `FR-7.4` URL timer `buildTimerUrl` pakai `buildWidgetUrl` dengan grouping `stringKeys [theme,font,accent,textColor,pos,anim,subathonMode]`, `intKeys [fontSize,bgOpacity,focusMinutes,totalSessions]`, `transparentKeys [bg]` — pola generalisasi untuk widget baru via `defineWidgetConfig`.
+- `FR-7.1` Timer core `TimerCoreConfig { focusMinutes 1-120, totalSessions 1-10, subathonMode }` + runtime `timerSeconds/isRunning/currentSession` - shared via `app/widgets/_shared/types/timer.ts` dan `baseTheme.ts: TimerBaseProps`, dipakai `timer` dan `task` agar field konsisten.
+- `FR-7.2` Tema timer via registry `app/widgets/timer/themes/registry.ts: getTimerTheme(theme)` + `TIMER_THEMES` config - tambah tema baru 3 langkah (buat `MyTheme.tsx` + daftar di registry + entry di `TIMER_THEMES`) tanpa ubah `display`/`page.tsx`.
+- `FR-7.3` Semua tema timer WAJIB pakai `resolveBg(bg,accent,fallback,bgOpacity)` dan `resolveTextColor(textColor)` dari `app/widgets/_shared/utils/color.ts` - tidak boleh hardcode hex di CSS/TSX, tidak boleh pakai `opacity` di container (harus `rgba`). Fix: `Focus`/`Minimal`/`Glass`/`Subathon` sudah respect `accent/bg/bgOpacity/textColor/fontSize`.
+- `FR-7.4` URL timer `buildTimerUrl` pakai `buildWidgetUrl` dengan grouping `stringKeys [theme,font,accent,textColor,pos,anim,subathonMode]`, `intKeys [fontSize,bgOpacity,focusMinutes,totalSessions]`, `transparentKeys [bg]` - pola generalisasi untuk widget baru via `defineWidgetConfig`.
 
 ### FR-8 Global Position & Live Preview
 - `FR-8.1` Posisi global `WIDGET_POSITIONS = tl,t,tr,l,center,r,bl,b,br` + aliases `top→t, bottom→b, left→l, right→r, top-left→tl, bottom-right→br, etc.` via `app/widgets/_shared/constants/positions.ts: normalizePosition()`. Helper `getPositionClasses(pos)` return `items-* justify-*` untuk container `fixed inset-0 flex`.
-- `FR-8.2` Komponen `PositionPicker` 3x3 grid `app/widgets/_shared/components/PositionPicker.tsx` — dipakai semua widget (timer sudah pakai, chat/poll/media bisa reuse). Value `pos` disimpan di `?pos=` dan `localStorage`, termasuk `t,l,b,r` single-axis.
-- `FR-8.3` Live preview & OBS pakai **1 file** — `app/widgets/timer/display/page.tsx` handle `?obs=1` (transparent) dan `?simulate=1` (preview dummy tick tanpa socket). Settings page `app/widgets/timer/page.tsx` embed iframe `.../display?theme=...&pos=...&simulate=1` dengan `key={simulateUrl}` biar reload saat setting berubah — langsung mensimulasikan `t,l,b,r,center,tl/tr/bl/br` tanpa duplikasi logic `TimerPreview`.
+- `FR-8.2` Komponen `PositionPicker` 3x3 grid `app/widgets/_shared/components/PositionPicker.tsx` - dipakai semua widget (timer sudah pakai, chat/poll/media bisa reuse). Value `pos` disimpan di `?pos=` dan `localStorage`, termasuk `t,l,b,r` single-axis.
+- `FR-8.3` Live preview & OBS pakai **1 file** - `app/widgets/timer/display/page.tsx` handle `?obs=1` (transparent) dan `?simulate=1` (preview dummy tick tanpa socket). Settings page `app/widgets/timer/page.tsx` embed iframe `.../display?theme=...&pos=...&simulate=1` dengan `key={simulateUrl}` biar reload saat setting berubah - langsung mensimulasikan `t,l,b,r,center,tl/tr/bl/br` tanpa duplikasi logic `TimerPreview`.
 - `FR-8.4` Preview container menampilkan faint 9-grid overlay dan badge `SIMULATE • theme • pos` biar align terlihat sebelum masuk OBS.
 
 ---
@@ -150,7 +150,7 @@
                                                                     |
 Browser: /widgets/chat/display?key=room&... --io(join-room)--> io --+
                                                                     |
-OBS Browser Source (?obs=1, transparent) ←—— Socket.IO (poll-update, tiktok-gift/like/member, pinned-chat)
+OBS Browser Source (?obs=1, transparent) ←-- Socket.IO (poll-update, tiktok-gift/like/member, pinned-chat)
 Supabase: profiles.private_key / user_private_keys → resolvePrivateKey → room isolation
 SMTC Bridge 127.0.0.1:5000 → /now-playing → media-player/lyrics polling
 ```
@@ -173,7 +173,7 @@ SMTC Bridge 127.0.0.1:5000 → /now-playing → media-player/lyrics polling
 - Query: `?theme=&font=&fontSize=&accent=&bg=&bgOpacity=&pos=&focusMinutes=&totalSessions=&subathonMode=&textColor=&anim=&maxMessages=&hideAfter=&showAvatar=&showPlatform=&showTimestamp=&horizontal=&horizontalAnim=&inline=&cuteBubbleBg...&key=&obs=1&simulate=1`
 - Storage: `localStorage: 'chat-settings' | 'poll-settings' | 'clock-settings' | 'media-player-settings' | 'timer-settings' | 'task-settings'` + `sessionStorage: dock_private_verified`
 - Mask: `maskPrivateKey(url)` → `key=••••` untuk copy.
-- Position: `?pos=tl|t|tr|l|center|r|bl|b|br` alias `top/bottom/left/right/top-left/...` via `normalizePosition()` — global, dipakai semua widget, 1 param untuk OBS align.
+- Position: `?pos=tl|t|tr|l|center|r|bl|b|br` alias `top/bottom/left/right/top-left/...` via `normalizePosition()` - global, dipakai semua widget, 1 param untuk OBS align.
 
 ---
 
@@ -199,5 +199,5 @@ SMTC Bridge 127.0.0.1:5000 → /now-playing → media-player/lyrics polling
 - **Baca dulu:** `docs/DESIGN.md` (visual + file structure) + `app/widgets/_shared/README.md` + `server.ts` sebelum coding.
 - **Jangan:** hapus `app/overlay`, duplikasi `getSocketUrl/buildUrl/animMap`, buat `page.tsx > 120 baris`, pakai `any` untuk `ChatSettings`.
 - **Do:** import dari `_shared/utils|constants|hooks|components`, typed `ChatThemeProps`, barrel `app/widgets/chat/index.ts`.
-- **Chat widget adalah exemplar clean** — duplikasi strukturnya untuk widget baru.
+- **Chat widget adalah exemplar clean** - duplikasi strukturnya untuk widget baru.
 

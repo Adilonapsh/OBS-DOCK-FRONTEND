@@ -5,7 +5,7 @@ import Sidebar from '../../../components/Sidebar';
 import { Menu, ArrowLeft } from 'lucide-react';
 import React from 'react';
 
-// Shared layout for all widget settings pages — header + URL bar + 2-col (settings | preview)
+// Shared layout for all widget settings pages - header + URL bar + 2-col (settings | preview)
 // Keeps each widget's page.tsx < 80 lines
 export function WidgetShell({
   sidebarOpen,

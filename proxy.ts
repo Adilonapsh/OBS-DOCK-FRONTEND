@@ -28,7 +28,7 @@ export async function proxy(request: NextRequest) {
 
   // Proteksi halaman yang butuh login - redirect ke /login jika belum auth
   // Kecuali allow guest untuk /dock dan /overlay/display & /widgets/display (browser source)
-  const protectedPaths = ['/dashboard', '/dock', '/account', '/config', '/monitor']
+  const protectedPaths = ['/dashboard', '/dock', '/account', '/config', '/monitor', '/integrations']
   const isProtected = protectedPaths.some(p => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + '/'))
   const isGuestAllowed = request.nextUrl.pathname.startsWith('/dock') // dock boleh guest via privateKey
     || request.nextUrl.pathname.startsWith('/overlay/display')
@@ -50,7 +50,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Jika sudah login tapi akses /login, /register, atau /forgot-password, redirect ke dashboard
-  // Catatan: /reset-password TIDAK dimasukkan — user yang klik link recovery
+  // Catatan: /reset-password TIDAK dimasukkan - user yang klik link recovery
   // memang punya session sementara dan harus bisa buka halaman itu.
   if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register' || request.nextUrl.pathname === '/forgot-password') && user) {
     const next = request.nextUrl.searchParams.get('next') || '/dashboard'
@@ -74,6 +74,7 @@ export const config = {
     '/account/:path*',
     '/config/:path*',
     '/monitor/:path*',
+    '/integrations/:path*',
     '/overlay/:path*',
     '/widgets/:path*',
     '/login',

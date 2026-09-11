@@ -42,7 +42,7 @@ function applyParams(
   return s;
 }
 
-// Generic factory — semua widget (timer/chat/poll/etc) bisa pakai ini
+// Generic factory - semua widget (timer/chat/poll/etc) bisa pakai ini
 // Menggantikan duplikasi useTimerSettings / useChatSettings / useTaskSettings
 export function createUseWidgetSettings<T extends Record<string, unknown>>(
   storageKey: string,

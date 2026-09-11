@@ -57,7 +57,7 @@ function TaskInner() {
   const hideDur = isElegantAnim(hideAnimName) ? 620 : 400;
   const taskSocketRef = useRef<ReturnType<typeof io> | null>(null) as any;
 
-  // auto collapsed on time — awalnya muncul semua, sekian detik collapse ke 1 task belum done; checklist di dock muncul lagi semua, sekian detik collapse lagi
+  // auto collapsed on time - awalnya muncul semua, sekian detik collapse ke 1 task belum done; checklist di dock muncul lagi semua, sekian detik collapse lagi
   useEffect(() => {
     if (!autoCollapse) {
       collapseTimersRef.current.forEach(clearTimeout);
@@ -93,7 +93,7 @@ function TaskInner() {
   // global expand/collapse ke 1 task selanjutnya
   useEffect(() => {
     if (!autoCollapse) { setIsExpanded(true); return; }
-    // deteksi perubahan checklist (dock) — jika ada task yang completed berubah, tampilkan semua dulu
+    // deteksi perubahan checklist (dock) - jika ada task yang completed berubah, tampilkan semua dulu
     const prev = prevTasksRef.current;
     const changed = tasks.length !== prev.length || tasks.some((t, i) => prev[i] && prev[i].completed !== t.completed);
     if (changed) {
@@ -101,7 +101,7 @@ function TaskInner() {
       if (expandTimerRef.current) clearTimeout(expandTimerRef.current);
       expandTimerRef.current = setTimeout(() => setIsExpanded(false), collapseAfter * 1000);
     } else if (prev.length === 0 && tasks.length > 0) {
-      // initial load — muncul semua, sekian detik collapse
+      // initial load - muncul semua, sekian detik collapse
       setIsExpanded(true);
       if (expandTimerRef.current) clearTimeout(expandTimerRef.current);
       expandTimerRef.current = setTimeout(() => setIsExpanded(false), collapseAfter * 1000);
@@ -134,7 +134,7 @@ function TaskInner() {
   }, [privateKey]);
 
   const handleToggleTask = (id: string) => {
-    // optimistic local, lalu sync ke server (dock master) via socket persisten — biar 2-way sinkron
+    // optimistic local, lalu sync ke server (dock master) via socket persisten - biar 2-way sinkron
     setTasks((prev) => prev.map((t) => t.id === id ? { ...t, completed: !t.completed } : t));
     const room = privateKey || 'global';
     const sock: any = taskSocketRef.current;

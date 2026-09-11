@@ -1,4 +1,4 @@
-// Unified Google Fonts — single source for ALL widgets (chat/poll/clock/media/lyrics/overlay)
+// Unified Google Fonts - single source for ALL widgets (chat/poll/clock/media/lyrics/overlay)
 // Semua font diambil dari Google Fonts, select diisi dari sini. Jangan hardcode fontsList di widget.
 
 export const WIDGET_FONTS = [

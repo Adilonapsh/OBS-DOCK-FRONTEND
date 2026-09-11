@@ -1,4 +1,4 @@
-// Barrel — import from 'app/widgets/_shared'
+// Barrel - import from 'app/widgets/_shared'
 export * from './utils/socket';
 export * from './utils/url';
 export * from './utils/font';

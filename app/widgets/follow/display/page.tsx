@@ -94,11 +94,11 @@ function FollowInner() {
     };
     socket.on('tiktok-follow', handleFollow);
     socket.on('tiktok-member', (data: Record<string, unknown>) => {
-      // member juga dianggap follow untuk demo — filter hanya yang follow-like? tetap tampil tapi suara hanya untuk follow murni
+      // member juga dianggap follow untuk demo - filter hanya yang follow-like? tetap tampil tapi suara hanya untuk follow murni
       // kita tampilkan member sebagai follow juga biar OBS ramai, tapi tanpa suara ganda: hanya follow yang pakai suara
       const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string };
       // jika tiktok-follow tidak ada, fallback member sebagai follow (opsional)
-      // untuk hindari double, kita hanya push jika belum ada follow event — tetap push sebagai join tapi tanpa suara ekstra
+      // untuk hindari double, kita hanya push jika belum ada follow event - tetap push sebagai join tapi tanpa suara ekstra
       // di sini kita push sebagai follow tapi tanpa suara jika bukan follow murni: kita pakai pushFollow tanpa suara? untuk simpel, push sebagai follow dengan suara juga
       // biar user lihat, kita push member sebagai follow juga
       // (bisa dimatikan via filter kalau mau)

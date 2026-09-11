@@ -2,20 +2,20 @@ import type { ChatItem } from './themes/types';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 
 export const CHAT_THEMES = [
-  { value: 'standard', label: 'Standard — Dark Glass' },
-  { value: 'bubble', label: 'Bubble — Putih WA-style' },
-  { value: 'clean', label: 'Clean — Baris Minimalis' },
-  { value: 'boxed', label: 'Boxed — Card dengan Header' },
-  { value: 'cute', label: 'Cute — Lavender Pastel' },
+  { value: 'standard', label: 'Standard - Dark Glass' },
+  { value: 'bubble', label: 'Bubble - Putih WA-style' },
+  { value: 'clean', label: 'Clean - Baris Minimalis' },
+  { value: 'boxed', label: 'Boxed - Card dengan Header' },
+  { value: 'cute', label: 'Cute - Lavender Pastel' },
 ] as const;
 
 export const CHAT_FONTS = WIDGET_FONTS;
 
 export const CHAT_ANIMS = [
   { value: 'elegant', label: 'Elegant (Recommended)' },
-  { value: 'softPop', label: 'Soft Pop — Halus' },
-  { value: 'blur', label: 'Blur In — Minimal' },
-  { value: 'luxe', label: 'Luxe — Editorial' },
+  { value: 'softPop', label: 'Soft Pop - Halus' },
+  { value: 'blur', label: 'Blur In - Minimal' },
+  { value: 'luxe', label: 'Luxe - Editorial' },
   { value: 'slideUp', label: 'Slide Up' },
   { value: 'slideLeft', label: 'Slide Left' },
   { value: 'slideRight', label: 'Slide Right' },
@@ -38,7 +38,7 @@ export const CHAT_HORIZONTAL_ANIMS = [
 ] as const;
 
 export const CHAT_HIDE_ANIMS = [
-  { value: 'fade', label: 'Fade — Halus (default)' },
+  { value: 'fade', label: 'Fade - Halus (default)' },
   { value: 'elegant', label: 'Elegant Out' },
   { value: 'blur', label: 'Blur Out' },
   { value: 'softPop', label: 'Soft Pop Out' },

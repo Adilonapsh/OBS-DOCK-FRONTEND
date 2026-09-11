@@ -42,7 +42,7 @@ export function TimerSettingsForm({ state, update }: { state: TimerSettings; upd
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-white" /> Posisi — Global</h2>
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-white" /> Posisi - Global</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <PositionPicker value={(state as unknown as { pos: string }).pos || 'center'} onChange={(v) => update('pos' as keyof typeof state, v)} />
         </div>
@@ -56,14 +56,14 @@ export function TimerSettingsForm({ state, update }: { state: TimerSettings; upd
             {/* <label className="block"><span className="text-[11px] font-bold text-gray-300">Sessions</span><input type="number" min={1} max={10} value={state.totalSessions} onChange={(e) => update('totalSessions', parseInt(e.target.value) || 3)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label> */}
           </div>
           {(state.theme === 'subathon' || state.theme === 'glass') && (
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Mode — {state.theme === 'glass' ? 'Glass' : 'Subathon'}</span>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Mode - {state.theme === 'glass' ? 'Glass' : 'Subathon'}</span>
               <select value={(state as unknown as { subathonMode: string }).subathonMode} onChange={(e) => update('subathonMode' as keyof typeof state, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                <option value="powerup" className="bg-zinc-900">Power-Up — 2X cream</option>
-                <option value="sleep" className="bg-zinc-900">Sleep — Zz purple</option>
-                <option value="locked" className="bg-zinc-900">Locked — gembok</option>
-                <option value="paused" className="bg-zinc-900">Paused — pause</option>
+                <option value="powerup" className="bg-zinc-900">Power-Up - 2X cream</option>
+                <option value="sleep" className="bg-zinc-900">Sleep - Zz purple</option>
+                <option value="locked" className="bg-zinc-900">Locked - gembok</option>
+                <option value="paused" className="bg-zinc-900">Paused - pause</option>
               </select>
-              <span className="text-[10px] text-gray-500 mt-1 block">Mode general — dipakai Glass & Subathon (shared TimerCoreConfig.subathonMode). Tema lain ingore field ini.</span>
+              <span className="text-[10px] text-gray-500 mt-1 block">Mode general - dipakai Glass & Subathon (shared TimerCoreConfig.subathonMode). Tema lain ingore field ini.</span>
             </label>
           )}
           <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Timer di OBS bisa di-play/pause/reset via preview. Default 50:00 × 3 sesi (subathon pakai HH:MM:SS 42:56:08).</div>

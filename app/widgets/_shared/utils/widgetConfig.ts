@@ -1,4 +1,4 @@
-// Generic widget config factory — generalisasi untuk semua widget
+// Generic widget config factory - generalisasi untuk semua widget
 // Supaya tambah widget/tema baru tidak perlu copy-paste buildUrl / DEFAULTS manual
 
 import { buildWidgetUrl } from './url';

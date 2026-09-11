@@ -1,4 +1,4 @@
-// Unified Google Font loader — replaces 6 variants (chat/display, poll/display, clock/display, etc.)
+// Unified Google Font loader - replaces 6 variants (chat/display, poll/display, clock/display, etc.)
 
 export function loadGoogleFont(font: string, weights: string = '400;700;900', dataAttr: string = 'widget-font'): void {
   if (typeof document === 'undefined' || !font) return;

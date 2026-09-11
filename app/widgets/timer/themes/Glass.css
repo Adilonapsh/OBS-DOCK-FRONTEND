@@ -1,5 +1,5 @@
 .timer-overlay-card {
-  /* background & border sekarang di-inline via props (accent/bg/textColor) — fallback di bawah untuk backward compat */
+  /* background & border sekarang di-inline via props (accent/bg/textColor) - fallback di bawah untuk backward compat */
   background: rgba(147, 158, 255, 0.45);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

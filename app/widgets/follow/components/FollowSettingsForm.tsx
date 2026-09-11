@@ -36,7 +36,7 @@ export function FollowSettingsForm({ state, update, reset, privateKey, onCopy }:
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" min={10} max={26} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 14)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{FOLLOW_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof FollowSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{FOLLOW_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter — default fade</span></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof FollowSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{FOLLOW_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade</span></label>
         </div>
       </div>
 
@@ -52,7 +52,7 @@ export function FollowSettingsForm({ state, update, reset, privateKey, onCopy }:
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi — Global</h2>
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
           <PositionPicker value={(state as unknown as { pos: string }).pos || 'bl'} onChange={(v) => update('pos' as keyof FollowSettings, v)} />
         </div>
@@ -81,7 +81,7 @@ export function FollowSettingsForm({ state, update, reset, privateKey, onCopy }:
             <input value={(state as unknown as { soundUrl: string }).soundUrl} onChange={(e) => update('soundUrl' as keyof FollowSettings, e.target.value)} placeholder="https://.../follow.mp3" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-[11px] font-mono text-white placeholder:text-gray-500" />
             <span className="text-[10px] text-gray-500 mt-1 block">Default pixabay ding • bisa pakai URL mp3 sendiri • CORS harus allow</span>
           </label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Volume — {(state as unknown as { soundVolume: number }).soundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { soundVolume: number }).soundVolume} onChange={(e) => update('soundVolume' as keyof FollowSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Volume - {(state as unknown as { soundVolume: number }).soundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { soundVolume: number }).soundVolume} onChange={(e) => update('soundVolume' as keyof FollowSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
           <button onClick={playSound} className="w-full h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-white flex items-center justify-center gap-1.5"><Volume2 className="w-3 h-3" /> Test Suara</button>
         </div>
       </div>
@@ -89,7 +89,7 @@ export function FollowSettingsForm({ state, update, reset, privateKey, onCopy }:
       <div className="bg-pink-500/10 border border-pink-500/20 rounded-2xl p-3">
         <div className="text-pink-300 font-black uppercase text-[10px]">Sumber Follow</div>
         <div className="text-gray-400 text-[11px] leading-relaxed mt-1">Listen <code className="bg-white/10 px-1 rounded text-white">tiktok-follow</code> + <code className="bg-white/10 px-1 rounded text-white">tiktok-member</code> dari <code className="bg-white/10 px-1 rounded text-white">server.ts</code> (TikTok Live + Streamer.bot). Suara diputar di OBS Browser Source (allow audio).</div>
-        <Link href={privateKey ? `/dock?key=${privateKey}` : '/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Buka Dock — Connect TikTok</Link>
+        <Link href={privateKey ? `/dock?key=${privateKey}` : '/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Buka Dock - Connect TikTok</Link>
       </div>
 
       <div className="flex gap-2">

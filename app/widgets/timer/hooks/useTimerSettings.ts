@@ -10,7 +10,7 @@ export function useTimerSettings(){
   // Init sync dari localStorage biar preview langsung sinkron tanpa flicker 50:00 -> 10:00
   const [state,setState]=useState<TimerSettings>(()=>{
     if(typeof window==='undefined') return {...TIMER_DEFAULTS} as TimerSettings;
-    // jika ada query param, jangan load LS dulu — biar effect yang handle
+    // jika ada query param, jangan load LS dulu - biar effect yang handle
     try{
       const sp = new URLSearchParams(window.location.search);
       const hasQuery = sp.get('theme')||sp.get('focusMinutes')||sp.get('accent')||sp.get('bg');

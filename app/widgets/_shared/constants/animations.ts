@@ -1,4 +1,4 @@
-// Shared animation definitions — elegant core used by chat
+// Shared animation definitions - elegant core used by chat
 // Single source for keyframes, maps, and duration helpers
 
 export const ANIM_MAP: Record<string, string> = {
@@ -48,7 +48,7 @@ export const KEYFRAMES_CSS = `
   @keyframes popIn { 0%{ opacity:0; transform: scale(0.85) translateY(8px); filter: blur(6px);} 60%{ transform: scale(1.03); filter: blur(0);} 100%{ opacity:1; transform: scale(1) translateY(0); } }
   @keyframes fadeIn { from{ opacity:0; filter: blur(6px); } to{ opacity:1; filter: blur(0); } }
   @keyframes flipIn { from { opacity:0; transform: perspective(600px) rotateX(-20deg); filter: blur(6px); } to { opacity:1; transform: perspective(600px) rotateX(0); filter: blur(0); } }
-  /* — Hide / Out — default fade, elegant blur+scale */
+  /* - Hide / Out - default fade, elegant blur+scale */
   @keyframes elegantOut { from { opacity:1; transform: translateY(0) scale(1); filter: blur(0); } to { opacity:0; transform: translateY(-10px) scale(0.98); filter: blur(8px); } }
   @keyframes softPopOut { from { opacity:1; transform: scale(1) translateY(0); filter: blur(0); } to { opacity:0; transform: scale(0.96) translateY(-6px); filter: blur(6px); } }
   @keyframes blurOut { from { opacity:1; filter: blur(0); } to { opacity:0; filter: blur(12px); } }

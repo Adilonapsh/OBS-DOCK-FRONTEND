@@ -1,4 +1,4 @@
-// Global widget position — shared across all widgets (timer, chat, poll, media, etc.)
+// Global widget position - shared across all widgets (timer, chat, poll, media, etc.)
 // Align: t,l,b,r, center, tl,tr,bl,br + aliases (top, bottom, left, right, top-left, etc.)
 // Live preview langsung mensimulasikan posisi via flex alignment (items-*, justify-*)
 
@@ -16,7 +16,7 @@ export const WIDGET_POSITIONS = [
 
 export type WidgetPosition = typeof WIDGET_POSITIONS[number]['value'];
 
-// Aliases for backward compat — support hyphen, underscore, space
+// Aliases for backward compat - support hyphen, underscore, space
 const ALIASES: Record<string, WidgetPosition> = {
   'top-left': 'tl', 'top_left': 'tl', 'top left': 'tl',
   'top-right': 'tr', 'top_right': 'tr', 'top right': 'tr',
@@ -36,7 +36,7 @@ export function normalizePosition(pos: string | undefined): WidgetPosition {
   return (ALIASES[key] as WidgetPosition) || 'center';
 }
 
-// 1-line align + justify — pakai flex alignItems/justifyContent biar 1 line
+// 1-line align + justify - pakai flex alignItems/justifyContent biar 1 line
 // Contoh: style={getPositionStyle(pos)} → {display:'flex', alignItems:'flex-end', justifyContent:'flex-start'} untuk bl
 export function getPositionStyle(pos: string | undefined): React.CSSProperties {
   const p = normalizePosition(pos);
@@ -55,7 +55,7 @@ export function getPositionStyle(pos: string | undefined): React.CSSProperties {
   return { display: 'flex', alignItems: v.alignItems as any, justifyContent: v.justifyContent as any };
 }
 
-// Legacy — tetap export biar tidak breaking, tapi prefer getPositionStyle biar 1 line
+// Legacy - tetap export biar tidak breaking, tapi prefer getPositionStyle biar 1 line
 export function getPositionClasses(pos: string | undefined): string {
   const p = normalizePosition(pos);
   switch (p) {
@@ -72,7 +72,7 @@ export function getPositionClasses(pos: string | undefined): string {
   }
 }
 
-// For grid picker UI — returns if cell is active
+// For grid picker UI - returns if cell is active
 export function isPositionActive(current: string | undefined, cell: WidgetPosition): boolean {
   return normalizePosition(current) === cell;
 }

@@ -1,11 +1,11 @@
-// Simple mustache-like template — {{username}} {{message}} {{date}} {{timer}} {{clock}} {{polls}} etc.
+// Simple mustache-like template - {{username}} {{message}} {{date}} {{timer}} {{clock}} {{polls}} etc.
 // WordPress-like: user tinggal drag {{variable}} ke editor, preview langsung render.
 
 export type TemplateData = Record<string, string | number | boolean | null | undefined>;
 
 const PLACEHOLDER_RE = /\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g;
 
-// Known variables — dipakai untuk drag-drop palette & docs
+// Known variables - dipakai untuk drag-drop palette & docs
 export const TEMPLATE_VARS = [
   { key: 'username', label: 'Username', example: 'Rizky_JR', desc: 'Nama user chat' },
   { key: 'message', label: 'Message', example: 'Halo bang!', desc: 'Isi chat' },
@@ -37,7 +37,7 @@ export function extractVariables(template: string): string[] {
   return Array.from(vars);
 }
 
-// Sanitize html — allow basic tags, strip script
+// Sanitize html - allow basic tags, strip script
 export function sanitizeHtml(html: string): string {
   // very light: remove <script>, on* attributes
   return html

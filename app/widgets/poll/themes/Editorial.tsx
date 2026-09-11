@@ -11,7 +11,7 @@ export default function EditorialTheme({
   showTotal,
   showTimer
 }: PollThemeProps) {
-  // Respect global pos via outer display flex — editorial card tetap max-w 680
+  // Respect global pos via outer display flex - editorial card tetap max-w 680
   const cardBg = bg === 'transparent' ? '#F7F7F5' : bg;
   // 1. Kalkulasi Total & Timer
   const total = poll.total || poll.votes.reduce((a: number, b: number) => a + b, 0);
@@ -74,7 +74,7 @@ export default function EditorialTheme({
         )}
       </div>
 
-      {/* METRICS / STATS CARDS — respect showTotal */}
+      {/* METRICS / STATS CARDS - respect showTotal */}
       <div className={`grid gap-2 mb-5 ${showTotal ? 'grid-cols-3' : 'grid-cols-2'}`}>
         {showTotal && (
         <div className="bg-slate-50/80 border border-slate-200/80 p-2.5 flex items-center gap-3">

@@ -1,10 +1,10 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 
 export const INFO_SLIDES_THEMES = [
-  { value: 'clean', label: 'Clean — Minimal Transparan' },
-  { value: 'boxed', label: 'Boxed — Card Sponsor' },
-  { value: 'glass', label: 'Glass — Blur Premium' },
-  { value: 'timer-glass', label: 'Timer Glass — Ala Timer (Recommended)' },
+  { value: 'clean', label: 'Clean - Minimal Transparan' },
+  { value: 'boxed', label: 'Boxed - Card Sponsor' },
+  { value: 'glass', label: 'Glass - Blur Premium' },
+  { value: 'timer-glass', label: 'Timer Glass - Ala Timer (Recommended)' },
 ] as const;
 
 export const INFO_SLIDES_ANIMS = [
@@ -25,11 +25,11 @@ export type InfoSlide = {
   title: string;
   desc: string;
   accent?: string;
-  image?: string; // url http/https/data: — logo sponsor / QR / ilustrasi
+  image?: string; // url http/https/data: - logo sponsor / QR / ilustrasi
 };
 
 export const DEFAULT_SLIDES: InfoSlide[] = [
-  { id: 's1', badge: 'SPONSOR', title: 'TrueNAP', desc: 'Powered by TrueNAP — Ultra Low Latency', accent: '#8b5cf6', image: 'https://ui-avatars.com/api/?name=TrueNAP&background=8b5cf6&color=fff&size=128&font-size=0.35&bold=true' },
+  { id: 's1', badge: 'SPONSOR', title: 'TrueNAP', desc: 'Powered by TrueNAP - Ultra Low Latency', accent: '#8b5cf6', image: 'https://ui-avatars.com/api/?name=TrueNAP&background=8b5cf6&color=fff&size=128&font-size=0.35&bold=true' },
   { id: 's2', badge: 'RULES', title: 'No Toxic • No SARA', desc: 'Jaga chat tetap asik & respect semua viewer', accent: '#06b6d4' },
   { id: 's3', badge: 'FOLLOW', title: 'Follow & Nyalakan Lonceng', desc: '@adilonapsh di TikTok • Twitch • YouTube', accent: '#ec4899' },
   { id: 's4', badge: 'SAWERIA', title: 'Dukung via Saweria', desc: 'Scan QR di layar • Setiap dukungan berarti!', accent: '#f59e0b' },

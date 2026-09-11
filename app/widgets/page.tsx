@@ -43,7 +43,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "event",
     title: "Event Overlay",
-    desc: "Overlay event Join • Gift • Like — TikTok member/gift/like + Streamer.bot, 3 tema (Standard/Minimal/Cute), filter per event, animasi elegant. Sumber: server.ts tiktok-member/gift/like.",
+    desc: "Overlay event Join • Gift • Like - TikTok member/gift/like + Streamer.bot, 3 tema (Standard/Minimal/Cute), filter per event, animasi elegant. Sumber: server.ts tiktok-member/gift/like.",
     category: "alert",
     tags: ["Event", "Join", "Gift", "Like", "TikTok"],
     layout: "event",
@@ -55,7 +55,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "timer",
     title: "Timer",
-    desc: "Pomodoro 50:00 × 3 sesi — 4 tema (Focus/Minimal/Subathon/Glass), Glass sync dock ±5m & COUNTDOWN live + badge +5m.",
+    desc: "Pomodoro 50:00 × 3 sesi - 4 tema (Focus/Minimal/Subathon/Glass), Glass sync dock ±5m & COUNTDOWN live + badge +5m.",
     category: "progress",
     tags: ["Timer", "Focus", "Glass", "Sync"],
     layout: "timer",
@@ -67,7 +67,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "task",
     title: "Task List",
-    desc: "Task list — 2 tema, inline/horizontal, animasi masuk/keluar. Pisah dari Timer.",
+    desc: "Task list - 2 tema, inline/horizontal, animasi masuk/keluar. Pisah dari Timer.",
     category: "progress",
     tags: ["Task", "List", "Todo"],
     layout: "task",
@@ -79,7 +79,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "follow",
     title: "Follow Overlay",
-    desc: "Follow alert + suara — TikTok follow/member + Twitch/YouTube follow via Streamer.bot, 3 tema, suara MP3 kustom, animasi elegant hide fade.",
+    desc: "Follow alert + suara - TikTok follow/member + Twitch/YouTube follow via Streamer.bot, 3 tema, suara MP3 kustom, animasi elegant hide fade.",
     category: "alert",
     tags: ["Follow", "Alert", "Sound", "TikTok"],
     layout: "follow",
@@ -139,7 +139,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "info-slides",
     title: "Info Slides",
-    desc: "Sponsor / Rules Loop — 5-10 slide auto-rotate 5-10s, 3 tema Clean/Boxed/Glass, badge + progress dots.",
+    desc: "Sponsor / Rules Loop - 5-10 slide auto-rotate 5-10s, 3 tema Clean/Boxed/Glass, badge + progress dots.",
     category: "info",
     tags: ["Info", "Slides", "Sponsor", "Rules"],
     layout: "info-slides",
@@ -151,7 +151,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "social-rotator",
     title: "Social Rotator",
-    desc: "Rotasi handle sosial — Instagram/TikTok/YouTube/Twitch/Discord, 5 tema Pill/Clean/Glass/Boxed/Badge Space Mono, interval 2-20s, posisi global 9-titik.",
+    desc: "Rotasi handle sosial - Instagram/TikTok/YouTube/Twitch/Discord, 5 tema Pill/Clean/Glass/Boxed/Badge Space Mono, interval 2-20s, posisi global 9-titik.",
     category: "info",
     tags: ["Social", "Rotator", "Instagram", "TikTok", "OBS"],
     layout: "social",
@@ -163,7 +163,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "custom",
     title: "Custom Overlay",
-    desc: "StreamElements-like — canvas 1920×1080, drag-drop layers (chat {{username}}/{{message}}, timer {{timer}}, clock {{clock}}, polls {{polls}}, social {{handle}}), template {{date}} + custom CSS per layer, 1 URL obs.",
+    desc: "StreamElements-like - canvas 1920×1080, drag-drop layers (chat {{username}}/{{message}}, timer {{timer}}, clock {{clock}}, polls {{polls}}, social {{handle}}), template {{date}} + custom CSS per layer, 1 URL obs.",
     category: "minimal",
     tags: ["Custom", "StreamElements", "DragDrop", "Template"],
     layout: "full",
@@ -191,7 +191,7 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
         <div className="flex items-center gap-2 px-3 py-2 bg-white/[0.06] border border-white/10 rounded-xl">
           <span className="px-1.5 py-0.5 bg-white text-black rounded-full text-[6px] font-black">SPONSOR</span>
-          <span className="text-white font-black text-[7px] truncate">TrueNAP — Ultra Low Latency</span>
+          <span className="text-white font-black text-[7px] truncate">TrueNAP - Ultra Low Latency</span>
         </div>
         <div className="flex gap-1 justify-center"><span className="w-4 h-1 bg-white rounded-full" /><span className="w-1 h-1 bg-white/30 rounded-full" /><span className="w-1 h-1 bg-white/30 rounded-full" /></div>
       </div>

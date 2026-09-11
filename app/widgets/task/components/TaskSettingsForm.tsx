@@ -32,7 +32,7 @@ export function TaskSettingsForm({
 
   return (
     <>
-      {/* Tema & Font — sama persis dengan chat/poll */}
+      {/* Tema & Font - sama persis dengan chat/poll */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-white" /> Tema & Font</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
@@ -51,11 +51,11 @@ export function TaskSettingsForm({
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" min={10} max={26} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 14)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{TASK_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof TaskSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{TASK_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat task selesai — default fade halus</span></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof TaskSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{TASK_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat task selesai - default fade halus</span></label>
         </div>
       </div>
 
-      {/* Warna — sama dengan chat */}
+      {/* Warna - sama dengan chat */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-violet-400" /> Warna</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
@@ -67,15 +67,15 @@ export function TaskSettingsForm({
         </div>
       </div>
 
-      {/* Posisi — Global */}
+      {/* Posisi - Global */}
       <div className="space-y-3">
-        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi — Global</h2>
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
           <PositionPicker value={(state as unknown as { pos: string }).pos || 'bl'} onChange={(v) => update('pos' as keyof TaskSettings, v)} />
         </div>
       </div>
 
-      {/* Tampilan — sama dengan chat: inline/horizontal */}
+      {/* Tampilan - sama dengan chat: inline/horizontal */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><ImageIcon className="w-4 h-4 text-white" /> Tampilan</h2>
         <div className="space-y-2 bg-white/5 border border-white/10 rounded-2xl p-3">
@@ -87,7 +87,7 @@ export function TaskSettingsForm({
         </div>
       </div>
 
-      {/* Auto Collapse — baru */}
+      {/* Auto Collapse - baru */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Clock className="w-4 h-4 text-amber-400" /> Auto Collapse</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
@@ -114,8 +114,8 @@ export function TaskSettingsForm({
       </div>
 
       <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-3">
-        <div className="text-violet-300 font-black uppercase text-[10px]">OBS — Task Focus</div>
-        <div className="text-gray-400 text-[11px] leading-relaxed mt-1">Timer & tasks live di OBS — tasks bisa ditoggle di preview, timer auto-next sesi. Background transparent cocok untuk OBS.</div>
+        <div className="text-violet-300 font-black uppercase text-[10px]">OBS - Task Focus</div>
+        <div className="text-gray-400 text-[11px] leading-relaxed mt-1">Timer & tasks live di OBS - tasks bisa ditoggle di preview, timer auto-next sesi. Background transparent cocok untuk OBS.</div>
         <Link href={privateKey ? `/dock?key=${privateKey}` : '/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Buka Dock</Link>
       </div>
 

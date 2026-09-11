@@ -40,7 +40,7 @@ export default function SubathonTheme({
   const badgePowerBg = accent && accent !== '#594d4a' && accent !== 'transparent' ? accent : '#ebd1b3';
   const badgeSleepBg = accent && accent !== '#594d4a' && accent !== 'transparent' ? hexToRgba(accent, 100) : '#8b88d9';
 
-  // mode change animation — key remount triggers softPop with blur
+  // mode change animation - key remount triggers softPop with blur
   const modeAnim = 'softPopIn 0.42s cubic-bezier(0.16,1,0.3,1) both';
 
   return (

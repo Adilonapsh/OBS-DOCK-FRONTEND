@@ -40,9 +40,9 @@ function TimerInner() {
   const addedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevTotalRef = useRef(focusMinutesParam * 60);
 
-  // hanya reset totalSeconds saat URL focusMinutes berubah DAN belum ada socket (awal load), bukan saat mode ganti — mode ganti harus lanjut 13:20 → 13:19
+  // hanya reset totalSeconds saat URL focusMinutes berubah DAN belum ada socket (awal load), bukan saat mode ganti - mode ganti harus lanjut 13:20 → 13:19
   useEffect(() => { if (!hasSocketTimer) { setTotalSeconds(focusMinutesParam * 60); setIsRunning(false); setCurrentSession(1); } }, [focusMinutesParam, hasSocketTimer]);
-  // sync from URL when no socket yet — subathonMode ganti tidak reset detik, cuma ganti mode
+  // sync from URL when no socket yet - subathonMode ganti tidak reset detik, cuma ganti mode
   useEffect(() => {
     if (!hasSocketTimer) {
       // hanya update mode, jangan reset detik
@@ -55,13 +55,13 @@ function TimerInner() {
   useEffect(() => loadGoogleFont(font, '600;700;800;900', 'timer-font'), [font]);
   useEffect(() => loadGoogleFont('Montserrat', '600;700;800;900', 'timer-font-mont'), []);
 
-  // socket sync — Dock → Timer OBS (mirip poll/task) — pakai updatedAt biar sinkron detik, overlay 100% ikut dock
+  // socket sync - Dock → Timer OBS (mirip poll/task) - pakai updatedAt biar sinkron detik, overlay 100% ikut dock
   const timerUpdateRef = useRef({ totalSeconds: focusMinutesParam * 60, updatedAt: Date.now(), isRunning: false });
   const timerSocketRef = useRef<ReturnType<typeof io> | null>(null);
   const hasSocketTimerRef = useRef(false);
   useEffect(() => { hasSocketTimerRef.current = hasSocketTimer; }, [hasSocketTimer]);
   useEffect(() => {
-    if (simulate) return; // live preview simulate — 1 file untuk OBS + preview, tidak perlu socket
+    if (simulate) return; // live preview simulate - 1 file untuk OBS + preview, tidak perlu socket
     const s = io(getSocketUrl(), { transports: ['websocket', 'polling'] as const });
     timerSocketRef.current = s as any;
     const room = privateKey || 'global';
@@ -105,7 +105,7 @@ function TimerInner() {
     return () => { s.disconnect(); timerSocketRef.current = null; if (addedTimeoutRef.current) clearTimeout(addedTimeoutRef.current); };
   }, [privateKey]);
 
-  // local tick — sinkron dengan server via updatedAt, overlay 100% ikut dock jika hasSocketTimer
+  // local tick - sinkron dengan server via updatedAt, overlay 100% ikut dock jika hasSocketTimer
   useEffect(() => {
     if (!isRunning) return;
     const id = setInterval(() => {
@@ -115,7 +115,7 @@ function TimerInner() {
         const cur = Math.max(0, base - elapsed);
         setTotalSeconds(cur);
         prevTotalRef.current = cur;
-        // jangan auto-next session saat sync dock — tunggu server kirim next, biar 100% sync
+        // jangan auto-next session saat sync dock - tunggu server kirim next, biar 100% sync
         return;
       }
       setTotalSeconds((prev) => {
@@ -130,7 +130,7 @@ function TimerInner() {
   }, [isRunning, focusMinutes, totalSessions, hasSocketTimer]);
 
   const animName = ANIM_MAP[anim] || 'elegantIn';
-  // Global position — 1 line align + justify, langsung tersimulasi di live preview
+  // Global position - 1 line align + justify, langsung tersimulasi di live preview
   const posStyle = getPositionStyle(pos);
   const handleAddTime = (sec: number) => {
     if (addedTimeoutRef.current) clearTimeout(addedTimeoutRef.current);
@@ -154,7 +154,7 @@ function TimerInner() {
   };
   const themeProps = { font, fontSize, accent, bg, bgOpacity, textColor, pos, timerSeconds: totalSeconds, isRunning, currentSession, totalSessions, onToggleTimer: () => setIsRunning((v) => !v), onResetTimer: () => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); }, onNextSession: () => { setCurrentSession((c) => (c < totalSessions ? c + 1 : 1)); setTotalSeconds(focusMinutes * 60); setIsRunning(false); }, onAddTime: handleAddTime, anim: animName, subathonMode, addedSeconds } as const;
   const Theme = getTimerTheme(theme);
-  // subathonMode sengaja tidak dimasukkan ke displayKey — mode diubah dari dock tidak boleh
+  // subathonMode sengaja tidak dimasukkan ke displayKey - mode diubah dari dock tidak boleh
   // menyebabkan Theme remount (yang akan memicu ulang animasi entry dan membuat timer tampak reset)
   const displayKey = `${theme}-${accent}-${bg}-${textColor}-${bgOpacity}-${font}-${anim}-${pos}`;
 

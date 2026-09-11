@@ -1,4 +1,4 @@
-// Shared widget listing types — unified for app/widgets/page.tsx and _shared
+// Shared widget listing types - unified for app/widgets/page.tsx and _shared
 
 export type WidgetCategory = 'chat' | 'alert' | 'counter' | 'progress' | 'info' | 'minimal';
 

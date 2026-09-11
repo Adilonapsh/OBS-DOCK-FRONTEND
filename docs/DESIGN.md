@@ -1,6 +1,6 @@
-# DESIGN SYSTEM — OBS Overlays
+# DESIGN SYSTEM - OBS Overlays
 
-> **Design spec untuk Agent AI — jaga konsistensi visual & kode.**
+> **Design spec untuk Agent AI - jaga konsistensi visual & kode.**
 > File: `docs/DESIGN.md` | Pair: `docs/PRD.md` | Update: `2026-09-04`
 > Prinsip: *Editorial dark, glassmorphism, elegant blur, modular widget*
 
@@ -25,7 +25,7 @@
 | `resub grad` | `#c4a2f8 → #fca4d4` (cute) customizable `cuteResubFrom/To` | `CuteTheme:resubGrad` |
 | `badge` | `bg #2e2c45 text #a8a3ce` (mod/sub/vip), `bg #3b3058 text #a3b2f8` (resub) customizable `cuteBadgeBg/Text` | `Cute.css: role-badge` |
 | `name mod` | `#f5a8d0`, `name user` `#d8cded` customizable `cuteNameMod/User` | `Cute.tsx` |
-| `gradient cute` | `135deg #6c62a8→#8979c4` — **tidak dipakai** (cute container sekarang `transparent` per request) | - |
+| `gradient cute` | `135deg #6c62a8→#8979c4` - **tidak dipakai** (cute container sekarang `transparent` per request) | - |
 
 Semua warna cute bisa dikustom via 7 picker `ChatSettingsForm` ketika `theme==='cute'`.
 
@@ -125,15 +125,15 @@ app/widgets/
     display/page.tsx    # 115 baris (was 200)
     page.tsx            # 170 baris (was 420)
     index.ts            # barrel
-  poll/, clock/, media-player/, lyrics/ # belum clean — ikuti pola chat
+  poll/, clock/, media-player/, lyrics/ # belum clean - ikuti pola chat
   display/page.tsx      # 699 → TODO pecah
   editor/page.tsx       # 1157 → TODO pecah
   page.tsx              # 529 listing
-  overlay/              # JANGAN HAPUS — editor/display butuh app/overlay/components/theme.ts
+  overlay/              # JANGAN HAPUS - editor/display butuh app/overlay/components/theme.ts
 ```
 
 **Aturan:**
-- `page.tsx` settings < 90 baris (chat sudah 170 termasuk modals — next target 90)
+- `page.tsx` settings < 90 baris (chat sudah 170 termasuk modals - next target 90)
 - `display/page.tsx` < 160 baris (chat 115)
 - `config.ts` untuk semua konstanta, bukan inline di `page.tsx`
 - `hooks/` untuk `useEffect` + `localStorage` + `socket`, bukan campur JSX
@@ -154,9 +154,9 @@ app/widgets/
 
 **Don't:**
 - Copy-paste `function getSocketUrl(){...}` ke widget baru
-- Buat `page.tsx > 120 baris` — pecah ke `components/` + `hooks/`
-- Pakai `any` untuk `buildUrl` — pakai `ChatSettings`
-- Hapus `app/overlay` — akan `Module not found: Can't resolve '../overlay/components/theme'`
+- Buat `page.tsx > 120 baris` - pecah ke `components/` + `hooks/`
+- Pakai `any` untuk `buildUrl` - pakai `ChatSettings`
+- Hapus `app/overlay` - akan `Module not found: Can't resolve '../overlay/components/theme'`
 - Pakai `bg` untuk `cute` container (sudah `transparent` + warna kustom 7 picker)
 - Lupa `animation: ${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both`
 
@@ -170,7 +170,7 @@ npm run build                     # Compiled successfully
 
 ## 10. Referensi Visual
 
-- Chat Cute: screenshot `Lavender Pastel` — `max-w-[380px] flex-col gap-3 p-4`, header `MOD/SUB/VIP badge #2e2c45`, bubble `#1e1d2b`, resub `linear 90deg`, `Nunito 11px 900`.
+- Chat Cute: screenshot `Lavender Pastel` - `max-w-[380px] flex-col gap-3 p-4`, header `MOD/SUB/VIP badge #2e2c45`, bubble `#1e1d2b`, resub `linear 90deg`, `Nunito 11px 900`.
 - Poll Bar: `Bar.tsx` `linear 90deg colors[i]→accent`, `poll-option-index` `7×7 rounded-full bg-white`.
 - Media Classic: `bg: linear-gradient(0deg, bgColorEE, bgColorAA), url(bgArt)` + `backdrop-blur-xl`.
 
@@ -179,6 +179,6 @@ npm run build                     # Compiled successfully
 ## 11. Panduan Agent
 
 1. Baca `docs/PRD.md` + `app/widgets/_shared/README.md` dulu sebelum edit widget.
-2. Chat adalah **gold standard** — widget baru copy `chat/config.ts + hooks/useChatSettings + components/` lalu ganti `themes/`.
+2. Chat adalah **gold standard** - widget baru copy `chat/config.ts + hooks/useChatSettings + components/` lalu ganti `themes/`.
 3. Tanya user jika butuh 11 tema baru vs reuse `_shared/media-themes`.
 4. Selalu update `docs/PRD` + `docs/DESIGN` jika tambah FR atau tema baru agar AI berikutnya konsisten.

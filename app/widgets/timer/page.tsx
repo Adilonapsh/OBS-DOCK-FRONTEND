@@ -18,7 +18,7 @@ function TimerSettingsInner() {
 
   const widgetUrl = useMemo(() => buildTimerUrl(typeof window !== 'undefined' ? `${window.location.origin}/widgets/timer/display` : '', state) + (privateKey ? `&key=${privateKey}` : ''), [state, privateKey]);
   const obsUrl = useMemo(() => `${widgetUrl}&obs=1`, [widgetUrl]);
-  // 1 file untuk OBS + live preview — preview pakai simulate=1 biar 1 source (display/page.tsx)
+  // 1 file untuk OBS + live preview - preview pakai simulate=1 biar 1 source (display/page.tsx)
   const previewUrl = useMemo(() => buildTimerUrl('/widgets/timer/display', state), [state]);
   const simulateUrl = useMemo(() => `${previewUrl}${previewUrl.includes('?') ? '&' : '?'}simulate=1`, [previewUrl]);
 
@@ -33,7 +33,7 @@ function TimerSettingsInner() {
         user={shell.user}
         headerIcon={<Clock className="w-4 h-4 text-white" />}
         title={<>Focus Timer <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white text-black rounded-full">Pomodoro</span></>}
-        subtitle="Timer 50:00 × 3 sesi — desain Moka #594d4a"
+        subtitle="Timer 50:00 × 3 sesi - desain Moka #594d4a"
         headerActions={
           <>
             <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
@@ -46,13 +46,13 @@ function TimerSettingsInner() {
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview — {state.theme} • simulate • pos:{normalizePosition((state as unknown as {pos:string}).pos || 'center')}</div>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • simulate • pos:{normalizePosition((state as unknown as {pos:string}).pos || 'center')}</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.focusMinutes}m • {normalizePosition((state as unknown as {pos:string}).pos || 'center')}</span>
             </div>
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px]">
               <iframe key={simulateUrl} src={simulateUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="timer-preview" />
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">Posisi global (t,l,b,r, tl/tr/bl/br, center) — langsung tersimulasi di live preview & OBS pakai <code className="bg-white/10 px-1 rounded text-white">.../timer/display?pos=...</code> yang sama + <code className="bg-white/10 px-1 rounded text-white">simulate=1</code>.</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">Posisi global (t,l,b,r, tl/tr/bl/br, center) - langsung tersimulasi di live preview & OBS pakai <code className="bg-white/10 px-1 rounded text-white">.../timer/display?pos=...</code> yang sama + <code className="bg-white/10 px-1 rounded text-white">simulate=1</code>.</div>
           </>
         }
       />

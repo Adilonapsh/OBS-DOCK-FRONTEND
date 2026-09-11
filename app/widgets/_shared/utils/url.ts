@@ -1,4 +1,4 @@
-// Shared URL param helpers — replaces duplicated getParam/getIntParam/getBoolParam in 5 widgets
+// Shared URL param helpers - replaces duplicated getParam/getIntParam/getBoolParam in 5 widgets
 
 export function getStringParam(params: URLSearchParams, key: string, fallback: string): string {
   const v = params.get(key);

@@ -39,16 +39,16 @@ export function ChatSettingsForm({
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" min={10} max={26} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 14)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof ChatSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter — default fade halus</span></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof ChatSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade halus</span></label>
         </div>
       </div>
 
       {/* Warna */}
       {state.theme === 'cute' ? (
         <div className="space-y-3">
-          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-pink-400" /> Warna — Cute (kustom)</h2>
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-pink-400" /> Warna - Cute (kustom)</h2>
           <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
-            <div className="text-[10px] text-gray-500 bg-pink-500/10 border border-pink-500/20 rounded-xl p-2">Tema Cute tidak pakai Background container — hanya warna bubble & badge yang bisa dikustom.</div>
+            <div className="text-[10px] text-gray-500 bg-pink-500/10 border border-pink-500/20 rounded-xl p-2">Tema Cute tidak pakai Background container - hanya warna bubble & badge yang bisa dikustom.</div>
             <div className="grid grid-cols-2 gap-3">
               <label className="block"><span className="text-[11px] font-bold text-gray-300">Bubble</span><input type="color" value={state.cuteBubbleBg} onChange={(e) => update('cuteBubbleBg', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
               <label className="block"><span className="text-[11px] font-bold text-gray-300">Badge BG</span><input type="color" value={state.cuteBadgeBg} onChange={(e) => update('cuteBadgeBg', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
@@ -77,9 +77,9 @@ export function ChatSettingsForm({
         </div>
       )}
 
-      {/* Posisi — Global */}
+      {/* Posisi - Global */}
       <div className="space-y-3">
-        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi — Global</h2>
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
           <PositionPicker value={(state as unknown as { pos: string }).pos || 'bl'} onChange={(v) => update('pos' as keyof ChatSettings, v)} />
         </div>

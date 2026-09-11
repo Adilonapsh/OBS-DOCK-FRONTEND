@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { getSocketUrl } from '../utils/socket';
 
-// Generic socket hook — replaces duplicated io() + join-room + connected state in 4 widgets
+// Generic socket hook - replaces duplicated io() + join-room + connected state in 4 widgets
 export function useWidgetSocket(privateKey: string): { socket: Socket | null; connected: boolean } {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);

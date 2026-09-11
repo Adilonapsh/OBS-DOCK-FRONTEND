@@ -1,5 +1,5 @@
 .timer-capsule {
-  /* background sekarang via inline resolveBg(bg,accent) — fallback #2b2b42 untuk compat */
+  /* background sekarang via inline resolveBg(bg,accent) - fallback #2b2b42 untuk compat */
   background-color: #2b2b42;
   border-radius: 9999px;
   box-shadow: 0 8px 20px rgba(40, 35, 75, 0.25);

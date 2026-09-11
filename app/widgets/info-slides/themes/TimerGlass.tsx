@@ -2,7 +2,7 @@ import type { InfoSlidesThemeProps } from './types';
 import './TimerGlass.css';
 
 /**
- * Timer Glass — 1:1 port dari app/widgets/timer/themes/Glass.tsx
+ * Timer Glass - 1:1 port dari app/widgets/timer/themes/Glass.tsx
  * Struktur, kelas, warna, radius, animasi plek sama. Hanya konten tengah diganti
  * dari HH:MM:SS menjadi title/desc slide + dukungan image.
  */
@@ -43,7 +43,7 @@ export default function TimerGlassTheme({ slides, index, font, bg, bgOpacity, te
           )}
         </div>
 
-        {/* tengah: plek seperti timer tapi isi slide — pakai div h-12 overflow-hidden + slide-up biar anim sama */}
+        {/* tengah: plek seperti timer tapi isi slide - pakai div h-12 overflow-hidden + slide-up biar anim sama */}
         <div className="flex-1 flex flex-col items-center justify-center px-2 min-w-0">
           <div className="h-6 sm:h-7 overflow-hidden flex items-center justify-center max-w-full">
             <span key={slide.title + index} className="inline-block slide-up font-black text-[15px] sm:text-[20px] tracking-tight text-white leading-none truncate text-center" style={{ color: textColor || '#ffffff', animation: animStyle }}>

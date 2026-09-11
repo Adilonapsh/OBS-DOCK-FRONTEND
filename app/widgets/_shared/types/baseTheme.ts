@@ -1,4 +1,4 @@
-// Shared base theme props — dipakai semua widget agar konsisten & mudah digeneralisasi
+// Shared base theme props - dipakai semua widget agar konsisten & mudah digeneralisasi
 // Developer cukup extend BaseThemeProps untuk widget-specific props
 
 export type BaseThemeProps = {
@@ -22,7 +22,7 @@ import type React from 'react';
 // Generic theme component type
 export type ThemeComponent<P extends BaseThemeProps> = React.ComponentType<P>;
 
-// Registry type — map value -> component
+// Registry type - map value -> component
 export type ThemeRegistry<P extends BaseThemeProps> = Record<string, ThemeComponent<P>>;
 
 // Helper untuk mendaftarkan tema dengan type-safety

@@ -6,7 +6,7 @@ type ModalsProps = {
   onReset: () => void;
 };
 
-// Handler show/hide private key (konfirmasi dulu) — dipakai UrlBar.
+// Handler show/hide private key (konfirmasi dulu) - dipakai UrlBar.
 export function toggleShowKey(shell: WidgetPageShell, obsUrl: string) {
   if (!shell.showKey && obsUrl.includes('key=')) shell.setShowKeyConfirm(true);
   else shell.setShowKey((v) => !v);

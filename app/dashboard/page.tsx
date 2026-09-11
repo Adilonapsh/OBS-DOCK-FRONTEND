@@ -49,7 +49,7 @@ export default function DashboardPage() {
                     key = (s as any)?.private_key || null;
                 } catch {}
             }
-            // Private key HANYA dibaca di sini — dibuat saat register (DB trigger)
+            // Private key HANYA dibaca di sini - dibuat saat register (DB trigger)
             // atau via tombol Regenerate. Jangan generate otomatis saat login.
             setPrivateKey(key);
             setLoading(false);

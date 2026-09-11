@@ -22,7 +22,7 @@ export default function GlassTheme({ tasks, font, fontSize, accent, bg, bgOpacit
   const shouldCollapseView = !!(autoCollapse && !isExpanded);
   const nextTask = tasks.find(t => !t.completed && !collapsedIds?.has(t.id)) || tasks.find(t => !t.completed) || null;
 
-  // Glass card wrapper — mirip timer Glass: blur + border 2px + radius 36px
+  // Glass card wrapper - mirip timer Glass: blur + border 2px + radius 36px
   return (
     <div className="task-glass-theme w-full max-w-[420px] flex flex-col items-center gap-3 select-none" style={{ fontFamily: `'Nunito','${font}', sans-serif` }}>
       <div className="flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black tracking-widest uppercase will-change-transform" style={{ background: 'rgba(255,255,255,0.85)', color: '#2b2b42', backdropFilter: 'blur(6px)' }}>

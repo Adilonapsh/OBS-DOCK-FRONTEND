@@ -1,8 +1,8 @@
-// Timer Theme Registry — generalisasi untuk developer lain
+// Timer Theme Registry - generalisasi untuk developer lain
 // Cara tambah tema baru (3 langkah):
 // 1. Buat file themes/NamaTema.tsx + NamaTema.css yang menerima TimerThemeProps
 // 2. Import di sini dan daftarkan di TIMER_THEME_REGISTRY
-// 3. Tambahkan entry di TIMER_THEMES (config.ts) — selesai, otomatis muncul di settings & display
+// 3. Tambahkan entry di TIMER_THEMES (config.ts) - selesai, otomatis muncul di settings & display
 
 import type { TimerThemeProps } from './types';
 import type { ThemeRegistry } from '../../_shared/types/baseTheme';
@@ -26,7 +26,7 @@ export function listTimerThemes(): string[] {
   return Object.keys(TIMER_THEME_REGISTRY);
 }
 
-// Untuk preview/docs — bisa dipakai untuk generate docs otomatis
+// Untuk preview/docs - bisa dipakai untuk generate docs otomatis
 export const TIMER_THEME_DOCS = `
 # Menambah Tema Timer Baru
 
@@ -51,7 +51,7 @@ export const TIMER_THEME_REGISTRY = { ..., mytheme: MyTheme };
 
 3. Tambahkan di \`config.ts\`:
 \`\`\`ts
-export const TIMER_THEMES = [..., { value: 'mytheme', label: 'MyTheme — Deskripsi' }] as const;
+export const TIMER_THEMES = [..., { value: 'mytheme', label: 'MyTheme - Deskripsi' }] as const;
 \`\`\`
-Tanpa ubah display/page.tsx atau Preview — registry otomatis merender tema baru.
+Tanpa ubah display/page.tsx atau Preview - registry otomatis merender tema baru.
 ` as const;
