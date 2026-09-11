@@ -454,17 +454,7 @@ function OverlayContent() {
               {/* Vertical stack */}
               {!isHorizontal && (
                 <div className={`absolute ${chatPositionClass} flex flex-col gap-2 max-w-[380px] w-[92%] sm:w-[380px] pointer-events-none`}>
-                  {chats.length === 0 ? (
-                    <div className="px-4 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                        <MessageSquare className="w-4 h-4 text-gray-400" />
-                      </div>
-                      <div>
-                        <div className="text-white font-bold text-[11px]">Menunggu chat…</div>
-                        <div className="text-gray-500 text-[10px]">Connect TikTok di Dock untuk mulai live chat</div>
-                      </div>
-                    </div>
-                  ) : (
+                  {chats.length === 0 ? null : (
                     chats.map((chat) => (
                       <div
                         key={chat.id}
@@ -521,9 +511,7 @@ function OverlayContent() {
                             animation: `ticker ${tickerSpeed}s ${hMode === "steps" ? "steps(30)" : "linear"} infinite`,
                           }}
                         >
-                          {chats.length === 0 ? (
-                            <span className="text-gray-500 text-[13px] font-medium">Menunggu chat… Connect TikTok di Dock untuk mulai live chat</span>
-                          ) : (
+                          {chats.length === 0 ? null : (
                             chats.map((chat, i) => (
                               <div
                                 key={chat.id}
@@ -564,9 +552,7 @@ function OverlayContent() {
                           className={`flex items-center gap-3 overflow-hidden ${hDir === "right" ? "justify-end" : "justify-start"}`}
                           style={{ fontSize: `${theme.fontScale}em` }}
                         >
-                          {chats.length === 0 ? (
-                            <span className="text-gray-500 text-[13px] font-medium">Menunggu chat… Connect TikTok di Dock untuk mulai live chat</span>
-                          ) : (
+                          {chats.length === 0 ? null : (
                             chats.slice(-6).map((chat) => (
                               <div
                                 key={chat.id}

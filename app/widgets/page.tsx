@@ -6,7 +6,7 @@ import {
   Layers, Monitor, Search, Copy, Check, Eye, EyeOff, ExternalLink, Sparkles,
   MessageSquare, Gift, Heart, UserPlus, Pin, Zap, LayoutGrid, Filter,
   Settings2, Activity, AlertCircle, Menu, Plus, Palette, Pencil, Trophy,
-  Clock3, Hash, Target, ShoppingBag, Timer, Music, Mic2, Cog, GripVertical, BarChart3
+  Clock3, Hash, Target, ShoppingBag, Timer, Music, Mic2, Cog, GripVertical, BarChart3, Volume2, Share2
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { createClient } from "@/utils/supabase/client";
@@ -21,7 +21,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll";
+  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator";
   recommended?: boolean;
   w: number;
   h: number;
@@ -31,7 +31,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "chat",
     title: "Chat Overlay",
-    desc: "Overlay chat TikTok + Streamer.bot (Twitch/YouTube/Kick) - 4 tema, avatar & platform logo, animasi & auto-hide. Sumber: server.ts tiktok-chat.",
+    desc: "Overlay chat TikTok + Streamer.bot (Twitch/YouTube/Kick) - 5 tema (Cute lavender), avatar & platform logo, animasi elegant & horizontal/inline. Sumber: server.ts tiktok-chat.",
     category: "chat",
     tags: ["Chat", "TikTok", "Streamer.bot", "Overlay"],
     layout: "chat",
@@ -39,6 +39,54 @@ const WIDGETS: WidgetItem[] = [
     preview: "chat",
     recommended: true,
     w: 420, h: 520,
+  },
+  {
+    id: "event",
+    title: "Event Overlay",
+    desc: "Overlay event Join • Gift • Like — TikTok member/gift/like + Streamer.bot, 3 tema (Standard/Minimal/Cute), filter per event, animasi elegant. Sumber: server.ts tiktok-member/gift/like.",
+    category: "alert",
+    tags: ["Event", "Join", "Gift", "Like", "TikTok"],
+    layout: "event",
+    params: "theme=standard&font=Outfit&accent=%238b5cf6",
+    preview: "gift",
+    recommended: true,
+    w: 420, h: 400,
+  },
+  {
+    id: "timer",
+    title: "Timer",
+    desc: "Pomodoro 50:00 × 3 sesi — 4 tema (Focus/Minimal/Subathon/Glass), Glass sync dock ±5m & COUNTDOWN live + badge +5m.",
+    category: "progress",
+    tags: ["Timer", "Focus", "Glass", "Sync"],
+    layout: "timer",
+    params: "theme=glass&font=Nunito&focusMinutes=50&totalSessions=3",
+    preview: "timer",
+    recommended: true,
+    w: 360, h: 340,
+  },
+  {
+    id: "task",
+    title: "Task List",
+    desc: "Task list — Dark Slate #1a2233, 2 tema, inline/horizontal, animasi masuk/keluar. Pisah dari Timer.",
+    category: "progress",
+    tags: ["Task", "List", "Todo"],
+    layout: "task",
+    params: "theme=focus&font=Nunito",
+    preview: "task",
+    recommended: true,
+    w: 360, h: 400,
+  },
+  {
+    id: "follow",
+    title: "Follow Overlay",
+    desc: "Follow alert + suara — TikTok follow/member + Twitch/YouTube follow via Streamer.bot, 3 tema, suara MP3 kustom, animasi elegant hide fade.",
+    category: "alert",
+    tags: ["Follow", "Alert", "Sound", "TikTok"],
+    layout: "follow",
+    params: "theme=standard&font=Outfit&accent=%23ec4899",
+    preview: "follow",
+    recommended: true,
+    w: 420, h: 300,
   },
   {
     id: "poll",
@@ -88,9 +136,122 @@ const WIDGETS: WidgetItem[] = [
     recommended: true,
     w: 560, h: 180,
   },
+  {
+    id: "info-slides",
+    title: "Info Slides",
+    desc: "Sponsor / Rules Loop — 5-10 slide auto-rotate 5-10s, 3 tema Clean/Boxed/Glass, badge + progress dots.",
+    category: "info",
+    tags: ["Info", "Slides", "Sponsor", "Rules"],
+    layout: "info-slides",
+    params: "theme=clean&font=Outfit&duration=6&autoRotate=true",
+    preview: "ticker",
+    recommended: true,
+    w: 640, h: 160,
+  },
+  {
+    id: "social-rotator",
+    title: "Social Rotator",
+    desc: "Rotasi handle sosial — Instagram/TikTok/YouTube/Twitch/Discord, 4 tema Pill/Clean/Glass/Boxed, interval 2-20s, posisi global 9-titik, warna per platform.",
+    category: "info",
+    tags: ["Social", "Rotator", "Instagram", "TikTok", "OBS"],
+    layout: "social",
+    params: "theme=pill&font=Outfit&duration=4&pos=bl",
+    preview: "social",
+    recommended: true,
+    w: 420, h: 160,
+  },
 ];
 
 function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
+  if (type === "social") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
+        <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-full border border-white/10 shadow w-fit mx-auto">
+          <div className="w-6 h-6 rounded-full bg-[#FE2C55] grid place-items-center text-white font-black text-[10px]">♪</div>
+          <span className="text-black font-black text-[8px]">@adilonapsh</span>
+          <span className="text-black/50 font-bold text-[6px] uppercase">TikTok</span>
+        </div>
+        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center justify-center gap-1"><Share2 className="w-2 h-2" /> 4 tema • Pill/Glass/Boxed • 4s</div>
+      </div>
+    );
+  }
+  if (type === "ticker") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
+        <div className="flex items-center gap-2 px-3 py-2 bg-white/[0.06] border border-white/10 rounded-xl">
+          <span className="px-1.5 py-0.5 bg-violet-600 text-white rounded-full text-[6px] font-black">SPONSOR</span>
+          <span className="text-white font-black text-[7px] truncate">TrueNAP — Ultra Low Latency</span>
+        </div>
+        <div className="flex gap-1 justify-center"><span className="w-4 h-1 bg-white rounded-full" /><span className="w-1 h-1 bg-white/30 rounded-full" /><span className="w-1 h-1 bg-white/30 rounded-full" /></div>
+        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1"><Layers className="w-2 h-2" /> 3 tema • 5-10 slides • 6s</div>
+      </div>
+    );
+  }
+  if (type === "follow") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
+        <div className="flex items-center gap-2 px-2 py-1.5 bg-[#1e1d2b] border border-pink-500/30 rounded-xl">
+          <div className="w-7 h-7 rounded-xl bg-pink-500 flex items-center justify-center"><Heart className="w-4 h-4 text-white fill-white" /></div>
+          <div className="flex-1 min-w-0">
+            <div className="text-white font-black text-[7px] leading-none">Rizky_JR</div>
+            <div className="text-pink-200 text-[6px] font-bold">followed you • welcome! 🎉</div>
+          </div>
+          <Volume2 className="w-3 h-3 text-pink-400" />
+        </div>
+        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1"><Heart className="w-2 h-2 fill-pink-400" /> 3 tema • suara MP3</div>
+      </div>
+    );
+  }
+  if (type === "timer") {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center p-2 gap-1">
+        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[#fff] text-[5px] font-black tracking-widest uppercase shadow-sm">
+          <svg className="w-2 h-2 fill-current" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg> 2X • POWER-UP
+        </div>
+        <div className="w-[132px] px-2.5 py-1.5 flex items-center justify-between gap-1 rounded-[14px] border bg-[rgba(147,158,255,0.55)] backdrop-blur shadow-sm" style={{ borderWidth: '1.5px', borderColor: 'rgba(255,255,255,0.5)' }}>
+          <div className="w-4 h-4 rounded-full border-[1.5px] border-white/90 grid place-items-center shrink-0 bg-white/10">
+            <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2.5 2.5" /></svg>
+          </div>
+          <span className="text-white font-black text-[10px] tracking-tight">13:20:05</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-white/25 border border-white/70 text-white text-[5px] font-black leading-none">+5m</span>
+        </div>
+        <div className="text-[5px] font-black uppercase tracking-widest text-white/90 flex items-center gap-1"><Clock3 className="w-2 h-2" /> Glass • 4 tema • sync dock</div>
+      </div>
+    );
+  }
+  if (type === "task") {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center p-2">
+        <div className="w-[80px] rounded-[8px] bg-[#1a2233] p-2 space-y-1">
+          <div className="text-white font-black text-[6px] text-center uppercase tracking-widest">TASKS</div>
+          <div className="h-2 rounded-full bg-[#232d42]" />
+          <div className="h-2 rounded-full bg-[#232d42]/60" />
+          <div className="h-2 rounded-full bg-[#232d42]" />
+        </div>
+        <div className="text-[6px] font-black uppercase tracking-widest text-[#594d4a] mt-1">Task List</div>
+      </div>
+    );
+  }
+  if (type === "gift") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
+        <div className="flex items-center gap-2 px-2 py-1.5 bg-[#1e1d2b] border border-white/10 rounded-xl">
+          <div className="w-6 h-6 rounded-full bg-[#FE2C55] flex items-center justify-center"><Gift className="w-3 h-3 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <div className="text-white font-black text-[6px] leading-none">SitiPlay • GIFT</div>
+            <div className="text-white/70 text-[6px]">Rose ×5 • ♦5</div>
+          </div>
+          <Heart className="w-3 h-3 text-pink-400 fill-pink-400" />
+        </div>
+        <div className="flex items-center gap-2 px-2 py-1 bg-white/[0.06] border border-white/10 rounded-full">
+          <UserPlus className="w-3 h-3 text-green-400" />
+          <span className="text-white font-black text-[6px]">BudiSantuy joined</span>
+          <span className="ml-auto text-[6px] text-gray-500">+12 likes</span>
+        </div>
+        <div className="text-[6px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1"><Gift className="w-2 h-2" /> 3 tema • Join/Gift/Like</div>
+      </div>
+    );
+  }
   if (type === "chat") {
     return (
       <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
@@ -254,6 +415,18 @@ function WidgetsListing() {
 
   const getWidgetUrl = (item: WidgetItem, transparent = true) => {
     if (typeof window === "undefined") return "";
+    if (item.id === 'follow') {
+      const base = `${window.location.origin}/widgets/follow/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'task') {
+      const base = `${window.location.origin}/widgets/task/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'event') {
+      const base = `${window.location.origin}/widgets/event/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
     if (item.id === 'chat') {
       const base = `${window.location.origin}/widgets/chat/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
@@ -272,6 +445,14 @@ function WidgetsListing() {
     }
     if (item.id === 'lyrics') {
       const base = `${window.location.origin}/widgets/lyrics/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'info-slides') {
+      const base = `${window.location.origin}/widgets/info-slides/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'social-rotator') {
+      const base = `${window.location.origin}/widgets/social-rotator/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     let themeQ = "";
@@ -425,7 +606,23 @@ function WidgetsListing() {
                       <Link href={urlPreview} target="_blank" className="h-8 flex items-center justify-center gap-1 bg-white text-black rounded-xl text-[9px] font-black uppercase hover:bg-gray-100">
                         <Eye className="w-3 h-3" /> Preview
                       </Link>
-                      {item.id === 'chat' ? (
+                      {item.id === 'timer' ? (
+                        <Link href={`/widgets/timer${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
+                      ) : item.id === 'task' ? (
+                        <Link href={`/widgets/task${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
+                      ) : item.id === 'follow' ? (
+                        <Link href={`/widgets/follow${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
+                      ) : item.id === 'event' ? (
+                        <Link href={`/widgets/event${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
+                      ) : item.id === 'chat' ? (
                         <Link href={`/widgets/chat${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
@@ -445,13 +642,25 @@ function WidgetsListing() {
                         <Link href={`/widgets/lyrics${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'info-slides' ? (
+                        <Link href={`/widgets/info-slides${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
+                      ) : item.id === 'social-rotator' ? (
+                        <Link href={`/widgets/social-rotator${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
+                      ) : item.id === 'task' ? (
+                        <Link href={`/widgets/task${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : (
-                        <Link href={`/widgets/editor?id=${item.id}&key=${privateKey || ""}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/editor?&key=${privateKey || ""}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'chat') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator') && (
                       <a
                         href={urlObs}
                         draggable

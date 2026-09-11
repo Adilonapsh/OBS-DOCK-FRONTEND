@@ -53,6 +53,14 @@ function EditorContent() {
   const router = useRouter();
   const supabase = createClient();
   const initialId = searchParams.get("id") || searchParams.get("overlay") || "full";
+  // task & new widgets jangan ke /editor — pakai halaman dedicated /widgets/task|chat|poll|event|follow
+  useEffect(() => {
+    const dedicated = ['task','chat','poll','event','follow','clock','media-player','lyrics'];
+    if (dedicated.includes(initialId)) {
+      const key = searchParams.get('key') || '';
+      router.replace(`/widgets/${initialId}${key ? `?key=${key}` : ''}`);
+    }
+  }, [initialId, searchParams, router]);
   const [overlayId, setOverlayId] = useState(initialId);
   const [privateKey, setPrivateKey] = useState(searchParams.get("key") || "");
   const [theme, setTheme] = useState<OverlayTheme>(defaultTheme);

@@ -1,5 +1,5 @@
 'use client';
-import { useState, forwardRef, useImperativeHandle } from "react";
+import { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 
 export interface PollingRef {
   getData: () => { question: string; options: string[] };
@@ -9,6 +9,17 @@ export interface PollingRef {
 const Polling = forwardRef<PollingRef>((_, ref) => {
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [focusIdx, setFocusIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (focusIdx !== null) {
+      requestAnimationFrame(() => {
+        inputRefs.current[focusIdx]?.focus();
+        setFocusIdx(null);
+      });
+    }
+  }, [options, focusIdx]);
 
   useImperativeHandle(ref, () => ({
     getData: () => ({ question, options }),
@@ -23,7 +34,11 @@ const Polling = forwardRef<PollingRef>((_, ref) => {
   };
 
   const addOption = () => {
-    if (options.length < 5) setOptions([...options, ""]);
+    if (options.length < 5) {
+      const nextIdx = options.length;
+      setOptions([...options, ""]);
+      setFocusIdx(nextIdx);
+    }
   };
 
   const removeOption = (idx: number) => {
@@ -49,11 +64,19 @@ const Polling = forwardRef<PollingRef>((_, ref) => {
           {options.map((opt, idx) => (
             <div key={idx} className="flex gap-2">
               <input
+                ref={(el) => { inputRefs.current[idx] = el; }}
                 type="text"
                 value={opt}
                 onChange={(e) => updateOption(idx, e.target.value)}
                 placeholder={`Opsi ${idx + 1}`}
                 className="flex-1 rounded-lg px-3 py-2 text-sm font-medium bg-white/5 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (idx === options.length - 1 && options.length < 5) addOption();
+                    else inputRefs.current[idx + 1]?.focus();
+                  }
+                }}
               />
               {options.length > 2 && (
                 <button

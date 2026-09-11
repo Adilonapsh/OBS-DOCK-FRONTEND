@@ -15,20 +15,21 @@ function platformLogo(p?: string) {
   return '/assets/logo/tik-tok.png';
 }
 
-export default function StandardTheme({ chats, font, accent, bg, showAvatar, showPlatform, showTimestamp, anim, horizontalAnim, fontSize, bgOpacity, horizontal, inline }: ChatThemeProps) {
+export default function StandardTheme({ chats, font, accent, bg, showAvatar, showPlatform, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, exitingIds }: ChatThemeProps) {
   const bgColor = bg === 'transparent' ? 'rgba(18,18,18,0.88)' : bg;
   const effectiveAnim = horizontal ? (horizontalAnim || anim) : anim;
-  const isElegant = ['elegantIn','softPopIn','blurIn','luxeIn'].includes(effectiveAnim);
-  const dur = isElegant ? '0.62s' : '0.45s';
+  const hide = hideAnim || 'fadeOut';
+  const getAnim = (id: string) => {
+    const isExiting = exitingIds?.has(id);
+    const name = isExiting ? hide : effectiveAnim;
+    const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name);
+    const d = isEleg ? '0.62s' : '0.45s';
+    return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`;
+  };
   if (horizontal) {
     return (
       <div className="chat-standard-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-center content-start" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {chats.length === 0 ? (
-          <div className="chat-empty px-4 py-2.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl text-white/60 text-[13px] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" />
-            Menunggu chat… hubungkan TikTok / Streamer.bot di Dock
-          </div>
-        ) : chats.map((c) => (
+        {chats.length === 0 ? null : chats.map((c) => (
           <div
             key={c.id}
             className="chat-bubble flex items-center gap-2 backdrop-blur-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-3 py-2 will-change-transform shrink-0 max-w-[360px]"
@@ -37,7 +38,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
               borderColor: 'rgba(255,255,255,0.10)',
               borderRadius: '999px',
               opacity: bgOpacity / 100,
-              animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both`,
+              animation: getAnim(c.id),
               borderLeft: `3px solid ${accent}`,
             }}
           >
@@ -64,12 +65,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
   if (inline) {
     return (
       <div className="chat-standard-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {chats.length === 0 ? (
-          <div className="chat-empty px-4 py-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl text-white/60 text-[13px] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" />
-            Menunggu chat… hubungkan TikTok / Streamer.bot di Dock
-          </div>
-        ) : chats.map((c) => (
+        {chats.length === 0 ? null : chats.map((c) => (
           <div
             key={c.id}
             className="chat-bubble flex items-center gap-2 backdrop-blur-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-3 py-2 will-change-transform"
@@ -78,7 +74,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
               borderColor: 'rgba(255,255,255,0.10)',
               borderRadius: '999px',
               opacity: bgOpacity / 100,
-              animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both`,
+              animation: getAnim(c.id),
               borderLeft: `3px solid ${accent}`,
             }}
           >
@@ -104,12 +100,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
   }
   return (
     <div className="chat-standard-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-      {chats.length === 0 ? (
-        <div className="chat-empty px-4 py-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl text-white/60 text-[13px] flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" />
-          Menunggu chat… hubungkan TikTok / Streamer.bot di Dock
-        </div>
-      ) : chats.map((c) => (
+      {chats.length === 0 ? null : chats.map((c) => (
         <div
           key={c.id}
           className="chat-bubble flex gap-2.5 backdrop-blur-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-3 py-2.5 will-change-transform"
@@ -118,7 +109,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
             borderColor: 'rgba(255,255,255,0.10)',
             borderRadius: '16px',
             opacity: bgOpacity / 100,
-            animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both`,
+            animation: getAnim(c.id),
             borderLeft: `3px solid ${accent}`,
           }}
         >

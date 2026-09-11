@@ -5,6 +5,9 @@ import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
 import { createClient } from '@/utils/supabase/client';
 import { Copy, Check, ExternalLink, Monitor, Palette, Music, Image as ImageIcon, Sparkles, ArrowLeft, RefreshCw, Settings2, Menu, GripVertical, Eye, EyeOff } from 'lucide-react';
+import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { getPositionStyle } from '../_shared/constants/positions';
+import { PositionPicker } from '../_shared/components/PositionPicker';
 
 const themes = [
   { value: 'standard', label: 'Standard' },
@@ -16,10 +19,11 @@ const themes = [
   { value: 'classic', label: 'Classic' },
   { value: 'card', label: 'Card' },
   { value: 'album-art', label: 'Album Art' },
+  { value: 'large-album-art', label: 'Large Album Art' },
   { value: 'vinyl', label: 'Vinyl' },
   { value: 'color-palette', label: 'Color Palette' },
 ];
-const fontsList = ['Outfit','Inter','Poppins','Space Grotesk','JetBrains Mono','Manrope','Bebas Neue','Anton','Righteous','Segoe UI','Arial','Geist'];
+const fontsList = [...WIDGET_FONTS];
 const showAnimations = ['fade-in','slide-in-from-top','slide-in-from-bottom','slide-in-from-left','slide-in-from-right'];
 const hideAnimations = ['fade-out','slide-out-top','slide-out-bottom','slide-out-left','slide-out-right'];
 
@@ -48,6 +52,7 @@ function buildUrl(base: string, state: any): string {
   p.set('hideAnimation', state.hideAnimation);
   p.set('smtcBridgeAddress', state.smtcBridgeAddress);
   p.set('smtcBridgePort', state.smtcBridgePort);
+  p.set('pos', state.pos || 'bl');
   // include obs flag for preview? not needed
   return `${base}?${p.toString()}`;
 }
@@ -76,6 +81,7 @@ const defaults = {
   hideAnimation: 'slide-out-bottom',
   smtcBridgeAddress: '127.0.0.1',
   smtcBridgePort: '5000',
+  pos: 'bl',
 };
 
 function MediaPlayerSettingsInner() {
@@ -237,9 +243,11 @@ function MediaPlayerSettingsInner() {
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" value={state.fontSize} onChange={e => update('fontSize', parseInt(e.target.value)||0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Max Width <span className="font-normal opacity-60">0=full</span></span><input type="number" value={state.maxWidth} onChange={e => update('maxWidth', parseInt(e.target.value)||0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Vertical Align</span><select value={state.verticalAlignment} onChange={e => update('verticalAlignment', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="align-to-top" className="bg-zinc-900">Align To Top</option><option value="align-to-center" className="bg-zinc-900">Align To Center</option><option value="align-to-bottom" className="bg-zinc-900">Align To Bottom</option></select></label>
+                  <div className="grid grid-cols-1 gap-3">
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Text Align</span><select value={state.textAlignment} onChange={e => update('textAlignment', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-zinc-900">Left</option><option value="center" className="bg-zinc-900">Center</option><option value="right" className="bg-zinc-900">Right</option></select></label>
+                  </div>
+                  <div className="bg-black/30 border border-white/5 rounded-xl p-2">
+                    <PositionPicker value={(state as any).pos || 'bl'} onChange={(v) => update('pos', v)} />
                   </div>
                   <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5">
                     <span className="text-[11px] font-bold text-white">Use Custom Colors</span>
@@ -296,9 +304,9 @@ function MediaPlayerSettingsInner() {
               <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><ImageIcon className="w-4 h-4 text-white" /> Live Preview</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.theme} • {state.font} • {state.showAnimation}</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[320px]">
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[320px] flex p-4" style={getPositionStyle((state as any).pos || state.verticalAlignment || 'bl') as any}>
               <iframe key={iframeSrc} src={iframeSrc} className="w-full h-full border-0 bg-black" allow="autoplay" />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SMTC {state.smtcBridgeAddress}:{state.smtcBridgePort} • {state.autoHide ? `${state.displayDuration}s auto-hide` : 'always'}</div>
+              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SMTC {state.smtcBridgeAddress}:{state.smtcBridgePort} • {state.autoHide ? `${state.displayDuration}s auto-hide` : 'always'} • {(state as any).pos || state.verticalAlignment || 'bl'}</div>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS</a>

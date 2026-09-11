@@ -1,0 +1,39 @@
+.timer-overlay-card {
+  /* background & border sekarang di-inline via props (accent/bg/textColor) — fallback di bawah untuk backward compat */
+  background: rgba(147, 158, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 36px;
+  box-shadow: 0 12px 32px rgba(100, 110, 210, 0.25);
+}
+.top-tab {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  border-radius: 0 0 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: none;
+}
+.clock-badge {
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 9999px;
+}
+.plus-badge {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 9999px;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 13px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(60%); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.slide-up {
+  display: inline-block;
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.seconds-accent { color: #c3d3ff; }
+.glass-theme { }

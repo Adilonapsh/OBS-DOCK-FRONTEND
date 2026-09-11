@@ -2,6 +2,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { getPositionStyle } from '../../_shared/constants/positions';
+import { getStringParam } from '../../_shared/utils/url';
 import StandardTheme from '../themes/Standard';
 import MatteTheme from '../themes/Matte';
 import MatteDarkTheme from '../themes/MatteDark';
@@ -14,6 +16,7 @@ import AlbumArtTheme from '../themes/AlbumArt';
 import VinylTheme from '../themes/Vinyl';
 import ColorPaletteTheme from '../themes/ColorPalette';
 import type { AccentPalette } from '../themes/types';
+import LargeAlbumArtTheme from '../themes/LargeAlbumArt';
 
 // PlaybackStatus from enumSmtc.ts
 const PlaybackStatus = {
@@ -115,6 +118,8 @@ function MediaPlayerInner() {
   const hideAnimation = params.get('hideAnimation') || 'slide-out-bottom';
   const smtcBridgeAddress = params.get('smtcBridgeAddress') || '127.0.0.1';
   const smtcBridgePort = params.get('smtcBridgePort') || '5000';
+  const pos = getStringParam(params, 'pos', 'bl');
+  const posStyle = getPositionStyle(pos);
   const obsMode = params.get('obs') === '1';
 
   const PLACEHOLDER = 'https://via.placeholder.com/300/1d1d1d/ffffff?text=%E2%99%AA';
@@ -334,7 +339,7 @@ function MediaPlayerInner() {
         .anim-slide-out-left { animation: slide-out-left 0.5s ease forwards }
         .anim-slide-out-right { animation: slide-out-right 0.5s ease forwards }
       `}</style>
-      <div id="media-player-root" className={`min-h-screen w-screen flex ${alignmentCls} justify-center p-4 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined }}>
+      <div id="media-player-root" className={`min-h-screen w-screen flex p-6 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined, ...posStyle } as any}>
         <div
           id="main-container"
           className={`flex w-full ${alignmentCls} ${themeWrapper}`}
@@ -363,6 +368,7 @@ function MediaPlayerInner() {
                 case 'album-art': return <AlbumArtTheme {...themeProps} />;
                 case 'vinyl': return <VinylTheme {...themeProps} />;
                 case 'color-palette': return <ColorPaletteTheme {...themeProps} />;
+                case 'large-album-art': return <LargeAlbumArtTheme {...themeProps} />;
                 case 'standard':
                 default: return <StandardTheme {...themeProps} />;
               }

@@ -19,6 +19,7 @@ export type ChatThemeProps = {
   showTimestamp: boolean;
   anim: string;
   horizontalAnim?: string;
+  hideAnim?: string;
   hideAfter: number;
   fontSize: number;
   bgOpacity: number;
@@ -32,4 +33,5 @@ export type ChatThemeProps = {
   cuteBadgeText?: string;
   cuteNameMod?: string;
   cuteNameUser?: string;
+  exitingIds?: Set<string>;
 };

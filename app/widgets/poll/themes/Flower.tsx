@@ -41,11 +41,8 @@ export default function FlowerTheme({ poll, font, bg, showTotal }: PollThemeProp
 
       {/* Judul */}
       <div className="text-center w-full px-2">
-        <div className="inline-block bg-slate-800/60 px-3 py-1 rounded-full text-xs text-slate-300 font-semibold mb-1">
-          Vote • {total} suara • {poll.options.length} opsi
-        </div>
         <h2 id="poll-question" className="text-xl md:text-2xl font-extrabold tracking-wide text-white">
-          Vote for : <span className="font-normal text-slate-100">{poll.question}</span>
+          <span className="font-normal text-slate-100">{poll.question}</span>
         </h2>
       </div>
 

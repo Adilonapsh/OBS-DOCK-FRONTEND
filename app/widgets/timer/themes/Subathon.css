@@ -1,0 +1,36 @@
+.timer-capsule {
+  /* background sekarang via inline resolveBg(bg,accent) — fallback #2b2b42 untuk compat */
+  background-color: #2b2b42;
+  border-radius: 9999px;
+  box-shadow: 0 8px 20px rgba(40, 35, 75, 0.25);
+}
+.status-pill {
+  background-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 3px 16px;
+  letter-spacing: 0.02em;
+}
+.badge-powerup {
+  background-color: #ebd1b3;
+  color: #2b2b42;
+  border-radius: 9999px;
+  font-weight: 900;
+  font-size: 11px;
+  padding: 2px 9px;
+}
+.badge-sleep {
+  background-color: #8b88d9;
+  color: #ffffff;
+  border-radius: 9999px;
+  font-weight: 900;
+  font-size: 11px;
+  padding: 2px 9px;
+}
+.icon-circle-dark {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+}
+.subathon-theme { }

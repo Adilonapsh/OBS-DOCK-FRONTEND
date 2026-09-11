@@ -4,9 +4,9 @@ import Image from "next/image";
 import { io, Socket } from "socket.io-client";
 import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2,
-    RefreshCcw, ChevronDown, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
+    RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus,
-    Share2, ListPlus, Search, Pause, Play, Square, Trash2, EyeOff
+    Share2, ListPlus, ListChecks, Check, Clock, Search, Pause, Play, Square, Trash2, EyeOff, Minimize2, Maximize2
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -112,6 +112,7 @@ export default function Home() {
         current: "DOCK",
         updateTitle: false,
         createPoll: false,
+        createTask: false,
     });
 
     const [activeTab, setActiveTab] = useState<"stats" | "briefing" | "system">("stats");
@@ -151,8 +152,35 @@ export default function Home() {
         if (typeof window === 'undefined') return true;
         try { const v = localStorage.getItem('dock-showPoll'); return v === null ? true : v === 'true'; } catch { return true; }
     });
+    const [pollMinimized,setPollMinimized]=useState(() => {
+        if (typeof window === 'undefined') return false;
+        try { return localStorage.getItem('dock-pollMinimized') === 'true'; } catch { return false; }
+    });
+    const [activeTasks,setActiveTasks]=useState<any>(null);
+    const [taskMinimized,setTaskMinimized]=useState(() => {
+        if (typeof window === 'undefined') return false;
+        try { return localStorage.getItem('dock-taskMinimized') === 'true'; } catch { return false; }
+    });
+    const [newTaskText,setNewTaskText]=useState("");
+    const [activeTimer,setActiveTimer]=useState<any>(null);
+    const [timerTick,setTimerTick]=useState(0);
+    const [timerMinimized,setTimerMinimized]=useState(() => {
+        if (typeof window === 'undefined') return false;
+        try { return localStorage.getItem('dock-timerMinimized') === 'true'; } catch { return false; }
+    });
+    const [dockSwiperIndex,setDockSwiperIndex]=useState(0);
+    const [dockTouchStart,setDockTouchStart]=useState<number|null>(null);
+    const [dockSwiperMinimized,setDockSwiperMinimized]=useState(() => {
+        if (typeof window === 'undefined') return false;
+        try { return localStorage.getItem('dock-swiperMinimized') === 'true'; } catch { return false; }
+    });
     useEffect(()=>{ try{ localStorage.setItem('dock-showPoll', String(showPoll)); }catch{} },[showPoll]);
+    useEffect(()=>{ try{ localStorage.setItem('dock-pollMinimized', String(pollMinimized)); }catch{} },[pollMinimized]);
+    useEffect(()=>{ try{ localStorage.setItem('dock-taskMinimized', String(taskMinimized)); }catch{} },[taskMinimized]);
+    useEffect(()=>{ try{ localStorage.setItem('dock-timerMinimized', String(timerMinimized)); }catch{} },[timerMinimized]);
+    useEffect(()=>{ try{ localStorage.setItem('dock-swiperMinimized', String(dockSwiperMinimized)); }catch{} },[dockSwiperMinimized]);
     useEffect(()=>{ if(!activePoll || activePoll.ended) return; const t=setInterval(()=>setPollTick(v=>v+1),1000); return ()=>clearInterval(t); },[activePoll]);
+    useEffect(()=>{ if(!activeTimer?.isRunning) return; const t=setInterval(()=>setTimerTick(v=>v+1),1000); return ()=>clearInterval(t); },[activeTimer]);
 
     // grafik TikTok realtime dari viewerCount (roomUser)
     useEffect(() => {
@@ -481,11 +509,16 @@ export default function Home() {
             const room = getRoom();
             s.emit('join-room', room);
             s.emit('poll-get', { privateKey: room });
+            s.emit('task-get', { privateKey: room });
+            s.emit('timer-get', { privateKey: room });
         });
         s.on('poll-update', (p:any)=> { setActivePoll(p); if(typeof p.visible==='boolean') setShowPoll(p.visible); });
         s.on('poll-clear', ()=> setActivePoll(null));
+        s.on('task-update', (t:any)=> setActiveTasks(t));
+        s.on('task-clear', ()=> setActiveTasks(null));
+        s.on('timer-update', (t:any)=> setActiveTimer(t));
         // also join when privateKey changes
-        const t = setInterval(()=>{ if(s.connected){ const room=getRoom(); s.emit('poll-get',{privateKey:room}); } }, 3000);
+        const t = setInterval(()=>{ if(s.connected){ const room=getRoom(); s.emit('poll-get',{privateKey:room}); s.emit('task-get',{privateKey:room}); s.emit('timer-get',{privateKey:room}); } }, 3000);
         return () => { clearInterval(t); s.disconnect(); pollSocketRef.current = null; };
     }, []);
     useEffect(()=>{
@@ -493,6 +526,8 @@ export default function Home() {
             const room = privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
             pollSocketRef.current.emit('join-room', room);
             pollSocketRef.current.emit('poll-get', { privateKey: room });
+            pollSocketRef.current.emit('task-get', { privateKey: room });
+            pollSocketRef.current.emit('timer-get', { privateKey: room });
         }
     },[privateKey]);
 
@@ -635,6 +670,38 @@ export default function Home() {
         setPollDuration(60);
         setLayout({ ...layout, createPoll: false });
     }
+    const closeCreateTask = () => {
+        setNewTaskText("");
+        setLayout({ ...layout, createTask: false });
+    }
+    const handleAddTask = () => {
+        const text = newTaskText.trim();
+        if (!text) { alert('Teks task tidak boleh kosong!'); return; }
+        const room = privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        pollSocketRef.current?.emit('task-add', { privateKey: room, text });
+        setNewTaskText("");
+    }
+    const handleToggleTask = (id: string) => {
+        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        pollSocketRef.current?.emit('task-toggle', { privateKey: room, id });
+    }
+    const handleRemoveTask = (id: string) => {
+        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        pollSocketRef.current?.emit('task-remove', { privateKey: room, id });
+    }
+    const handleClearTasks = () => {
+        if (!confirm('Hapus semua tasks?')) return;
+        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        pollSocketRef.current?.emit('task-clear', { privateKey: room });
+        setActiveTasks(null);
+    }
+    const getTimerRoom = () => privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+    const handleTimerControl = (action: string, extra: Record<string, unknown> = {}) => {
+        const room = getTimerRoom();
+        pollSocketRef.current?.emit('timer-control', { privateKey: room, action, ...extra });
+    };
+    const handleTimerAdd = (sec: number = 300) => handleTimerControl('add', { seconds: sec });
+    const handleTimerSub = (sec: number = 300) => handleTimerControl('sub', { seconds: sec });
 
     const toggleStream = () => {
         if (!window.confirm("Apakah Anda yakin ingin memulai/menghentikan Streaming?")) return;
@@ -1869,6 +1936,13 @@ export default function Home() {
                                     <BarChart2 className="w-4 h-4" />
                                     Create Poll
                                 </button>
+                                <button onClick={() => {
+                                    setLayout({ ...layout, createTask: true })
+                                    setDropdownOpen({ ...dropdownOpen, streamTools: false })
+                                }} className="group flex items-center gap-2 w-full px-4 py-2 text-[10px] font-bold uppercase hover:bg-white/5 transition-colors">
+                                    <ListChecks className="w-4 h-4" />
+                                    Create Task
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2059,7 +2133,7 @@ export default function Home() {
                                 </div>
                             )}
                             <div className="flex-1 overflow-y-auto p-4 text-[12px] space-y-3 custom-scrollbar">
-                                {chatMessages.length === 0 && <div className="text-gray-500 italic">Menunggu chat masuk...</div>}
+                                {chatMessages.length === 0 ? null : null}
                                 {chatMessages.length > 0 && filteredChatMessages.length === 0 && <div className="text-gray-500 italic">Tidak ada hasil untuk &quot;{chatSearch}&quot;</div>}
                                 {filteredChatMessages.map(message => {
                                     const getPlatformLogo = (p: string) => p === "twitch" ? "/assets/logo/twitch.png" : p === "tiktok" ? "/assets/logo/tik-tok.png" : "/assets/logo/youtube.png";
@@ -2688,59 +2762,141 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* Active Poll Bar - muncul saat polling berjalan */}
-            {activePoll && (
-                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[96%] max-w-[720px] bg-[#1a1a1a] border border-violet-500/30 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden">
-                    <div className="px-4 py-3 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-b border-white/10 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <span className={`w-2 h-2 rounded-full shrink-0 ${activePoll.ended ? 'bg-gray-500' : activePoll.paused ? 'bg-yellow-500' : 'bg-green-500 animate-pulse'}`} />
-                            <span className="text-white font-black uppercase text-[11px] tracking-widest">
-                                {activePoll.visible===false ? 'HIDDEN' : activePoll.ended ? 'SELESAI' : activePoll.paused ? 'PAUSED' : 'POLLING LIVE'}
-                            </span>
-                            {!activePoll.ended && !activePoll.paused && (()=>{ const remain=Math.max(0, activePoll.duration - Math.floor((Date.now() - activePoll.createdAt)/1000)); return <span className="text-white font-mono font-black text-[11px] bg-black/30 border border-white/10 rounded-full px-2 py-0.5">{String(Math.floor(remain/60)).padStart(2,'0')}:{String(remain%60).padStart(2,'0')}</span>; })()}
-                            {activePoll.paused && <span className="text-yellow-400 font-black text-[10px] uppercase">Paused</span>}
-                            <span className="hidden sm:inline text-gray-400 text-[10px] font-bold">{activePoll.total} votes • ketik 1-{activePoll.options.length} di chat</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                            <button onClick={handleToggleShowPoll} className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 border ${showPoll ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`} title={showPoll ? 'Sembunyikan di OBS' : 'Tampilkan di OBS'}>
-                                {showPoll ? <><EyeOff className="w-3 h-3" /> Hide</> : <><Eye className="w-3 h-3" /> Show</>}
-                            </button>
-                            {!activePoll.ended && (
-                                <button onClick={handlePausePoll} className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 border ${activePoll.paused ? 'bg-green-600 hover:bg-green-500 text-white border-green-500' : 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border-yellow-500/30'}`}>
-                                    {activePoll.paused ? <><Play className="w-3 h-3" /> Resume</> : <><Pause className="w-3 h-3" /> Pause</>}
+            {/* Dock Control Swiper — Poll / Task / Timer swipeable, tidak menumpuk — card asli tetap */}
+            {(() => {
+                const hasPoll = !!activePoll;
+                const hasTaskItems = (activeTasks as { items?: unknown[] })?.items?.length || 0;
+                const hasTimer = true;
+                const tabs: Array<{ id: 'poll'|'task'|'timer'; label: string; icon: React.ReactNode; count?: number; show: boolean }> = [
+                    { id: 'poll', label: 'POLL', icon: <BarChart2 className="w-3 h-3" />, count: hasPoll ? (activePoll as { total: number }).total : undefined, show: hasPoll },
+                    { id: 'task', label: 'TASK', icon: <ListChecks className="w-3 h-3" />, count: hasTaskItems ? hasTaskItems : undefined, show: true },
+                    { id: 'timer', label: 'TIMER', icon: <Clock className="w-3 h-3" />, show: hasTimer },
+                ];
+                const visibleTabs = tabs.filter(t => t.show);
+                const safeIndex = Math.min(dockSwiperIndex, Math.max(0, visibleTabs.length - 1));
+                if (visibleTabs.length === 0) return null;
+                const go = (dir: number) => setDockSwiperIndex((i) => (i + dir + visibleTabs.length) % visibleTabs.length);
+                return (
+                <div className={dockSwiperMinimized ? 'fixed z-[110] bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden will-change-transform transform-gpu transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bottom-3 left-1/2 -translate-x-1/2 w-[96%] max-w-[420px] rounded-[20px]' : 'fixed z-[110] bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden will-change-transform transform-gpu transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bottom-4 left-1/2 -translate-x-1/2 w-[96%] max-w-[720px] rounded-2xl'}>
+                    <div className="flex items-center justify-between px-2 py-1.5 bg-white/[0.03] border-b border-white/5">
+                        <div className="flex items-center gap-1">
+                            {visibleTabs.map((t, i) => (
+                                <button key={t.id} onClick={() => setDockSwiperIndex(i)} className={`h-7 px-3 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5 border transition-all ${i===safeIndex ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                                    {t.icon} {t.label} {t.count !== undefined && <span className={`px-1 py-0.5 rounded-full text-[9px] ${i===safeIndex ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>{t.count}</span>}
                                 </button>
-                            )}
-                            {!activePoll.ended ? (
-                                <button onClick={handleStopPoll} className="h-7 px-3 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-xl text-red-400 text-[10px] font-black uppercase flex items-center gap-1.5"><Square className="w-3 h-3" /> Stop</button>
-                            ) : (
-                                <button onClick={handleClearPoll} className="h-7 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 text-[10px] font-black uppercase flex items-center gap-1.5"><Trash2 className="w-3 h-3" /> Hapus</button>
-                            )}
-                            <button onClick={()=>setActivePoll(null)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400"><X className="w-3 h-3" /></button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setDockSwiperMinimized(!dockSwiperMinimized)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white" title={dockSwiperMinimized ? 'Expand' : 'Minimize'}>{dockSwiperMinimized ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}</button>
+                            <button onClick={() => go(-1)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400"><ChevronDown className="w-3 h-3 rotate-90" /></button>
+                            <button onClick={() => go(1)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400"><ChevronDown className="w-3 h-3 -rotate-90" /></button>
                         </div>
                     </div>
-                    <div className="p-3">
-                        <div className="text-white font-black text-[13px] leading-tight truncate">{activePoll.question}</div>
-                        <div className="mt-2 space-y-1.5">
-                            {activePoll.options.map((opt:string,i:number)=>{
-                                const v=activePoll.votes[i]||0;
-                                const pct= activePoll.total? Math.round((v/activePoll.total)*100):0;
-                                const colors=['#8b5cf6','#06b6d4','#f59e0b','#ec4899','#10b981','#f43f5e'];
-                                const isWin = !activePoll.ended && v===Math.max(...activePoll.votes) && v>0;
-                                return (
-                                    <div key={i} className="relative overflow-hidden rounded-xl border flex items-center gap-2 px-2.5 py-2" style={{ borderColor: isWin? colors[i%colors.length]:'rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.04)' }}>
-                                        <div className="absolute inset-y-0 left-0 transition-all duration-500" style={{ width:`${pct}%`, background: colors[i%colors.length], opacity:0.9 }} />
-                                        <span className="relative w-6 h-6 rounded-full bg-white text-black flex items-center justify-center font-black text-[11px] shrink-0">{i+1}</span>
-                                        <span className="relative flex-1 text-white font-bold text-[12px] truncate">{opt}</span>
-                                        <span className="relative text-white font-black text-[11px] bg-black/30 border border-white/10 rounded-full px-1.5 py-0.5">{v}</span>
-                                        <span className="relative text-white font-black text-[11px] w-8 text-right">{pct}%</span>
-                                    </div>
-                                );
-                            })}
+                    <div className={dockSwiperMinimized ? 'overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform max-h-0 opacity-0 -translate-y-1 scale-[0.98]' : 'overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform max-h-[500px] opacity-100 translate-y-0 scale-100'}>
+                    <div className="overflow-hidden" onTouchStart={(e) => setDockTouchStart(e.touches[0].clientX)} onTouchEnd={(e) => { if (dockTouchStart === null) return; const diff = e.changedTouches[0].clientX - dockTouchStart; if (Math.abs(diff) > 40) go(diff > 0 ? -1 : 1); setDockTouchStart(null); }}>
+                        <div className="flex transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform" style={{ transform: `translateX(-${safeIndex * 100}%)` }}>
+                            {visibleTabs.map((tab) => (
+                                <div key={tab.id} className="w-full shrink-0">
+                                    {tab.id === 'poll' && activePoll && (
+                                        <div>
+                                            <div className="px-4 py-2.5 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-b border-white/10 flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className={`w-2 h-2 rounded-full shrink-0 ${activePoll.ended ? 'bg-gray-500' : activePoll.paused ? 'bg-yellow-500' : 'bg-green-500 animate-pulse'}`} />
+                                                    <span className="text-white font-black uppercase text-[11px] tracking-widest truncate max-w-[200px]">{activePoll.question}</span>
+                                                    <span className="hidden sm:inline text-gray-400 text-[10px] font-bold">{activePoll.total} votes</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <button onClick={handleStopPoll} className="h-6 px-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-full text-red-400 text-[10px] font-black uppercase flex items-center gap-1"><Square className="w-3 h-3" /> Stop</button>
+                                                    <button onClick={handleClearPoll} className="w-6 h-6 grid place-items-center rounded-full bg-white/5 text-gray-400"><Trash2 className="w-3 h-3" /></button>
+                                                    <button onClick={()=>setActivePoll(null)} className="w-6 h-6 grid place-items-center rounded-full bg-white/5 text-gray-400"><X className="w-3 h-3" /></button>
+                                                </div>
+                                            </div>
+                                            <div className="p-3 space-y-1.5 max-h-[220px] overflow-y-auto custom-scrollbar">
+                                                {activePoll.options.map((opt:string,i:number)=>{ const v=activePoll.votes[i]||0; const pct= activePoll.total? Math.round((v/activePoll.total)*100):0; const colors=['#8b5cf6','#06b6d4','#f59e0b','#ec4899','#10b981','#f43f5e']; return (
+                                                        <div key={i} className="relative overflow-hidden rounded-xl border flex items-center gap-2 px-2.5 py-1.5" style={{ borderColor:'rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.04)' }}>
+                                                            <div className="absolute inset-y-0 left-0" style={{ width:`${pct}%`, background: colors[i%colors.length], opacity:0.9 }} />
+                                                            <span className="relative w-5 h-5 rounded-full bg-white text-black grid place-items-center font-black text-[10px] shrink-0">{i+1}</span>
+                                                            <span className="relative flex-1 text-white font-bold text-[11px] truncate">{opt}</span>
+                                                            <span className="relative text-white font-black text-[10px]">{pct}%</span>
+                                                        </div>
+                                                    ); })}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {tab.id === 'task' && (
+                                        <div className="p-3 space-y-2 max-h-[260px] overflow-y-auto custom-scrollbar">
+                                            {/* header */}
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <ListChecks className="w-4 h-4 text-cyan-400" />
+                                                    <span className="text-white font-black text-[11px] tracking-widest uppercase">Task Control</span>
+                                                    <span className="px-1.5 py-0.5 bg-white/10 border border-white/10 rounded-full text-[10px] font-black text-white">{(activeTasks as { items?: unknown[] })?.items?.length || 0} tasks</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={handleClearTasks} disabled={!((activeTasks as { items?: unknown[] })?.items?.length)} className="h-6 px-2 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-full text-gray-400 hover:text-red-400 text-[10px] font-black uppercase flex items-center gap-1 disabled:opacity-30"><Trash2 className="w-3 h-3" /> Clear</button>
+                                                    <button onClick={() => setLayout({ ...layout, createTask: true })} className="w-6 h-6 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400" title="Buka modal"><Plus className="w-3 h-3" /></button>
+                                                </div>
+                                            </div>
+                                            {/* list */}
+                                            {((activeTasks as { items?: any[] })?.items?.length || 0) > 0 ? (
+                                                <div className="space-y-1.5">
+                                                    {activeTasks.items.map((t:any)=>(
+                                                        <div key={t.id} className={`group flex gap-2 items-center px-3 py-2 rounded-xl border text-[11px] font-bold transition-all ${t.completed ? 'bg-white/5 border-white/5 opacity-60 line-through text-gray-400' : 'bg-white/[0.06] border-white/10 text-white hover:border-white/15'}`}>
+                                                            <button onClick={()=>handleToggleTask(t.id)} className={`w-5 h-5 rounded-full border-2 grid place-items-center shrink-0 transition-colors ${t.completed ? 'bg-white border-white text-[#1a2233]' : 'border-white/30 hover:border-white/50'}`}>{t.completed && <Check className="w-3 h-3" />}</button>
+                                                            <span className="flex-1 truncate">{t.text}</span>
+                                                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase ${t.completed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{t.completed ? 'done' : 'todo'}</span>
+                                                            <button onClick={()=>handleRemoveTask(t.id)} className="opacity-0 group-hover:opacity-100 w-6 h-6 grid place-items-center rounded-full hover:bg-red-500/20 text-red-400 transition-opacity"><X className="w-3 h-3" /></button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="py-6 flex flex-col items-center gap-2 text-center border border-dashed border-white/10 rounded-xl bg-white/[0.02]">
+                                                    <ListChecks className="w-6 h-6 text-gray-600" />
+                                                    <span className="text-gray-500 text-[11px] font-bold">Belum ada task — tambah di bawah</span>
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2 pt-1">
+                                                <input value={newTaskText} onChange={(e)=>setNewTaskText(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleAddTask(); }} placeholder="Tambah task..." className="flex-1 h-8 bg-white/5 border border-white/10 rounded-full px-3 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50" />
+                                                <button onClick={handleAddTask} className="h-8 px-4 bg-cyan-600 hover:bg-cyan-500 rounded-full text-white text-[11px] font-black uppercase flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>
+                                            </div>
+                                            <div className="text-[10px] text-gray-500 leading-relaxed">Sinkron ke OBS via <code className="bg-white/10 px-1 rounded text-white">task widget</code> — toggle/hapus langsung update overlay.</div>
+                                        </div>
+                                    )}
+                                    {tab.id === 'timer' && (
+                                        <div className="p-3 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Clock className="w-4 h-4 text-violet-400" />
+                                                    <span className="text-white font-mono font-black text-[14px]">{(() => { const base = activeTimer?.totalSeconds ?? 50*60; void timerTick; const sec = activeTimer?.isRunning && activeTimer?.updatedAt ? Math.max(0, base - Math.floor((Date.now() - activeTimer.updatedAt)/1000)) : base; const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60; return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; })()}</span>
+                                                    <span className={`w-2 h-2 rounded-full ${activeTimer?.isRunning?'bg-green-500 animate-pulse':'bg-yellow-500'}`} />
+                                                </div>
+                                                <span className="text-gray-400 text-[10px] font-bold">{activeTimer?.currentSession||1}/{activeTimer?.totalSessions||3} {activeTimer?.mode||'powerup'}</span>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-1.5">
+                                                <button onClick={()=>handleTimerControl(activeTimer?.isRunning?'stop':'start')} className={`h-7 rounded-full text-[10px] font-black uppercase border flex items-center justify-center gap-1 ${activeTimer?.isRunning?'bg-yellow-500/20 text-yellow-400 border-yellow-500/30':'bg-green-600 text-white border-green-500'}`}>{activeTimer?.isRunning ? <><Pause className="w-3 h-3"/>Stop</> : <><Play className="w-3 h-3"/>Start</>}</button>
+                                                <button onClick={()=>handleTimerControl('reset')} className="h-7 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-bold flex items-center justify-center gap-1"><RefreshCcw className="w-3 h-3" />Reset</button>
+                                                <button onClick={()=>handleTimerAdd(300)} className="h-7 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-black">+5m</button>
+                                                <button onClick={()=>handleTimerSub(300)} className="h-7 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-black">-5m</button>
+                                            </div>
+                                            <div className="flex gap-1.5">
+                                                {['powerup','sleep','locked','paused'].map((m)=>(
+                                                    <button key={m} onClick={()=>handleTimerControl('mode',{mode:m})} className={`flex-1 h-6 rounded-full text-[9px] font-black uppercase border ${activeTimer?.mode===m?'bg-white text-black border-white':'bg-white/5 text-gray-400 border-white/10'}`}>{m}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
-                        <div className="mt-2 text-[10px] text-gray-500 text-center">Vote via chat TikTok & Streamer.bot (YT/Twitch/Kick) - ketik angka opsi</div>
+                    </div>
+                    <div className="flex items-center justify-center gap-1.5 py-1.5 bg-black/20 border-t border-white/5">
+                        {visibleTabs.map((_, i) => <span key={i} className={`h-1.5 rounded-full transition-all ${i===safeIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/30'}`} />)}
+                        <span className="ml-2 text-[10px] text-gray-500 font-bold hidden sm:inline">swipe ↔</span>
+                    </div>
                     </div>
                 </div>
-            )}
+                );
+            })()}
 
             {/* Create Poll Modal */}
             <div

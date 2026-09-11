@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { getPositionStyle } from '../../_shared/constants/positions';
+import { getStringParam as getStringParamShared } from '../../_shared/utils/url';
 import StandardTheme from '../themes/Standard';
 import MatteTheme from '../themes/Matte';
 import MatteDarkTheme from '../themes/MatteDark';
@@ -141,6 +143,8 @@ function LyricsDisplayInner() {
   const smtcBridgeAddress = params.get('smtcBridgeAddress') || '127.0.0.1';
   const smtcBridgePort = params.get('smtcBridgePort') || '5000';
   const obsMode = params.get('obs') === '1';
+  const pos = getStringParamShared(params, 'pos', 'bl');
+  const posStyle = getPositionStyle(pos);
   // lyrics specific
   const showLyrics = getBoolParam(params, 'showLyrics', true);
   const lyricsAlign = params.get('lyricsAlign') || textAlignment;
@@ -399,7 +403,7 @@ function LyricsDisplayInner() {
         .anim-slide-out-left { animation: slide-out-left 0.5s ease forwards }
         .anim-slide-out-right { animation: slide-out-right 0.5s ease forwards }
       `}</style>
-      <div id="lyrics-root" className={`min-h-screen w-screen flex ${alignmentCls} justify-center p-4 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined }}>
+      <div id="lyrics-root" className={`min-h-screen w-screen flex p-6 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined, ...posStyle } as any}>
         <div id="main-container" className={`flex w-full ${alignmentCls} ${themeWrapper}`} style={{ maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%' }}>
           <div id="main-wrapper" className={`relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${'anim-' + animClass}`} style={containerStyle}>
             {(() => {

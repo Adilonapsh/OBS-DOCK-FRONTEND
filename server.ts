@@ -18,11 +18,15 @@ async function startServer() {
   const connections = new Map<string, any>();
   const mockIntervals = new Map<string, NodeJS.Timeout>();
   const polls = new Map<string, any>(); // room -> poll state
+  const tasks = new Map<string, any>(); // room -> tasks { room, items: TaskItem[] }
+  const timers = new Map<string, any>(); // room -> timer { room, totalSeconds, isRunning, currentSession, focusMinutes, totalSessions, mode, updatedAt }
 
   function getPollRoom(payload: any): string {
     if (typeof payload === 'string') return payload || 'global';
     return (payload?.privateKey || payload?.room || payload?.key || 'global').toString() || 'global';
   }
+  function getTaskRoom(payload: any): string { return getPollRoom(payload); }
+  function getTimerRoom(payload: any): string { return getPollRoom(payload); }
   function parseVote(comment: string, optionCount: number): number | null {
     const t = (comment || '').trim();
     // only exact 1..6
@@ -92,8 +96,8 @@ async function startServer() {
         request: "Subscribe",
         id: "tickdashboard",
         events: {
-          Twitch: ["ChatMessage"],
-          YouTube: ["Message"]
+          Twitch: ["ChatMessage", "Follow", "Sub", "ReSub"],
+          YouTube: ["Message", "NewSponsor"]
         }
       }));
     };
@@ -147,6 +151,25 @@ async function startServer() {
               }
             } catch (e) { console.error('poll vote error sb', e); }
             console.log(`Chat from Streamer.bot (${platform}): ${user}: ${msg}`);
+          }
+
+          // Handle follow/sub events for Follow widget + sound
+          if (type === 'Follow' || type === 'Sub' || type === 'ReSub' || type === 'NewSponsor') {
+            const user = eventData.user?.name || eventData.user?.displayName || eventData.user?.login || "User";
+            let avatar = null;
+            if (eventData.user) avatar = eventData.user.profileImageUrl || eventData.user.avatar || null;
+            const followData = {
+              uniqueId: user.toLowerCase().replace(/\s/g, '_'),
+              nickname: user,
+              profilePictureUrl: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user)}`,
+              platform,
+              fromStreamerBot: true,
+              displayType: type,
+            };
+            io.emit('tiktok-follow', followData);
+            io.emit('tiktok-member', followData);
+            io.to('all').emit('tiktok-follow', followData);
+            console.log(`Follow from Streamer.bot (${platform}): ${user} — ${type}`);
           }
         }
       } catch (e) {
@@ -287,6 +310,110 @@ async function startServer() {
       handlePollVote(room, uid, String(payload.vote ?? ''));
     });
 
+    // Task widget — Dock Stream Tools
+    socket.on("task-get", (payload: any) => {
+      const room = getTaskRoom(payload || {});
+      const t = tasks.get(room) || tasks.get('global');
+      if (t) socket.emit('task-update', t);
+    });
+    socket.on("task-set", (payload: any) => {
+      const room = getTaskRoom(payload);
+      const items = Array.isArray(payload.tasks) ? payload.tasks.slice(0, 20).map((x: any) => ({ id: String(x.id || Date.now()+Math.random()), text: String(x.text||'').trim().slice(0,120), completed: !!x.completed, user: String(x.user||'').slice(0,30) })).filter((x: any) => x.text) : [];
+      const state = { room, items, updatedAt: Date.now() };
+      tasks.set(room, state);
+      io.to(room).emit('task-update', state);
+      io.emit('task-update', state);
+      if (room !== 'global') io.to('global').emit('task-update', state);
+    });
+    socket.on("task-add", (payload: any) => {
+      const room = getTaskRoom(payload);
+      const text = String(payload.text || '').trim().slice(0, 120);
+      if (!text) return;
+      const cur = tasks.get(room) || { room, items: [] };
+      const item = { id: Date.now().toString(), text, completed: false, user: String(payload.user||'').slice(0,30) };
+      cur.items = [...cur.items, item].slice(-20);
+      tasks.set(room, cur);
+      io.to(room).emit('task-update', cur);
+      io.emit('task-update', cur);
+    });
+    socket.on("task-toggle", (payload: any) => {
+      const room = getTaskRoom(payload);
+      const id = String(payload.id || '');
+      const cur = tasks.get(room) || tasks.get('global');
+      if (!cur) return;
+      cur.items = cur.items.map((x: any) => x.id === id ? { ...x, completed: !x.completed } : x);
+      tasks.set(cur.room, cur);
+      io.to(cur.room).emit('task-update', cur);
+      io.emit('task-update', cur);
+    });
+    socket.on("task-remove", (payload: any) => {
+      const room = getTaskRoom(payload);
+      const id = String(payload.id || '');
+      const cur = tasks.get(room) || tasks.get('global');
+      if (!cur) return;
+      cur.items = cur.items.filter((x: any) => x.id !== id);
+      tasks.set(cur.room, cur);
+      io.to(cur.room).emit('task-update', cur);
+      io.emit('task-update', cur);
+    });
+    socket.on("task-clear", (payload: any) => {
+      const room = payload ? getTaskRoom(payload) : 'global';
+      tasks.delete(room);
+      io.to(room).emit('task-clear', { room });
+      io.emit('task-clear', { room });
+    });
+
+    // Timer widget — Dock control: start/stop, +/- time, mode, reset/next
+    socket.on("timer-get", (payload: any) => {
+      const room = getTimerRoom(payload || {});
+      const t = timers.get(room) || timers.get('global');
+      if (t) socket.emit('timer-update', t);
+    });
+    socket.on("timer-set", (payload: any) => {
+      const room = getTimerRoom(payload);
+      const focusMinutes = Math.max(1, Math.min(120, parseInt(payload.focusMinutes) || 50));
+      const totalSessions = Math.max(1, Math.min(10, parseInt(payload.totalSessions) || 3));
+      const mode = String(payload.mode || payload.subathonMode || 'powerup').slice(0,20);
+      const totalSeconds = typeof payload.totalSeconds === 'number' ? payload.totalSeconds : focusMinutes * 60;
+      const cur = timers.get(room) || { room, focusMinutes, totalSessions, totalSeconds, isRunning: false, currentSession: 1, mode, updatedAt: Date.now() };
+      cur.focusMinutes = focusMinutes; cur.totalSessions = totalSessions; cur.mode = mode;
+      if (typeof payload.totalSeconds === 'number') cur.totalSeconds = payload.totalSeconds;
+      if (typeof payload.isRunning === 'boolean') cur.isRunning = payload.isRunning;
+      if (typeof payload.currentSession === 'number') cur.currentSession = payload.currentSession;
+      cur.updatedAt = Date.now();
+      timers.set(room, cur);
+      io.to(room).emit('timer-update', cur);
+      io.emit('timer-update', cur);
+    });
+    socket.on("timer-control", (payload: any) => {
+      const room = getTimerRoom(payload);
+      const action = String(payload.action || '').toLowerCase();
+      let cur = timers.get(room) || timers.get('global') || { room, focusMinutes: 50, totalSessions: 3, totalSeconds: 50*60, isRunning: false, currentSession: 1, mode: 'powerup', updatedAt: Date.now() };
+      if (!timers.has(room) && timers.has('global')) cur = { ...timers.get('global'), room };
+      // sinkron live seconds sebelum aksi jika sedang running — biar pause/add akurat
+      if (cur.isRunning && cur.updatedAt) {
+        const elapsed = Math.floor((Date.now() - cur.updatedAt) / 1000);
+        if (elapsed > 0) cur.totalSeconds = Math.max(0, cur.totalSeconds - elapsed);
+      }
+      const sec = parseInt(payload.seconds) || 300; // default 5 menit
+      let delta: number | null = null;
+      if (action === 'start') cur.isRunning = true;
+      else if (action === 'stop' || action === 'pause') cur.isRunning = false;
+      else if (action === 'reset') { cur.totalSeconds = cur.focusMinutes * 60; cur.isRunning = false; cur.currentSession = 1; }
+      else if (action === 'next') { cur.currentSession = cur.currentSession < cur.totalSessions ? cur.currentSession + 1 : 1; cur.totalSeconds = cur.focusMinutes * 60; cur.isRunning = false; }
+      else if (action === 'add') { cur.totalSeconds += sec; delta = sec; }
+      else if (action === 'sub' || action === 'subtract') { const before = cur.totalSeconds; cur.totalSeconds = Math.max(0, before - sec); delta = cur.totalSeconds - before; }
+      else if (action === 'mode' && payload.mode) cur.mode = String(payload.mode).slice(0,20);
+      else if (action === 'set' && typeof payload.totalSeconds === 'number') cur.totalSeconds = payload.totalSeconds;
+      cur.updatedAt = Date.now();
+      timers.set(room, cur);
+      timers.set('global', cur);
+      const out = delta !== null ? { ...cur, addedSeconds: delta } : cur;
+      io.to(room).emit('timer-update', out);
+      io.emit('timer-update', out);
+      if (room !== 'global') io.to('global').emit('timer-update', out);
+    });
+
     // Streamer.bot action configuration
     socket.on("sb-update-action", ({ key, value }) => {
       sbActions[key] = value;
@@ -417,10 +544,20 @@ async function startServer() {
         io.to(room).emit("tiktok-social", data);
       });
 
+      tiktokLiveConnection.on("follow", (data: any) => {
+        io.to(room).emit("tiktok-follow", data);
+        io.to("all").emit("tiktok-follow", data);
+        io.to(room).emit("tiktok-member", data);
+        sendToStreamerBot(sbActions.member, {
+          type: 'follow',
+          nickname: data.nickname,
+          profilePictureUrl: data.profilePictureUrl
+        });
+      });
+
       tiktokLiveConnection.on("member", (data: any) => {
         io.to(room).emit("tiktok-member", data);
-
-        // Send to Streamer.bot
+        // also emit follow for widget that listens only to follow — member dianggap join, bukan follow, jadi tidak emit follow di sini
         sendToStreamerBot(sbActions.member, {
           type: 'member',
           nickname: data.nickname,

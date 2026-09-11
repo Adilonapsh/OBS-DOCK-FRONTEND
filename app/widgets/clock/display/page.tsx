@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { getPositionStyle } from '../../_shared/constants/positions';
 
 function formatWithTokens(date: Date, fmt: string, tz: string) {
     if (!fmt) return '';
@@ -122,6 +123,7 @@ function useClockParams(searchParams: URLSearchParams) {
         a3: get('a3', get('line3Align', 'center')),
         v3: getBool('v3', getBool('line3Visible', false)),
         gap: getNum('gap', 2),
+        pos: get('pos', 'bl'),
     };
 }
 
@@ -158,14 +160,15 @@ function ClockInner() {
     const line3Text = useMemo(() => params.v3 && params.l3 ? formatWithTokens(now, params.l3, params.tz) : '', [now, params.l3, params.tz, params.v3]);
 
     const isTransparent = obsMode;
+    const posStyle = getPositionStyle((params as unknown as { pos: string }).pos || 'bl');
 
     return (
         <>
             {isTransparent && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important}` }} />}
             <div
                 id="main-container"
-                className={`${isTransparent ? 'fixed inset-0 w-screen h-screen overflow-hidden flex items-center justify-center' : 'w-full min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6'}`}
-                style={{ background: isTransparent ? (params.bg === 'transparent' ? 'transparent' : params.bg) : '#0a0a0a' }}
+                className={`${isTransparent ? 'fixed inset-0 w-screen h-screen overflow-hidden flex p-6' : 'w-full min-h-screen bg-[#0a0a0a] flex p-6'}`}
+                style={{ background: isTransparent ? (params.bg === 'transparent' ? 'transparent' : params.bg) : '#0a0a0a', ...posStyle } as any}
             >
                 {/* checker for non-transparent preview */}
                 {!isTransparent && <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />}

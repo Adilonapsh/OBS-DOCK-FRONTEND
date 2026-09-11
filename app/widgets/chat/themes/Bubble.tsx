@@ -7,24 +7,18 @@ function timeLabel(ts?: number) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, fontSize, bgOpacity, horizontal, inline }: ChatThemeProps) {
+export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, exitingIds }: ChatThemeProps) {
   const bubbleBg = bg === 'transparent' ? '#ffffff' : bg;
-  const effectiveAnim = horizontal ? (horizontalAnim || anim) : anim;
-  const isElegant = ['elegantIn','softPopIn','blurIn','luxeIn'].includes(effectiveAnim);
-  const dur = isElegant ? '0.62s' : '0.45s';
+  const hide = hideAnim || 'fadeOut';
+  const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.45s'; return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`; };
   if (horizontal) {
     return (
       <div className="chat-bubble-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-center" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {chats.length === 0 ? (
-          <div className="px-4 py-2 rounded-full bg-white text-black/50 text-[12px] flex items-center gap-2 shadow-lg border border-black/5 shrink-0">
-            <span className="w-2 h-2 rounded-full bg-black/10 animate-pulse" />
-            Menunggu chat…
-          </div>
-        ) : chats.map((c, i) => (
+        {chats.length === 0 ? null : chats.map((c, i) => (
           <div
             key={c.id}
             className="chat-bubble-item flex items-center gap-2 shrink-0"
-            style={{ animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both`, animationDelay: `${i * 40}ms` }}
+            style={{ animation: getAnim(c.id), animationDelay: `${i * 40}ms` }}
           >
             {showAvatar && (
               <img
@@ -47,13 +41,8 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showT
   if (inline) {
     return (
       <div className="chat-bubble-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {chats.length === 0 ? (
-          <div className="px-4 py-3 rounded-[18px] bg-white text-black/50 text-[13px] flex items-center gap-2 shadow-lg border border-black/5">
-            <span className="w-2 h-2 rounded-full bg-black/10 animate-pulse" />
-            Menunggu chat…
-          </div>
-        ) : chats.map((c, i) => (
-          <div key={c.id} className="chat-bubble-item flex items-center gap-2 shrink-0" style={{ animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both`, animationDelay: `${i * 40}ms` }}>
+        {chats.length === 0 ? null : chats.map((c, i) => (
+          <div key={c.id} className="chat-bubble-item flex items-center gap-2 shrink-0" style={{ animation: getAnim(c.id), animationDelay: `${i * 40}ms` }}>
             {showAvatar && <img src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`} alt={c.nickname} className="w-6 h-6 rounded-full object-cover border border-black/5 shrink-0" />}
             <div className="flex items-center gap-1.5 rounded-full px-3 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border flex-1 max-w-[92%]" style={{ background: bubbleBg, borderColor: 'rgba(0,0,0,0.06)', opacity: bgOpacity / 100 }}>
               <span className="font-black text-[11px] shrink-0" style={{ color: accent }}>{c.nickname}</span>
@@ -67,16 +56,11 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showT
   }
   return (
     <div className="chat-bubble-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-      {chats.length === 0 ? (
-        <div className="px-4 py-3 rounded-[18px] bg-white text-black/50 text-[13px] flex items-center gap-2 shadow-lg border border-black/5">
-          <span className="w-2 h-2 rounded-full bg-black/10 animate-pulse" />
-          Menunggu chat…
-        </div>
-      ) : chats.map((c, i) => (
+      {chats.length === 0 ? null : chats.map((c, i) => (
         <div
           key={c.id}
           className="chat-bubble-item flex gap-2 items-end"
-          style={{ animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both`, animationDelay: `${i * 40}ms` }}
+          style={{ animation: getAnim(c.id), animationDelay: `${i * 40}ms` }}
         >
           {showAvatar && (
             <img

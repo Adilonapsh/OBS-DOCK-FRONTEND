@@ -538,17 +538,7 @@ function WidgetDisplayContent() {
               <>
                 {!isHorizontal && (
                   <div className={`absolute ${chatPositionClass} flex flex-col max-w-[380px] w-[92%] sm:w-[380px] pointer-events-none`} style={{ gap: theme.chatGap, margin: theme.chatMargin }}>
-                    {chats.length === 0 ? (
-                      <div className="px-4 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                          <MessageSquare className="w-4 h-4 text-gray-400" />
-                        </div>
-                        <div>
-                          <div className="text-white font-bold text-[11px]">Menunggu chat…</div>
-                          <div className="text-gray-500 text-[10px]">Connect TikTok di Dock untuk mulai live chat</div>
-                        </div>
-                      </div>
-                    ) : (
+                    {chats.length === 0 ? null : (
                       chats.map((chat) => (
                         <div
                           key={chat.id}
@@ -598,9 +588,7 @@ function WidgetDisplayContent() {
                       <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
                         <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent py-3 px-4 overflow-hidden">
                           <div className="flex items-center whitespace-nowrap will-change-transform" style={{ fontSize: `${theme.fontScale}em`, gap: theme.chatGap, animation: `ticker ${tickerSpeed}s ${hMode === "steps" ? "steps(30)" : "linear"} infinite` }}>
-                            {chats.length === 0 ? (
-                              <span className="text-gray-500 text-[13px] font-medium">Menunggu chat… Connect TikTok di Dock untuk mulai live chat</span>
-                            ) : (
+                            {chats.length === 0 ? null : (
                               chats.map((chat, i) => (
                                 <div key={chat.id} className="overlay-chat-bubble flex items-center gap-2.5 backdrop-blur-2xl shrink-0" style={{ background: theme.chatBg, border: `1px solid ${theme.chatBorder}`, borderRadius: `${theme.chatRadius}px`, opacity: theme.chatOpacity / 100, backdropFilter: theme.chatBlur ? `blur(${theme.chatBlur}px)` : undefined, fontSize: `${theme.fontScale}em`, padding: theme.chatPadding }}>
                                   {theme.showAvatar && <div className="overlay-chat-avatar w-7 h-7 rounded-lg shrink-0 border border-white/10 flex items-center justify-center overflow-hidden" style={{ background: i % 3 === 0 ? "#3b82f6" : i % 3 === 1 ? theme.accent : "#8b5cf6" }}><span className="text-white font-black text-[11px]">{(chat.nickname || "U")[0].toUpperCase()}</span></div>}
@@ -619,9 +607,7 @@ function WidgetDisplayContent() {
                       <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
                         <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent py-3 px-4 overflow-hidden">
                           <div key={chats.map(c => c.id).join(",") + hDir + hMode} className={`flex items-center will-change-transform ${hDir === "right" ? "justify-end" : "justify-start"}`} style={{ fontSize: `${theme.fontScale}em`, gap: theme.chatGap, animation: isSlideMode ? `shiftTrack 0.6s cubic-bezier(0.22,1,0.36,1) both` : undefined }}>
-                            {chats.length === 0 ? (
-                              <span className="text-gray-500 text-[13px] font-medium">Menunggu chat…</span>
-                            ) : (
+                            {chats.length === 0 ? null : (
                               chats.slice(-6).map((chat, idx, arr) => {
                                 const isLast = idx === arr.length - 1;
                                 return (

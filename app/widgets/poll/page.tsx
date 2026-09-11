@@ -13,10 +13,12 @@ import MinimalTheme from './themes/Minimal';
 import AnimeTheme from './themes/Anime';
 import FlowerTheme from './themes/Flower';
 import VoteTheme from './themes/Vote';
+import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { getSocketUrl } from '../_shared/utils/socket';
+import { PositionPicker } from '../_shared/components/PositionPicker';
+import { getPositionStyle } from '../_shared/constants/positions';
 
-function getSocketUrl(){ if(typeof window==='undefined') return 'http://localhost:3000'; const h=window.location.hostname; if(h==='localhost'||h==='127.0.0.1') return 'http://localhost:3000'; return window.location.origin; }
-
-const fontsList = ['Outfit','Fredoka','Nunito','Inter','Poppins','Space Grotesk','JetBrains Mono','Manrope','Bebas Neue','Anton','Geist','Montserrat','Roboto','Oswald','Space Mono'];
+const fontsList = [...WIDGET_FONTS];
 const pollThemes = [
   { value:'bar', label:'Bar Horizontal' },
   { value:'card', label:'Cards' },
@@ -27,6 +29,7 @@ const pollThemes = [
 ];
 
 const defaults = {
+  pos: 'bl',
   theme: 'bar',
   font: 'Outfit',
   accent: '#8b5cf6',
@@ -39,6 +42,7 @@ const defaults = {
 
 function buildUrl(base:string, s:any){
   const p=new URLSearchParams();
+  p.set('pos', s.pos || 'bl');
   p.set('theme', s.theme);
   p.set('font', s.font);
   p.set('accent', s.accent);
@@ -185,6 +189,14 @@ function PollSettingsInner(){
                 </div>
               </div>
 
+              {/* Posisi — Global */}
+              <div className="space-y-3">
+                <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi — Global</h2>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
+                  <PositionPicker value={state.pos || 'bl'} onChange={(v)=>update('pos', v)} />
+                </div>
+              </div>
+
               {/* Warna */}
               <div className="space-y-3">
                 <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-violet-400" /> Warna</h2>
@@ -236,12 +248,12 @@ function PollSettingsInner(){
 
           <div className="flex-1 bg-[#0a0a0a] p-4 md:p-6 flex flex-col min-h-[420px]">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white"/> Preview Simulasi - {state.theme}</div>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white"/> Preview Simulasi - {state.theme} • pos:{state.pos || 'bl'}</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • simulasi • OBS = data real</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px] grid place-items-center p-4">
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px] p-4 flex" style={getPositionStyle(state.pos || 'bl') as any}>
               <SimulatedPollPreview state={state} />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULASI • {state.theme} • {state.font}</div>
+              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULASI • {state.theme} • pos:{state.pos || 'bl'}</div>
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">Preview di sini dummy - data real hanya di OBS (<code className="bg-white/10 px-1 rounded text-white">.../poll/display?obs=1</code>) yang terhubung ke Dock + chat.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">

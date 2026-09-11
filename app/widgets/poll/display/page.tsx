@@ -9,6 +9,8 @@ import MinimalTheme from '../themes/Minimal';
 import AnimeTheme from '../themes/Anime';
 import FlowerTheme from '../themes/Flower';
 import type { PollState } from '../themes/types';
+import { getPositionStyle } from '../../_shared/constants/positions';
+import { getStringParam } from '../../_shared/utils/url';
 
 function getSocketUrl() {
   if (typeof window === 'undefined') return 'http://localhost:3000';
@@ -19,6 +21,7 @@ function getSocketUrl() {
 
 function PollInner(){
   const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams.toString());
   const privateKey = searchParams.get('key') || searchParams.get('privateKey') || '';
   const obsMode = searchParams.get('obs')==='1' || searchParams.get('transparent')==='1';
   const theme = (searchParams.get('theme') as any) || 'bar';
@@ -29,6 +32,8 @@ function PollInner(){
   const showCount = searchParams.get('showCount') !== '0';
   const showTotal = searchParams.get('showTotal') !== '0';
   const showTimer = searchParams.get('showTimer') !== '0';
+  const pos = getStringParam(params,'pos','bl');
+  const posStyle = getPositionStyle(pos);
   const isTransparent = obsMode;
   // fallback from URL for preview without socket
   const qFallback = searchParams.get('q') || searchParams.get('question') || '';
@@ -99,7 +104,7 @@ function PollInner(){
         @keyframes winnerGlow { 0%{ box-shadow: 0 0 0 rgba(255,255,255,0); } 50%{ box-shadow: 0 0 24px rgba(255,255,255,0.6); } 100%{ box-shadow: 0 0 0 rgba(255,255,255,0); } }
         @keyframes confetti { 0%{ transform: translateY(0) rotate(0); opacity:1; } 100%{ transform: translateY(-24px) rotate(180deg); opacity:0; } }
       `}</style>
-      <div className={`${isTransparent ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex items-center justify-center p-4' : 'w-full min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6'}`} style={{ background: isTransparent ? 'transparent' : '#0a0a0a' }}>
+      <div className={`${isTransparent ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4' : 'w-full min-h-screen bg-[#0a0a0a] flex p-6'}`} style={{ ...posStyle, background: isTransparent ? 'transparent' : '#0a0a0a' } as any}>
         {!isTransparent && <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage:"linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize:"40px 40px"}} />}
         {!hasPoll ? (
           isTransparent ? null : poll && poll.visible === false ? (

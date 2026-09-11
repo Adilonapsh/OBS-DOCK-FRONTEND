@@ -7,21 +7,18 @@ function timeLabel(ts?: number) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, fontSize, bgOpacity, horizontal, inline }: ChatThemeProps) {
+export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, exitingIds }: ChatThemeProps) {
   const cardBg = bg === 'transparent' ? 'rgba(12,12,12,0.9)' : bg;
-  const effectiveAnim = horizontal ? (horizontalAnim || anim) : anim;
-  const isElegant = ['elegantIn','softPopIn','blurIn','luxeIn'].includes(effectiveAnim);
-  const dur = isElegant ? '0.62s' : '0.45s';
+  const hide = hideAnim || 'fadeOut';
+  const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.45s'; return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`; };
   if (horizontal) {
     return (
       <div className="chat-boxed-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-center" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {chats.length === 0 ? (
-          <div className="px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/50 text-[12px] shrink-0">Menunggu chat…</div>
-        ) : chats.map((c) => (
+        {chats.length === 0 ? null : chats.map((c) => (
           <div
             key={c.id}
             className="boxed-row flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.06] border border-white/10 shrink-0 max-w-[340px]"
-            style={{ animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both`, background: cardBg, opacity: bgOpacity / 100 }}
+            style={{ animation: getAnim(c.id), background: cardBg, opacity: bgOpacity / 100 }}
           >
             {showAvatar && (
               <img
@@ -49,10 +46,8 @@ export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTi
           <span className="text-white/50 text-[10px] font-mono">{chats.length} messages</span>
         </div>
         <div className="p-3 flex flex-col gap-2 max-h-[520px] overflow-hidden">
-          {chats.length === 0 ? (
-            <div className="px-3 py-6 text-center text-white/40 text-[13px]">Belum ada chat - tunggu viewers ngobrol di TikTok / Twitch / YouTube</div>
-          ) : chats.map((c) => (
-            <div key={c.id} className="boxed-row flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.04] border border-white/5" style={{ animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both` }}>
+          {chats.length === 0 ? null : chats.map((c) => (
+            <div key={c.id} className="boxed-row flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.04] border border-white/5" style={{ animation: getAnim(c.id) }}>
               {showAvatar && <img src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`} alt={c.nickname} className="w-6 h-6 rounded-full object-cover border border-white/10 shrink-0" />}
               <span className="font-black text-[11px] text-white shrink-0">{c.nickname}</span>
               <span className="text-white/30 text-[11px]">:</span>
@@ -73,13 +68,11 @@ export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTi
         <span className="text-white/50 text-[10px] font-mono">{chats.length} messages</span>
       </div>
       <div className="p-3 flex flex-col gap-2 max-h-[520px] overflow-hidden">
-        {chats.length === 0 ? (
-          <div className="px-3 py-6 text-center text-white/40 text-[13px]">Belum ada chat - tunggu viewers ngobrol di TikTok / Twitch / YouTube</div>
-        ) : chats.map((c) => (
+        {chats.length === 0 ? null : chats.map((c) => (
           <div
             key={c.id}
             className="boxed-row flex gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/5"
-            style={{ animation: `${effectiveAnim} ${dur} cubic-bezier(0.16,1,0.3,1) both` }}
+            style={{ animation: getAnim(c.id) }}
           >
             {showAvatar && (
               <img

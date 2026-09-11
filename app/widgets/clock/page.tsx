@@ -5,8 +5,9 @@ import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
 import { createClient } from '@/utils/supabase/client';
 import { Copy, Check, ExternalLink, Monitor, Clock3, Palette, Type, Settings2, Menu, Eye, EyeOff, Image as ImageIcon, Sparkles, ArrowLeft, RefreshCw, GripVertical } from 'lucide-react';
+import { WIDGET_FONTS } from '../_shared/constants/fonts';
 
-const fontsList = ['Outfit','Inter','Poppins','Space Grotesk','JetBrains Mono','Manrope','Bebas Neue','Anton','Righteous','Orbitron','Geist','Oswald','Montserrat','Roboto','Playfair Display','IBM Plex Mono'];
+const fontsList = [...WIDGET_FONTS];
 
 const timePresets = [
   { label: '06:40:06 PM (hh:mm:ss A)', value: 'hh:mm:ss A' },
@@ -36,6 +37,7 @@ const defaults = {
   s3: 30, w3: '600', c3: '#ffffff', o3: 1, t3: 'none', a3: 'center', v3: false,
   gap: 2,
   bg: 'transparent',
+  pos: 'bl',
 };
 
 function buildUrl(base: string, s: any, privateKey: string) {
@@ -47,6 +49,7 @@ function buildUrl(base: string, s: any, privateKey: string) {
   p.set('l3', s.l3); p.set('s3', String(s.s3)); p.set('w3', s.w3); p.set('c3', s.c3); p.set('o3', String(s.o3)); p.set('t3', s.t3); p.set('a3', s.a3); p.set('v3', s.v3 ? '1' : '0');
   p.set('gap', String(s.gap));
   if (s.bg && s.bg !== 'transparent') p.set('bg', s.bg);
+  p.set('pos', s.pos || 'bl');
   if (privateKey) p.set('key', privateKey);
   return `${base}?${p.toString()}`;
 }
@@ -108,6 +111,7 @@ function ClockEditorInner() {
     p.set('l3', state.l3); p.set('s3', String(state.s3)); p.set('w3', state.w3); p.set('c3', state.c3); p.set('o3', String(state.o3)); p.set('t3', state.t3); p.set('a3', state.a3); p.set('v3', state.v3 ? '1':'0');
     p.set('gap', String(state.gap));
     if (state.bg !== 'transparent') p.set('bg', state.bg);
+    p.set('pos', state.pos || 'bl');
     return `/widgets/clock/display?${p.toString()}`;
   }, [state]);
 
