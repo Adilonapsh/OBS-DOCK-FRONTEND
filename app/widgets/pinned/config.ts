@@ -40,7 +40,7 @@ export const PINNED_KB_CAPS = [
 ] as const;
 
 export const PINNED_DEFAULTS = {
-  pos: 'bl' as string,
+  pos: 'center' as string,
   theme: 'standard' as string,
   font: 'Outfit',
   fontSize: 15,
@@ -87,7 +87,7 @@ export function buildPinnedUrl(base: string, s: PinnedSettings): string {
   p.set('kbCaps', s.kbCaps || 'dark');
   if (s.mkText) p.set('mkText', s.mkText);
   if (s.mkDim) p.set('mkDim', s.mkDim);
-  p.set('pos', (s as unknown as { pos: string }).pos || 'bl');
+  p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   const q = p.toString();
   return q ? `${base}?${q}` : base;
 }

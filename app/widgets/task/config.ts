@@ -49,7 +49,7 @@ export const TASK_HIDE_ANIMS = [
 ] as const;
 
 export const TASK_DEFAULTS = {
-  pos: 'bl' as string,
+  pos: 'center' as string,
   theme: 'focus' as string,
   font: 'Nunito',
   fontSize: 14,
@@ -78,7 +78,7 @@ export type TaskSettings = typeof TASK_DEFAULTS;
 
 export function buildTaskUrl(base: string, s: TaskSettings): string {
   const p = new URLSearchParams();
-  p.set('pos', (s as unknown as { pos: string }).pos || 'bl');
+  p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   p.set('theme', s.theme);
   p.set('font', s.font);
   p.set('fontSize', String(s.fontSize));

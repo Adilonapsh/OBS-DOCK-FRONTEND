@@ -31,7 +31,7 @@ const pollThemes = [
 ];
 
 const defaults = {
-  pos: 'bl',
+  pos: 'center',
   theme: 'bar',
   font: 'Outfit',
   accent: '#8b5cf6',
@@ -44,7 +44,7 @@ const defaults = {
 
 function buildUrl(base:string, s:any){
   const p=new URLSearchParams();
-  p.set('pos', s.pos || 'bl');
+  p.set('pos', s.pos || 'center');
   p.set('theme', s.theme);
   p.set('font', s.font);
   p.set('accent', s.accent);
@@ -160,7 +160,7 @@ function PollSettingsInner(){
           </div>
           <div className="flex self-end gap-2 shrink-0">
             <a href={obsUrl} target="_blank" className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5"/> OBS</a>
-            <a href={obsUrl} draggable onDragStart={(e)=>{e.dataTransfer.setData('text/plain', obsUrl);}} className="h-9 px-3 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5"/> Drag ke OBS</a>
+            <a href={obsUrl} draggable onDragStart={(e)=>{e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed='copy';}} className="h-9 px-3 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5"/> Drag ke OBS</a>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ function PollSettingsInner(){
               <div className="space-y-3">
                 <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-                  <PositionPicker value={state.pos || 'bl'} onChange={(v)=>update('pos', v)} />
+                  <PositionPicker value={state.pos || 'center'} onChange={(v)=>update('pos', v)} />
                 </div>
               </div>
 
@@ -240,12 +240,12 @@ function PollSettingsInner(){
 
           <div className="flex-1 bg-[#0a0a0a] p-4 md:p-6 flex flex-col min-h-[420px]">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white"/> Preview Simulasi - {state.theme} • pos:{state.pos || 'bl'}</div>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white"/> Preview Simulasi - {state.theme} • pos:{state.pos || 'center'}</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • simulasi • OBS = data real</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px] p-4 flex" style={getPositionStyle(state.pos || 'bl') as any}>
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px] p-4 flex" style={getPositionStyle(state.pos || 'center') as any}>
               <SimulatedPollPreview state={state} />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULASI • {state.theme} • pos:{state.pos || 'bl'}</div>
+              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULASI • {state.theme} • pos:{state.pos || 'center'}</div>
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">Preview di sini dummy - data real hanya di OBS (<code className="bg-white/10 px-1 rounded text-white">.../poll/display?obs=1</code>) yang terhubung ke Dock + chat.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">

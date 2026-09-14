@@ -44,7 +44,7 @@ function ViewCounterInner() {
   const showBreakdown = getBoolParam(params, 'showBreakdown', true);
   const inline = getBoolParam(params, 'inline', false);
   const idleFx = getStringParam(params, 'idleFx', 'none');
-  const pos = getStringParam(params, 'pos', 'bl');
+  const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
 
   const [counts, setCounts] = useState<Record<string, number>>((): Record<string, number> =>

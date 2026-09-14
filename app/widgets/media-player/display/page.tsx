@@ -118,7 +118,7 @@ function MediaPlayerInner() {
   const hideAnimation = params.get('hideAnimation') || 'slide-out-bottom';
   const smtcBridgeAddress = params.get('smtcBridgeAddress') || '127.0.0.1';
   const smtcBridgePort = params.get('smtcBridgePort') || '5000';
-  const pos = getStringParam(params, 'pos', 'bl');
+  const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
   const obsMode = params.get('obs') === '1';
 

@@ -19,7 +19,7 @@ import { createClient } from "@/utils/supabase/client";
 import Polling, { PollingRef } from "../components/Polling";
 import { useTtSbMap } from "../hooks/useTtSbMap";
 import { ChatMessage, DockStatus } from "../types/dockTypes";
-import { decrypt } from "../utils/encryption";
+import { decrypt, isEncrypted } from "../utils/encryption";
 import { gooeyToast } from "goey-toast";
 
 function TwitchIcon({ className }: { className?: string }) {
@@ -75,35 +75,21 @@ export default function Home() {
         { value: Math.max(0, diskSpaceValue * 0.9) },
         { value: diskSpaceValue },
     ];
-    const youtubeChartData = [
-        { value: 0 },
-        { value: 1 },
-        { value: 0 },
-        { value: 2 },
-        { value: 1 },
-        { value: 3 },
-        { value: 2 },
-        { value: 0 },
-    ];
-    const twitchChartData = [
-        { value: 1 },
-        { value: 2 },
-        { value: 1 },
-        { value: 3 },
-        { value: 2 },
-        { value: 4 },
-        { value: 3 },
-        { value: 1 },
-    ];
+    const [youtubeViewerCountSB, setYoutubeViewerCountSB] = useState<number | null>(null);
+    const [youtubeChartData, setYoutubeChartData] = useState<Array<{ value: number }>>([
+        { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
+        { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
+    ]);
+    const [youtubeLive, setYoutubeLive] = useState(false);
+    const [twitchLive, setTwitchLive] = useState(false);
+    const [twitchViewerCountSB, setTwitchViewerCountSB] = useState<number | null>(null);
+    const [twitchChartData, setTwitchChartData] = useState<Array<{ value: number }>>([
+        { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
+        { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
+    ]);
     const [tiktokChartData, setTiktokChartData] = useState<Array<{ value: number }>>([
-        { value: 0 },
-        { value: 0 },
-        { value: 1 },
-        { value: 0 },
-        { value: 2 },
-        { value: 1 },
-        { value: 0 },
-        { value: 0 },
+        { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
+        { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
     ]);
 
     const [dropdownOpen, setDropdownOpen] = useState({
@@ -161,6 +147,12 @@ export default function Home() {
     const [newTaskText,setNewTaskText]=useState("");
     const [activeTimer,setActiveTimer]=useState<any>(null);
     const [timerTick,setTimerTick]=useState(0);
+    const [timerCustomMin,setTimerCustomMin]=useState<string>("5");
+    const [timerCustomSec,setTimerCustomSec]=useState<string>("0");
+    const [timerAddMin,setTimerAddMin]=useState<string>("5");
+    const [timerAddSec,setTimerAddSec]=useState<string>("0");
+    const [timerSubMin,setTimerSubMin]=useState<string>("5");
+    const [timerSubSec,setTimerSubSec]=useState<string>("0");
     const [timerMinimized,setTimerMinimized]=useState(() => {
         if (typeof window === 'undefined') return true;
         try { const v=localStorage.getItem('dock-timerMinimized'); return v===null ? true : v==='true'; } catch { return true; }
@@ -215,6 +207,13 @@ export default function Home() {
     useEffect(()=>{ if(!autoMinimizeEnabled || !activePoll || activePoll.ended) return; setPollMinimized(false); setLastActivity(Date.now()); },[activePoll?.id, activePoll?.ended]);
     useEffect(()=>{ if(!autoMinimizeEnabled || !activeTasks) return; setTaskMinimized(false); setLastActivity(Date.now()); },[activeTasks?.items?.length]);
     useEffect(()=>{ if(!autoMinimizeEnabled || !activeTimer) return; setTimerMinimized(false); setLastActivity(Date.now()); },[activeTimer?.totalSeconds]);
+    // sync custom input dengan timer yang ada (biar 50:00 → 50m 0s), hanya saat tidak running biar tidak ganggu ketikan
+    useEffect(()=>{
+        if(activeTimer?.totalSeconds == null || activeTimer?.isRunning) return;
+        const sec = activeTimer.totalSeconds;
+        setTimerCustomMin(String(Math.floor(sec/60)));
+        setTimerCustomSec(String(sec%60));
+    },[activeTimer?.totalSeconds, activeTimer?.isRunning]);
 
     // grafik TikTok realtime dari viewerCount (roomUser)
     useEffect(() => {
@@ -247,13 +246,25 @@ export default function Home() {
                             const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: keyFromUrl });
                             if (all && !all.error) {
                                 if (all.obs_config) {
-                                    const dec = all.obs_config.password ? await decrypt(all.obs_config.password, keyFromUrl).catch(() => all.obs_config.password) : "";
-                                    setObsConfig((prev: any) => ({ ...prev, address: all.obs_config.address, port: all.obs_config.port, password: dec || all.obs_config.password || "", auto_connect: all.obs_config.auto_connect }));
+                                    const raw = all.obs_config.password || "";
+                                    let dec = "";
+                                    if (raw) dec = isEncrypted(raw) ? await decrypt(raw, keyFromUrl).catch(() => "") : raw;
+                                    setObsConfig((prev: any) => {
+                                        if (obsConfigDirtyRef.current && isEncrypted(raw) && !dec) return prev;
+                                        const finalPass = dec || (!isEncrypted(raw) ? raw : prev.password || "");
+                                        return { ...prev, address: all.obs_config.address, port: all.obs_config.port, password: finalPass, auto_connect: all.obs_config.auto_connect };
+                                    });
                                 }
                                 if (all.tiktok_config) setTiktokConfig((prev: any) => ({ ...prev, ...all.tiktok_config }));
                                 if (all.streamerbot_config) {
-                                    const dec = all.streamerbot_config.password ? await decrypt(all.streamerbot_config.password, keyFromUrl).catch(() => all.streamerbot_config.password) : "";
-                                    setSbConfig((prev: any) => ({ ...prev, address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: dec || all.streamerbot_config.password || "", auto_connect: all.streamerbot_config.auto_connect }));
+                                    const rawSb = all.streamerbot_config.password || "";
+                                    let decSb = "";
+                                    if (rawSb) decSb = isEncrypted(rawSb) ? await decrypt(rawSb, keyFromUrl).catch(() => "") : rawSb;
+                                    setSbConfig((prev: any) => {
+                                        if (sbConfigDirtyRef.current && isEncrypted(rawSb) && !decSb) return prev;
+                                        const finalPass = decSb || (!isEncrypted(rawSb) ? rawSb : prev.password || "");
+                                        return { ...prev, address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: finalPass, auto_connect: all.streamerbot_config.auto_connect };
+                                    });
                                 }
                                 if (all.dashboard_layout) setSectionVisible((prev: any) => ({ ...prev, ...all.dashboard_layout }));
                                 if (all.briefing) setBriefing((prev: any) => ({ ...prev, ...all.briefing }));
@@ -277,13 +288,25 @@ export default function Home() {
                             const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: bypassKey });
                             if (all && !all.error) {
                                 if (all.obs_config) {
-                                    const dec = all.obs_config.password ? await decrypt(all.obs_config.password, bypassKey).catch(() => all.obs_config.password) : "";
-                                    setObsConfig((prev: any) => ({ ...prev, address: all.obs_config.address, port: all.obs_config.port, password: dec || all.obs_config.password || "", auto_connect: all.obs_config.auto_connect }));
+                                    const raw = all.obs_config.password || "";
+                                    let dec = "";
+                                    if (raw) dec = isEncrypted(raw) ? await decrypt(raw, bypassKey).catch(() => "") : raw;
+                                    setObsConfig((prev: any) => {
+                                        if (obsConfigDirtyRef.current && isEncrypted(raw) && !dec) return prev;
+                                        const finalPass = dec || (!isEncrypted(raw) ? raw : prev.password || "");
+                                        return { ...prev, address: all.obs_config.address, port: all.obs_config.port, password: finalPass, auto_connect: all.obs_config.auto_connect };
+                                    });
                                 }
                                 if (all.tiktok_config) setTiktokConfig((prev: any) => ({ ...prev, ...all.tiktok_config }));
                                 if (all.streamerbot_config) {
-                                    const dec = all.streamerbot_config.password ? await decrypt(all.streamerbot_config.password, bypassKey).catch(() => all.streamerbot_config.password) : "";
-                                    setSbConfig((prev: any) => ({ ...prev, address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: dec || all.streamerbot_config.password || "", auto_connect: all.streamerbot_config.auto_connect }));
+                                    const rawSb = all.streamerbot_config.password || "";
+                                    let decSb = "";
+                                    if (rawSb) decSb = isEncrypted(rawSb) ? await decrypt(rawSb, bypassKey).catch(() => "") : rawSb;
+                                    setSbConfig((prev: any) => {
+                                        if (sbConfigDirtyRef.current && isEncrypted(rawSb) && !decSb) return prev;
+                                        const finalPass = decSb || (!isEncrypted(rawSb) ? rawSb : prev.password || "");
+                                        return { ...prev, address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: finalPass, auto_connect: all.streamerbot_config.auto_connect };
+                                    });
                                 }
                                 if (all.dashboard_layout) setSectionVisible((prev: any) => ({ ...prev, ...all.dashboard_layout }));
                                 if (all.briefing) setBriefing((prev: any) => ({ ...prev, ...all.briefing }));
@@ -333,10 +356,22 @@ export default function Home() {
                         const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: key });
                         if (all && !all.error) {
                             if (all.obs_config) {
-                                const dec = all.obs_config.password ? await decrypt(all.obs_config.password, key).catch(() => all.obs_config.password) : "";
-                                const obsFromDb = { address: all.obs_config.address, port: all.obs_config.port, password: dec || all.obs_config.password || "", autoConnect: all.obs_config.auto_connect };
-                                setObsConfig(obsFromDb as any);
-                                localStorage.setItem("obs-config", JSON.stringify(obsFromDb));
+                                const raw = all.obs_config.password || "";
+                                let dec = "";
+                                if (raw) dec = isEncrypted(raw) ? await decrypt(raw, key).catch(() => "") : raw;
+                                if (obsConfigDirtyRef.current && isEncrypted(raw) && !dec) {
+                                    // jangan overwrite password yang lagi diketik user kalau decrypt gagal
+                                } else {
+                                    const finalPass = dec || (!isEncrypted(raw) ? raw : "");
+                                    const obsFromDb = { address: all.obs_config.address, port: all.obs_config.port, password: finalPass, autoConnect: all.obs_config.auto_connect };
+                                    // jangan overwrite localStorage dengan string kosong kalau decrypt gagal
+                                    if (finalPass !== "" || !isEncrypted(raw)) {
+                                        setObsConfig(obsFromDb as any);
+                                        localStorage.setItem("obs-config", JSON.stringify(obsFromDb));
+                                    } else {
+                                        setObsConfig((prev:any)=> ({...prev, address: all.obs_config.address, port: all.obs_config.port, autoConnect: all.obs_config.auto_connect}));
+                                    }
+                                }
                             }
                             if (all.tiktok_config) {
                                 const t = { username: all.tiktok_config.username || "", autoConnect: all.tiktok_config.auto_connect };
@@ -344,10 +379,21 @@ export default function Home() {
                                 localStorage.setItem("tiktok-config", JSON.stringify(t));
                             }
                             if (all.streamerbot_config) {
-                                const dec = all.streamerbot_config.password ? await decrypt(all.streamerbot_config.password, key).catch(() => all.streamerbot_config.password) : "";
-                                const sbFromDb = { address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: dec || all.streamerbot_config.password || "", autoConnect: all.streamerbot_config.auto_connect };
-                                setSbConfig(sbFromDb as any);
-                                localStorage.setItem("sb-config", JSON.stringify(sbFromDb));
+                                const rawSb = all.streamerbot_config.password || "";
+                                let decSb = "";
+                                if (rawSb) decSb = isEncrypted(rawSb) ? await decrypt(rawSb, key).catch(() => "") : rawSb;
+                                if (sbConfigDirtyRef.current && isEncrypted(rawSb) && !decSb) {
+                                    // skip
+                                } else {
+                                    const finalPassSb = decSb || (!isEncrypted(rawSb) ? rawSb : "");
+                                    const sbFromDb = { address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: finalPassSb, autoConnect: all.streamerbot_config.auto_connect };
+                                    if (finalPassSb !== "" || !isEncrypted(rawSb)) {
+                                        setSbConfig(sbFromDb as any);
+                                        localStorage.setItem("sb-config", JSON.stringify(sbFromDb));
+                                    } else {
+                                        setSbConfig((prev:any)=> ({...prev, address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, autoConnect: all.streamerbot_config.auto_connect}));
+                                    }
+                                }
                             }
                         }
                     } catch {}
@@ -393,9 +439,25 @@ export default function Home() {
             try {
                 const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: input });
                 if (all && !all.error) {
-                    if (all.obs_config) setObsConfig((prev: any) => ({ ...prev, ...all.obs_config }));
+                    if (all.obs_config) {
+                        const raw = (all.obs_config as any).password || "";
+                        let dec = raw && isEncrypted(raw) ? await decrypt(raw, input).catch(()=> "") : raw;
+                        setObsConfig((prev: any) => {
+                            if (isEncrypted(raw) && !dec) return { ...prev, address: (all.obs_config as any).address, port: (all.obs_config as any).port, auto_connect: (all.obs_config as any).auto_connect };
+                            const finalPass = dec || (!isEncrypted(raw) ? raw : prev.password || "");
+                            return { ...prev, address: (all.obs_config as any).address, port: (all.obs_config as any).port, password: finalPass, auto_connect: (all.obs_config as any).auto_connect };
+                        });
+                    }
                     if (all.tiktok_config) setTiktokConfig((prev: any) => ({ ...prev, ...all.tiktok_config }));
-                    if (all.streamerbot_config) setSbConfig((prev: any) => ({ ...prev, ...all.streamerbot_config }));
+                    if (all.streamerbot_config) {
+                        const rawSb = (all.streamerbot_config as any).password || "";
+                        let decSb = rawSb && isEncrypted(rawSb) ? await decrypt(rawSb, input).catch(()=> "") : rawSb;
+                        setSbConfig((prev: any) => {
+                            if (isEncrypted(rawSb) && !decSb) return { ...prev, address: (all.streamerbot_config as any).address, port: (all.streamerbot_config as any).port, endpoint: (all.streamerbot_config as any).endpoint, auto_connect: (all.streamerbot_config as any).auto_connect };
+                            const finalPassSb = decSb || (!isEncrypted(rawSb) ? rawSb : prev.password || "");
+                            return { ...prev, address: (all.streamerbot_config as any).address, port: (all.streamerbot_config as any).port, endpoint: (all.streamerbot_config as any).endpoint, password: finalPassSb, auto_connect: (all.streamerbot_config as any).auto_connect };
+                        });
+                    }
                     if (all.dashboard_layout) setSectionVisible((prev: any) => ({ ...prev, ...all.dashboard_layout }));
                     if (all.briefing) setBriefing((prev: any) => ({ ...prev, ...all.briefing }));
                 }
@@ -424,7 +486,7 @@ export default function Home() {
     };
 
     const twitchViewerCount = Object.values(viewerData).filter(item => item.platform === "twitch").length;
-    const youtubeViewerCount = Object.values(viewerData).filter(item => item.platform === "youtube").length;
+    const youtubeChatViewerCount = Object.values(viewerData).filter(item => item.platform === "youtube").length;
     const tiktokViewerCount = Object.values(viewerData).filter(item => item.platform === "tiktok").length;
     const filteredChatMessages = chatSearch.trim()
         ? chatMessages.filter(m => `${m.user} ${m.text} ${m.platform}`.toLowerCase().includes(chatSearch.toLowerCase()))
@@ -532,6 +594,7 @@ export default function Home() {
     };
 
     const [tiktokStatus, setTiktokStatus] = useState<"DISCONNECTED" | "CONNECTING" | "CONNECTED" | "ERROR">("DISCONNECTED");
+    const [tiktokError, setTiktokError] = useState<string | null>(null);
     const router = useRouter();
     const supabase = createClient();
     const [privateKey, setPrivateKey] = useState<string | null>(null);
@@ -741,6 +804,13 @@ export default function Home() {
     };
     const handleTimerAdd = (sec: number = 300) => handleTimerControl('add', { seconds: sec });
     const handleTimerSub = (sec: number = 300) => handleTimerControl('sub', { seconds: sec });
+    const handleTimerSetCustom = () => {
+        const m = Math.max(0, Math.min(999, parseInt(timerCustomMin) || 0));
+        const s = Math.max(0, Math.min(59, parseInt(timerCustomSec) || 0));
+        const total = m * 60 + s;
+        if (total === 0) { if(typeof window!=='undefined') gooeyToast.error('Durasi harus > 0'); return; }
+        handleTimerControl('set', { totalSeconds: total });
+    };
 
     const toggleStream = () => {
         if (!window.confirm("Apakah Anda yakin ingin memulai/menghentikan Streaming?")) return;
@@ -1000,6 +1070,7 @@ export default function Home() {
 
             tkSocketRef.current.on("disconnect", () => {
                 setTiktokStatus("DISCONNECTED");
+                setTiktokError(null);
                 setTiktokRoomViewerCount(null);
                 setTiktokTotalUser(null);
                 scheduleTikTokRetry("koneksi ke server putus");
@@ -1007,22 +1078,26 @@ export default function Home() {
 
             tkSocketRef.current.on("tiktok-connecting", () => {
                 setTiktokStatus("CONNECTING");
+                setTiktokError(null);
                 addSystemLog(`Menghubungkan ke TikTok @${username}...`, "info");
             });
 
             tkSocketRef.current.on("tiktok-connected", () => {
                 setTiktokStatus("CONNECTED");
+                setTiktokError(null);
                 addSystemLog(`Berhasil terhubung ke TikTok Live: @${username}`, "success");
             });
 
             tkSocketRef.current.on("tiktok-error", (err: string) => {
                 setTiktokStatus("ERROR");
+                setTiktokError(err);
                 clearTikTokRetry();
                 addSystemLog(`Gagal terhubung ke TikTok: ${err}`, "error");
             });
 
             tkSocketRef.current.on("tiktok-disconnected", () => {
                 setTiktokStatus("DISCONNECTED");
+                setTiktokError(null);
                 setTiktokRoomViewerCount(null);
                 setTiktokTotalUser(null);
                 addSystemLog("TikTok terputus.", "warn");
@@ -1031,6 +1106,7 @@ export default function Home() {
 
             tkSocketRef.current.on("tiktok-streamEnd", () => {
                 setTiktokStatus("DISCONNECTED");
+                setTiktokError(null);
                 setTiktokRoomViewerCount(null);
                 setTiktokTotalUser(null);
                 addSystemLog("Live TikTok berakhir.", "warn");
@@ -1109,6 +1185,7 @@ export default function Home() {
             tkSocketRef.current.emit("disconnect-tiktok", payload);
         }
         setTiktokStatus("DISCONNECTED");
+        setTiktokError(null);
         setTiktokRoomViewerCount(null);
         setTiktokTotalUser(null);
         addSystemLog("TikTok disconnected.", "warn");
@@ -1116,6 +1193,7 @@ export default function Home() {
 
     const resetTikTokUI = () => {
         setTiktokStatus("DISCONNECTED");
+        setTiktokError(null);
         setTiktokRoomViewerCount(null);
         setTiktokTotalUser(null);
     }
@@ -1296,7 +1374,7 @@ export default function Home() {
     const getTiktokButtonText = () => {
         if (tiktokStatus === "CONNECTED") return "Disconnect";
         if (tiktokStatus === "CONNECTING") return "Connecting...";
-        if (tiktokStatus === "ERROR") return "Error";
+        if (tiktokStatus === "ERROR") return "Coba Lagi";
         return "Connect";
     };
 
@@ -1417,10 +1495,18 @@ export default function Home() {
             const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: key });
             if (all && !all.error) {
                 if (all.obs_config) {
-                    const dec = all.obs_config.password ? await decrypt(all.obs_config.password, key).catch(() => all.obs_config.password) : "";
-                    const obsFromDb = { address: all.obs_config.address, port: all.obs_config.port, password: dec || all.obs_config.password || "", autoConnect: all.obs_config.auto_connect };
-                    setObsConfig(obsFromDb as any);
-                    localStorage.setItem("obs-config", JSON.stringify(obsFromDb));
+                    const raw = (all.obs_config as any).password || "";
+                    let dec = "";
+                    if (raw) dec = isEncrypted(raw) ? await decrypt(raw, key).catch(() => "") : raw;
+                    if (isEncrypted(raw) && !dec) {
+                        // decrypt gagal -> jangan overwrite password local
+                        setObsConfig((prev:any)=> ({...prev, address: (all.obs_config as any).address, port: (all.obs_config as any).port, autoConnect: (all.obs_config as any).auto_connect}));
+                    } else {
+                        const finalPass = dec || (!isEncrypted(raw) ? raw : "");
+                        const obsFromDb = { address: (all.obs_config as any).address, port: (all.obs_config as any).port, password: finalPass, autoConnect: (all.obs_config as any).auto_connect };
+                        setObsConfig(obsFromDb as any);
+                        localStorage.setItem("obs-config", JSON.stringify(obsFromDb));
+                    }
                 }
                 if (all.tiktok_config) {
                     const t = { username: all.tiktok_config.username || "", autoConnect: all.tiktok_config.auto_connect };
@@ -1428,10 +1514,17 @@ export default function Home() {
                     localStorage.setItem("tiktok-config", JSON.stringify(t));
                 }
                 if (all.streamerbot_config) {
-                    const dec = all.streamerbot_config.password ? await decrypt(all.streamerbot_config.password, key).catch(() => all.streamerbot_config.password) : "";
-                    const sbFromDb = { address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: dec || all.streamerbot_config.password || "", autoConnect: all.streamerbot_config.auto_connect };
-                    setSbConfig(sbFromDb as any);
-                    localStorage.setItem("sb-config", JSON.stringify(sbFromDb));
+                    const rawSb = (all.streamerbot_config as any).password || "";
+                    let decSb = "";
+                    if (rawSb) decSb = isEncrypted(rawSb) ? await decrypt(rawSb, key).catch(() => "") : rawSb;
+                    if (isEncrypted(rawSb) && !decSb) {
+                        setSbConfig((prev:any)=> ({...prev, address: (all.streamerbot_config as any).address, port: (all.streamerbot_config as any).port, endpoint: (all.streamerbot_config as any).endpoint, autoConnect: (all.streamerbot_config as any).auto_connect}));
+                    } else {
+                        const finalPassSb = decSb || (!isEncrypted(rawSb) ? rawSb : "");
+                        const sbFromDb = { address: (all.streamerbot_config as any).address, port: (all.streamerbot_config as any).port, endpoint: (all.streamerbot_config as any).endpoint, password: finalPassSb, autoConnect: (all.streamerbot_config as any).auto_connect };
+                        setSbConfig(sbFromDb as any);
+                        localStorage.setItem("sb-config", JSON.stringify(sbFromDb));
+                    }
                 }
                 gooeyToast.success("Config disinkron dari database");
             } else {
@@ -1817,10 +1910,21 @@ export default function Home() {
                             sbotStatus: "CONNECTED",
                             streamStatus: "LIVE",
                         }));
+                        // platform live flags untuk card YouTube/Twitch
+                        if (platform === "youtube" && ["BroadcastStarted","BroadcastUpdated","StatisticsUpdated","PresentViewers"].includes(type)) {
+                            setYoutubeLive(true);
+                        }
+                        if (platform === "twitch" && ["StreamOnline","PresentViewers"].includes(type)) {
+                            setTwitchLive(true);
+                        }
 
                         if (platform === "youtube" && data.concurrentViewers !== undefined) {
+                            const v = Number(data.concurrentViewers) || 0;
+                            setYoutubeViewerCountSB(v);
+                            setYoutubeChartData(prev => { const next = [...prev, { value: v }]; return next.length > 8 ? next.slice(-8) : next; });
                             if (tkSocketRef.current?.connected) {
-                                tkSocketRef.current.emit("sb-viewers", { platform: "youtube", viewers: Number(data.concurrentViewers) || 0 });
+                                const roomSb3 = getTimerRoom();
+                                tkSocketRef.current.emit("sb-viewers", { privateKey: roomSb3, platform: "youtube", viewers: v });
                             }
                         }
 
@@ -1828,8 +1932,20 @@ export default function Home() {
                             // Twitch: data.viewers array; YouTube: data.viewers / concurrentViewers
                             const list = Array.isArray((data as any).viewers) ? (data as any).viewers.length : undefined;
                             const count = list ?? Number((data as any).concurrentViewers ?? (data as any).viewerCount ?? NaN);
-                            if (!Number.isNaN(count) && tkSocketRef.current?.connected) {
-                                tkSocketRef.current.emit("sb-viewers", { platform: platform || "twitch", viewers: count });
+                            if (!Number.isNaN(count)) {
+                                if (platform === "youtube") {
+                                    setYoutubeViewerCountSB(count);
+                                    setYoutubeChartData(prev => { const next = [...prev, { value: count }]; return next.length > 8 ? next.slice(-8) : next; });
+                                    setYoutubeLive(true);
+                                } else if (platform === "twitch") {
+                                    setTwitchViewerCountSB(count);
+                                    setTwitchChartData(prev => { const next = [...prev, { value: count }]; return next.length > 8 ? next.slice(-8) : next; });
+                                    setTwitchLive(true);
+                                }
+                                if (tkSocketRef.current?.connected) {
+                                    const roomSb4 = getTimerRoom();
+                                    tkSocketRef.current.emit("sb-viewers", { privateKey: roomSb4, platform: platform || "twitch", viewers: count });
+                                }
                             }
                         }
 
@@ -1844,6 +1960,16 @@ export default function Home() {
                             sbotStatus: "CONNECTED",
                             streamStatus: "STOPPED",
                         }));
+                        if (platform === "youtube" && type === "BroadcastEnded") {
+                            setYoutubeLive(false);
+                        }
+                        if (platform === "twitch" && type === "StreamOffline") {
+                            setTwitchLive(false);
+                            setTwitchViewerCountSB(0);
+                        }
+                        if (platform === "youtube" && type === "BroadcastEnded") {
+                            setYoutubeViewerCountSB(0);
+                        }
                     }
 
                     if (["ChatMessage", "Message"].includes(type)) {
@@ -1856,7 +1982,9 @@ export default function Home() {
                         // (server echo ke semua kecuali pengirim, jadi tidak dobel)
                         handleIncomingMessage(user, message, pf, avatar, []);
                         if (tkSocketRef.current?.connected) {
+                            const roomSb = getTimerRoom();
                             tkSocketRef.current.emit("sb-chat", {
+                                privateKey: roomSb,
                                 uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
                                 nickname: user,
                                 comment: message,
@@ -1873,7 +2001,9 @@ export default function Home() {
                         addActivityLog(`➕ ${user} mengikuti (${type})`, pf);
                         addSystemLog(`➕ [SB ${type?.toUpperCase()}] ${user}`, "success");
                         if (tkSocketRef.current?.connected) {
+                            const roomSb = getTimerRoom();
                             tkSocketRef.current.emit("sb-event", {
+                                privateKey: roomSb,
                                 eventType: type,
                                 uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
                                 nickname: user,
@@ -1891,7 +2021,9 @@ export default function Home() {
                         addGiftLog(user, text, platform || "twitch", { amount: String(amount), giftName: type, avatar: avatar || undefined });
                         addSystemLog(`🎁 [GIFT ${platform}] ${user}: ${text}`, "info");
                         if (tkSocketRef.current?.connected) {
+                            const roomSb2 = getTimerRoom();
                             tkSocketRef.current.emit("sb-event", {
+                                privateKey: roomSb2,
                                 eventType: type,
                                 uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
                                 nickname: user,
@@ -2138,33 +2270,33 @@ export default function Home() {
             <main className="flex-1 flex p-4 gap-4 overflow-hidden min-h-0">
                 <div className="flex-1 flex flex-col gap-4">
                     {sectionVisible.streaming && (
-                        <div className="grid grid-cols-2 gap-4 flex-none">
-                            <div className="stat-card border-l-4 border-l-gray-600 cursor-pointer py-2.5" onClick={toggleStream}>
+                        <div className="grid grid-cols-2 gap-3 flex-none">
+                            <div className="stat-card border-l-4 border-l-gray-600 cursor-pointer py-2 px-2.5" onClick={toggleStream}>
                                 <div className="flex justify-between items-start relative z-10">
                                     <div>
-                                        <h3 className="text-gray-500 text-[9px] font-black uppercase mb-1">Streaming</h3>
-                                        <div className={`flex items-center gap-2 text-lg font-black font-mono-custom ${status.streamStatus === "STOPPED" ? "text-gray-700" : "text-red-700"}`}>
+                                        <h3 className="text-gray-500 text-[8px] font-black uppercase mb-0.5">Streaming</h3>
+                                        <div className={`flex items-center gap-1.5 text-[13px] font-black font-mono-custom ${status.streamStatus === "STOPPED" ? "text-gray-700" : "text-red-700"}`}>
                                             <span>{status.streamStatus === "STOPPED" ? "NOT STREAMING" : "STREAMING"}</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-0.5">
                                         <div className="text-right">
-                                            <div className="text-[8px] text-gray-500 font-bold uppercase">Time</div>
-                                            <span className="font-mono-custom text-[20px]">{status.streamTime}</span>
+                                            <div className="text-[7px] text-gray-500 font-bold uppercase">Time</div>
+                                            <span className="font-mono-custom text-[15px] leading-none">{status.streamTime}</span>
                                         </div>
-                                        <div className="flex gap-5">
+                                        <div className="flex gap-3">
                                             <div className="text-right">
-                                                <div className="text-[8px] text-gray-500 font-bold uppercase">Dropped</div>
-                                                <div className="font-mono-custom text-[10px]">0</div>
+                                                <div className="text-[7px] text-gray-500 font-bold uppercase">Dropped</div>
+                                                <div className="font-mono-custom text-[9px]">0</div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="text-[8px] text-gray-500 font-bold uppercase">Bitrate</div>
-                                                <div className="font-mono-custom text-[10px]">{status.bitrate ?? "0 kbps"}</div>
+                                                <div className="text-[7px] text-gray-500 font-bold uppercase">Bitrate</div>
+                                                <div className="font-mono-custom text-[9px]">{status.bitrate ?? "0 kbps"}</div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="h-14 w-full -mt-10 relative">
+                                <div className="h-10 w-full -mt-6 relative">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={streamChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
                                             <defs>
@@ -2178,22 +2310,22 @@ export default function Home() {
                                     </ResponsiveContainer>
                                 </div>
                             </div>
-                            <div className="stat-card border-l-4 border-l-gray-600 cursor-pointer py-2.5" onClick={toggleRecord}>
+                            <div className="stat-card border-l-4 border-l-gray-600 cursor-pointer py-2 px-2.5" onClick={toggleRecord}>
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h3 className="text-gray-500 text-[9px] font-black uppercase mb-1">Recording</h3>
-                                        <div className={`flex items-center gap-2 text-lg font-black font-mono-custom ${status.recordStatus === "STOPPED" ? "text-gray-500" : "text-red-500"}`}>
+                                        <h3 className="text-gray-500 text-[8px] font-black uppercase mb-0.5">Recording</h3>
+                                        <div className={`flex items-center gap-1.5 text-[13px] font-black font-mono-custom ${status.recordStatus === "STOPPED" ? "text-gray-500" : "text-red-500"}`}>
                                             <span>{status.recordStatus === "STOPPED" ? "IDLE" : "RECORDING"}</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-0.5">
                                         <div className="text-right">
-                                            <div className="text-[8px] text-gray-500 font-bold uppercase">Time</div>
-                                            <span className="font-mono-custom text-[20px] text-white">{status.recordTime}</span>
+                                            <div className="text-[7px] text-gray-500 font-bold uppercase">Time</div>
+                                            <span className="font-mono-custom text-[15px] leading-none text-white">{status.recordTime}</span>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-[8px] text-gray-500 font-bold uppercase">Disk Space</div>
-                                            <div className="font-mono-custom text-[10px]">{status.diskSpace ?? "200 GB"}</div>
+                                            <div className="text-[7px] text-gray-500 font-bold uppercase">Disk Space</div>
+                                            <div className="font-mono-custom text-[9px]">{status.diskSpace ?? "200 GB"}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2363,119 +2495,126 @@ export default function Home() {
                                     <h4 className="text-gray-500 text-[9px] font-black uppercase px-1">Penonton Real-time</h4>
 
                                     {sectionVisible.cardYt && (
-                                        <div className="stat-card border border-red-500/20 group relative overflow-visible py-2.5">
-                                            <div className="flex justify-between items-start mb-1.5 relative z-10">
-                                                <div className="flex items-center gap-2">
-                                                    <Image src="/assets/logo/youtube.png" alt="YouTube Logo" width={16} height={16} className="w-4 h-4 invert" />
-                                                    <span className="font-black text-[10px] uppercase">YouTube</span>
+                                        <div className="stat-card border border-red-500/20 group relative overflow-visible py-2 px-2.5">
+                                            <div className="flex justify-between items-start mb-1 relative z-10">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Image src="/assets/logo/youtube.png" alt="YouTube Logo" width={14} height={14} className="w-3.5 h-3.5 invert" />
+                                                    <span className="font-black text-[9px] uppercase">YouTube</span>
                                                 </div>
-                                                <span className="text-[8px] font-bold text-green-500 pulse-live uppercase">LIVE</span>
+                                                <span className={`text-[7px] font-bold uppercase ${youtubeLive ? "text-green-500 pulse-live" : "text-gray-500"}`}>{youtubeLive ? "LIVE" : "Offline"}</span>
                                             </div>
                                             <div className="flex items-end justify-between relative z-10">
                                                 <div>
-                                                    <span className="text-2xl font-bold font-mono-custom tracking-tighter">0</span>
-                                                    <div className="flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                        <div className="flex items-center gap-1 text-[9px] text-gray-400">
-                                                            <ThumbsUp className="w-3 h-3" /> <span>0</span>
+                                                    <span className="text-xl font-bold font-mono-custom tracking-tighter leading-none">{youtubeViewerCountSB ?? 0}</span>
+                                                    <div className="flex gap-2 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                        <div className="flex items-center gap-1 text-[8px] text-gray-400">
+                                                            <ThumbsUp className="w-2.5 h-2.5" /> <span>{youtubeViewerCountSB ?? 0}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-1 text-[9px] text-gray-400">
-                                                            <Eye className="w-3 h-3" /> <span>0</span>
+                                                        <div className="flex items-center gap-1 text-[8px] text-gray-400">
+                                                            <Eye className="w-2.5 h-2.5" /> <span>{youtubeViewerCountSB ?? 0}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-[8px] text-red-500 font-bold uppercase">Current Chatters</div>
-                                                    <div className="text-[8px] text-gray-500 font-bold uppercase mt-1">Chatters:
-                                                        <span className="text-white">0</span>
+                                                    <div className="text-[7px] text-red-500 font-bold uppercase">Current Viewers</div>
+                                                    <div className="text-[7px] text-gray-500 font-bold uppercase mt-0.5">Viewers:
+                                                        <span className="text-white">{youtubeViewerCountSB ?? 0}</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="h-14 w-full -mt-10 relative">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={youtubeChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                                                        <defs>
-                                                            <linearGradient id="youtube-fill" x1="0" x2="0" y1="0" y2="1">
-                                                                <stop offset="0%" stopColor="#f87171" stopOpacity={0.7} />
-                                                                <stop offset="100%" stopColor="#f87171" stopOpacity={0.05} />
-                                                            </linearGradient>
-                                                        </defs>
-                                                        <Area type="monotone" dataKey="value" stroke="#f87171" fill="url(#youtube-fill)" strokeWidth={2} isAnimationActive={false} />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                            </div>
+                                            {(youtubeViewerCountSB != null && youtubeViewerCountSB > 0) && (
+                                                <div className="h-10 w-full -mt-6 relative">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <AreaChart data={youtubeChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                                                            <defs>
+                                                                <linearGradient id="youtube-fill" x1="0" x2="0" y1="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#f87171" stopOpacity={0.7} />
+                                                                    <stop offset="100%" stopColor="#f87171" stopOpacity={0.05} />
+                                                                </linearGradient>
+                                                            </defs>
+                                                            <Area type="monotone" dataKey="value" stroke="#f87171" fill="url(#youtube-fill)" strokeWidth={2} isAnimationActive={false} />
+                                                        </AreaChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
                                     {sectionVisible.cardTw && (
-                                        <div className="stat-card border border-purple-500/30 py-2.5">
-                                            <div className="flex justify-between items-start mb-1.5 relative z-10">
-                                                <div className="flex items-center gap-2">
-                                                    <Image src="/assets/logo/twitch.png" alt="Twitch Logo" width={16} height={16} className="w-4 h-4 invert" />
-                                                    <span className="font-black text-[10px] uppercase">Twitch</span>
+                                        <div className="stat-card border border-purple-500/30 py-2 px-2.5">
+                                            <div className="flex justify-between items-start mb-1 relative z-10">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Image src="/assets/logo/twitch.png" alt="Twitch Logo" width={14} height={14} className="w-3.5 h-3.5 invert" />
+                                                    <span className="font-black text-[9px] uppercase">Twitch</span>
                                                 </div>
-                                                <span className="text-[8px] font-bold text-green-500 pulse-live uppercase">LIVE</span>
+                                                <span className={`text-[7px] font-bold uppercase ${twitchLive ? "text-green-500 pulse-live" : "text-gray-500"}`}>{twitchLive ? "LIVE" : "Offline"}</span>
                                             </div>
                                             <div className="flex items-end justify-between relative z-10">
-                                                <span className="text-2xl font-bold font-mono-custom tracking-tighter">{twitchViewerCount}</span>
+                                                <span className="text-xl font-bold font-mono-custom tracking-tighter leading-none">{twitchViewerCountSB ?? twitchViewerCount}</span>
                                                 <div className="text-right">
-                                                    <div className="text-[8px] text-purple-400 font-bold uppercase">Current Viewers</div>
+                                                    <div className="text-[7px] text-purple-400 font-bold uppercase">Current Viewers</div>
+                                                    <div className="text-[7px] text-gray-500 font-bold uppercase mt-0.5">Chatters: <span className="text-white">{twitchViewerCount}</span></div>
                                                 </div>
                                             </div>
-                                            <div className="h-14 w-full -mt-10 relative">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={twitchChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                                                        <defs>
-                                                            <linearGradient id="twitch-fill" x1="0" x2="0" y1="0" y2="1">
-                                                                <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.7} />
-                                                                <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.05} />
-                                                            </linearGradient>
-                                                        </defs>
-                                                        <Area type="monotone" dataKey="value" stroke="#a78bfa" fill="url(#twitch-fill)" strokeWidth={2} isAnimationActive={false} />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                            </div>
+                                            {(twitchViewerCountSB != null && twitchViewerCountSB > 0) && (
+                                                <div className="h-10 w-full -mt-6 relative">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <AreaChart data={twitchChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                                                            <defs>
+                                                                <linearGradient id="twitch-fill" x1="0" x2="0" y1="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.7} />
+                                                                    <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.05} />
+                                                                </linearGradient>
+                                                            </defs>
+                                                            <Area type="monotone" dataKey="value" stroke="#a78bfa" fill="url(#twitch-fill)" strokeWidth={2} isAnimationActive={false} />
+                                                        </AreaChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
                                     {sectionVisible.cardTt && (
-                                        <div className="stat-card border border-[#FE2C55]/30 py-2.5 group relative overflow-hidden">
-                                            <div className="flex justify-between items-start mb-1.5 relative z-10">
-                                                <div className="flex items-center gap-2">
-                                                    <Image src="/assets/logo/tik-tok.png" alt="TikTok Logo" width={16} height={16} className="w-4 h-4 invert" />
-                                                    <span className="font-black text-[10px] uppercase text-[#FE2C55]">TikTok</span>
+                                        <div className="stat-card border border-[#FE2C55]/30 py-2 px-2.5 group relative overflow-hidden">
+                                            <div className="flex justify-between items-start mb-1 relative z-10">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Image src="/assets/logo/tik-tok.png" alt="TikTok Logo" width={14} height={14} className="w-3.5 h-3.5 invert" />
+                                                    <span className="font-black text-[9px] uppercase text-[#FE2C55]">TikTok</span>
                                                 </div>
-                                                <span className={`text-[8px] font-bold uppercase ${tiktokStatus === "CONNECTED" ? "text-green-500 pulse-live" : "text-gray-500"}`}>{tiktokStatus === "CONNECTED" ? "LIVE" : "Offline"}</span>
+                                                <span className={`text-[7px] font-bold uppercase ${tiktokStatus === "CONNECTED" ? "text-green-500 pulse-live" : "text-gray-500"}`}>{tiktokStatus === "CONNECTED" ? "LIVE" : "Offline"}</span>
                                             </div>
                                             <div className="flex items-end justify-between relative z-10">
                                                 <div>
-                                                    <span className="text-2xl font-bold font-mono-custom tracking-tighter">{tiktokRoomViewerCount ?? tiktokViewerCount}</span>
-                                                    <div className="flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                        <div className="flex items-center gap-1 text-[9px] text-gray-400">
-                                                            <Eye className="w-3 h-3" /> <span>{tiktokRoomViewerCount ?? tiktokViewerCount}</span>
+                                                    <span className="text-xl font-bold font-mono-custom tracking-tighter leading-none">{tiktokRoomViewerCount ?? tiktokViewerCount}</span>
+                                                    <div className="flex gap-1.5 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                        <div className="flex items-center gap-1 text-[8px] text-gray-400">
+                                                            <Eye className="w-2.5 h-2.5" /> <span>{tiktokRoomViewerCount ?? tiktokViewerCount}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-1 text-[9px] text-gray-400">
-                                                            <Users className="w-3 h-3" /> <span>{tiktokTotalUser ?? 0}</span>
+                                                        <div className="flex items-center gap-1 text-[8px] text-gray-400">
+                                                            <Users className="w-2.5 h-2.5" /> <span>{tiktokTotalUser ?? 0}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-[8px] text-[#25F4EE] font-bold uppercase">Realtime Penonton</div>
-                                                    <div className="text-[8px] text-gray-500 font-bold uppercase mt-1">Total User: <span className="text-white">{tiktokTotalUser ?? 0}</span></div>
+                                                    <div className="text-[7px] text-[#25F4EE] font-bold uppercase">Realtime Penonton</div>
+                                                    <div className="text-[7px] text-gray-500 font-bold uppercase mt-0.5">Total User: <span className="text-white">{tiktokTotalUser ?? 0}</span></div>
                                                 </div>
                                             </div>
-                                            <div className="h-14 w-full -mt-10 relative">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={tiktokChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                                                        <defs>
-                                                            <linearGradient id="tiktok-fill" x1="0" x2="0" y1="0" y2="1">
-                                                                <stop offset="0%" stopColor="#FE2C55" stopOpacity={0.45} />
-                                                                <stop offset="100%" stopColor="#25F4EE" stopOpacity={0.05} />
-                                                            </linearGradient>
-                                                        </defs>
-                                                        <Area type="monotone" dataKey="value" stroke="#FE2C55" fill="url(#tiktok-fill)" strokeWidth={2} isAnimationActive={false} />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                            </div>
+                                            {((tiktokRoomViewerCount ?? tiktokViewerCount ?? 0) > 0) && (
+                                                <div className="h-10 w-full -mt-6 relative">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <AreaChart data={tiktokChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                                                            <defs>
+                                                                <linearGradient id="tiktok-fill" x1="0" x2="0" y1="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#FE2C55" stopOpacity={0.45} />
+                                                                    <stop offset="100%" stopColor="#25F4EE" stopOpacity={0.05} />
+                                                                </linearGradient>
+                                                            </defs>
+                                                            <Area type="monotone" dataKey="value" stroke="#FE2C55" fill="url(#tiktok-fill)" strokeWidth={2} isAnimationActive={false} />
+                                                        </AreaChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -2671,6 +2810,9 @@ export default function Home() {
                                         <input
                                             type="password"
                                             value={obsConfig.password}
+                                            autoComplete="new-password"
+                                            data-lpignore="true"
+                                            data-form-type="other"
                                             onChange={(e) => {
                                                 obsConfigDirtyRef.current = true;
                                                 if (obsReconnectTimerRef.current) {
@@ -2778,6 +2920,9 @@ export default function Home() {
                                         <input
                                             type="password"
                                             value={sbConfig.password}
+                                            autoComplete="new-password"
+                                            data-lpignore="true"
+                                            data-form-type="other"
                                             onChange={(e) => {
                                                 sbConfigDirtyRef.current = true;
                                                 if (sbReconnectTimerRef.current) {
@@ -2792,7 +2937,7 @@ export default function Home() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <input
-                                            type="password"
+                                            type="text"
                                             value={sbConfig.endpoint}
                                             onChange={(e) => {
                                                 sbConfigDirtyRef.current = true;
@@ -2847,9 +2992,14 @@ export default function Home() {
                                         className={tiktokStatus === "CONNECTED" || tiktokStatus === "CONNECTING" || tiktokStatus === "ERROR" ? `${getTiktokButtonClass()} w-full` : `${connectButtonClass} w-full bg-[#FE2C55] hover:bg-[#E62254] shadow-[0_0_10px_rgba(254,44,85,0.4)]`}>
                                         {getTiktokButtonText()}
                                     </button>
+                                    {tiktokStatus === "ERROR" && tiktokError && (
+                                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                                            <span className="text-red-400 text-[10px] font-bold leading-tight break-words">{tiktokError}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
                                         <span className="text-gray-400 uppercase font-bold text-[8px]">Status</span>
-                                        <span id="tiktok-connection-state" className={`${getTiktokStatusColor()} font-black uppercase text-[10px]`}>{tiktokStatus}</span>
+                                        <span id="tiktok-connection-state" className={`${getTiktokStatusColor()} font-black text-[10px] ${tiktokStatus==="ERROR" ? "normal-case max-w-[180px] text-right leading-tight break-words" : "uppercase"}`}>{tiktokStatus==="ERROR" && tiktokError ? tiktokError : tiktokStatus}</span>
                                     </div>
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
                                         <span className="text-gray-400 uppercase font-bold text-[8px]">Auto Connect</span>
@@ -3086,11 +3236,35 @@ export default function Home() {
                                                 </div>
                                                 <span className="text-gray-400 text-[10px] font-bold">{activeTimer?.currentSession||1}/{activeTimer?.totalSessions||3} {activeTimer?.mode||'powerup'}</span>
                                             </div>
-                                            <div className="grid grid-cols-4 gap-1.5">
+                                            <div className="grid grid-cols-2 gap-1.5">
                                                 <button onClick={()=>handleTimerControl(activeTimer?.isRunning?'stop':'start')} className={`h-7 rounded-full text-[10px] font-black uppercase border flex items-center justify-center gap-1 ${activeTimer?.isRunning?'bg-yellow-500/20 text-yellow-400 border-yellow-500/30':'bg-green-600 text-white border-green-500'}`}>{activeTimer?.isRunning ? <><Pause className="w-3 h-3"/>Stop</> : <><Play className="w-3 h-3"/>Start</>}</button>
                                                 <button onClick={()=>handleTimerControl('reset')} className="h-7 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-bold flex items-center justify-center gap-1"><RefreshCcw className="w-3 h-3" />Reset</button>
-                                                <button onClick={()=>handleTimerAdd(300)} className="h-7 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-black">+5m</button>
-                                                <button onClick={()=>handleTimerSub(300)} className="h-7 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-black">-5m</button>
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
+                                                    <span className="text-[9px] font-black uppercase text-gray-500 w-8 shrink-0">Set</span>
+                                                    <input type="number" min={0} max={999} value={timerCustomMin} onChange={(e)=>setTimerCustomMin(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[10px] font-black text-gray-400">m</span>
+                                                    <input type="number" min={0} max={59} value={timerCustomSec} onChange={(e)=>setTimerCustomSec(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[10px] font-black text-gray-400">s</span>
+                                                    <button onClick={handleTimerSetCustom} className="ml-auto h-7 px-4 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Clock className="w-3 h-3" />Set</button>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
+                                                    <span className="text-[9px] font-black uppercase text-green-400 w-8 shrink-0">Add</span>
+                                                    <input type="number" min={0} max={999} value={timerAddMin} onChange={(e)=>setTimerAddMin(e.target.value)} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[10px] font-black text-gray-400">m</span>
+                                                    <input type="number" min={0} max={59} value={timerAddSec} onChange={(e)=>setTimerAddSec(e.target.value)} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[10px] font-black text-gray-400">s</span>
+                                                    <button onClick={()=>{ const c=(parseInt(timerAddMin)||0)*60+(parseInt(timerAddSec)||0); if(c>0) handleTimerAdd(c); else { handleTimerAdd(300);} }} className="ml-auto h-7 px-4 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Plus className="w-3 h-3" />+ {timerAddMin||5}:{String(timerAddSec||0).padStart(2,'0')}</button>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
+                                                    <span className="text-[9px] font-black uppercase text-red-400 w-8 shrink-0">Sub</span>
+                                                    <input type="number" min={0} max={999} value={timerSubMin} onChange={(e)=>setTimerSubMin(e.target.value)} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[10px] font-black text-gray-400">m</span>
+                                                    <input type="number" min={0} max={59} value={timerSubSec} onChange={(e)=>setTimerSubSec(e.target.value)} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[10px] font-black text-gray-400">s</span>
+                                                    <button onClick={()=>{ const c=(parseInt(timerSubMin)||0)*60+(parseInt(timerSubSec)||0); if(c>0) handleTimerSub(c); else { handleTimerSub(300);} }} className="ml-auto h-7 px-4 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Square className="w-3 h-3" />- {timerSubMin||5}:{String(timerSubSec||0).padStart(2,'0')}</button>
+                                                </div>
                                             </div>
                                             <div className="flex gap-1.5">
                                                 {['powerup','sleep','locked','paused'].map((m)=>(

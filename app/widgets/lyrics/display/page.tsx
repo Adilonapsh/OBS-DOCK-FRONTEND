@@ -143,7 +143,7 @@ function LyricsDisplayInner() {
   const smtcBridgeAddress = params.get('smtcBridgeAddress') || '127.0.0.1';
   const smtcBridgePort = params.get('smtcBridgePort') || '5000';
   const obsMode = params.get('obs') === '1';
-  const pos = getStringParamShared(params, 'pos', 'bl');
+  const pos = getStringParamShared(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
   // lyrics specific
   const showLyrics = getBoolParam(params, 'showLyrics', true);

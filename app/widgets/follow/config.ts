@@ -49,7 +49,7 @@ export const FOLLOW_HIDE_ANIMS = [
 ] as const;
 
 export const FOLLOW_DEFAULTS = {
-  pos: 'bl' as string,
+  pos: 'center' as string,
   theme: 'standard' as string,
   font: 'Outfit',
   fontSize: 14,
@@ -78,7 +78,7 @@ export const DEMO_FOLLOWS: FollowItem[] = [
 
 export function buildFollowUrl(base: string, s: FollowSettings): string {
   const p = new URLSearchParams();
-  p.set('pos', (s as unknown as { pos: string }).pos || 'bl');
+  p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   p.set('theme', s.theme);
   p.set('font', s.font);
   p.set('fontSize', String(s.fontSize));

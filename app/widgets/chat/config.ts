@@ -8,6 +8,7 @@ export const CHAT_THEMES = [
   { value: 'boxed', label: 'Boxed - Card dengan Header' },
   { value: 'cute', label: 'Cute - Lavender Pastel' },
   { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
+  { value: 'plain', label: 'Plain - YouTube Polosan' },
 ] as const;
 
 export const CHAT_FONTS = WIDGET_FONTS;
@@ -52,7 +53,7 @@ export const CHAT_HIDE_ANIMS = [
 ] as const;
 
 export const CHAT_DEFAULTS = {
-  pos: 'bl' as string,
+  pos: 'center' as string,
   theme: 'standard' as string,
   font: 'Outfit',
   fontSize: 14,
@@ -104,7 +105,7 @@ export function buildChatUrl(base: string, s: ChatSettings): string {
   p.set('showTimestamp', s.showTimestamp ? '1' : '0');
   p.set('anim', s.anim);
   p.set('hideAnim', (s as unknown as { hideAnim: string }).hideAnim || 'fade');
-  p.set('pos', (s as unknown as { pos: string }).pos || 'bl');
+  p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   p.set('horizontal', s.horizontal ? '1' : '0');
   p.set('horizontalAnim', s.horizontalAnim || 'slideLeft');
   p.set('inline', s.inline ? '1' : '0');

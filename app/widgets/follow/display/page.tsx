@@ -35,7 +35,7 @@ function FollowInner() {
   const soundEnabled = getBoolParam(params, 'soundEnabled', true);
   const soundUrl = getStringParam(params, 'soundUrl', 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c8ad9c.mp3');
   const soundVolume = Math.max(0, Math.min(100, getIntParam(params, 'soundVolume', 80)));
-  const pos = getStringParam(params, 'pos', 'bl');
+  const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
 
   const [follows, setFollows] = useState<FollowItem[]>([]);

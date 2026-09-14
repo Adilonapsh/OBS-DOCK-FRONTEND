@@ -30,7 +30,7 @@ function SocialRotatorInner() {
   const showHandle = getBoolParam(params, 'showHandle', true);
   const showLabel = getBoolParam(params, 'showLabel', true);
   const anim = getStringParam(params, 'anim', 'elegant');
-  const pos = getStringParam(params, 'pos', 'bl');
+  const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
 
   const socialsParam = params.get('socials');

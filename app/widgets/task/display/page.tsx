@@ -33,7 +33,7 @@ function TaskInner() {
   const horizontal = getBoolParam(params, 'horizontal', false);
   const horizontalAnim = getStringParam(params, 'horizontalAnim', 'elegant');
   const inline = getBoolParam(params, 'inline', false);
-  const pos = getStringParam(params, 'pos', 'bl');
+  const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
   const tasksParam = parseTasksParam(params.get('tasks'));
   const tasksFromUrl: TaskItem[] = tasksParam || [

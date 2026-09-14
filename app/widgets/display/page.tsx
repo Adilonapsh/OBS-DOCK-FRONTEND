@@ -273,7 +273,7 @@ function WidgetDisplayContent() {
 
   const isHorizontal = isTickerWidget;
   const chatPositionClass = (() => {
-    const pos = searchParams.get("pos") || "bl";
+    const pos = searchParams.get("pos") || "center";
     if (isHorizontal) return "bottom-0 left-0 right-0 items-start justify-center";
     switch (pos) {
       case "br": return "bottom-6 right-6 items-end";
@@ -284,7 +284,7 @@ function WidgetDisplayContent() {
     }
   })();
   const counterPositionClass = (() => {
-    const pos = searchParams.get("pos") || "top-center";
+    const pos = searchParams.get("pos") || "center";
     switch (pos) {
       case "bl": return "bottom-6 left-6";
       case "br": return "bottom-6 right-6";

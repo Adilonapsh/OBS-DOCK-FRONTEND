@@ -58,7 +58,7 @@ function buildUrl(base: string, state: any): string {
   p.set('lyricsFontSize', String(state.lyricsFontSize));
   p.set('maxLyricsLines', String(state.maxLyricsLines));
   p.set('lrclibEnabled', String(state.lrclibEnabled));
-  p.set('pos', state.pos || 'bl');
+  p.set('pos', state.pos || 'center');
   return `${base}?${p.toString()}`;
 }
 
@@ -93,7 +93,7 @@ const defaults = {
   lyricsFontSize: 20,
   maxLyricsLines: 3,
   lrclibEnabled: true,
-  pos: 'bl',
+  pos: 'center',
 };
 
 function LyricsSettingsInner() {
@@ -233,7 +233,7 @@ function LyricsSettingsInner() {
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Lyrics Align</span><select value={state.lyricsAlign} onChange={e => update('lyricsAlign', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-zinc-900">Left</option><option value="center" className="bg-zinc-900">Center</option><option value="right" className="bg-zinc-900">Right</option></select></label>
                   </div>
                   <div className="bg-black/30 border border-white/5 rounded-xl p-2">
-                    <PositionPicker value={(state as any).pos || 'bl'} onChange={(v) => update('pos', v)} />
+                    <PositionPicker value={(state as any).pos || 'center'} onChange={(v) => update('pos', v)} />
                   </div>
                   <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5">
                     <span className="text-[11px] font-bold text-white">Use Custom Colors</span>
@@ -298,9 +298,9 @@ function LyricsSettingsInner() {
               <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><ImageIcon className="w-4 h-4 text-white" /> Live Preview</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.theme} • {state.font} • {state.showLyrics ? `${state.maxLyricsLines} lines` : 'no lyrics'}</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[380px] flex p-4" style={getPositionStyle((state as any).pos || state.verticalAlignment || 'bl') as any}>
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[380px] flex p-4" style={getPositionStyle((state as any).pos || state.verticalAlignment || 'center') as any}>
               <iframe key={iframeSrc} src={iframeSrc} className="w-full h-full border-0 bg-black" allow="autoplay" />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">LRCLIB {state.lrclibEnabled ? 'ON' : 'OFF'} • {state.lyricsFontSize}px • {state.lyricsAlign} • {(state as any).pos || state.verticalAlignment || 'bl'}</div>
+              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">LRCLIB {state.lrclibEnabled ? 'ON' : 'OFF'} • {state.lyricsFontSize}px • {state.lyricsAlign} • {(state as any).pos || state.verticalAlignment || 'center'}</div>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS</a>

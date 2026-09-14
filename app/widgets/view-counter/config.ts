@@ -9,7 +9,7 @@ export const VIEW_COUNTER_THEMES = [
 export const VIEW_COUNTER_FONTS = WIDGET_FONTS;
 
 export const VIEW_COUNTER_DEFAULTS = {
-  pos: 'bl' as string,
+  pos: 'center' as string,
   theme: 'standard' as string,
   font: 'Outfit',
   fontSize: 28,
@@ -34,7 +34,7 @@ export function buildViewCounterUrl(base: string, s: ViewCounterSettings): strin
   p.set('showBreakdown', s.showBreakdown ? '1' : '0');
   p.set('inline', s.inline ? '1' : '0');
   if (s.idleFx && s.idleFx !== 'none') p.set('idleFx', s.idleFx);
-  p.set('pos', (s as unknown as { pos: string }).pos || 'bl');
+  p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   const q = p.toString();
   return q ? `${base}?${q}` : base;
 }

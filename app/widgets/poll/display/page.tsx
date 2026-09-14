@@ -28,7 +28,7 @@ function PollInner(){
   const showCount = searchParams.get('showCount') !== '0';
   const showTotal = searchParams.get('showTotal') !== '0';
   const showTimer = searchParams.get('showTimer') !== '0';
-  const pos = getStringParam(params,'pos','bl');
+  const pos = getStringParam(params,'pos','center');
   const posStyle = getPositionStyle(pos);
   const isTransparent = obsMode;
   // fallback from URL for preview without socket

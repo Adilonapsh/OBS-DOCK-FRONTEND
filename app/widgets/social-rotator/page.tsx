@@ -46,19 +46,19 @@ function SocialRotatorInner() {
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • simulate • pos:{(state as any).pos || 'bl'}</div>
-              <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.duration}s • pos:{(state as any).pos || 'bl'}</span>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • simulate • pos:{(state as any).pos || 'center'}</div>
+              <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.duration}s • pos:{(state as any).pos || 'center'}</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[280px] flex p-4" style={getPositionStyle((state as any).pos || 'bl') as any}>
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[280px] flex p-4" style={getPositionStyle((state as any).pos || 'center') as any}>
               <div className="absolute inset-2 border border-white/5 rounded-xl pointer-events-none opacity-15">
                 <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-px p-1">
                   {(['tl','t','tr','l','center','r','bl','b','br'] as const).map((p) => (
-                    <div key={p} className={`rounded-md ${(state as any).pos === p || ((state as any).pos || 'bl') === p ? 'bg-white/10 border border-white/20' : 'bg-white/[0.03]'}`} />
+                    <div key={p} className={`rounded-md ${(state as any).pos === p || ((state as any).pos || 'center') === p ? 'bg-white/10 border border-white/20' : 'bg-white/[0.03]'}`} />
                   ))}
                 </div>
               </div>
               <iframe key={simulateUrl} src={simulateUrl} className="relative w-full h-full border-0 bg-transparent" title="social-rotator-preview" />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULATE • {state.theme} • pos:{(state as any).pos || 'bl'}</div>
+              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULATE • {state.theme} • pos:{(state as any).pos || 'center'}</div>
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">Live preview & OBS pakai <code className="bg-white/10 px-1 rounded text-white">.../social-rotator/display</code> yang sama - posisi global (t,l,b,r, tl/tr/bl/br) langsung tersimulasi.</div>
           </>

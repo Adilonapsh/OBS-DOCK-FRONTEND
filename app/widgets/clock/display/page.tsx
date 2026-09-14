@@ -123,7 +123,7 @@ function useClockParams(searchParams: URLSearchParams) {
         a3: get('a3', get('line3Align', 'center')),
         v3: getBool('v3', getBool('line3Visible', false)),
         gap: getNum('gap', 2),
-        pos: get('pos', 'bl'),
+        pos: get('pos', 'center'),
     };
 }
 
@@ -160,7 +160,7 @@ function ClockInner() {
     const line3Text = useMemo(() => params.v3 && params.l3 ? formatWithTokens(now, params.l3, params.tz) : '', [now, params.l3, params.tz, params.v3]);
 
     const isTransparent = obsMode;
-    const posStyle = getPositionStyle((params as unknown as { pos: string }).pos || 'bl');
+    const posStyle = getPositionStyle((params as unknown as { pos: string }).pos || 'center');
 
     return (
         <>

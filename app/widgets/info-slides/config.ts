@@ -50,7 +50,7 @@ export const INFO_SLIDES_DEFAULTS = {
   showBadge: true,
   showArrows: false,
   anim: 'elegant',
-  pos: 'bl' as string,
+  pos: 'center' as string,
   slidesJson: JSON.stringify(DEFAULT_SLIDES),
 } as const;
 
@@ -86,7 +86,7 @@ export function buildInfoSlidesUrl(base: string, s: InfoSlidesSettings): string 
   p.set('showBadge', s.showBadge ? '1' : '0');
   p.set('showArrows', s.showArrows ? '1' : '0');
   p.set('anim', s.anim);
-  p.set('pos', (s as unknown as { pos: string }).pos || 'bl');
+  p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   // slides di-compress via encodeURIComponent biar URL tetap shareable, tapi fallback ke storage jika kepanjangan
   try {
     const slides = parseSlides(s.slidesJson);

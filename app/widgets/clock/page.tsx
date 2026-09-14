@@ -39,7 +39,7 @@ const defaults = {
   s3: 30, w3: '600', c3: '#ffffff', o3: 1, t3: 'none', a3: 'center', v3: false,
   gap: 2,
   bg: 'transparent',
-  pos: 'bl',
+  pos: 'center',
 };
 
 function buildUrl(base: string, s: any, privateKey: string) {
@@ -51,7 +51,7 @@ function buildUrl(base: string, s: any, privateKey: string) {
   p.set('l3', s.l3); p.set('s3', String(s.s3)); p.set('w3', s.w3); p.set('c3', s.c3); p.set('o3', String(s.o3)); p.set('t3', s.t3); p.set('a3', s.a3); p.set('v3', s.v3 ? '1' : '0');
   p.set('gap', String(s.gap));
   if (s.bg && s.bg !== 'transparent') p.set('bg', s.bg);
-  p.set('pos', s.pos || 'bl');
+  p.set('pos', s.pos || 'center');
   if (privateKey) p.set('key', privateKey);
   return `${base}?${p.toString()}`;
 }
@@ -118,7 +118,7 @@ function ClockEditorInner() {
     p.set('l3', state.l3); p.set('s3', String(state.s3)); p.set('w3', state.w3); p.set('c3', state.c3); p.set('o3', String(state.o3)); p.set('t3', state.t3); p.set('a3', state.a3); p.set('v3', state.v3 ? '1':'0');
     p.set('gap', String(state.gap));
     if (state.bg !== 'transparent') p.set('bg', state.bg);
-    p.set('pos', state.pos || 'bl');
+    p.set('pos', state.pos || 'center');
     return `/widgets/clock/display?${p.toString()}`;
   }, [state]);
 
@@ -188,7 +188,7 @@ function ClockEditorInner() {
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-2"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={e=>update('bg', e.target.value)} className="w-9 h-9 bg-black/40 border border-white/10 rounded-xl p-1" /><button onClick={()=>update('bg','transparent')} className={`flex-1 h-9 rounded-xl text-[11px] font-black uppercase border ${state.bg==='transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
                   </div>
                   <div className="bg-black/30 border border-white/5 rounded-xl p-2">
-                    <PositionPicker value={state.pos || 'bl'} onChange={(v) => update('pos', v)} />
+                    <PositionPicker value={state.pos || 'center'} onChange={(v) => update('pos', v)} />
                   </div>
                   {/* <label className="block"><span className="text-[11px] font-bold text-gray-300">Private Key (optional, untuk isolasi OBS)</span><input value={privateKey} onChange={e=>setPrivateKey(e.target.value)} placeholder="YOUR_PRIVATE_KEY" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" /></label> */}
                 </div>

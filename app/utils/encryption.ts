@@ -26,16 +26,20 @@ export async function encrypt(text: string, keySource: string): Promise<string> 
 
 export async function decrypt(cipherText: string, keySource: string): Promise<string> {
   if (!cipherText) return "";
+  // kalau bukan format terenkripsi kita, anggap plain - jangan coba decrypt
+  if (!isEncrypted(cipherText)) return cipherText;
   try {
     const key = await getKey(keySource);
     const combined = Uint8Array.from(atob(cipherText), c => c.charCodeAt(0));
+    if (combined.length <= 12) throw new Error("invalid cipher");
     const iv = combined.slice(0, 12);
     const data = combined.slice(12);
     const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
     return new TextDecoder().decode(plain);
   } catch {
-    // fallback: coba atob plain, kalau gagal return as is
-    try { return atob(cipherText); } catch { return cipherText; }
+    // GAGAL decrypt = key salah atau data corrupt -> jangan return cipherText (itu base64 acak)
+    // return "" biar caller tahu gagal dan tidak overwrite password plain dengan cipher
+    return "";
   }
 }
 

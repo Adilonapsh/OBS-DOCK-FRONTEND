@@ -29,7 +29,7 @@ function InfoSlidesInner() {
   const showBadge = getBoolParam(params, 'showBadge', true);
   const showArrows = getBoolParam(params, 'showArrows', false);
   const anim = getStringParam(params, 'anim', 'elegant');
-  const pos = getStringParam(params, 'pos', 'bl');
+  const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
 
   const slidesParam = params.get('slides');

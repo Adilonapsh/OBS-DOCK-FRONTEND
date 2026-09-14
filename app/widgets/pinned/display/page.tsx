@@ -68,7 +68,7 @@ function PinnedInner() {
   const anim = getStringParam(params, 'anim', 'elegant');
   const bg = getStringParam(params, 'bg', 'transparent');
   const bgOpacity = Math.max(10, Math.min(100, getIntParam(params, 'bgOpacity', 100)));
-  const pos = getStringParam(params, 'pos', 'bl');
+  const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
   const simulate = getBoolParam(params, 'simulate', false) || getBoolParam(params, 'preview', false);
   const animName = ANIM_MAP[anim] || 'elegantIn';

@@ -139,7 +139,7 @@ export function PinnedSettingsForm({ state, update }: Props) {
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-          <PositionPicker value={(state as unknown as { pos: string }).pos || 'bl'} onChange={(v) => update('pos', v)} />
+          <PositionPicker value={(state as unknown as { pos: string }).pos || 'center'} onChange={(v) => update('pos', v)} />
         </div>
       </div>
 

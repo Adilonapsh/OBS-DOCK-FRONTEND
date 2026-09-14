@@ -14,6 +14,7 @@ import CleanTheme from '../themes/Clean';
 import BoxedTheme from '../themes/Boxed';
 import CuteTheme from '../themes/Cute';
 import PerCharTheme from '../themes/PerChar';
+import PlainTheme from '../themes/Plain';
 import { DEMO_CHATS } from '../config';
 import type { ChatItem } from '../themes/types';
 
@@ -40,7 +41,7 @@ function ChatInner() {
   const bgOpacity = Math.max(10, Math.min(100, getIntParam(params, 'bgOpacity', 100)));
   const horizontal = getBoolParam(params, 'horizontal', false);
   const inline = getBoolParam(params, 'inline', false);
-  const pos = getStringParam(params, 'pos', horizontal ? 'b' : 'bl');
+  const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
   const cuteBubbleBg = getStringParam(params, 'cuteBubbleBg', '#1e1d2b');
   const cuteResubFrom = getStringParam(params, 'cuteResubFrom', '#c4a2f8');
@@ -128,6 +129,7 @@ function ChatInner() {
       case 'boxed': return <BoxedTheme {...themeProps} />;
       case 'cute': return <CuteTheme {...themeProps} />;
       case 'perchar': return <PerCharTheme {...themeProps} />;
+      case 'plain': return <PlainTheme {...themeProps} />;
       default: return <StandardTheme {...themeProps} />;
     }
   };

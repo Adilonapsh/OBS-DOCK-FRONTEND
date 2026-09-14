@@ -31,7 +31,7 @@ function EditorContent() {
   const [overlayId, setOverlayId] = useState(initialId);
   const [privateKey, setPrivateKey] = useState(searchParams.get("key") || "");
   const [theme, setTheme] = useState<OverlayTheme>(defaultTheme);
-  const [pos, setPos] = useState(searchParams.get("pos") || "bl");
+  const [pos, setPos] = useState(searchParams.get("pos") || "center");
   const [scale, setScale] = useState(parseFloat(searchParams.get("scale") || "1"));
   const [layout, setLayout] = useState(searchParams.get("layout") || "full");
   const [copied, setCopied] = useState(false);

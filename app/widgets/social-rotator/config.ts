@@ -59,7 +59,7 @@ export const SOCIAL_ROTATOR_DEFAULTS = {
   showHandle: true,
   showLabel: true,
   anim: 'elegant',
-  pos: 'bl' as string,
+  pos: 'center' as string,
   socialsJson: JSON.stringify(DEFAULT_SOCIALS),
 } as const;
 
@@ -95,7 +95,7 @@ export function buildSocialRotatorUrl(base: string, s: SocialRotatorSettings): s
   p.set('showHandle', s.showHandle ? '1' : '0');
   p.set('showLabel', (s as any).showLabel ? '1' : '0');
   p.set('anim', s.anim);
-  p.set('pos', (s as any).pos || 'bl');
+  p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   try {
     const socials = parseSocials(s.socialsJson);
     p.set('socials', encodeURIComponent(JSON.stringify(socials)));

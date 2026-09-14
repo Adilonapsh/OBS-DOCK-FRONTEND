@@ -248,7 +248,7 @@ function OverlayContent() {
 
   // posisi chat stack
   const chatPositionClass = (() => {
-    const pos = searchParams.get("pos") || "bl"; // bl br tl tr bottom
+    const pos = searchParams.get("pos") || "center"; // bl br tl tr bottom
     if (isHorizontal) return "bottom-0 left-0 right-0 items-start justify-center";
     switch (pos) {
       case "br": return "bottom-6 right-6 items-end";
