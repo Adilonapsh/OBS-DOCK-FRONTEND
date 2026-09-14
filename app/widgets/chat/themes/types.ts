@@ -34,4 +34,6 @@ export type ChatThemeProps = {
   cuteNameMod?: string;
   cuteNameUser?: string;
   exitingIds?: Set<string>;
+  charDelayMs?: number;
+  charDurationS?: number;
 };

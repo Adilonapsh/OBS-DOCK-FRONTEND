@@ -134,6 +134,8 @@ export default function Home() {
     const [pollDuration, setPollDuration] = useState(60);
     const [chatMessages, setChatMessages] = useState<Array<ChatMessage>>([]);
     const [pinnedChat, setPinnedChat] = useState<{ user: string; text: string; platform: string; avatar?: string } | null>(null);
+    const [pinnedExiting, setPinnedExiting] = useState(false);
+    const pinnedExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [viewerData, setViewerData] = useState<Record<string, { platform: string; avatar?: string; initials: string }>>({});
     const [chatSearch, setChatSearch] = useState("");
     const [activityLogs, setActivityLogs] = useState<Array<{ id: number; text: string; platform?: string; time?: string }>>([]);
@@ -517,8 +519,12 @@ export default function Home() {
 
     const tkSocketRef = useRef<Socket | null>(null);
     const hasInitialTkConnectRef = useRef(false);
+    const tkManualDisconnectRef = useRef(false);
+    const tkRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pollSocketRef = useRef<Socket | null>(null);
     const getSocketUrl = () => {
+        const fromEnv = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
+        if (fromEnv) return fromEnv.replace(/\/$/, '');
         if (typeof window === 'undefined') return 'http://localhost:3000';
         const h = window.location.hostname;
         if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000';
@@ -895,13 +901,21 @@ export default function Home() {
     }
 
     const unpinMessage = () => {
-        setPinnedChat(null);
+        if (!pinnedChat || pinnedExiting) return;
+        setPinnedExiting(true);
+        if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
+        pinnedExitTimer.current = setTimeout(() => {
+            setPinnedChat(null);
+            setPinnedExiting(false);
+        }, 300);
         if (tkSocketRef.current && tkSocketRef.current.connected) {
             tkSocketRef.current.emit("unpin-chat", privateKey ? { privateKey } : {});
         }
     }
 
     const pinMessage = (user: string, text: string, platform: string, avatar?: string) => {
+        if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
+        setPinnedExiting(false);
         setPinnedChat({ user, text, platform, avatar });
 
         if (tkSocketRef.current && tkSocketRef.current.connected) {
@@ -913,7 +927,45 @@ export default function Home() {
         }
     }
 
+    // Ambil payload connect terakhir (tanpa alert) untuk dipakai auto-retry
+    const getTikTokRetryPayload = () => {
+        const username = tiktokConfig.username.trim() || (typeof window !== "undefined" ? localStorage.getItem("tiktokUsername") || "" : "");
+        const key = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null);
+        if (!username || !key) return null;
+        return { username, privateKey: key };
+    };
+
+    const clearTikTokRetry = () => {
+        if (tkRetryTimerRef.current) {
+            clearTimeout(tkRetryTimerRef.current);
+            tkRetryTimerRef.current = null;
+        }
+    };
+
+    // Auto-reconnect ala OBS/SB: putus tak disengaja → coba lagi sekali jalan
+    const scheduleTikTokRetry = (why: string, delayMs = 3000) => {
+        if (tkManualDisconnectRef.current) return;
+        const payload = getTikTokRetryPayload();
+        if (!payload) return;
+        clearTikTokRetry();
+        addSystemLog(`TikTok ${why}. Mencoba reconnect...`, "warn");
+        tkRetryTimerRef.current = setTimeout(() => {
+            tkRetryTimerRef.current = null;
+            if (tkManualDisconnectRef.current) return;
+            if (tkSocketRef.current?.connected) {
+                tkSocketRef.current.emit("connect-tiktok", payload);
+            } else if (tkSocketRef.current) {
+                tkSocketRef.current.connect();
+                tkSocketRef.current.once("connect", () => {
+                    tkSocketRef.current?.emit("connect-tiktok", payload);
+                });
+            }
+        }, delayMs);
+    };
+
     const connectTikTok = () => {
+        tkManualDisconnectRef.current = false;
+        clearTikTokRetry();
         const username = tiktokConfig.username.trim();
         if (!username) {
             alert("Silakan masukkan username TikTok!");
@@ -938,10 +990,19 @@ export default function Home() {
 
         if (!tkSocketRef.current) {
             tkSocketRef.current = io(getSocketUrl());
+            tkManualDisconnectRef.current = false;
+            clearTikTokRetry();
 
             tkSocketRef.current.on("connect", () => {
                 addSystemLog("Terhubung ke server TikTok lokal.", "info");
                 tkSocketRef.current?.emit("connect-tiktok", payload);
+            });
+
+            tkSocketRef.current.on("disconnect", () => {
+                setTiktokStatus("DISCONNECTED");
+                setTiktokRoomViewerCount(null);
+                setTiktokTotalUser(null);
+                scheduleTikTokRetry("koneksi ke server putus");
             });
 
             tkSocketRef.current.on("tiktok-connecting", () => {
@@ -956,6 +1017,7 @@ export default function Home() {
 
             tkSocketRef.current.on("tiktok-error", (err: string) => {
                 setTiktokStatus("ERROR");
+                clearTikTokRetry();
                 addSystemLog(`Gagal terhubung ke TikTok: ${err}`, "error");
             });
 
@@ -964,6 +1026,15 @@ export default function Home() {
                 setTiktokRoomViewerCount(null);
                 setTiktokTotalUser(null);
                 addSystemLog("TikTok terputus.", "warn");
+                scheduleTikTokRetry("terputus dari live");
+            });
+
+            tkSocketRef.current.on("tiktok-streamEnd", () => {
+                setTiktokStatus("DISCONNECTED");
+                setTiktokRoomViewerCount(null);
+                setTiktokTotalUser(null);
+                addSystemLog("Live TikTok berakhir.", "warn");
+                scheduleTikTokRetry("live berakhir, cek apakah live lagi", 5000);
             });
 
             tkSocketRef.current.on("tiktok-chat", (data: { nickname: string; comment: string; profilePictureUrl?: string; platform?: string }) => {
@@ -1030,6 +1101,8 @@ export default function Home() {
     }
 
     const disconnectTikTok = () => {
+        tkManualDisconnectRef.current = true;
+        clearTikTokRetry();
         const username = tiktokConfig.username.trim() || (typeof window !== "undefined" ? localStorage.getItem("tiktokUsername") || "" : "");
         const payload: any = privateKey ? { username, privateKey } : username;
         if (tkSocketRef.current) {
@@ -1746,7 +1819,18 @@ export default function Home() {
                         }));
 
                         if (platform === "youtube" && data.concurrentViewers !== undefined) {
-                            console.log("YouTube viewers:", data.concurrentViewers);
+                            if (tkSocketRef.current?.connected) {
+                                tkSocketRef.current.emit("sb-viewers", { platform: "youtube", viewers: Number(data.concurrentViewers) || 0 });
+                            }
+                        }
+
+                        if (type === "PresentViewers") {
+                            // Twitch: data.viewers array; YouTube: data.viewers / concurrentViewers
+                            const list = Array.isArray((data as any).viewers) ? (data as any).viewers.length : undefined;
+                            const count = list ?? Number((data as any).concurrentViewers ?? (data as any).viewerCount ?? NaN);
+                            if (!Number.isNaN(count) && tkSocketRef.current?.connected) {
+                                tkSocketRef.current.emit("sb-viewers", { platform: platform || "twitch", viewers: count });
+                            }
                         }
 
                         if (platform === "twitch" && data?.title) {
@@ -2210,7 +2294,10 @@ export default function Home() {
                                 </div>
                             </div>
                             {pinnedChat && (
-                                <div className="px-4 py-3 bg-white/10 border-b border-white/5 relative shadow-lg">
+                                <div
+                                    className="px-4 py-3 bg-white/10 border-b border-white/5 relative shadow-lg"
+                                    style={{ opacity: pinnedExiting ? 0 : 1, transition: "opacity 0.3s ease" }}
+                                >
                                     <div className="flex gap-2 items-start">
                                         <Pin className="w-3 h-3 text-yellow-400 mt-1 flex-none drop-shadow" />
                                         <div className="flex-1 min-w-0 pr-4">

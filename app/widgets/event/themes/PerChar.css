@@ -1,0 +1,204 @@
+.event-perchar-theme { gap: 16px; }
+
+.pe-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pe-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pe-empty-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  animation: pePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pePulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.pe-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 2px;
+  animation: peMetaIn 0.3s ease both;
+}
+
+@keyframes peMetaIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pe-badge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.pe-username {
+  background: rgba(40, 38, 64, 0.92);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: 16px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pe-bubble-line {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.pe-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: #0d0c18;
+  border: 2.5px solid transparent;
+  animation: peAvatarPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.pe-avatar-fallback {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2.5px solid transparent;
+  animation: peAvatarPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.pe-icon { width: 18px; height: 18px; color: #fff; }
+.pe-icon-fill { fill: #fff; }
+
+@keyframes peAvatarPop {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.pe-bubble {
+  position: relative;
+  color: #fff;
+  font-weight: 800;
+  line-height: 1.45;
+  padding: 13px 20px;
+  border-radius: 20px;
+  max-width: 370px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  overflow-wrap: break-word;
+  transform-origin: bottom left;
+  animation: peBubbleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pe-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 18px;
+  width: 18px;
+  height: 14px;
+  background: inherit;
+  clip-path: path("M 0,0 C 2,5 0,10 -6,12 C 2,10 10,6 16,0 Z");
+}
+
+@keyframes peBubbleIn {
+  0% { opacity: 0; transform: scale(0.85) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.pe-char {
+  display: inline-block;
+  opacity: 0;
+  animation-name: peCharIn;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+  white-space: pre;
+}
+
+.pe-inline-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(40, 38, 64, 0.92);
+  border-radius: 999px;
+  padding: 4px 12px;
+  max-width: 320px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: peMetaIn 0.3s ease both;
+}
+
+.pe-inline-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  background: rgba(40, 38, 64, 0.92);
+  border-radius: 12px;
+  padding: 7px 12px;
+  animation: peMetaIn 0.3s ease both;
+}
+
+.pe-inline-nick {
+  font-weight: 800;
+  font-size: 12px;
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pe-inline-sep {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.pe-inline-text {
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.pe-truncate {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pe-truncate .pe-char { white-space: nowrap; }
+
+@keyframes peCharIn {
+  0% { opacity: 0; transform: translateY(2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}

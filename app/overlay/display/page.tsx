@@ -31,12 +31,7 @@ type GiftItem = {
 type MemberItem = { id: string; nickname: string; profilePictureUrl?: string; timestamp: number };
 type LikeItem = { id: string; nickname: string; likeCount: number; timestamp: number };
 
-function getSocketUrl() {
-  if (typeof window === "undefined") return "http://localhost:3000";
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1") return "http://localhost:3000";
-  return window.location.origin;
-}
+import { getSocketUrl } from "../../widgets/_shared/utils/socket";
 
 function OverlayContent() {
   const searchParams = useSearchParams();

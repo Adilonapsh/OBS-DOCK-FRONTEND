@@ -13,6 +13,8 @@ import BubbleTheme from '../themes/Bubble';
 import CleanTheme from '../themes/Clean';
 import BoxedTheme from '../themes/Boxed';
 import CuteTheme from '../themes/Cute';
+import PerCharTheme from '../themes/PerChar';
+import { DEMO_CHATS } from '../config';
 import type { ChatItem } from '../themes/types';
 
 function ChatInner() {
@@ -20,6 +22,7 @@ function ChatInner() {
   const params = new URLSearchParams(searchParams.toString());
   const privateKey = getStringParam(params, 'key', getStringParam(params, 'privateKey', ''));
   const obsMode = getBoolParam(params, 'obs', false) || getBoolParam(params, 'transparent', false);
+  const simulate = getBoolParam(params, 'simulate', false) || getBoolParam(params, 'preview', false);
 
   const theme = getStringParam(params, 'theme', 'standard');
   const font = getStringParam(params, 'font', 'Outfit');
@@ -46,16 +49,19 @@ function ChatInner() {
   const cuteBadgeText = getStringParam(params, 'cuteBadgeText', '#a8a3ce');
   const cuteNameMod = getStringParam(params, 'cuteNameMod', '#f5a8d0');
   const cuteNameUser = getStringParam(params, 'cuteNameUser', '#d8cded');
+  const charDelayMs = Math.max(0, Math.min(500, getIntParam(params, 'charDelayMs', 25)));
+  const charDurationS = Math.max(0.05, Math.min(3, parseFloat(params.get('charDurationS') || '') || 0.35));
 
-  const [chats, setChats] = useState<ChatItem[]>([]);
+  const [chats, setChats] = useState<ChatItem[]>(() => (simulate ? [...DEMO_CHATS] : []));
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(simulate);
   const hideAnimName = ANIM_OUT_MAP[hideAnim] || 'fadeOut';
   const hideDur = isElegantAnim(hideAnimName) ? 620 : 400;
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'chat-font'), [font]);
 
   useEffect(() => {
+    if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
@@ -84,7 +90,7 @@ function ChatInner() {
       }
     });
     return () => { socket.disconnect(); };
-  }, [privateKey, maxMessages, hideAfter, hideDur]);
+  }, [privateKey, maxMessages, hideAfter, hideDur, simulate]);
 
   const themeProps = {
     chats,
@@ -110,6 +116,8 @@ function ChatInner() {
     cuteBadgeText,
     cuteNameMod,
     cuteNameUser,
+    charDelayMs,
+    charDurationS,
     exitingIds,
   };
 
@@ -119,6 +127,7 @@ function ChatInner() {
       case 'clean': return <CleanTheme {...themeProps} />;
       case 'boxed': return <BoxedTheme {...themeProps} />;
       case 'cute': return <CuteTheme {...themeProps} />;
+      case 'perchar': return <PerCharTheme {...themeProps} />;
       default: return <StandardTheme {...themeProps} />;
     }
   };

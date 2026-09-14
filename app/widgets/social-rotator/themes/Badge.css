@@ -49,3 +49,4 @@
 .pill-button.dark { background-color: #2e2b4a; color: #ffffff; }
 .pill-button.light { background-color: #ffffff; color: #2e2b4a; }
 .kick-icon { font-weight: 900; font-size: 22px; line-height: 1; }
+.badge-logo { width: 26px; height: 26px; object-fit: contain; }

@@ -35,4 +35,6 @@ export type EventThemeProps = {
   cuteNameMod?: string;
   cuteNameUser?: string;
   exitingIds?: Set<string>;
+  charDelayMs?: number;
+  charDurationS?: number;
 };

@@ -11,6 +11,8 @@ import { getPositionStyle } from '../../_shared/constants/positions';
 import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
+import PerCharTheme from '../themes/PerChar';
+import { DEMO_EVENTS } from '../config';
 import type { EventItem } from '../themes/types';
 
 function EventInner() {
@@ -18,6 +20,7 @@ function EventInner() {
   const params = new URLSearchParams(searchParams.toString());
   const privateKey = getStringParam(params, 'key', getStringParam(params, 'privateKey', ''));
   const obsMode = getBoolParam(params, 'obs', false) || getBoolParam(params, 'transparent', false);
+  const simulate = getBoolParam(params, 'simulate', false) || getBoolParam(params, 'preview', false);
 
   const theme = getStringParam(params, 'theme', 'standard');
   const font = getStringParam(params, 'font', 'Outfit');
@@ -54,10 +57,12 @@ function EventInner() {
   const likeSoundEnabled = getBoolParam(params, 'likeSoundEnabled', true);
   const likeSoundUrl = getStringParam(params, 'likeSoundUrl', 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c0143c.mp3');
   const likeSoundVolume = Math.max(0, Math.min(100, getIntParam(params, 'likeSoundVolume', 80)));
+  const charDelayMs = Math.max(0, Math.min(500, getIntParam(params, 'charDelayMs', 25)));
+  const charDurationS = Math.max(0.05, Math.min(3, parseFloat(params.get('charDurationS') || '') || 0.35));
 
-  const [events, setEvents] = useState<EventItem[]>([]);
+  const [events, setEvents] = useState<EventItem[]>(() => (simulate ? [...DEMO_EVENTS] : []));
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(simulate);
   const hideAnimName = ANIM_OUT_MAP[hideAnim] || 'fadeOut';
   const hideDur = isElegantAnim(hideAnimName) ? 620 : 400;
 
@@ -104,6 +109,7 @@ function EventInner() {
   };
 
   useEffect(() => {
+    if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
@@ -121,7 +127,7 @@ function EventInner() {
       pushEvent({ id: `like_${Date.now()}_${Math.random().toString(36).slice(2,4)}`, type: 'like', nickname: d.nickname || d.uniqueId || 'Someone', likeCount: d.likeCount || 1, profilePictureUrl: d.profilePictureUrl, timestamp: Date.now() }, showLike);
     });
     return () => { socket.disconnect(); };
-  }, [privateKey, maxEvents, hideAfter, hideDur, showJoin, showGift, showLike]);
+  }, [privateKey, maxEvents, hideAfter, hideDur, showJoin, showGift, showLike, simulate]);
 
   const themeProps = {
     events,
@@ -144,6 +150,8 @@ function EventInner() {
     cuteBadgeText,
     cuteNameMod,
     cuteNameUser,
+    charDelayMs,
+    charDurationS,
     exitingIds,
   };
 
@@ -151,6 +159,7 @@ function EventInner() {
     switch (theme) {
       case 'minimal': return <MinimalTheme {...themeProps} />;
       case 'cute': return <CuteTheme {...themeProps} />;
+      case 'perchar': return <PerCharTheme {...themeProps} />;
       default: return <StandardTheme {...themeProps} />;
     }
   };

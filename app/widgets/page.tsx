@@ -6,7 +6,7 @@ import {
   Layers, Monitor, Search, Eye, EyeOff, ExternalLink, Sparkles,
   Gift, Heart, UserPlus, Zap, LayoutGrid, Filter,
   Settings2, AlertCircle, Menu, Palette, Pencil,
-  Music, Cog, GripVertical, Volume2
+  Music, Cog, GripVertical, Volume2, Pin
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { createClient } from "@/utils/supabase/client";
@@ -21,7 +21,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator";
+  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin";
   recommended?: boolean;
   w: number;
   h: number;
@@ -161,9 +161,32 @@ const WIDGETS: WidgetItem[] = [
     w: 420, h: 160,
   },
   {
+    id: "pinned",
+    title: "Pinned Chat",
+    desc: "Chat yang di-pin dari dock — sinkron realtime, lepas via unpin. 2 tema Standard/Minimal.",
+    category: "chat",
+    tags: ["Pin", "Chat", "Sync"],
+    layout: "pinned",
+    params: "theme=standard&font=Outfit",
+    preview: "pinned",
+    recommended: true,
+    w: 400, h: 200,
+  },
+  {
+    id: "view-counter",
+    title: "View Counter",
+    desc: "Total penonton gabungan TikTok + Twitch + YouTube + Kick. TikTok via backend, sisanya via Streamer.bot.",
+    category: "info",
+    tags: ["Viewers", "TikTok", "Streamer.bot"],
+    layout: "counter",
+    params: "theme=standard&font=Outfit",
+    preview: "counter",
+    recommended: true,
+    w: 260, h: 200,
+  },
+  {
     id: "custom",
-    title: "Custom Overlay",
-    desc: "StreamElements-like - canvas 1920×1080, drag-drop layers (chat {{username}}/{{message}}, timer {{timer}}, clock {{clock}}, polls {{polls}}, social {{handle}}), template {{date}} + custom CSS per layer, 1 URL obs.",
+    title: "Custom Overlay",    desc: "StreamElements-like - canvas 1920×1080, drag-drop layers (chat {{username}}/{{message}}, timer {{timer}}, clock {{clock}}, polls {{polls}}, social {{handle}}), template {{date}} + custom CSS per layer, 1 URL obs.",
     category: "minimal",
     tags: ["Custom", "StreamElements", "DragDrop", "Template"],
     layout: "full",
@@ -323,9 +346,47 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "pinned") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-2">
+        <div className="w-[160px] rounded-xl overflow-hidden border border-white/10 bg-black/70">
+          <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-white/10 bg-white/5">
+            <div className="w-5 h-5 rounded-full bg-white shrink-0" />
+            <div className="text-white font-black text-[6px] truncate">Rizky_JR</div>
+            <span className="ml-auto px-1 py-px rounded-full bg-white text-black text-[5px] font-black">PIN</span>
+          </div>
+          <div className="px-2 py-1.5 text-white text-[6px] font-bold">Gass keun bang!</div>
+        </div>
+      </div>
+    );
+  }
+  if (type === "counter") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-2">
+        <div className="w-[120px] rounded-xl overflow-hidden border border-white/10 bg-black/70">
+          <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-white/10 bg-white/5">
+            <Eye className="w-3 h-3 text-white" />
+            <span className="text-white font-black text-[6px] uppercase tracking-widest">Watching</span>
+          </div>
+          <div className="px-2 py-1.5 space-y-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FE2C55]" />
+              <span className="text-white/70 text-[6px] font-bold">TikTok</span>
+              <span className="ml-auto text-white text-[6px] font-black">1.3K</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6]" />
+              <span className="text-white/70 text-[6px] font-bold">Twitch</span>
+              <span className="ml-auto text-white text-[6px] font-black">342</span>
+            </div>
+          </div>
+          <div className="px-2 pb-1.5 text-white font-black text-[12px]">2.1K</div>
+        </div>
+      </div>
+    );
+  }
   // full
-  return (
-    <div className="w-full h-full bg-black relative p-2 overflow-hidden">
+  return (    <div className="w-full h-full bg-black relative p-2 overflow-hidden">
       <div className="absolute top-2 left-2 flex gap-1">
         <div className="px-1.5 py-0.5 bg-white rounded-full w-8 h-1.5" />
         <div className="px-1.5 py-0.5 bg-white/40 rounded-full w-10 h-1.5" />
@@ -423,6 +484,14 @@ function WidgetsListing() {
     }
     if (item.id === 'poll') {
       const base = `${window.location.origin}/widgets/poll/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'pinned') {
+      const base = `${window.location.origin}/widgets/pinned/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'view-counter') {
+      const base = `${window.location.origin}/widgets/view-counter/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     if (item.id === 'clock') {
@@ -603,6 +672,14 @@ function WidgetsListing() {
                         <Link href={`/widgets/poll${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'pinned' ? (
+                        <Link href={`/widgets/pinned${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
+                      ) : item.id === 'view-counter' ? (
+                        <Link href={`/widgets/view-counter${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'clock' ? (
                         <Link href={`/widgets/clock${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
@@ -637,7 +714,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

@@ -5,6 +5,7 @@ export const EVENT_THEMES = [
   { value: 'standard', label: 'Standard - Card' },
   { value: 'minimal', label: 'Minimal - Pill' },
   { value: 'cute', label: 'Cute - Lavender Pastel' },
+  { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
 ] as const;
 
 export const EVENT_FONTS = WIDGET_FONTS;
@@ -74,6 +75,8 @@ export const EVENT_DEFAULTS = {
   cuteBadgeText: '#a8a3ce',
   cuteNameMod: '#f5a8d0',
   cuteNameUser: '#d8cded',
+  charDelayMs: 25,
+  charDurationS: 0.35,
   joinSoundEnabled: true,
   joinSoundUrl: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_9bd4170e1c.mp3',
   joinSoundVolume: 80,
@@ -130,5 +133,7 @@ export function buildEventUrl(base: string, s: EventSettings): string {
   if ((s as unknown as { cuteBadgeText: string }).cuteBadgeText) p.set('cuteBadgeText', (s as unknown as { cuteBadgeText: string }).cuteBadgeText);
   if ((s as unknown as { cuteNameMod: string }).cuteNameMod) p.set('cuteNameMod', (s as unknown as { cuteNameMod: string }).cuteNameMod);
   if ((s as unknown as { cuteNameUser: string }).cuteNameUser) p.set('cuteNameUser', (s as unknown as { cuteNameUser: string }).cuteNameUser);
+  p.set('charDelayMs', String((s as unknown as { charDelayMs: number }).charDelayMs ?? 25));
+  p.set('charDurationS', String((s as unknown as { charDurationS: number }).charDurationS ?? 0.35));
   return `${base}?${p.toString()}`;
 }

@@ -40,6 +40,18 @@ export function ChatSettingsForm({
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
           </div>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof ChatSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade halus</span></label>
+          {state.theme === 'perchar' && (
+            <>
+              <div className="grid grid-cols-2 gap-3 items-center">
+                <span className="text-[11px] font-bold text-gray-300">Letter Fade Delay <span className="font-mono text-white">{state.charDelayMs}ms</span></span>
+                <input type="range" min={0} max={200} step={5} value={state.charDelayMs} onChange={(e) => update('charDelayMs', parseInt(e.target.value) || 0)} className="w-full accent-white cursor-pointer" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 items-center">
+                <span className="text-[11px] font-bold text-gray-300">Fade Duration <span className="font-mono text-white">{Number(state.charDurationS).toFixed(2)}s</span></span>
+                <input type="range" min={0.05} max={1.5} step={0.05} value={Number(state.charDurationS)} onChange={(e) => update('charDurationS', parseFloat(e.target.value) || 0.35)} className="w-full accent-white cursor-pointer" />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

@@ -7,6 +7,7 @@ export const CHAT_THEMES = [
   { value: 'clean', label: 'Clean - Baris Minimalis' },
   { value: 'boxed', label: 'Boxed - Card dengan Header' },
   { value: 'cute', label: 'Cute - Lavender Pastel' },
+  { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
 ] as const;
 
 export const CHAT_FONTS = WIDGET_FONTS;
@@ -75,6 +76,8 @@ export const CHAT_DEFAULTS = {
   cuteBadgeText: '#a8a3ce',
   cuteNameMod: '#f5a8d0',
   cuteNameUser: '#d8cded',
+  charDelayMs: 25,
+  charDurationS: 0.35,
 } as const;
 
 export type ChatSettings = typeof CHAT_DEFAULTS;
@@ -112,5 +115,7 @@ export function buildChatUrl(base: string, s: ChatSettings): string {
   if (s.cuteBadgeText) p.set('cuteBadgeText', s.cuteBadgeText);
   if (s.cuteNameMod) p.set('cuteNameMod', s.cuteNameMod);
   if (s.cuteNameUser) p.set('cuteNameUser', s.cuteNameUser);
+  p.set('charDelayMs', String(s.charDelayMs));
+  p.set('charDurationS', String(s.charDurationS));
   return `${base}?${p.toString()}`;
 }

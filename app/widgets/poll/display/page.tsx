@@ -13,12 +13,7 @@ import type { PollState } from '../themes/types';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { getStringParam } from '../../_shared/utils/url';
 
-function getSocketUrl() {
-  if (typeof window === 'undefined') return 'http://localhost:3000';
-  const host = window.location.hostname;
-  if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:3000';
-  return window.location.origin;
-}
+import { getSocketUrl } from '../../_shared/utils/socket';
 
 function PollInner(){
   const searchParams = useSearchParams();
