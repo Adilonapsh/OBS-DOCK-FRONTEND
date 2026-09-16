@@ -14,6 +14,7 @@ import CardTheme from '../themes/Card';
 import AlbumArtTheme from '../themes/AlbumArt';
 import VinylTheme from '../themes/Vinyl';
 import ColorPaletteTheme from '../themes/ColorPalette';
+import PlainTheme from '../themes/Plain';
 import type { AccentPalette, LyricLine } from '../themes/types';
 
 const PlaybackStatus = {
@@ -424,6 +425,7 @@ function LyricsDisplayInner() {
                 case 'album-art': return <AlbumArtTheme {...themeProps} />;
                 case 'vinyl': return <VinylTheme {...themeProps} />;
                 case 'color-palette': return <ColorPaletteTheme {...themeProps} />;
+                case 'plain': return <PlainTheme {...themeProps} />;
                 case 'standard':
                 default: return <StandardTheme {...themeProps} />;
               }

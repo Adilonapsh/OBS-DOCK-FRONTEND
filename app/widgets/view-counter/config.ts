@@ -4,6 +4,7 @@ export const VIEW_COUNTER_THEMES = [
   { value: 'standard', label: 'Standard - Card' },
   { value: 'minimal', label: 'Minimal - Angka Saja' },
   { value: 'cute', label: 'Cute - Lavender Pastel' },
+  { value: 'music', label: 'Music - Viewers + Queue' },
 ] as const;
 
 export const VIEW_COUNTER_FONTS = WIDGET_FONTS;

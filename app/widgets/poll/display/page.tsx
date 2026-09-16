@@ -9,6 +9,7 @@ import MinimalTheme from '../themes/Minimal';
 import AnimeTheme from '../themes/Anime';
 import FlowerTheme from '../themes/Flower';
 import EditorialTheme from '../themes/Editorial';
+import PlainTheme from '../themes/Plain';
 import type { PollState } from '../themes/types';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { getStringParam } from '../../_shared/utils/url';
@@ -30,6 +31,7 @@ function PollInner(){
   const showTimer = searchParams.get('showTimer') !== '0';
   const pos = getStringParam(params,'pos','center');
   const posStyle = getPositionStyle(pos);
+  const simulate = searchParams.get('simulate') === '1' || searchParams.get('preview') === '1';
   const isTransparent = obsMode;
   // fallback from URL for preview without socket
   const qFallback = searchParams.get('q') || searchParams.get('question') || '';
@@ -37,6 +39,9 @@ function PollInner(){
   const optsFallback = optsFallbackRaw ? optsFallbackRaw.split(',').map(s=>decodeURIComponent(s.trim())).filter(Boolean) : [];
 
   const [poll, setPoll] = useState<PollState | null>(()=>{
+    if (simulate) {
+      return { id:'sim', room: privateKey||'global', question:'Mana turnamen selanjutnya?', options:['Mobile Legends','Valorant','PUBG Mobile','Free Fire'], votes:[42,28,18,12], total:100, theme, duration:60, createdAt:Date.now()-10000, ended:false, visible:true, voterMap:{}, accent, bg, font, showPercent:true, showCount:true, showTotal:true, showTimer:true } as any;
+    }
     if(qFallback && optsFallback.length>=2){
       return { id:'fallback', room: privateKey||'global', question: qFallback, options: optsFallback, votes: Array(optsFallback.length).fill(0), total:0, theme, duration:60, createdAt:Date.now(), ended:false, visible:true, voterMap:{} } as any;
     }
@@ -76,6 +81,7 @@ function PollInner(){
   },[font]);
 
   useEffect(()=>{
+    if (simulate) { setConnected(true); return; } // mode simulate — demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports:['websocket','polling'] });
     const room = privateKey || 'global';
     socket.on('connect',()=>{ setConnected(true); socket.emit('join-room', room); socket.emit('poll-get', { privateKey: room }); });
@@ -86,7 +92,7 @@ function PollInner(){
     });
     socket.on('poll-clear',()=>setPoll(null));
     return ()=>{ socket.disconnect(); };
-  },[privateKey]);
+  },[privateKey, simulate]);
 
   const hasPoll = !!displayedPoll && displayedPoll.visible !== false;
 
@@ -126,7 +132,7 @@ function PollInner(){
           )
         ) : (
           <div key={displayedPoll!.id + '-' + winnerKey} className={`${isExiting ? 'animate-[pollOut_0.36s_ease_forwards]' : 'animate-[pollIn_0.55s_cubic-bezier(0.16,1,0.3,1)]'} ${displayedPoll!.ended ? 'poll-ended' : ''} flex`}>
-            {theme==='editorial' ? <EditorialTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='flower' ? <FlowerTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='anime' ? <AnimeTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='donut' ? <DonutTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='minimal' ? <MinimalTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='card' ? <CardTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : <BarTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} />}
+            {theme==='plain' ? <PlainTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='editorial' ? <EditorialTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='flower' ? <FlowerTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='anime' ? <AnimeTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='donut' ? <DonutTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='minimal' ? <MinimalTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='card' ? <CardTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : <BarTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} />}
           </div>
         )}
         {!isTransparent && (

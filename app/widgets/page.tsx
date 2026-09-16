@@ -21,7 +21,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin";
+  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music";
   recommended?: boolean;
   w: number;
   h: number;
@@ -185,6 +185,18 @@ const WIDGETS: WidgetItem[] = [
     w: 260, h: 200,
   },
   {
+    id: "music",
+    title: "Music Request",
+    desc: "Song request via chat !song + queue + player. Kontrol play/pause/next dari dock.",
+    category: "info",
+    tags: ["Music", "Song Request", "Queue"],
+    layout: "music",
+    params: "theme=standard&font=Outfit",
+    preview: "music",
+    recommended: true,
+    w: 420, h: 220,
+  },
+  {
     id: "custom",
     title: "Custom Overlay",    desc: "StreamElements-like - canvas 1920×1080, drag-drop layers (chat {{username}}/{{message}}, timer {{timer}}, clock {{clock}}, polls {{polls}}, social {{handle}}), template {{date}} + custom CSS per layer, 1 URL obs.",
     category: "minimal",
@@ -331,6 +343,26 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
           <div className="h-2.5 w-24 bg-white rounded mb-1" />
           <div className="h-2 w-16 bg-white/60 rounded" />
           <div className="mt-1.5 h-1 w-full bg-white/20 rounded-full overflow-hidden"><div className="h-full w-[42%] bg-white rounded-full" /></div>
+        </div>
+      </div>
+    );
+  }
+  if (type === "music") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col justify-center p-3 gap-1.5">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-green-500 shrink-0 flex items-center justify-center"><Music className="w-4 h-4 text-black" /></div>
+          <div className="flex-1 min-w-0">
+            <div className="h-2 w-24 bg-white rounded mb-1" />
+            <div className="h-1.5 w-16 bg-white/50 rounded" />
+          </div>
+          <span className="text-white text-[8px] font-mono font-black">1:24</span>
+        </div>
+        <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden"><div className="h-full w-[35%] bg-green-500 rounded-full" /></div>
+        <div className="flex gap-1">
+          <div className="h-1.5 flex-1 bg-white/10 rounded" />
+          <div className="h-1.5 flex-1 bg-white/10 rounded" />
+          <div className="h-1.5 flex-1 bg-white/10 rounded" />
         </div>
       </div>
     );
@@ -492,6 +524,10 @@ function WidgetsListing() {
     }
     if (item.id === 'view-counter') {
       const base = `${window.location.origin}/widgets/view-counter/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'music') {
+      const base = `${window.location.origin}/widgets/music/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     if (item.id === 'clock') {
@@ -680,6 +716,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/view-counter${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'music' ? (
+                        <Link href={`/widgets/music${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'clock' ? (
                         <Link href={`/widgets/clock${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
@@ -714,7 +754,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'music' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

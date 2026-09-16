@@ -17,6 +17,7 @@ import { TextArea } from "@heroui/react/textarea";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Polling, { PollingRef } from "../components/Polling";
+import MusicControl from "./components/MusicControl";
 import { useTtSbMap } from "../hooks/useTtSbMap";
 import { ChatMessage, DockStatus } from "../types/dockTypes";
 import { decrypt, isEncrypted } from "../utils/encryption";
@@ -3131,10 +3132,11 @@ export default function Home() {
                 const hasPoll = !!activePoll;
                 const hasTaskItems = (activeTasks as { items?: unknown[] })?.items?.length || 0;
                 const hasTimer = true;
-                const tabs: Array<{ id: 'poll'|'task'|'timer'; label: string; icon: React.ReactNode; count?: number; show: boolean }> = [
+                const tabs: Array<{ id: 'poll'|'task'|'timer'|'music'; label: string; icon: React.ReactNode; count?: number; show: boolean }> = [
                     { id: 'poll', label: 'POLL', icon: <BarChart2 className="w-3 h-3" />, count: hasPoll ? (activePoll as { total: number }).total : undefined, show: hasPoll },
                     { id: 'task', label: 'TASK', icon: <ListChecks className="w-3 h-3" />, count: hasTaskItems ? hasTaskItems : undefined, show: true },
                     { id: 'timer', label: 'TIMER', icon: <Clock className="w-3 h-3" />, show: hasTimer },
+                    { id: 'music', label: 'MUSIC', icon: <Music className="w-3 h-3" />, show: true },
                 ];
                 const visibleTabs = tabs.filter(t => t.show);
                 const safeIndex = Math.min(dockSwiperIndex, Math.max(0, visibleTabs.length - 1));
@@ -3271,6 +3273,13 @@ export default function Home() {
                                                     <button key={m} onClick={()=>handleTimerControl('mode',{mode:m})} className={`flex-1 h-6 rounded-full text-[9px] font-black uppercase border ${activeTimer?.mode===m?'bg-white text-black border-white':'bg-white/5 text-gray-400 border-white/10'}`}>{m}</button>
                                                 ))}
                                             </div>
+                                        </div>
+                                    )}
+                                    {tab.id === 'music' && (
+                                        <div className="p-3 max-h-[380px] overflow-y-auto custom-scrollbar">
+                                            <MusicControl
+                                                getRoom={() => privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("dock_private_verified") || sessionStorage.getItem("bypass_private_key") || "") : "") || "global"}
+                                            />
                                         </div>
                                     )}
                                 </div>

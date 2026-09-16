@@ -10,6 +10,8 @@ import { getPositionStyle } from '../../_shared/constants/positions';
 import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
+import MusicTheme from '../themes/Music';
+import PlainTheme from '../themes/Plain';
 
 function normPlatform(p?: string): string {
   const v = (p || '').toLowerCase();
@@ -50,6 +52,18 @@ function ViewCounterInner() {
   const [counts, setCounts] = useState<Record<string, number>>((): Record<string, number> =>
     simulate ? { tiktok: 1284, twitch: 342, youtube: 517 } : {},
   );
+  const [songs, setSongs] = useState<{ id: string; title: string; requestedBy: string }[]>(() =>
+    simulate
+      ? [
+          { id: 'demo1', title: 'Artis - Lagu Demo', requestedBy: 'tester' },
+          { id: 'demo2', title: 'Band - Lagu Kedua', requestedBy: 'viewer1' },
+          { id: 'demo3', title: 'DJ - Remix Malam', requestedBy: 'viewer2' },
+        ]
+      : [],
+  );
+  const [currentSong, setCurrentSong] = useState<{ id: string; title: string; requestedBy: string } | null>(
+    simulate ? { id: 'demo1', title: 'Artis - Lagu Demo', requestedBy: 'tester' } : null,
+  );
   const [connected, setConnected] = useState(simulate);
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'vc-font'), [font]);
@@ -70,6 +84,15 @@ function ViewCounterInner() {
       const n = Number(d.viewers);
       if (!Number.isNaN(n)) setCounts((prev) => ({ ...prev, [normPlatform(d.platform)]: n }));
     });
+    socket.on('song-update', (data: Record<string, unknown>) => {
+      const d = data as { queue?: { id: string; title: string; requestedBy: string }[]; currentIndex?: number };
+      if (Array.isArray(d.queue)) {
+        const q = d.queue.map((s) => ({ id: String(s.id), title: String(s.title), requestedBy: String(s.requestedBy || '') }));
+        setSongs(q);
+        const idx = typeof d.currentIndex === 'number' ? d.currentIndex : 0;
+        setCurrentSong(q.length > 0 ? q[Math.min(idx, q.length - 1)] : null);
+      }
+    });
     return () => { socket.disconnect(); };
   }, [privateKey, simulate]);
 
@@ -77,7 +100,7 @@ function ViewCounterInner() {
   const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const fontFamily = `'${font}', sans-serif`;
   const emptyLabel = simulate ? '' : connected ? 'Menunggu data…' : 'Menghubungkan…';
-  const themeProps = { counts, total, font, fontSize, accent, bg, showLabel, showBreakdown, inline, emptyLabel };
+  const themeProps = { counts, total, font, fontSize, accent, bg, showLabel, showBreakdown, inline, emptyLabel, songs, currentSong };
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-transparent" style={{ fontFamily }}>
@@ -92,6 +115,10 @@ function ViewCounterInner() {
             <MinimalTheme {...themeProps} />
           ) : theme === 'cute' ? (
             <CuteTheme {...themeProps} />
+          ) : theme === 'plain' ? (
+            <PlainTheme {...themeProps} />
+          ) : theme === 'music' ? (
+            <MusicTheme {...themeProps} />
           ) : (
             <StandardTheme {...themeProps} />
           )}

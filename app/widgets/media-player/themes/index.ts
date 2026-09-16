@@ -9,3 +9,4 @@ export { default as CardTheme } from './Card';
 export { default as AlbumArtTheme } from './AlbumArt';
 export { default as VinylTheme } from './Vinyl';
 export { default as ColorPaletteTheme } from './ColorPalette';
+export { default as PlainTheme } from './Plain';

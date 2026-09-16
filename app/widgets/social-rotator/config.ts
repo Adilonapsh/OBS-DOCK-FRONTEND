@@ -6,6 +6,7 @@ export const SOCIAL_ROTATOR_THEMES = [
   { value: 'glass', label: 'Glass - Blur Premium' },
   { value: 'boxed', label: 'Boxed - Card' },
   { value: 'badge', label: 'Badge - Space Mono + Speech Bubble' },
+  { value: 'plain', label: 'Plain - Teks Polos' },
 ] as const;
 
 export const SOCIAL_ROTATOR_ANIMS = [

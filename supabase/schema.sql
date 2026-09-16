@@ -155,9 +155,11 @@ alter table public.tiktok_configs enable row level security;
 alter table public.streamerbot_configs enable row level security;
 alter table public.dashboard_layouts enable row level security;
 
--- profiles: user bisa read semua, update milik sendiri
+-- profiles: read/update/insert milik sendiri (JANGAN using(true):
+-- kolom private_key tidak boleh terbaca publik via anon key)
 drop policy if exists "profiles_select_all" on public.profiles;
-create policy "profiles_select_all" on public.profiles for select using (true);
+drop policy if exists "profiles_select_own" on public.profiles;
+create policy "profiles_select_own" on public.profiles for select using (auth.uid() = id);
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id);
 drop policy if exists "profiles_insert_own" on public.profiles;

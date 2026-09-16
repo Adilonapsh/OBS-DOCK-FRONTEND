@@ -8,7 +8,7 @@ export const CHAT_THEMES = [
   { value: 'boxed', label: 'Boxed - Card dengan Header' },
   { value: 'cute', label: 'Cute - Lavender Pastel' },
   { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
-  { value: 'plain', label: 'Plain - YouTube Polosan' },
+  { value: 'plain', label: 'Plain - Teks Polos' },
 ] as const;
 
 export const CHAT_FONTS = WIDGET_FONTS;

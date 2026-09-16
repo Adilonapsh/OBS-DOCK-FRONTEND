@@ -316,6 +316,12 @@ function PinnedInner() {
               </div>
             </div>
             </SpinWrap>
+          ) : theme === 'plain' ? (
+            <div className="pinned-font max-w-[560px]" style={{ animation: 'fadeIn 0.4s ease both' }}>
+              <div className="font-black leading-none" style={{ fontSize, color: accent }}>{pinned.nickname}</div>
+              <div className="text-white font-bold break-words leading-relaxed mt-1" style={{ fontSize: fontSize + 1 }}>{pinned.comment}</div>
+              {showTimestamp && <div className="text-white/40 text-[10px] font-mono mt-1">{timeStr}</div>}
+            </div>
           ) : (
             <div className="pinned-font w-[380px] max-w-[90vw] rounded-2xl overflow-hidden border border-white/10 backdrop-blur-md shadow-2xl" style={{ ...(cardBg ? { background: cardBg } : { background: 'rgba(0,0,0,0.7)' }) }}>
               <div className="flex items-center gap-2 px-3 py-2 border-b border-white/10" style={{ background: `${accent}22` }}>

@@ -11,6 +11,8 @@ import { getPositionStyle } from '../../_shared/constants/positions';
 import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
+import PlainTheme from '../themes/Plain';
+import { DEMO_FOLLOWS } from '../config';
 import type { FollowItem } from '../themes/types';
 
 function FollowInner() {
@@ -18,6 +20,7 @@ function FollowInner() {
   const params = new URLSearchParams(searchParams.toString());
   const privateKey = getStringParam(params, 'key', getStringParam(params, 'privateKey', ''));
   const obsMode = getBoolParam(params, 'obs', false) || getBoolParam(params, 'transparent', false);
+  const simulate = getBoolParam(params, 'simulate', false) || getBoolParam(params, 'preview', false);
 
   const theme = getStringParam(params, 'theme', 'standard');
   const font = getStringParam(params, 'font', 'Outfit');
@@ -38,9 +41,9 @@ function FollowInner() {
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
 
-  const [follows, setFollows] = useState<FollowItem[]>([]);
+  const [follows, setFollows] = useState<FollowItem[]>(() => (simulate ? [...DEMO_FOLLOWS] : []));
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(simulate);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const hideAnimName = ANIM_OUT_MAP[hideAnim] || 'fadeOut';
@@ -84,6 +87,7 @@ function FollowInner() {
   };
 
   useEffect(() => {
+    if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
@@ -110,7 +114,7 @@ function FollowInner() {
       }
     });
     return () => { socket.disconnect(); };
-  }, [privateKey, maxFollows, hideAfter, hideDur, soundEnabled, soundUrl, soundVolume]);
+  }, [privateKey, maxFollows, hideAfter, hideDur, soundEnabled, soundUrl, soundVolume, simulate]);
 
   const themeProps = {
     follows,
@@ -131,6 +135,7 @@ function FollowInner() {
     switch (theme) {
       case 'minimal': return <MinimalTheme {...themeProps} />;
       case 'cute': return <CuteTheme {...themeProps} />;
+      case 'plain': return <PlainTheme {...themeProps} />;
       default: return <StandardTheme {...themeProps} />;
     }
   };

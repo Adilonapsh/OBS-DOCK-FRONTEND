@@ -10,6 +10,7 @@ import CleanTheme from '../themes/Clean';
 import BoxedTheme from '../themes/Boxed';
 import GlassTheme from '../themes/Glass';
 import TimerGlassTheme from '../themes/TimerGlass';
+import PlainTheme from '../themes/Plain';
 import { parseSlides } from '../config';
 
 function InfoSlidesInner() {
@@ -89,7 +90,7 @@ function InfoSlidesInner() {
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@400;700;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; }`}</style>
       <div className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen ${theme === 'timer-glass' ? 'flex items-center justify-center p-6' : `flex p-6`}`}`} style={{ fontFamily: `'${font}', sans-serif`, background: obsMode ? 'transparent' : theme === 'timer-glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : '#0a0a0a', ...posStyle } as any}>
-        {theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'timer-glass' ? <TimerGlassTheme {...themeProps} /> : <CleanTheme {...themeProps} />}
+        {theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'timer-glass' ? <TimerGlassTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : <CleanTheme {...themeProps} />}
       </div>
       {!obsMode && (
         <div className="fixed bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 backdrop-blur border border-white/10 rounded-full px-3 py-1.5">

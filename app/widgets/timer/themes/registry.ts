@@ -10,12 +10,14 @@ import FocusTheme from './Focus';
 import MinimalTheme from './Minimal';
 import GlassTheme from './Glass';
 import SubathonTheme from './Subathon';
+import PlainTheme from './Plain';
 
 export const TIMER_THEME_REGISTRY: ThemeRegistry<TimerThemeProps> = {
   focus: FocusTheme,
   minimal: MinimalTheme,
   glass: GlassTheme,
   subathon: SubathonTheme,
+  plain: PlainTheme,
 };
 
 export function getTimerTheme(theme: string): React.ComponentType<TimerThemeProps> {

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import FocusTheme from '../themes/Focus';
 import MinimalTheme from '../themes/Minimal';
 import GlassTheme from '../themes/Glass';
+import PlainTheme from '../themes/Plain';
 import type { TaskSettings } from '../config';
 import { ANIM_MAP } from '../../_shared/constants/animations';
 
@@ -91,5 +92,6 @@ export function TaskPreview({ state, onToggleTask }: {
 
   if (state.theme === 'glass') return <GlassTheme {...props} onAddTask={() => {}} />;
   if (state.theme === 'minimal') return <MinimalTheme {...props} />;
+  if (state.theme === 'plain') return <PlainTheme {...props} />;
   return <FocusTheme {...props} onAddTask={() => {}} />;
 }

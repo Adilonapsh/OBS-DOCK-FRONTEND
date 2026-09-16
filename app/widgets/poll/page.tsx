@@ -7,17 +7,9 @@ import { useWidgetPageShell } from '../_shared/hooks/useWidgetPage';
 import { WidgetPageModals, toggleShowKey } from '../_shared/components/WidgetPageModals';
 import { io, Socket } from 'socket.io-client';
 import { Copy, Check, ExternalLink, Monitor, BarChart3, Palette, Type, Settings2, Menu, Eye, EyeOff, Sparkles, ArrowLeft, RefreshCw, GripVertical, Image as ImageIcon } from 'lucide-react';
-import BarTheme from './themes/Bar';
-import CardTheme from './themes/Card';
-import DonutTheme from './themes/Donut';
-import MinimalTheme from './themes/Minimal';
-import AnimeTheme from './themes/Anime';
-import FlowerTheme from './themes/Flower';
-import EditorialTheme from './themes/Editorial';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import { getSocketUrl } from '../_shared/utils/socket';
 import { PositionPicker } from '../_shared/components/PositionPicker';
-import { getPositionStyle } from '../_shared/constants/positions';
 
 const fontsList = [...WIDGET_FONTS];
 const pollThemes = [
@@ -28,6 +20,7 @@ const pollThemes = [
   { value:'anime', label:'Anime' },
   { value:'flower', label:'Flower Timer' },
   { value:'editorial', label:'Editorial' },
+  { value:'plain', label:'Plain - Teks Polos' },
 ];
 
 const defaults = {
@@ -54,25 +47,6 @@ function buildUrl(base:string, s:any){
   p.set('showTotal', s.showTotal?'1':'0');
   p.set('showTimer', s.showTimer?'1':'0');
   return `${base}?${p.toString()}`;
-}
-
-function SimulatedPollPreview({ state }: { state: any }){
-  const [tick,setTick]=useState(0);
-  useEffect(()=>{ const t=setInterval(()=>setTick(v=>v+1), 2200); return ()=>clearInterval(t); },[]);
-  const fake = useMemo(()=>{
-    const base=[38,26,18,12];
-    const jitter = base.map(v=> Math.max(4, v + ((tick*7 + v*3)%9)-4));
-    const total=jitter.reduce((a,b)=>a+b,0);
-    return { id:'sim', room:'sim', question:'Mana turnamen selanjutnya?', options:['Mobile Legends','Valorant','PUBG Mobile','Free Fire'], votes:jitter, total, theme:state.theme, duration:60, createdAt:Date.now()-10000, ended:false, paused:false, accent:state.accent, bg:state.bg, font:state.font, showPercent:state.showPercent, showCount:state.showCount, showTotal:state.showTotal, showTimer:state.showTimer } as any;
-  },[state.theme,state.accent,state.bg,state.font,state.showPercent,state.showCount,state.showTotal,state.showTimer,tick]);
-  const props = { poll: fake, theme: state.theme, font: state.font, accent: state.accent, bg: state.bg, showPercent: state.showPercent, showCount: state.showCount, showTotal: state.showTotal, showTimer: state.showTimer } as any;
-  if(state.theme==='flower') return <FlowerTheme {...props} />;
-  if(state.theme==='anime') return <AnimeTheme {...props} />;
-  if(state.theme==='donut') return <DonutTheme {...props} />;
-  if(state.theme==='minimal') return <MinimalTheme {...props} />;
-  if(state.theme==='card') return <CardTheme {...props} />;
-  if(state.theme==='editorial') return <EditorialTheme {...props} />;
-  return <BarTheme {...props} />;
 }
 
 function PollSettingsInner(){
@@ -124,6 +98,7 @@ function PollSettingsInner(){
   const widgetUrl = useMemo(()=> buildUrl(typeof window!=='undefined'? `${window.location.origin}/widgets/poll/display`:'', state) + (privateKey? `&key=${privateKey}`:''),[state,privateKey]);
   const obsUrl = useMemo(()=> `${widgetUrl}${widgetUrl.includes('?')?'&':'?'}obs=1`,[widgetUrl]);
   const previewUrl = useMemo(()=> buildUrl('/widgets/poll/display', state),[state]);
+  const simulateUrl = useMemo(()=> `${previewUrl}${previewUrl.includes('?')?'&':'?'}simulate=1`,[previewUrl]);
 
   const handleCopy = () => shell.copy(obsUrl);
   const update=(k:string,v:any)=> setState((prev:any)=>({...prev,[k]:v}));
@@ -243,9 +218,8 @@ function PollSettingsInner(){
               <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white"/> Preview Simulasi - {state.theme} • pos:{state.pos || 'center'}</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • simulasi • OBS = data real</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px] p-4 flex" style={getPositionStyle(state.pos || 'center') as any}>
-              <SimulatedPollPreview state={state} />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SIMULASI • {state.theme} • pos:{state.pos || 'center'}</div>
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px]">
+              <iframe key={simulateUrl} src={simulateUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="poll-preview" />
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">Preview di sini dummy - data real hanya di OBS (<code className="bg-white/10 px-1 rounded text-white">.../poll/display?obs=1</code>) yang terhubung ke Dock + chat.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">

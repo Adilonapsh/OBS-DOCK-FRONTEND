@@ -5,6 +5,7 @@ export const FOLLOW_THEMES = [
   { value: 'standard', label: 'Standard - Card' },
   { value: 'minimal', label: 'Minimal - Pill' },
   { value: 'cute', label: 'Cute - Lavender Pastel ✨' },
+  { value: 'plain', label: 'Plain - Teks Polos' },
 ] as const;
 
 export const FOLLOW_FONTS = WIDGET_FONTS;

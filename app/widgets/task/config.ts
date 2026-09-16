@@ -5,6 +5,7 @@ export const TASK_THEMES = [
   { value: 'focus', label: 'Focus - Moka & Dark Slate ✨' },
   { value: 'glass', label: 'Glass - Blur Premium (seperti Timer Glass)' },
   { value: 'minimal', label: 'Minimal - Clean' },
+  { value: 'plain', label: 'Plain - Teks Polos' },
 ] as const;
 
 export const TASK_FONTS = WIDGET_FONTS;

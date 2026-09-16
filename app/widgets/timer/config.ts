@@ -6,6 +6,7 @@ export const TIMER_THEMES = [
   { value: 'subathon', label: 'Subathon - Capsule #2b2b42' },
   { value: 'glass', label: 'Glass - Minimalist Overlay ✨' },
   { value: 'minimal', label: 'Minimal - Clean' },
+  { value: 'plain', label: 'Plain - Teks Polos' },
 ] as const;
 
 export const TIMER_FONTS = WIDGET_FONTS;

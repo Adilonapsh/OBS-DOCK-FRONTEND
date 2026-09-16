@@ -15,6 +15,7 @@ import CardTheme from '../themes/Card';
 import AlbumArtTheme from '../themes/AlbumArt';
 import VinylTheme from '../themes/Vinyl';
 import ColorPaletteTheme from '../themes/ColorPalette';
+import PlainTheme from '../themes/Plain';
 import type { AccentPalette } from '../themes/types';
 import LargeAlbumArtTheme from '../themes/LargeAlbumArt';
 
@@ -368,6 +369,7 @@ function MediaPlayerInner() {
                 case 'album-art': return <AlbumArtTheme {...themeProps} />;
                 case 'vinyl': return <VinylTheme {...themeProps} />;
                 case 'color-palette': return <ColorPaletteTheme {...themeProps} />;
+                case 'plain': return <PlainTheme {...themeProps} />;
                 case 'large-album-art': return <LargeAlbumArtTheme {...themeProps} />;
                 case 'standard':
                 default: return <StandardTheme {...themeProps} />;

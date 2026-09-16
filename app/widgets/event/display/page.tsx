@@ -12,6 +12,7 @@ import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
 import PerCharTheme from '../themes/PerChar';
+import PlainTheme from '../themes/Plain';
 import { DEMO_EVENTS } from '../config';
 import type { EventItem } from '../themes/types';
 
@@ -160,6 +161,7 @@ function EventInner() {
       case 'minimal': return <MinimalTheme {...themeProps} />;
       case 'cute': return <CuteTheme {...themeProps} />;
       case 'perchar': return <PerCharTheme {...themeProps} />;
+      case 'plain': return <PlainTheme {...themeProps} />;
       default: return <StandardTheme {...themeProps} />;
     }
   };
