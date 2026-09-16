@@ -1,0 +1,47 @@
+/* Theme variables scoped to .mdock wrapper (inherits to all children).
+   Theme ditoggle lewat class .mdock-dark / .mdock-light di wrapper,
+   jadi tidak mengganggu tema global dashboard. */
+
+.mdock-light {
+  --bg-color: #f4f4f5;
+  --panel-bg: #ffffff;
+  --border-color: #e4e4e7;
+  --text-main: #18181b;
+  --text-label: #71717a;
+  --accent: #2563eb;
+  --dock-bg: rgba(255, 255, 255, 0.92);
+  --handle-color: #d4d4d8;
+}
+
+.mdock-dark {
+  --bg-color: #09090b;
+  --panel-bg: #131316;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-main: #fafafa;
+  --text-label: #a1a1aa;
+  --accent: #3b82f6;
+  --dock-bg: rgba(9, 9, 11, 0.92);
+  --handle-color: rgba(255, 255, 255, 0.12);
+}
+
+@keyframes mdock-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mdock-animate-fade-in {
+  animation: mdock-fade-in 0.25s ease both;
+}
+
+.mdock-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--handle-color) transparent;
+}
+.mdock-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.mdock-scroll::-webkit-scrollbar-thumb {
+  background: var(--handle-color);
+  border-radius: 999px;
+}

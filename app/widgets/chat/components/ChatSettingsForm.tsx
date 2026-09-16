@@ -74,6 +74,7 @@ export function ChatSettingsForm({
               <label className="block"><span className="text-[11px] font-bold text-gray-300">Name VIP/Mod</span><input type="color" value={state.cuteNameMod} onChange={(e) => update('cuteNameMod', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
             </div>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Name User</span><input type="color" value={state.cuteNameUser} onChange={(e) => update('cuteNameUser', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks Chat</span><div className="mt-1 flex gap-1"><input type="color" value={state.textColor || '#ffffff'} onChange={(e) => update('textColor', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('textColor', '')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${!state.textColor ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Auto</button></div></label>
           </div>
         </div>
       ) : (
@@ -85,6 +86,7 @@ export function ChatSettingsForm({
               <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
             </div>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Opacity Background - {state.bgOpacity}%</span><input type="range" min={10} max={100} value={state.bgOpacity} onChange={(e) => update('bgOpacity', parseInt(e.target.value))} className="mt-1 w-full accent-white" /></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks Chat</span><div className="mt-1 flex gap-1"><input type="color" value={state.textColor || '#ffffff'} onChange={(e) => update('textColor', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('textColor', '')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${!state.textColor ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Auto</button></div><span className="text-[10px] text-gray-500">Auto = bawaan tiap tema</span></label>
           </div>
         </div>
       )}

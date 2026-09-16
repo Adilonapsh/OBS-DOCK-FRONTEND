@@ -7,8 +7,10 @@ function timeLabel(ts?: number) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, exitingIds }: ChatThemeProps) {
+export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds }: ChatThemeProps) {
   const cardBg = bg === 'transparent' ? 'rgba(12,12,12,0.9)' : bg;
+  const text = textColor || '#fff';
+  const sub = textColor || 'rgba(255,255,255,0.85)';
   const hide = hideAnim || 'fadeOut';
   const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.45s'; return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`; };
   if (horizontal) {
@@ -27,9 +29,9 @@ export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTi
                 className="w-6 h-6 rounded-full object-cover border border-white/10 shrink-0"
               />
             )}
-            <span className="font-black text-[11px] text-white shrink-0">{c.nickname}</span>
+            <span className="font-black text-[11px] shrink-0" style={{ color: text }}>{c.nickname}</span>
             <span className="text-white/30 text-[11px]">:</span>
-            <span className="text-white/85 text-[12px] truncate">{c.comment}</span>
+            <span className="text-[12px] truncate" style={{ color: sub }}>{c.comment}</span>
           </div>
         ))}
       </div>
@@ -49,9 +51,9 @@ export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTi
           {chats.length === 0 ? null : chats.map((c) => (
             <div key={c.id} className="boxed-row flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.04] border border-white/5" style={{ animation: getAnim(c.id) }}>
               {showAvatar && <img src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`} alt={c.nickname} className="w-6 h-6 rounded-full object-cover border border-white/10 shrink-0" />}
-              <span className="font-black text-[11px] text-white shrink-0">{c.nickname}</span>
+              <span className="font-black text-[11px] shrink-0" style={{ color: text }}>{c.nickname}</span>
               <span className="text-white/30 text-[11px]">:</span>
-              <span className="text-white/85 text-[12px] truncate flex-1">{c.comment}</span>
+              <span className="text-[12px] truncate flex-1" style={{ color: sub }}>{c.comment}</span>
             </div>
           ))}
         </div>
@@ -83,11 +85,11 @@ export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showTi
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-black text-[12px] text-white">{c.nickname}</span>
+                <span className="font-black text-[12px]" style={{ color: text }}>{c.nickname}</span>
                 {showTimestamp && c.timestamp ? <span className="text-white/30 text-[10px] font-mono">{timeLabel(c.timestamp)}</span> : null}
                 <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: accent }} />
               </div>
-              <p className="text-white/85 text-[13px] leading-snug break-words mt-0.5">{c.comment}</p>
+              <p className="text-[13px] leading-snug break-words mt-0.5" style={{ color: sub }}>{c.comment}</p>
             </div>
           </div>
         ))}

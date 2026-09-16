@@ -7,8 +7,9 @@ function timeLabel(ts?: number) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, exitingIds }: ChatThemeProps) {
+export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds }: ChatThemeProps) {
   const bubbleBg = bg === 'transparent' ? '#ffffff' : bg;
+  const text = textColor || 'rgba(0,0,0,0.85)';
   const hide = hideAnim || 'fadeOut';
   const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.45s'; return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`; };
   if (horizontal) {
@@ -31,7 +32,7 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showT
             <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border max-w-[300px]" style={{ background: bubbleBg, borderColor: 'rgba(0,0,0,0.06)', opacity: bgOpacity / 100 }}>
               <span className="font-black text-[11px] tracking-tight shrink-0" style={{ color: accent }}>{c.nickname}</span>
               <span className="text-black/30 text-[11px]">:</span>
-              <span className="text-black/85 text-[12px] truncate">{c.comment}</span>
+              <span className="text-[12px] truncate" style={{ color: text }}>{c.comment}</span>
             </div>
           </div>
         ))}
@@ -47,7 +48,7 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showT
             <div className="flex items-center gap-1.5 rounded-full px-3 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border flex-1 max-w-[92%]" style={{ background: bubbleBg, borderColor: 'rgba(0,0,0,0.06)', opacity: bgOpacity / 100 }}>
               <span className="font-black text-[11px] shrink-0" style={{ color: accent }}>{c.nickname}</span>
               <span className="text-black/30 text-[11px]">:</span>
-              <span className="text-black/85 text-[12px] truncate flex-1">{c.comment}</span>
+              <span className="text-[12px] truncate flex-1" style={{ color: text }}>{c.comment}</span>
             </div>
           </div>
         ))}
@@ -78,7 +79,7 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showT
               <span className="font-black text-[11px] tracking-tight" style={{ color: accent }}>{c.nickname}</span>
               {showTimestamp && c.timestamp ? <span className="text-black/30 text-[9px] font-mono">{timeLabel(c.timestamp)}</span> : null}
             </div>
-            <p className="text-black/85 text-[13px] leading-[1.35] break-words mt-0.5">{c.comment}</p>
+            <p className="text-[13px] leading-[1.35] break-words mt-0.5" style={{ color: text }}>{c.comment}</p>
           </div>
         </div>
       ))}

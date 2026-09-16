@@ -40,6 +40,7 @@ export function ChatPreview({ state }: { state: ChatSettings }) {
     hideAfter: state.hideAfter,
     fontSize: state.fontSize,
     bgOpacity: state.bgOpacity,
+    textColor: state.textColor,
     horizontal: state.horizontal,
     inline: state.inline,
     cuteBubbleBg: state.cuteBubbleBg,

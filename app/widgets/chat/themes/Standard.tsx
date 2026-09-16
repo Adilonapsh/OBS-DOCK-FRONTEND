@@ -1,4 +1,5 @@
 import type { ChatThemeProps } from './types';
+import { platformLogo } from './platformLogo';
 import './Standard.css';
 
 function timeLabel(ts?: number) {
@@ -6,17 +7,10 @@ function timeLabel(ts?: number) {
   const d = new Date(ts);
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-function platformLogo(p?: string) {
-  const v = (p || 'tiktok').toLowerCase();
-  if (v.includes('tiktok')) return '/assets/logo/tik-tok.png';
-  if (v.includes('youtube') || v === 'yt') return '/assets/logo/youtube.png';
-  if (v.includes('twitch')) return '/assets/logo/twitch.png';
-  if (v.includes('kick')) return '/assets/logo/sbot.png';
-  return '/assets/logo/tik-tok.png';
-}
 
-export default function StandardTheme({ chats, font, accent, bg, showAvatar, showPlatform, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, exitingIds }: ChatThemeProps) {
+export default function StandardTheme({ chats, font, accent, bg, showAvatar, showPlatform, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds }: ChatThemeProps) {
   const bgColor = bg === 'transparent' ? 'rgba(18,18,18,0.88)' : bg;
+  const text = textColor || '#fff';
   const effectiveAnim = horizontal ? (horizontalAnim || anim) : anim;
   const hide = hideAnim || 'fadeOut';
   const getAnim = (id: string) => {
@@ -50,12 +44,12 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`; }}
               />
             )}
-            <span className="font-black text-[11px] text-white flex items-center gap-1 shrink-0">
+            <span className="font-black text-[11px] flex items-center gap-1 shrink-0" style={{ color: text }}>
               {showPlatform && <img src={platformLogo(c.platform)} alt={c.platform} className="w-3 h-3 rounded-full bg-white p-0.5 object-contain" />}
               {c.nickname}
             </span>
             <span className="text-white/40 text-[11px]">:</span>
-            <span className="text-white text-[12px] leading-none truncate">{c.comment}</span>
+            <span className="text-[12px] leading-none truncate" style={{ color: text }}>{c.comment}</span>
             {showTimestamp && c.timestamp ? <span className="text-white/30 text-[9px] font-mono shrink-0">{timeLabel(c.timestamp)}</span> : null}
           </div>
         ))}
@@ -86,12 +80,12 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`; }}
               />
             )}
-            <span className="font-black text-[11px] text-white flex items-center gap-1 shrink-0">
+            <span className="font-black text-[11px] shrink-0" style={{ color: text }}>
               {showPlatform && <img src={platformLogo(c.platform)} alt={c.platform} className="w-3 h-3 rounded-full bg-white p-0.5 object-contain" />}
               {c.nickname}
             </span>
             <span className="text-white/40 text-[11px]">:</span>
-            <span className="text-white text-[12px] leading-none truncate flex-1">{c.comment}</span>
+            <span className="text-[12px] leading-none truncate flex-1" style={{ color: text }}>{c.comment}</span>
             {showTimestamp && c.timestamp ? <span className="text-white/30 text-[9px] font-mono shrink-0">{timeLabel(c.timestamp)}</span> : null}
           </div>
         ))}
@@ -123,13 +117,13 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-black text-[12px] leading-none tracking-tight text-white flex items-center gap-1">
+              <span className="font-black text-[12px] leading-none tracking-tight flex items-center gap-1" style={{ color: text }}>
                 {showPlatform && <img src={platformLogo(c.platform)} alt={c.platform} className="w-3.5 h-3.5 rounded-full bg-white p-0.5 object-contain" />}
                 {c.nickname}
               </span>
               {showTimestamp && c.timestamp ? <span className="text-white/40 text-[10px] font-mono">{timeLabel(c.timestamp)}</span> : null}
             </div>
-            <p className="text-white text-[13px] leading-[1.35] break-words mt-0.5 line-clamp-3">{c.comment}</p>
+            <p className="text-[13px] leading-[1.35] break-words mt-0.5 line-clamp-3" style={{ color: text }}>{c.comment}</p>
           </div>
         </div>
       ))}

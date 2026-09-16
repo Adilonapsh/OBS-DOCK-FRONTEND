@@ -69,6 +69,7 @@ export default function PerCharTheme({
   hideAnim,
   horizontal,
   inline,
+  textColor,
 }: PerCharThemeProps) {
   const hide = hideAnim || 'fadeOut';
   // horizontal & inline pakai bubble penuh yang sama — cuma arah alir beda
@@ -86,7 +87,7 @@ export default function PerCharTheme({
                   {platformGlyph(c.platform)}
                 </span>
               )}
-              <span className="pc-username">{c.nickname}</span>
+              <span className="pc-username" style={textColor ? { color: textColor } : undefined}>{c.nickname}</span>
               {showTimestamp && c.timestamp ? <span className="pc-time">{timeLabel(c.timestamp)}</span> : null}
             </div>
             <div className="pc-bubble-line">
@@ -101,7 +102,7 @@ export default function PerCharTheme({
               ) : (
                 <span className="pc-avatar-fallback" style={{ borderColor: color, color }}>{platformGlyph(c.platform)}</span>
               )}
-              <div className="pc-bubble" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)`, fontSize: `${fontSize}px` }}>
+              <div className="pc-bubble" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)`, fontSize: `${fontSize}px`, ...(textColor ? { color: textColor } : null) }}>
                 <PerCharText text={c.comment} delayMs={charDelayMs} durationS={charDurationS} />
               </div>
             </div>

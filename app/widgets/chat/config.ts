@@ -60,6 +60,7 @@ export const CHAT_DEFAULTS = {
   accent: '#8b5cf6',
   bg: 'transparent',
   bgOpacity: 100,
+  textColor: '', // '' = otomatis (bawaan tiap tema)
   maxMessages: 6,
   hideAfter: 0,
   showAvatar: true,
@@ -98,6 +99,7 @@ export function buildChatUrl(base: string, s: ChatSettings): string {
   p.set('accent', s.accent);
   if (s.bg && s.bg !== 'transparent') p.set('bg', s.bg);
   p.set('bgOpacity', String(s.bgOpacity));
+  if (s.textColor) p.set('textColor', s.textColor);
   p.set('maxMessages', String(s.maxMessages));
   p.set('hideAfter', String(s.hideAfter));
   p.set('showAvatar', s.showAvatar ? '1' : '0');

@@ -39,6 +39,7 @@ function ChatInner() {
   const horizontalAnim = getStringParam(params, 'horizontalAnim', 'elegant');
   const fontSize = getIntParam(params, 'fontSize', 14);
   const bgOpacity = Math.max(10, Math.min(100, getIntParam(params, 'bgOpacity', 100)));
+  const textColor = getStringParam(params, 'textColor', '');
   const horizontal = getBoolParam(params, 'horizontal', false);
   const inline = getBoolParam(params, 'inline', false);
   const pos = getStringParam(params, 'pos', 'center');
@@ -108,6 +109,7 @@ function ChatInner() {
     hideAfter,
     fontSize,
     bgOpacity,
+    textColor,
     horizontal,
     inline,
     cuteBubbleBg,

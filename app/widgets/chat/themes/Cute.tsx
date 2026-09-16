@@ -28,7 +28,7 @@ function isEmoteOnly(comment?: string) {
   return false;
 }
 
-export default function CuteTheme({ chats, font, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, exitingIds, cuteBubbleBg, cuteResubFrom, cuteResubTo, cuteBadgeBg, cuteBadgeText, cuteNameMod, cuteNameUser }: ChatThemeProps) {
+export default function CuteTheme({ chats, font, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, cuteBubbleBg, cuteResubFrom, cuteResubTo, cuteBadgeBg, cuteBadgeText, cuteNameMod, cuteNameUser }: ChatThemeProps) {
   const hide = hideAnim || 'fadeOut';
   const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.35s'; return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`; };
   const bubbleBg = cuteBubbleBg || '#1e1d2b';
@@ -38,6 +38,7 @@ export default function CuteTheme({ chats, font, showAvatar, showTimestamp, anim
   const badgeText = cuteBadgeText || '#a8a3ce';
   const nameMod = cuteNameMod || '#f5a8d0';
   const nameUser = cuteNameUser || '#d8cded';
+  const text = textColor || '#fff';
   const resubGrad = `linear-gradient(90deg, ${resubFrom} 0%, ${resubTo} 100%)`;
 
   // horizontal - row pills, container transparent (tidak pakai bg)
@@ -66,7 +67,7 @@ export default function CuteTheme({ chats, font, showAvatar, showTimestamp, anim
               {badge && <span className="role-badge" style={{ background: badgeBg, color: badgeText }}>{badge.label}</span>}
               <span className="font-black text-[11px] tracking-wider uppercase shrink-0" style={{ color: badge ? nameMod : nameUser }}>{c.nickname}</span>
               <span className="text-white/40 text-[11px]">:</span>
-              <span className="text-white text-[12px] font-bold truncate">{c.comment}</span>
+              <span className="text-[12px] font-bold truncate" style={{ color: text }}>{c.comment}</span>
             </div>
           );
         })}
@@ -94,7 +95,7 @@ export default function CuteTheme({ chats, font, showAvatar, showTimestamp, anim
               {badge && <span className="role-badge" style={{ background: badgeBg, color: badgeText }}>{badge.label}</span>}
               <span className="font-black text-[11px] tracking-wider uppercase shrink-0" style={{ color: badge ? nameMod : nameUser }}>{c.nickname}</span>
               <span className="text-white/40">:</span>
-              <span className="text-white text-[13px] font-bold truncate flex-1">{c.comment}</span>
+              <span className="text-[13px] font-bold truncate flex-1" style={{ color: text }}>{c.comment}</span>
               {showTimestamp && c.timestamp ? <span className="text-white/30 text-[9px] font-mono shrink-0">{timeLabel(c.timestamp)}</span> : null}
             </div>
           );
@@ -142,7 +143,7 @@ export default function CuteTheme({ chats, font, showAvatar, showTimestamp, anim
               <span className="font-black text-[11px] tracking-wider uppercase" style={{ color: badge ? nameMod : nameUser }}>{c.nickname}</span>
               {showTimestamp && c.timestamp ? <span className="text-white/30 text-[9px] font-mono">{timeLabel(c.timestamp)}</span> : null}
             </div>
-            <div className="px-3.5 py-2.5 text-[13px] sm:text-[14px] font-bold leading-snug tracking-wide max-w-[95%] break-words rounded-[12px]" style={{ background: bubbleBg, opacity: bgOpacity / 100 }}>
+            <div className="px-3.5 py-2.5 text-[13px] sm:text-[14px] font-bold leading-snug tracking-wide max-w-[95%] break-words rounded-[12px]" style={{ background: bubbleBg, opacity: bgOpacity / 100, color: text }}>
               {c.comment}
             </div>
           </div>

@@ -23,6 +23,7 @@ export type ChatThemeProps = {
   hideAfter: number;
   fontSize: number;
   bgOpacity: number;
+  textColor?: string;
   compact?: boolean;
   horizontal?: boolean;
   inline?: boolean;
