@@ -236,6 +236,19 @@ function WidgetDisplayContent() {
       setTimeout(() => setMembers(prev => prev.filter(x => x.id !== m.id)), 4000);
       if (isGoal) setGoalCurrent(v => Math.min(goalTarget, v + 1));
     });
+    // Follow dari Streamer.bot (Twitch Follow / YouTube NewSponsor) -> tampil sebagai member + goal
+    socket.on("tiktok-follow", (data: any) => {
+      if (!showMember) return;
+      const m: MemberItem = { id: `fol_${Date.now()}_${Math.random().toString(36).slice(2, 4)}`, nickname: data.nickname || data.uniqueId || "New Follower", profilePictureUrl: data.profilePictureUrl, timestamp: Date.now() };
+      setMembers(prev => [...prev, m].slice(-3));
+      setTimeout(() => setMembers(prev => prev.filter(x => x.id !== m.id)), 4000);
+      if (isGoal) setGoalCurrent(v => Math.min(goalTarget, v + 1));
+    });
+    // Viewer count dari Streamer.bot (YouTube/Twitch via dock bridge)
+    socket.on("sb-viewers", (data: any) => {
+      const vc = Number(data.viewers ?? data.viewerCount ?? data.count);
+      if (!Number.isNaN(vc)) setViewerCount(vc);
+    });
     socket.on("tiktok-roomUser", (data: any) => {
       const vc = data.viewerCount ?? data.viewer_count ?? data.totalUser ?? null;
       if (typeof vc === "number") setViewerCount(vc);

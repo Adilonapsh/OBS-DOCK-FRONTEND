@@ -82,6 +82,10 @@ export default function Home() {
         { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
     ]);
     const [youtubeLive, setYoutubeLive] = useState(false);
+    const [youtubeLikeCount, setYoutubeLikeCount] = useState<number | null>(null);
+    const [youtubeViewCount, setYoutubeViewCount] = useState<number | null>(null);
+    const [youtubeLastUpdate, setYoutubeLastUpdate] = useState<string | null>(null);
+    const [sbYoutubeConnected, setSbYoutubeConnected] = useState<boolean | null>(null);
     const [twitchLive, setTwitchLive] = useState(false);
     const [twitchViewerCountSB, setTwitchViewerCountSB] = useState<number | null>(null);
     const [twitchChartData, setTwitchChartData] = useState<Array<{ value: number }>>([
@@ -799,6 +803,20 @@ export default function Home() {
         setActiveTasks(null);
     }
     const getTimerRoom = () => privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+    // Bridge Streamer.bot -> backend -> widget. Pakai pollSocket (selalu konek),
+    // fallback ke tkSocket (hanya ada kalau TikTok pernah di-connect).
+    // Sebelumnya semua emit sb-* pakai tkSocket saja -> chat/gift/follow/viewer
+    // dari Twitch/YouTube tidak sampai ke widget kalau TikTok tidak konek.
+    const emitSbBridge = (evt: "sb-chat" | "sb-event" | "sb-viewers", payload: Record<string, unknown>) => {
+        let sent = false;
+        try {
+            if (pollSocketRef.current?.connected) { pollSocketRef.current.emit(evt, payload); sent = true; }
+        } catch {}
+        try {
+            if (tkSocketRef.current?.connected) { tkSocketRef.current.emit(evt, payload); sent = true; }
+        } catch {}
+        return sent;
+    };
     const handleTimerControl = (action: string, extra: Record<string, unknown> = {}) => {
         const room = getTimerRoom();
         pollSocketRef.current?.emit('timer-control', { privateKey: room, action, ...extra });
@@ -1886,10 +1904,16 @@ export default function Home() {
                 request: "Subscribe",
                 id: "dock",
                 events: {
-                    Twitch: ["ChatMessage", "Follow", "StreamOnline", "StreamOffline", "Cheer", "Sub", "GiftSub", "RewardRedemption"],
-                    YouTube: ["Message", "BroadcastStarted", "BroadcastUpdated", "BroadcastEnded", "StatisticsUpdated", "PresentViewers", "SuperChat", "SuperSticker", "NewSponsor"],
+                    Twitch: ["ChatMessage", "Follow", "StreamOnline", "StreamOffline", "Cheer", "Sub", "GiftSub", "RewardRedemption", "PresentViewers"],
+                    YouTube: ["Message", "BroadcastStarted", "BroadcastUpdated", "BroadcastEnded", "BroadcastAdded", "BroadcastMonitoringStarted", "BroadcastMonitoringEnded", "StatisticsUpdated", "PresentViewers", "SuperChat", "SuperSticker", "NewSponsor"],
                 },
             }));
+            // Verifikasi akun YouTube terhubung di Streamer.bot + ambil viewer aktif awal.
+            // Response-nya ditangani di onmessage (id dock-broadcaster / dock-viewers).
+            try {
+                socket.send(JSON.stringify({ request: "GetBroadcaster", id: "dock-broadcaster" }));
+                socket.send(JSON.stringify({ request: "GetActiveViewers", id: "dock-viewers" }));
+            } catch {}
         };
 
         socket.onmessage = (event) => {
@@ -1900,52 +1924,97 @@ export default function Home() {
                     return;
                 }
 
+                // --- Response GetBroadcaster: tandai apakah YouTube terhubung di Streamer.bot ---
+                if (payload.id === "dock-broadcaster" && payload.status === "ok") {
+                    const connected: string[] = Array.isArray(payload.connected) ? payload.connected.map((s: any) => String(s).toLowerCase()) : [];
+                    const hasYt = connected.includes("youtube") || !!payload.platforms?.youtube;
+                    setSbYoutubeConnected(hasYt);
+                    if (!hasYt) addSystemLog("⚠️ [SB] Akun YouTube belum terhubung di Streamer.bot (Settings → Platforms → YouTube)", "error");
+                    else addSystemLog("✅ [SB] YouTube terhubung — chart menunggu event StatisticsUpdated", "success");
+                    return;
+                }
+
+                // --- Response GetActiveViewers: seed awal chart YouTube/Twitch ---
+                if (payload.id === "dock-viewers" && payload.status === "ok" && Array.isArray(payload.viewers)) {
+                    const ytCount = payload.viewers.filter((v: any) => String(v?.type || "").toLowerCase() === "youtube").length;
+                    const twCount = payload.viewers.filter((v: any) => String(v?.type || "").toLowerCase() === "twitch").length;
+                    if (ytCount > 0) {
+                        setYoutubeViewerCountSB(ytCount);
+                        setYoutubeLive(true);
+                        setYoutubeChartData(prev => { const next = [...prev, { value: ytCount }]; return next.length > 20 ? next.slice(-20) : next; });
+                        setYoutubeLastUpdate(new Date().toLocaleTimeString());
+                    }
+                    if (twCount > 0) {
+                        setTwitchViewerCountSB(twCount);
+                        setTwitchLive(true);
+                        setTwitchChartData(prev => { const next = [...prev, { value: twCount }]; return next.length > 20 ? next.slice(-20) : next; });
+                    }
+                    return;
+                }
+
                 if (payload.event) {
                     const platform = payload.event.source?.toLowerCase?.() ?? "";
                     const type = payload.event.type;
                     const data = payload.data ?? {};
 
-                    if (["StreamOnline", "BroadcastStarted", "BroadcastUpdated", "StatisticsUpdated", "PresentViewers"].includes(type)) {
+                    const pushYoutubeViewers = (v: number) => {
+                        const n = Math.max(0, Number(v) || 0);
+                        setYoutubeViewerCountSB(n);
+                        setYoutubeChartData(prev => { const next = [...prev, { value: n }]; return next.length > 20 ? next.slice(-20) : next; });
+                        setYoutubeLive(true);
+                        setYoutubeLastUpdate(new Date().toLocaleTimeString());
+                        emitSbBridge("sb-viewers", { privateKey: getTimerRoom(), platform: "youtube", viewers: n });
+                    };
+
+                    if (["StreamOnline", "BroadcastStarted", "BroadcastUpdated", "BroadcastAdded", "BroadcastMonitoringStarted", "StatisticsUpdated", "PresentViewers"].includes(type)) {
                         setStatus(prev => ({
                             ...prev,
                             sbotStatus: "CONNECTED",
                             streamStatus: "LIVE",
                         }));
                         // platform live flags untuk card YouTube/Twitch
-                        if (platform === "youtube" && ["BroadcastStarted","BroadcastUpdated","StatisticsUpdated","PresentViewers"].includes(type)) {
+                        if (platform === "youtube" && ["BroadcastStarted", "BroadcastUpdated", "BroadcastAdded", "BroadcastMonitoringStarted", "StatisticsUpdated", "PresentViewers"].includes(type)) {
                             setYoutubeLive(true);
+                            setSbYoutubeConnected(true);
                         }
-                        if (platform === "twitch" && ["StreamOnline","PresentViewers"].includes(type)) {
+                        if (platform === "twitch" && ["StreamOnline", "PresentViewers"].includes(type)) {
                             setTwitchLive(true);
                         }
 
-                        if (platform === "youtube" && data.concurrentViewers !== undefined) {
-                            const v = Number(data.concurrentViewers) || 0;
-                            setYoutubeViewerCountSB(v);
-                            setYoutubeChartData(prev => { const next = [...prev, { value: v }]; return next.length > 8 ? next.slice(-8) : next; });
-                            if (tkSocketRef.current?.connected) {
-                                const roomSb3 = getTimerRoom();
-                                tkSocketRef.current.emit("sb-viewers", { privateKey: roomSb3, platform: "youtube", viewers: v });
-                            }
+                        // YouTube StatisticsUpdated: payload FLAT -> { concurrentViewers, likeCount, viewCount, ... }
+                        // (lihat docs.streamer.bot/api/websocket/events/youtube/statistics-updated)
+                        if (platform === "youtube" && type === "StatisticsUpdated") {
+                            const rawV = (data as any).concurrentViewers ?? (data as any).viewerCount ?? (data as any).viewers;
+                            if (rawV !== undefined && rawV !== null) pushYoutubeViewers(Number(rawV));
+                            const rawLike = (data as any).likeCount;
+                            if (rawLike !== undefined && rawLike !== null && !Number.isNaN(Number(rawLike))) setYoutubeLikeCount(Number(rawLike));
+                            const rawView = (data as any).viewCount;
+                            if (rawView !== undefined && rawView !== null && !Number.isNaN(Number(rawView))) setYoutubeViewCount(Number(rawView));
+                            // walau concurrentViewers 0, tetap update timestamp agar user tahu event jalan
+                            setYoutubeLastUpdate(new Date().toLocaleTimeString());
+                        }
+
+                        // Fallback lama: beberapa versi kirim concurrentViewers di event lain
+                        if (platform === "youtube" && type !== "StatisticsUpdated" && (data as any).concurrentViewers !== undefined) {
+                            pushYoutubeViewers(Number((data as any).concurrentViewers));
                         }
 
                         if (type === "PresentViewers") {
-                            // Twitch: data.viewers array; YouTube: data.viewers / concurrentViewers
-                            const list = Array.isArray((data as any).viewers) ? (data as any).viewers.length : undefined;
-                            const count = list ?? Number((data as any).concurrentViewers ?? (data as any).viewerCount ?? NaN);
+                            // Twitch: data.viewers = array user; YouTube: array / count / concurrentViewers
+                            const raw = (data as any).viewers;
+                            const listLen = Array.isArray(raw) ? raw.length : undefined;
+                            const countRaw = listLen ?? (data as any).concurrentViewers ?? (data as any).viewerCount ?? (typeof raw === "number" ? raw : NaN);
+                            const count = Number(countRaw);
                             if (!Number.isNaN(count)) {
                                 if (platform === "youtube") {
-                                    setYoutubeViewerCountSB(count);
-                                    setYoutubeChartData(prev => { const next = [...prev, { value: count }]; return next.length > 8 ? next.slice(-8) : next; });
-                                    setYoutubeLive(true);
+                                    pushYoutubeViewers(count);
                                 } else if (platform === "twitch") {
                                     setTwitchViewerCountSB(count);
-                                    setTwitchChartData(prev => { const next = [...prev, { value: count }]; return next.length > 8 ? next.slice(-8) : next; });
+                                    setTwitchChartData(prev => { const next = [...prev, { value: count }]; return next.length > 20 ? next.slice(-20) : next; });
                                     setTwitchLive(true);
-                                }
-                                if (tkSocketRef.current?.connected) {
-                                    const roomSb4 = getTimerRoom();
-                                    tkSocketRef.current.emit("sb-viewers", { privateKey: roomSb4, platform: platform || "twitch", viewers: count });
+                                    emitSbBridge("sb-viewers", { privateKey: getTimerRoom(), platform: "twitch", viewers: count });
+                                } else {
+                                    emitSbBridge("sb-viewers", { privateKey: getTimerRoom(), platform: platform || "twitch", viewers: count });
                                 }
                             }
                         }
@@ -1955,44 +2024,45 @@ export default function Home() {
                         }
                     }
 
-                    if (["StreamOffline", "BroadcastEnded"].includes(type)) {
+                    if (["StreamOffline", "BroadcastEnded", "BroadcastMonitoringEnded"].includes(type)) {
                         setStatus(prev => ({
                             ...prev,
                             sbotStatus: "CONNECTED",
                             streamStatus: "STOPPED",
                         }));
-                        if (platform === "youtube" && type === "BroadcastEnded") {
+                        if (platform === "youtube" && (type === "BroadcastEnded" || type === "BroadcastMonitoringEnded")) {
                             setYoutubeLive(false);
+                            setYoutubeViewerCountSB(0);
+                            setYoutubeChartData(prev => { const next = [...prev, { value: 0 }]; return next.length > 20 ? next.slice(-20) : next; });
+                            setYoutubeLastUpdate(new Date().toLocaleTimeString());
                         }
                         if (platform === "twitch" && type === "StreamOffline") {
                             setTwitchLive(false);
                             setTwitchViewerCountSB(0);
                         }
-                        if (platform === "youtube" && type === "BroadcastEnded") {
-                            setYoutubeViewerCountSB(0);
-                        }
                     }
 
                     if (["ChatMessage", "Message"].includes(type)) {
-                        const user = data.message?.username || data.user?.name || "User";
-                        const message = data.message?.text || data.message || "";
-                        const avatar = data.user?.profileImageUrl || data.user?.avatar || null;
+                        // Twitch ChatMessage: { user: {login,name}, text: "..." }
+                        // YouTube Message:   { message: "string", user: {name,login,profileImageUrl} }
+                        const rawMsg: any = (data as any).message;
+                        const message = typeof rawMsg === "string" ? rawMsg
+                            : (rawMsg?.text || (data as any).text || (data as any).comment || "");
+                        const user = rawMsg?.username || (data as any).user?.name || (data as any).user?.login || (data as any).userName || "User";
+                        const userId = (data as any).user?.id || (data as any).user?.login || user;
+                        const avatar = (data as any).user?.profileImageUrl || (data as any).user?.avatar || null;
                         const pf = (platform === "youtube" || platform === "kick" ? platform : "twitch") as ChatMessage["platform"];
                         if (!message) return;
-                        // tampil lokal + broadcast ke server agar overlay kebagian
-                        // (server echo ke semua kecuali pengirim, jadi tidak dobel)
+                        // tampil lokal + broadcast ke server agar overlay/widget kebagian
                         handleIncomingMessage(user, message, pf, avatar, []);
-                        if (tkSocketRef.current?.connected) {
-                            const roomSb = getTimerRoom();
-                            tkSocketRef.current.emit("sb-chat", {
-                                privateKey: roomSb,
-                                uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
-                                nickname: user,
-                                comment: message,
-                                profilePictureUrl: avatar,
-                                platform: pf,
-                            });
-                        }
+                        emitSbBridge("sb-chat", {
+                            privateKey: getTimerRoom(),
+                            uniqueId: String(userId).toLowerCase().replace(/\s/g, "_"),
+                            nickname: user,
+                            comment: message,
+                            profilePictureUrl: avatar,
+                            platform: pf,
+                        });
                     }
 
                     if (["Follow", "Sub", "ReSub", "NewSponsor", "MembershipGift"].includes(type)) {
@@ -2001,17 +2071,14 @@ export default function Home() {
                         const pf = (platform === "youtube" || platform === "kick" ? platform : "twitch") as ChatMessage["platform"];
                         addActivityLog(`➕ ${user} mengikuti (${type})`, pf);
                         addSystemLog(`➕ [SB ${type?.toUpperCase()}] ${user}`, "success");
-                        if (tkSocketRef.current?.connected) {
-                            const roomSb = getTimerRoom();
-                            tkSocketRef.current.emit("sb-event", {
-                                privateKey: roomSb,
-                                eventType: type,
-                                uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
-                                nickname: user,
-                                profilePictureUrl: avatar,
-                                platform: pf,
-                            });
-                        }
+                        emitSbBridge("sb-event", {
+                            privateKey: getTimerRoom(),
+                            eventType: type,
+                            uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
+                            nickname: user,
+                            profilePictureUrl: avatar,
+                            platform: pf,
+                        });
                     }
 
                     if (["Cheer", "GiftSub", "GiftBomb", "RewardRedemption", "SuperChat", "SuperSticker"].includes(type)) {
@@ -2021,19 +2088,16 @@ export default function Home() {
                         const text = amount ? `${type}: ${amount}` : type;
                         addGiftLog(user, text, platform || "twitch", { amount: String(amount), giftName: type, avatar: avatar || undefined });
                         addSystemLog(`🎁 [GIFT ${platform}] ${user}: ${text}`, "info");
-                        if (tkSocketRef.current?.connected) {
-                            const roomSb2 = getTimerRoom();
-                            tkSocketRef.current.emit("sb-event", {
-                                privateKey: roomSb2,
-                                eventType: type,
-                                uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
-                                nickname: user,
-                                profilePictureUrl: avatar,
-                                platform: platform || "twitch",
-                                giftName: text,
-                                repeatCount: 1,
-                            });
-                        }
+                        emitSbBridge("sb-event", {
+                            privateKey: getTimerRoom(),
+                            eventType: type,
+                            uniqueId: String(user).toLowerCase().replace(/\s/g, "_"),
+                            nickname: user,
+                            profilePictureUrl: avatar,
+                            platform: platform || "twitch",
+                            giftName: text,
+                            repeatCount: 1,
+                        });
                     }
                 }
             } catch (error) {
@@ -2501,43 +2565,44 @@ export default function Home() {
                                                 <div className="flex items-center gap-1.5">
                                                     <Image src="/assets/logo/youtube.png" alt="YouTube Logo" width={14} height={14} className="w-3.5 h-3.5 invert" />
                                                     <span className="font-black text-[9px] uppercase">YouTube</span>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${status.sbotStatus === "CONNECTED" && sbYoutubeConnected ? "bg-green-500" : status.sbotStatus === "CONNECTED" ? "bg-yellow-500" : "bg-gray-600"}`} title={status.sbotStatus !== "CONNECTED" ? "Streamer.bot belum konek" : sbYoutubeConnected ? "Streamer.bot + YouTube tersambung" : "Streamer.bot konek, YouTube belum terdeteksi"} />
                                                 </div>
                                                 <span className={`text-[7px] font-bold uppercase ${youtubeLive ? "text-green-500 pulse-live" : "text-gray-500"}`}>{youtubeLive ? "LIVE" : "Offline"}</span>
                                             </div>
+                                            {status.sbotStatus === "CONNECTED" && sbYoutubeConnected === false && (
+                                                <div className="text-[8px] font-bold text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1 mb-1">YouTube belum terhubung di Streamer.bot → Settings → Platforms → YouTube</div>
+                                            )}
                                             <div className="flex items-end justify-between relative z-10">
                                                 <div>
                                                     <span className="text-xl font-bold font-mono-custom tracking-tighter leading-none">{youtubeViewerCountSB ?? 0}</span>
                                                     <div className="flex gap-2 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                         <div className="flex items-center gap-1 text-[8px] text-gray-400">
-                                                            <ThumbsUp className="w-2.5 h-2.5" /> <span>{youtubeViewerCountSB ?? 0}</span>
+                                                            <ThumbsUp className="w-2.5 h-2.5" /> <span>{youtubeLikeCount ?? 0}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1 text-[8px] text-gray-400">
-                                                            <Eye className="w-2.5 h-2.5" /> <span>{youtubeViewerCountSB ?? 0}</span>
+                                                            <Eye className="w-2.5 h-2.5" /> <span>{youtubeViewCount ?? youtubeViewerCountSB ?? 0}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="text-[7px] text-red-500 font-bold uppercase">Current Viewers</div>
-                                                    <div className="text-[7px] text-gray-500 font-bold uppercase mt-0.5">Viewers:
-                                                        <span className="text-white">{youtubeViewerCountSB ?? 0}</span>
-                                                    </div>
+                                                    <div className="text-[7px] text-gray-500 font-bold uppercase mt-0.5">Likes: <span className="text-white">{youtubeLikeCount ?? 0}</span> • Views: <span className="text-white">{youtubeViewCount ?? 0}</span></div>
+                                                    <div className="text-[7px] text-gray-600 font-bold uppercase">Sync SB{youtubeLastUpdate ? ` • ${youtubeLastUpdate}` : " • menunggu event…"}</div>
                                                 </div>
                                             </div>
-                                            {(youtubeViewerCountSB != null && youtubeViewerCountSB > 0) && (
-                                                <div className="h-10 w-full -mt-6 relative">
-                                                    <ResponsiveContainer width="100%" height="100%">
-                                                        <AreaChart data={youtubeChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                                                            <defs>
-                                                                <linearGradient id="youtube-fill" x1="0" x2="0" y1="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#f87171" stopOpacity={0.7} />
-                                                                    <stop offset="100%" stopColor="#f87171" stopOpacity={0.05} />
-                                                                </linearGradient>
-                                                            </defs>
-                                                            <Area type="monotone" dataKey="value" stroke="#f87171" fill="url(#youtube-fill)" strokeWidth={2} isAnimationActive={false} />
-                                                        </AreaChart>
-                                                    </ResponsiveContainer>
-                                                </div>
-                                            )}
+                                            <div className="h-10 w-full -mt-6 relative">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={youtubeChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                                                        <defs>
+                                                            <linearGradient id="youtube-fill" x1="0" x2="0" y1="0" y2="1">
+                                                                <stop offset="0%" stopColor="#f87171" stopOpacity={0.7} />
+                                                                <stop offset="100%" stopColor="#f87171" stopOpacity={0.05} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <Area type="monotone" dataKey="value" stroke="#f87171" fill="url(#youtube-fill)" strokeWidth={2} isAnimationActive={false} />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
                                         </div>
                                     )}
 

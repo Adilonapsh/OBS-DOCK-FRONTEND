@@ -10,14 +10,25 @@
  * - Akses halaman dikunci private key (?key=, session bypass, atau login).
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import {
   Maximize2, Minimize2, Sun, Moon, Settings,
   Play, Pause, SkipForward, SkipBack, Plus,
   Trash2, Radio, Sliders, ExternalLink, MessageSquare,
   Tv, AlertCircle, Eye, EyeOff, Loader2, KeyRound, Music, Minus, RotateCcw,
+  LayoutGrid,
 } from 'lucide-react';
+import DockableLayout, {
+  createDefaultDockLayout,
+  sanitizeDockLayout,
+  restoreDockPanel,
+  removeDockPanel,
+  dockVisiblePanels,
+  DOCK_LAYOUT_LS,
+  type DockLayoutState,
+  type DockNode,
+} from './components/DockableLayout';
 import { getSocketUrl } from '../widgets/_shared/utils/socket';
 import { createClient } from '@/utils/supabase/client';
 import { encrypt, decrypt, isEncrypted } from '../utils/encryption';
@@ -79,6 +90,14 @@ type DockConfig = {
   manualVideoId: string;
   bgmRoomId: string;
   urls: PanelUrls;
+  customPanels: CustomPanel[];
+};
+
+// Panel buatan user: dock baru dengan URL sendiri (tambah/hapus via Settings)
+type CustomPanel = {
+  id: string;
+  title: string;
+  url: string;
 };
 
 // ------------------------------------------------------------ constants
@@ -94,7 +113,61 @@ const LS = {
   panelUrls: 'mobile-dock:panel-urls',
   zooms: 'mobile-dock:zooms',
   theme: 'mobile-dock:theme',
+  customPanels: 'mobile-dock:custom-panels',
 };
+
+// Panel yang bisa di-dock (urutan = urutan default tab & nav mobile)
+const KNOWN_DOCK_PANELS = ['deck', 'control', 'alert', 'monitor', 'chat', 'bgm'] as const;
+type DockPanelId = (typeof KNOWN_DOCK_PANELS)[number];
+
+const DOCK_TITLES: Record<DockPanelId, string> = {
+  deck: 'Deck',
+  control: 'Control',
+  alert: 'Alert',
+  monitor: 'Monitor',
+  chat: 'Chat',
+  bgm: 'BGM',
+};
+
+/** Bersihkan list panel kustom (buang entri rusak/duplikat, batasi 20). */
+function sanitizeCustomPanels(raw: unknown): CustomPanel[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: CustomPanel[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const r = item as Record<string, unknown>;
+    const id = String(r.id ?? '').trim().slice(0, 40);
+    const title = String(r.title ?? '').trim().slice(0, 40) || 'Custom';
+    const url = String(r.url ?? '').trim().slice(0, 2000);
+    if (!id || !url || seen.has(id)) continue;
+    if (!/^[A-Za-z0-9_-]+$/.test(id)) continue;
+    seen.add(id);
+    out.push({ id, title, url });
+    if (out.length >= 20) break;
+  }
+  return out;
+}
+
+function loadCustomPanelsLS(): CustomPanel[] {
+  try {
+    if (typeof window === 'undefined') return [];
+    const raw = localStorage.getItem(LS.customPanels);
+    if (!raw) return [];
+    return sanitizeCustomPanels(JSON.parse(raw));
+  } catch {
+    return [];
+  }
+}
+
+function loadDockLayout(knownPanels?: string[]): DockLayoutState {
+  const known = knownPanels ?? [...KNOWN_DOCK_PANELS];
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(DOCK_LAYOUT_LS) : null;
+    if (raw) return sanitizeDockLayout(JSON.parse(raw), known);
+  } catch {}
+  return createDefaultDockLayout();
+}
 
 // ID video publik untuk fallback saat offline & belum ada video manual.
 // Bukan kredensial — hanya placeholder tampilan.
@@ -115,7 +188,7 @@ function readLS(key: string, fallback: string): string {
 
 function loadCachedConfig(): DockConfig {
   if (typeof window === 'undefined') {
-    return { discordUserId: '', deckId: '', tiptapKey: '', tiptapWidget: '', manualVideoId: '', bgmRoomId: '', urls: { ...EMPTY_URLS } };
+    return { discordUserId: '', deckId: '', tiptapKey: '', tiptapWidget: '', manualVideoId: '', bgmRoomId: '', urls: { ...EMPTY_URLS }, customPanels: [] };
   }
   const urls = (() => {
     try {
@@ -141,6 +214,7 @@ function loadCachedConfig(): DockConfig {
     manualVideoId: readLS(LS.manualVideoId, ''),
     bgmRoomId: readLS(LS.bgmRoom, ''),
     urls,
+    customPanels: loadCustomPanelsLS(),
   };
 }
 
@@ -165,6 +239,16 @@ function buildDefaultUrls(deckId: string, tiptapKey: string, widgetId: string): 
 /** Ganti placeholder {videoId} bila user memakai URL custom. */
 function applyPlaceholders(url: string, videoId: string): string {
   return url.split('{videoId}').join(videoId);
+}
+
+/** Cari tabs node pertama (untuk menaruh panel kustom baru). */
+function findFirstTabs(node: DockNode): Extract<DockNode, { type: 'tabs' }> | null {
+  if (node.type === 'tabs') return node;
+  for (const c of node.children) {
+    const f = findFirstTabs(c);
+    if (f) return f;
+  }
+  return null;
 }
 
 function formatTime(secs: number): string {
@@ -346,6 +430,7 @@ export default function MobileDockPage() {
   const [manualVideoId, setManualVideoId] = useState(initialCache.manualVideoId);
   const [bgmRoomId, setBgmRoomId] = useState(initialCache.bgmRoomId);
   const [panelUrls, setPanelUrls] = useState<PanelUrls>({ ...initialCache.urls });
+  const [customPanels, setCustomPanels] = useState<CustomPanel[]>(() => [...initialCache.customPanels]);
 
   const [showSettings, setShowSettings] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -354,15 +439,16 @@ export default function MobileDockPage() {
   // buffer edit di modal
   const [tmpCreds, setTmpCreds] = useState({ discordUserId: '', deckId: '', tiptapKey: '', tiptapWidget: '', manualVideoId: '', bgmRoomId: '' });
   const [tmpUrls, setTmpUrls] = useState<PanelUrls>({ ...EMPTY_URLS });
+  const [tmpCustom, setTmpCustom] = useState<CustomPanel[]>([]);
   const [mask, setMask] = useState({ deck: true, key: true, widget: true });
 
   // ---- theme / fullscreen / layout
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (readLS(LS.theme, 'dark') === 'light' ? 'light' : 'dark'));
   // Invert iframe deck mengikuti brightness background aktual (>50% = invert)
   const [invertDeck, setInvertDeck] = useState(() => readLS(LS.theme, 'dark') === 'light');
-  // Zoom per iframe (preferensi tampilan per perangkat)
-  const [zooms, setZooms] = useState<Record<PanelZoomKey, number>>(() => loadZooms());
-  const setZoom = (key: PanelZoomKey, v: number) => {
+  // Zoom per iframe (preferensi tampilan per perangkat; key = id panel, termasuk kustom)
+  const [zooms, setZooms] = useState<Record<string, number>>(() => loadZooms());
+  const setZoom = (key: string, v: number) => {
     setZooms((prev) => {
       const next = { ...prev, [key]: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v)) };
       try { localStorage.setItem(LS.zooms, JSON.stringify(next)); } catch {}
@@ -370,15 +456,25 @@ export default function MobileDockPage() {
     });
   };
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [leftWidth, setLeftWidth] = useState(25);
-  const [midWidth, setMidWidth] = useState(45);
-  const [midTopHeight, setMidTopHeight] = useState(55);
-  const [isDragging, setIsDragging] = useState<'v1' | 'v2' | 'h1' | null>(null);
+  // Resizable & Dockable layout: posisi/ukuran/susunan semua panel (persist Supabase + LS)
+  const [dockLayout, setDockLayout] = useState<DockLayoutState>(() => loadDockLayout([...KNOWN_DOCK_PANELS, ...initialCache.customPanels.map((c) => c.id)]));
+  const dockLayoutRef = useRef<DockLayoutState | null>(null);
+  dockLayoutRef.current = dockLayout;
+  const [mobilePanel, setMobilePanel] = useState<string>('deck');
+  const [showLayoutMenu, setShowLayoutMenu] = useState(false);
+  const [isDockResizing, setIsDockResizing] = useState(false);
+
+  // Daftar panel dikenal (bawaan + kustom) & judulnya — dipakai sanitize, tab, nav.
+  const knownPanels = useMemo(
+    () => [...KNOWN_DOCK_PANELS.map(String), ...customPanels.map((c) => c.id)],
+    [customPanels]
+  );
+  const dockTitles = useMemo<Record<string, string>>(
+    () => ({ ...DOCK_TITLES, ...Object.fromEntries(customPanels.map((c) => [c.id, c.title])) }),
+    [customPanels]
+  );
 
   // ---- tabs
-  const [activeMobileTab, setActiveMobileTab] = useState<'deck' | 'control' | 'chat'>('deck');
-  const [controlTab, setControlTab] = useState<'alert' | 'monitor'>('alert');
-  const [chatTab, setChatTab] = useState<'chat' | 'bgm'>('chat');
   const [isMobile, setIsMobile] = useState(false);
 
   // ---- stream status (Lanyard)
@@ -542,6 +638,7 @@ export default function MobileDockPage() {
     setManualInput(cfg.manualVideoId);
     setBgmRoomId(cfg.bgmRoomId);
     setPanelUrls({ ...cfg.urls });
+    setCustomPanels([...cfg.customPanels]);
   };
 
   useEffect(() => {
@@ -552,7 +649,7 @@ export default function MobileDockPage() {
         const { data: all } = await (supabase as unknown as {
           rpc: (fn: string, args: Record<string, string>) => Promise<{ data: Record<string, unknown> }>;
         }).rpc('get_all_by_private_key', { p_key: privateKey });
-        const row = (all as { mobile_dock_config?: Record<string, string> } | null)?.mobile_dock_config;
+        const row = (all as { mobile_dock_config?: Record<string, unknown> } | null)?.mobile_dock_config;
         if (row) {
           const rawKey = String(row.tiptap_private_key ?? '');
           const decKey = rawKey && isEncrypted(rawKey)
@@ -572,9 +669,22 @@ export default function MobileDockPage() {
               monitorUrl: String(row.monitor_url ?? ''),
               chatUrl: String(row.chat_url ?? ''),
             },
+            // custom_panels: array dari Supabase menang; null (kolom lama) = pakai cache LS
+            customPanels: Array.isArray(row.custom_panels)
+              ? sanitizeCustomPanels(row.custom_panels)
+              : loadCustomPanelsLS(),
           };
           applyConfig(cfg);
           mirrorLS(cfg);
+          // layout dockable: sanitize ulang dengan daftar panel final (bawaan + kustom)
+          const known = [...KNOWN_DOCK_PANELS.map(String), ...cfg.customPanels.map((c) => c.id)];
+          const savedLayout = row.layout_json;
+          const base = savedLayout && typeof savedLayout === 'object'
+            ? savedLayout
+            : (() => { try { const raw = localStorage.getItem(DOCK_LAYOUT_LS); return raw ? JSON.parse(raw) : null; } catch { return null; } })();
+          const clean = sanitizeDockLayout(base, known);
+          setDockLayout(clean);
+          try { localStorage.setItem(DOCK_LAYOUT_LS, JSON.stringify(clean)); } catch {}
         }
       } catch (e) {
         console.error('Gagal memuat config Supabase:', e);
@@ -597,15 +707,17 @@ export default function MobileDockPage() {
       localStorage.setItem(LS.manualVideoId, cfg.manualVideoId);
       localStorage.setItem(LS.bgmRoom, cfg.bgmRoomId);
       localStorage.setItem(LS.panelUrls, JSON.stringify(cfg.urls));
+      localStorage.setItem(LS.customPanels, JSON.stringify(cfg.customPanels));
     } catch (e) {
       console.error('Gagal mirror localStorage:', e);
     }
   }
 
   /** Simpan config ke Supabase (session upsert / RPC bypass) + mirror LS + state. */
-  async function persistConfig(cfg: DockConfig): Promise<boolean> {
+  async function persistConfig(cfg: DockConfig, layout?: DockLayoutState): Promise<boolean> {
     if (!privateKey) return false;
     const encTiptap = cfg.tiptapKey ? await encrypt(cfg.tiptapKey, privateKey) : '';
+    const layoutJson = layout ?? dockLayoutRef.current;
     const payload = {
       discord_user_id: cfg.discordUserId,
       deck_id: cfg.deckId,
@@ -618,17 +730,18 @@ export default function MobileDockPage() {
       alert_url: cfg.urls.alertUrl,
       monitor_url: cfg.urls.monitorUrl,
       chat_url: cfg.urls.chatUrl,
+      custom_panels: cfg.customPanels,
     };
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const { error } = await supabase
           .from('mobile_dock_configs')
-          .upsert({ user_id: session.user.id, ...payload } as never, { onConflict: 'user_id' });
+          .upsert({ user_id: session.user.id, ...payload, layout_json: layoutJson } as never, { onConflict: 'user_id' });
         if (error) throw error;
       } else {
         const { error } = await (supabase as unknown as {
-          rpc: (fn: string, args: Record<string, string>) => Promise<{ error: { message: string } | null }>;
+          rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
         }).rpc('upsert_mobile_dock_config_by_private_key', {
           p_key: privateKey,
           p_discord: payload.discord_user_id,
@@ -642,6 +755,8 @@ export default function MobileDockPage() {
           p_alert_url: payload.alert_url,
           p_monitor_url: payload.monitor_url,
           p_chat_url: payload.chat_url,
+          p_layout_json: layoutJson,
+          p_custom_panels: payload.custom_panels,
         });
         if (error) throw new Error(error.message);
       }
@@ -657,6 +772,19 @@ export default function MobileDockPage() {
   const saveSettings = async () => {
     setIsSaving(true);
     setSaveError(null);
+    // panel kustom: pastikan id unik & valid
+    const seen = new Set<string>();
+    const customs: CustomPanel[] = [];
+    for (const c of tmpCustom) {
+      const title = c.title.trim().slice(0, 40) || 'Custom';
+      const url = c.url.trim();
+      let id = c.id.trim();
+      if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) id = `custom_${Date.now().toString(36)}${customs.length}`;
+      if (seen.has(id) || !url) continue;
+      seen.add(id);
+      customs.push({ id, title, url: url.slice(0, 2000) });
+      if (customs.length >= 20) break;
+    }
     const cfg: DockConfig = {
       discordUserId: tmpCreds.discordUserId.trim(),
       deckId: tmpCreds.deckId.trim(),
@@ -665,8 +793,42 @@ export default function MobileDockPage() {
       manualVideoId: tmpCreds.manualVideoId.trim(),
       bgmRoomId: tmpCreds.bgmRoomId.trim(),
       urls: { ...tmpUrls },
+      customPanels: customs,
     };
-    const ok = await persistConfig(cfg);
+    // rekonsiliasi layout: panel kustom baru → tambahkan ke tabs pertama;
+    // yang dihapus → buang dari layout.
+    const prevIds = new Set(customPanels.map((c) => c.id));
+    const nextIds = new Set(customs.map((c) => c.id));
+    let nextLayout = dockLayoutRef.current ?? dockLayout;
+    let layoutTouched = false;
+    for (const id of nextIds) {
+      if (!prevIds.has(id)) {
+        const cloned = JSON.parse(JSON.stringify(nextLayout)) as DockLayoutState;
+        const first = findFirstTabs(cloned.root);
+        if (first) {
+          first.panels.push(id);
+          first.active = id;
+          nextLayout = { version: 1, root: cloned.root, hidden: cloned.hidden };
+          layoutTouched = true;
+        }
+      }
+    }
+    for (const id of prevIds) {
+      if (!nextIds.has(id)) {
+        nextLayout = removeDockPanel(nextLayout, id);
+        layoutTouched = true;
+      }
+    }
+    // Pengaman: jangan sampai tidak ada panel terlihat sama sekali
+    if (dockVisiblePanels(nextLayout.root).length === 0) {
+      nextLayout = createDefaultDockLayout();
+      layoutTouched = true;
+    }
+    if (layoutTouched) {
+      setDockLayout(nextLayout);
+      try { localStorage.setItem(DOCK_LAYOUT_LS, JSON.stringify(nextLayout)); } catch {}
+    }
+    const ok = await persistConfig(cfg, layoutTouched ? nextLayout : undefined);
     if (ok) {
       setShowSettings(false);
     } else {
@@ -678,7 +840,7 @@ export default function MobileDockPage() {
   const saveManualVideoId = async () => {
     const cfg: DockConfig = {
       discordUserId, deckId, tiptapKey: tiptapPrivateKey, tiptapWidget: tiptapAlertWidgetId,
-      manualVideoId: manualInput.trim(), bgmRoomId, urls: { ...panelUrls },
+      manualVideoId: manualInput.trim(), bgmRoomId, urls: { ...panelUrls }, customPanels,
     };
     const ok = await persistConfig(cfg);
     if (ok) setShowChatSettings(false);
@@ -690,7 +852,7 @@ export default function MobileDockPage() {
     setBgmEnabled(nextEnabled);
     const cfg: DockConfig = {
       discordUserId, deckId, tiptapKey: tiptapPrivateKey, tiptapWidget: tiptapAlertWidgetId,
-      manualVideoId, bgmRoomId: nextRoom.trim(), urls: { ...panelUrls },
+      manualVideoId, bgmRoomId: nextRoom.trim(), urls: { ...panelUrls }, customPanels,
     };
     const ok = await persistConfig(cfg);
     if (ok) setShowBgmSettings(false);
@@ -815,42 +977,33 @@ export default function MobileDockPage() {
     return () => clearInterval(id);
   }, [song?.isPlaying, currentSongId]);
 
-  // drag resizer (desktop)
-  useEffect(() => {
-    if (!isDragging || !containerRef.current) return;
-    const onMove = (e: PointerEvent) => {
-      const rect = containerRef.current!.getBoundingClientRect();
-      if (isDragging === 'v1') {
-        const pct = ((e.clientX - rect.left) / rect.width) * 100;
-        if (pct > 10 && pct < 80) setLeftWidth(pct);
-      } else if (isDragging === 'v2') {
-        const rel = e.clientX - rect.left - (rect.width * leftWidth) / 100;
-        const pct = (rel / rect.width) * 100;
-        if (pct > 10 && leftWidth + pct < 90) setMidWidth(pct);
-      } else if (isDragging === 'h1') {
-        const mid = document.getElementById('mdock-panel-control');
-        if (mid) {
-          const r = mid.getBoundingClientRect();
-          const pct = ((e.clientY - r.top) / r.height) * 100;
-          if (pct > 10 && pct < 90) setMidTopHeight(pct);
-        }
-      }
-    };
-    const onUp = () => setIsDragging(null);
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
-    return () => {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
-    };
-  }, [isDragging, leftWidth]);
+  // dock layout: simpan ke LS tiap berubah (debounce), Supabase ikut persistConfig
+  const layoutSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleDockLayoutChange = (next: DockLayoutState) => {
+    setDockLayout(next);
+    try { localStorage.setItem(DOCK_LAYOUT_LS, JSON.stringify(next)); } catch {}
+    // persist ke Supabase (debounce 1.5s agar drag/resize tidak spam)
+    if (layoutSaveTimer.current) clearTimeout(layoutSaveTimer.current);
+    layoutSaveTimer.current = setTimeout(() => {
+      const cfg: DockConfig = {
+        discordUserId, deckId, tiptapKey: tiptapPrivateKey, tiptapWidget: tiptapAlertWidgetId,
+        manualVideoId, bgmRoomId, urls: { ...panelUrls }, customPanels,
+      };
+      void persistConfig(cfg, next);
+    }, 1500);
+  };
+  useEffect(() => () => { if (layoutSaveTimer.current) clearTimeout(layoutSaveTimer.current); }, []);
 
-  const handlePointerDown = (e: React.PointerEvent, type: 'v1' | 'v2' | 'h1') => {
-    e.preventDefault();
-    setIsDragging(type);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  const resetDockLayout = () => {
+    const fresh = createDefaultDockLayout();
+    setDockLayout(fresh);
+    try { localStorage.setItem(DOCK_LAYOUT_LS, JSON.stringify(fresh)); } catch {}
+    const cfg: DockConfig = {
+      discordUserId, deckId, tiptapKey: tiptapPrivateKey, tiptapWidget: tiptapAlertWidgetId,
+      manualVideoId, bgmRoomId, urls: { ...panelUrls }, customPanels,
+    };
+    void persistConfig(cfg, fresh);
+    setShowLayoutMenu(false);
   };
 
   // ------------------------------------------------------------ helpers
@@ -939,6 +1092,7 @@ export default function MobileDockPage() {
   const openSettings = () => {
     setTmpCreds({ discordUserId, deckId, tiptapKey: tiptapPrivateKey, tiptapWidget: tiptapAlertWidgetId, manualVideoId, bgmRoomId });
     setTmpUrls({ ...panelUrls });
+    setTmpCustom(customPanels.map((c) => ({ ...c })));
     setSaveError(null);
     setShowSettings(true);
   };
@@ -1034,6 +1188,351 @@ export default function MobileDockPage() {
     );
   }
 
+  // ------------------------------------------------- dock panels (isi tiap panel dockable)
+  // Judul panel tampil di tab-bar DockableLayout; di sini hanya toolbar + isi.
+  const noPointer = isDockResizing ? 'pointer-events-none' : undefined;
+
+  const panelToolbar = (zoomKey: string, label: string, src?: string) => (
+    <div className="px-2 py-1 border-b border-[var(--border-color)] bg-[var(--bg-color)] flex items-center justify-end gap-1 shrink-0">
+      {src ? <ZoomControls value={zooms[zoomKey] ?? 1} onChange={(v) => setZoom(zoomKey, v)} label={label} /> : null}
+      {src ? (
+        <a href={src} target="_blank" rel="noreferrer" className="p-1 text-[var(--text-label)] hover:text-[var(--text-main)]" title="Buka di tab baru">
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      ) : null}
+    </div>
+  );
+
+  const renderDockPanel = (id: string) => {
+    if (id === 'deck') {
+      return (
+        <div className="flex-1 min-h-0 flex flex-col">
+          {panelToolbar('deck', 'Zoom panel Deck', deckSrc || undefined)}
+          <div className="flex-1 min-h-0 bg-[var(--bg-color)] relative">
+            {deckSrc ? (
+              <ZoomableFrame
+                src={deckSrc}
+                title="Deck"
+                zoom={zooms.deck}
+                frameClass={noPointer}
+                frameStyle={{ filter: invertDeck ? 'invert(1) hue-rotate(180deg)' : 'none' }}
+              />
+            ) : emptyPanel('Deck')}
+          </div>
+        </div>
+      );
+    }
+    if (id === 'control') {
+      return (
+        <div className="flex-1 min-h-0 flex flex-col">
+          {panelToolbar('control', 'Zoom panel Control', controlSrc || undefined)}
+          <div className="flex-1 min-h-0">
+            {controlSrc ? (
+              <ZoomableFrame src={controlSrc} title="Control Console" zoom={zooms.control} frameClass={noPointer} />
+            ) : emptyPanel('Control')}
+          </div>
+        </div>
+      );
+    }
+    if (id === 'alert') {
+      return (
+        <div className="flex-1 min-h-0 flex flex-col">
+          {panelToolbar('alert', 'Zoom panel Alert', alertSrc || undefined)}
+          <div className="flex-1 min-h-0 relative">
+            {alertSrc ? (
+              <ZoomableFrame src={alertSrc} title="Alert Display" zoom={zooms.alert} frameClass={noPointer} />
+            ) : emptyPanel('Alert')}
+          </div>
+        </div>
+      );
+    }
+    if (id === 'monitor') {
+      return (
+        <div className="flex-1 min-h-0 flex flex-col">
+          {panelToolbar('monitor', 'Zoom panel Monitor', monitorSrc || undefined)}
+          <div className="flex-1 min-h-0 relative">
+            {!viewStream.isLive && !panelUrls.monitorUrl.trim() ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
+                <div className="p-4 bg-[var(--bg-color)] rounded-full">
+                  <Tv className="w-10 h-10 text-[var(--text-label)]" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-medium">Stream Offline</h3>
+                  <p className="text-xs text-[var(--text-label)]">{viewStream.title}</p>
+                </div>
+              </div>
+            ) : (
+              <ZoomableFrame src={monitorSrc} title="Monitor" zoom={zooms.monitor} allow="autoplay; encrypted-media" frameClass={noPointer} />
+            )}
+          </div>
+        </div>
+      );
+    }
+    if (id === 'chat') {
+      return (
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="p-3 bg-[var(--bg-color)] border-b border-[var(--border-color)] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 overflow-hidden min-w-0">
+              <img src={viewStream.thumbnail} alt="Preview" className="w-12 h-8 rounded object-cover bg-[var(--bg-color)] shrink-0" />
+              <div className="flex flex-col overflow-hidden leading-tight">
+                <p className="text-xs font-medium truncate">{viewStream.title}</p>
+                <span className="flex items-center gap-2">
+                  <a href={viewStream.url} target="_blank" rel="noreferrer" className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1">
+                    <ExternalLink className="w-3 h-3" /> Watch
+                  </a>
+                  <a href={chatSrc} target="_blank" rel="noreferrer" className="text-xs text-[var(--text-label)] hover:underline flex items-center gap-1" title="Buka URL chat di tab baru">
+                    <ExternalLink className="w-3 h-3" /> Popout
+                  </a>
+                </span>
+              </div>
+            </div>
+            <span className="flex items-center gap-1 shrink-0">
+              <ZoomControls value={zooms.chat} onChange={(v) => setZoom('chat', v)} label="Zoom panel Chat" />
+              <button onClick={() => setShowChatSettings((p) => !p)} className="p-2 text-[var(--text-label)] hover:text-[var(--text-main)] cursor-pointer rounded-md" title="Chat settings">
+                <Settings className="w-4 h-4" />
+              </button>
+            </span>
+          </div>
+          {showChatSettings && (
+            <div className="p-3 bg-[var(--bg-color)] border-b border-[var(--border-color)] flex flex-col gap-2">
+              <label className="text-xs font-medium text-[var(--text-label)]">Default Video ID</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  placeholder="Video ID"
+                  className="flex-1 text-xs px-3 py-2 border border-[var(--border-color)] bg-[var(--panel-bg)] rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                />
+                <button onClick={saveManualVideoId} className="px-4 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer">
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="flex-1 min-h-0 relative">
+            <ZoomableFrame src={chatSrc} title="Live Chat" zoom={zooms.chat} frameClass={noPointer} />
+          </div>
+          <span className="absolute bottom-2 right-3 text-[8px] tracking-widest font-bold uppercase text-[var(--text-label)] opacity-40 pointer-events-none">
+            LIVE CHAT
+          </span>
+        </div>
+      );
+    }
+    if (id === 'bgm') {
+      return (
+        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto mdock-scroll p-3 gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2"></div>
+            <button onClick={() => setShowBgmSettings((p) => !p)} className="p-1.5 text-[var(--text-label)] hover:text-[var(--text-main)] cursor-pointer" title="BGM settings">
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
+
+          {showBgmSettings && (
+            <div className="p-3 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-md space-y-3">
+              <input
+                type="text"
+                value={bgmRoomId}
+                onChange={(e) => setBgmRoomId(e.target.value)}
+                placeholder={`Room ID (kosong = private key)`}
+                className="w-full text-xs px-3 py-2 border border-[var(--border-color)] bg-[var(--panel-bg)] rounded-md"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => saveBgmRoom(bgmRoomId, true)}
+                  className="flex-1 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer"
+                >
+                  Connect
+                </button>
+                <button
+                  onClick={() => saveBgmRoom(bgmRoomId, false)}
+                  className="flex-1 py-2 text-xs font-medium text-red-500 bg-red-500/10 rounded-md cursor-pointer"
+                >
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Now playing + kontrol — sama seperti widget request queue */}
+          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-4 space-y-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Music className="w-4 h-4 text-emerald-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-[12px] truncate">{current ? current.title : 'Belum ada lagu'}</div>
+                {current && (
+                  <div className="text-[var(--text-label)] text-[9px] truncate">
+                    req by {current.requestedBy} • {current.platform}
+                  </div>
+                )}
+              </div>
+              <span className={`text-[9px] font-bold uppercase ${song?.isPlaying ? 'text-emerald-500' : 'text-[var(--text-label)]'}`}>
+                {song?.isPlaying ? 'Play' : 'Stop'}
+              </span>
+            </div>
+            {/* prev / play-pause / next inline + progress */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => songControl('prev')}
+                className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--bg-color)] hover:opacity-80 border border-[var(--border-color)] text-[var(--text-main)] cursor-pointer"
+                title="Sebelumnya"
+              >
+                <SkipBack className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => songControl(song?.isPlaying ? 'pause' : 'play')}
+                className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--text-main)] text-[var(--bg-color)] hover:opacity-85 cursor-pointer"
+                title={song?.isPlaying ? 'Pause' : 'Play'}
+              >
+                {song?.isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+              </button>
+              <button
+                onClick={() => songControl('next')}
+                className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--bg-color)] hover:opacity-80 border border-[var(--border-color)] text-[var(--text-main)] cursor-pointer"
+                title="Berikutnya"
+              >
+                <SkipForward className="w-3.5 h-3.5" />
+              </button>
+              <div className="flex-1 min-w-0 mt-3">
+                <input
+                  type="range"
+                  value={Math.min(effPos, Math.max(effDur, 1))}
+                  min={0}
+                  max={Math.max(effDur, 1)}
+                  onChange={(e) => songControl('seek', { seconds: parseFloat(e.target.value) })}
+                  className="w-full h-1 appearance-none cursor-pointer accent-[var(--accent)] bg-[var(--border-color)] rounded-full"
+                />
+                <div className="flex justify-between text-[9px] font-mono text-[var(--text-label)] mt-1">
+                  <span>{formatTime(effPos)}</span>
+                  <span>{formatTime(effDur)}</span>
+                </div>
+              </div>
+            </div>
+            {/* tambah manual */}
+            <div className="flex gap-2">
+              <input
+                value={newBgmUrl}
+                onChange={(e) => setNewBgmUrl(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddManual(); }}
+                placeholder={`Paste URL YouTube / MP3… (atau ${cmd} di chat)`}
+                className="flex-1 h-9 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-xl px-3 text-[11px] text-[var(--text-main)] placeholder:text-[var(--text-label)] focus:outline-none"
+              />
+              <button onClick={handleAddManual} className="shrink-0 w-9 h-9 grid place-items-center rounded-xl bg-[var(--text-main)] text-[var(--bg-color)] hover:opacity-85 cursor-pointer" title="Tambah ke queue">
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            {song?.lastError && (
+              <div className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">
+                {song.lastError}
+              </div>
+            )}
+          </div>
+
+          {/* Choose song — sama seperti widget request queue */}
+          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-3 space-y-2">
+            <h4 className="text-[var(--text-label)] text-[9px] font-bold uppercase flex items-center justify-between">
+              Choose Song ({queue.length})
+              {queue.length > 0 && (
+                <button onClick={() => songControl('clear')} className="text-[9px] text-red-500 hover:underline cursor-pointer normal-case font-medium">Clear</button>
+              )}
+            </h4>
+            <div className="space-y-1.5 max-h-[220px] overflow-y-auto mdock-scroll">
+              {!song || queue.length === 0 ? (
+                <div className="text-[10px] text-[var(--text-label)] italic opacity-70">Queue kosong. Ketik {cmd} + URL di chat.</div>
+              ) : (
+                queue.map((q, i) => (
+                  <div
+                    key={q.id}
+                    className={`flex items-center gap-2 p-1.5 rounded-lg border cursor-pointer transition-colors ${
+                      current && q.id === current.id
+                        ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30'
+                        : 'bg-[var(--bg-color)] border-[var(--border-color)]'
+                    }`}
+                    onClick={() => songControl('choose', { index: i })}
+                    title="Klik untuk putar"
+                  >
+                    <span className={`text-[9px] font-mono w-4 shrink-0 ${current && q.id === current.id ? 'text-[var(--accent)]' : 'text-[var(--text-label)]'}`}>
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-[var(--text-main)] truncate">{q.title}</div>
+                      <div className="text-[8px] text-[var(--text-label)] truncate">{q.requestedBy}</div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        songControl('remove', { index: i });
+                      }}
+                      className="shrink-0 p-1 text-[var(--text-label)] hover:text-red-400 cursor-pointer"
+                      title="Hapus"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Cari YouTube (tambahan mobile-dock) */}
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={bgmSearchQuery}
+                onChange={(e) => setBgmSearchQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') searchBgm(); }}
+                placeholder="Cari lagu YouTube..."
+                className="flex-1 text-xs px-3 py-2 border border-[var(--border-color)] bg-[var(--panel-bg)] rounded-md"
+              />
+              <button onClick={searchBgm} disabled={bgmIsSearching} className="px-3 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer disabled:opacity-50">
+                {bgmIsSearching ? '...' : 'Cari'}
+              </button>
+            </div>
+            {bgmSearchError && <p className="text-[10px] text-red-500">{bgmSearchError}</p>}
+            {bgmSearchResults.length > 0 && (
+              <div className="space-y-1 border border-[var(--border-color)] rounded-md p-1.5 max-h-48 overflow-y-auto mdock-scroll">
+                {bgmSearchResults.map((track: YtSearchItem) => (
+                  <div
+                    key={track.id?.videoId}
+                    onClick={() => addBgmUrl(`https://www.youtube.com/watch?v=${track.id?.videoId}`, track.snippet?.title)}
+                    className="p-2 cursor-pointer flex items-center gap-2 rounded-md hover:bg-[var(--bg-color)]"
+                  >
+                    {track.snippet?.thumbnails?.default?.url && (
+                      <img src={track.snippet.thumbnails.default.url} alt="" className="w-8 h-8 rounded object-cover bg-[var(--bg-color)] shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs truncate">{track.snippet?.title}</p>
+                      <p className="text-[10px] truncate text-[var(--text-label)]">{track.snippet?.channelTitle}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    // Panel kustom (tambah via Settings — URL bebas, mendukung {videoId})
+    const custom = customPanels.find((c) => c.id === id);
+    if (custom) {
+      const rawSrc = custom.url.trim();
+      const src = rawSrc ? applyPlaceholders(rawSrc, viewStream.videoId) : '';
+      return (
+        <div className="flex-1 min-h-0 flex flex-col">
+          {panelToolbar(custom.id, `Zoom panel ${custom.title}`, src || undefined)}
+          <div className="flex-1 min-h-0 relative">
+            {src ? (
+              <ZoomableFrame src={src} title={custom.title} zoom={zooms[custom.id] ?? 1} frameClass={noPointer} />
+            ) : emptyPanel(custom.title)}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   // ---------------------------------------------------------------- render
 
   return (
@@ -1052,6 +1551,39 @@ export default function MobileDockPage() {
           </h1>
         </div>
         <div className="flex items-center gap-1">
+          <div className="relative">
+            <button onClick={() => setShowLayoutMenu((p) => !p)} className="p-1.5 hover:bg-[var(--bg-color)] rounded transition-colors cursor-pointer" title="Layout — atur & kembalikan panel">
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            {showLayoutMenu && (
+              <>
+                <button aria-hidden tabIndex={-1} onClick={() => setShowLayoutMenu(false)} className="fixed inset-0 z-[199] cursor-default bg-transparent border-none p-0" />
+                <div className="absolute top-full mt-1.5 right-0 z-[200] w-56 rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-2 shadow-lg mdock-animate-fade-in">
+                  <p className="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--text-label)]">Layout Panel</p>
+                  <p className="px-2 pb-2 text-[10px] text-[var(--text-label)]">Drag tab panel ke atas / bawah / kiri / kanan / tengah untuk dock. Hover tab → ✕ untuk sembunyikan.</p>
+                  {dockLayout.hidden.length > 0 && (
+                    <div className="space-y-1 border-t border-[var(--border-color)] pt-2">
+                      <p className="px-2 text-[9px] font-black uppercase tracking-widest text-[var(--text-label)]">Tersembunyi</p>
+                      {dockLayout.hidden.map((id) => (
+                        <button
+                          key={id}
+                          onClick={() => handleDockLayoutChange(restoreDockPanel(dockLayout, id))}
+                          className="w-full text-left px-2 py-1.5 text-xs rounded-md hover:bg-[var(--bg-color)] text-[var(--text-main)] cursor-pointer"
+                        >
+                          + {dockTitles[id] ?? id}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="border-t border-[var(--border-color)] mt-2 pt-2">
+                    <button onClick={resetDockLayout} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs font-bold text-[var(--text-label)] hover:text-[var(--text-main)] rounded-md cursor-pointer">
+                      <RotateCcw className="w-3.5 h-3.5" /> Reset layout bawaan
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           <button onClick={openSettings} className="p-1.5 hover:bg-[var(--bg-color)] rounded transition-colors cursor-pointer" title="Settings — kredensial & URL tiap panel">
             <Settings className="w-4 h-4" />
           </button>
@@ -1064,443 +1596,45 @@ export default function MobileDockPage() {
         </div>
       </header>
 
-      {/* SPLIT CONTAINER */}
-      <div ref={containerRef} className="flex-grow pt-12 pb-16 md:pb-0 flex h-screen select-none relative gap-0.5">
-        {/* PANEL DECK */}
-        <div
-          style={{ width: isMobile ? '100%' : `${leftWidth}%` }}
-          className={`${activeMobileTab === 'deck' ? 'flex' : 'hidden'} md:flex flex-col flex-shrink-0 bg-[var(--panel-bg)] border border-[var(--border-color)] relative overflow-hidden`}
-        >
-          <div className="px-2 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-color)] flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-label)]">Deck</span>
-            <span className="flex items-center gap-1">
-              {deckSrc && <ZoomControls value={zooms.deck} onChange={(v) => setZoom('deck', v)} label="Zoom panel Deck" />}
-              {deckSrc && (
-                <a href={deckSrc} target="_blank" rel="noreferrer" className="p-1 text-[var(--text-label)] hover:text-[var(--text-main)]" title="Buka URL deck di tab baru">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              )}
-            </span>
-          </div>
-          <div className="flex-grow bg-[var(--bg-color)] relative">
-            {deckSrc ? (
-              <ZoomableFrame
-                src={deckSrc}
-                title="Deck"
-                zoom={zooms.deck}
-                frameClass={isDragging ? 'pointer-events-none' : undefined}
-                frameStyle={{ filter: invertDeck ? 'invert(1) hue-rotate(180deg)' : 'none' }}
-              />
-            ) : emptyPanel('Deck')}
-          </div>
-        </div>
-
-        {/* RESIZER 1 */}
-        <div
-          onPointerDown={(e) => handlePointerDown(e, 'v1')}
-          className="hidden md:flex w-3 cursor-col-resize self-stretch items-center justify-center group shrink-0"
-          style={{ touchAction: 'none' }}
-        >
-          <div className={`w-[2px] h-8 ${isDragging === 'v1' ? 'bg-[var(--accent)]' : 'bg-[var(--handle-color)] group-hover:bg-[var(--accent)]'}`} />
-        </div>
-
-        {/* PANEL CONTROL */}
-        <div
-          id="mdock-panel-control"
-          style={{ width: isMobile ? '100%' : `${midWidth}%` }}
-          className={`${activeMobileTab === 'control' ? 'flex' : 'hidden'} md:flex flex-col flex-shrink-0 self-stretch`}
-        >
-          <div style={{ height: `${midTopHeight}%` }} className="bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden flex flex-col relative shrink-0">
-            <div className="px-2 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-color)] flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-label)] flex items-center gap-1.5">
-                <Sliders className="w-3.5 h-3.5" /> Controls
-              </span>
-              <span className="flex items-center gap-1">
-                {controlSrc && <ZoomControls value={zooms.control} onChange={(v) => setZoom('control', v)} label="Zoom panel Control" />}
-                {controlSrc && (
-                  <a href={controlSrc} target="_blank" rel="noreferrer" className="p-1 text-[var(--text-label)] hover:text-[var(--text-main)]" title="Buka URL control di tab baru">
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </span>
-            </div>
-            <div className="flex-grow">
-              {controlSrc ? (
-                <ZoomableFrame
-                  src={controlSrc}
-                  title="Control Console"
-                  zoom={zooms.control}
-                  frameClass={isDragging ? 'pointer-events-none' : undefined}
-                />
-              ) : emptyPanel('Control')}
-            </div>
-          </div>
-
-          {/* RESIZER H */}
-          <div
-            onPointerDown={(e) => handlePointerDown(e, 'h1')}
-            className="hidden md:flex h-3 cursor-row-resize items-center justify-center shrink-0 group"
-            style={{ touchAction: 'none' }}
-          >
-            <div className={`h-[2px] w-10 ${isDragging === 'h1' ? 'bg-[var(--accent)]' : 'bg-[var(--handle-color)] group-hover:bg-[var(--accent)]'}`} />
-          </div>
-
-          <div className="flex-grow bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden flex flex-col relative">
-            <div className="flex gap-1 p-1.5 bg-[var(--bg-color)] border-b border-[var(--border-color)]">
-              <button
-                onClick={() => setControlTab('alert')}
-                className={`flex-1 py-1.5 px-3 text-xs font-medium cursor-pointer rounded-md ${controlTab === 'alert' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-label)] hover:text-[var(--text-main)]'}`}
-              >
-                Alert
-              </button>
-              <button
-                onClick={() => setControlTab('monitor')}
-                className={`flex-1 py-1.5 px-3 text-xs font-medium cursor-pointer rounded-md ${controlTab === 'monitor' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-label)] hover:text-[var(--text-main)]'}`}
-              >
-                Monitor
-              </button>
-              <ZoomControls
-                value={controlTab === 'alert' ? zooms.alert : zooms.monitor}
-                onChange={(v) => setZoom(controlTab === 'alert' ? 'alert' : 'monitor', v)}
-                label={controlTab === 'alert' ? 'Zoom panel Alert' : 'Zoom panel Monitor'}
-              />
-              <a
-                href={controlTab === 'alert' ? (alertSrc || monitorSrc) : monitorSrc}
-                target="_blank"
-                rel="noreferrer"
-                className="p-1.5 text-[var(--text-label)] hover:text-[var(--text-main)]"
-                title="Buka URL panel ini di tab baru"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-            {/* Kedua iframe tetap mounted (hidden saja) agar tidak reload saat pindah tab */}
-            <div className="flex-grow relative">
-              <div className={`${controlTab === 'alert' ? 'block' : 'hidden'} absolute inset-0`}>
-                {alertSrc ? (
-                  <ZoomableFrame
-                    src={alertSrc}
-                    title="Alert Display"
-                    zoom={zooms.alert}
-                    frameClass={isDragging ? 'pointer-events-none' : undefined}
-                  />
-                ) : emptyPanel('Alert')}
-              </div>
-              <div className={`${controlTab === 'monitor' ? 'block' : 'hidden'} absolute inset-0`}>
-                {!viewStream.isLive && !panelUrls.monitorUrl.trim() ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
-                    <div className="p-4 bg-[var(--bg-color)] rounded-full">
-                      <Tv className="w-10 h-10 text-[var(--text-label)]" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="font-medium">Stream Offline</h3>
-                      <p className="text-xs text-[var(--text-label)]">{viewStream.title}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <ZoomableFrame
-                    src={monitorSrc}
-                    title="Monitor"
-                    zoom={zooms.monitor}
-                    allow="autoplay; encrypted-media"
-                    frameClass={isDragging ? 'pointer-events-none' : undefined}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RESIZER 2 */}
-        <div
-          onPointerDown={(e) => handlePointerDown(e, 'v2')}
-          className="hidden md:flex w-3 cursor-col-resize self-stretch items-center justify-center group shrink-0"
-          style={{ touchAction: 'none' }}
-        >
-          <div className={`w-[2px] h-8 ${isDragging === 'v2' ? 'bg-[var(--accent)]' : 'bg-[var(--handle-color)] group-hover:bg-[var(--accent)]'}`} />
-        </div>
-
-        {/* PANEL CHAT / BGM */}
-        <div className={`${activeMobileTab === 'chat' ? 'flex' : 'hidden'} md:flex flex-1 flex-col bg-[var(--panel-bg)] border border-[var(--border-color)] relative overflow-hidden`}>
-          <div className="flex gap-1 p-1.5 bg-[var(--bg-color)] border-b border-[var(--border-color)]">
-            <button
-              onClick={() => setChatTab('chat')}
-              className={`flex-1 py-1.5 px-3 text-xs font-medium cursor-pointer rounded-md ${chatTab === 'chat' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-label)] hover:text-[var(--text-main)]'}`}
-            >
-              Chat
-            </button>
-            <button
-              onClick={() => setChatTab('bgm')}
-              className={`flex-1 py-1.5 px-3 text-xs font-medium cursor-pointer rounded-md ${chatTab === 'bgm' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-label)] hover:text-[var(--text-main)]'}`}
-            >
-              BGM
-            </button>
-          </div>
-
-          {/* Chat & BGM tetap mounted (hidden saja) agar iframe chat tidak reload saat pindah tab */}
-          <div className={chatTab === 'chat' ? 'flex-grow flex flex-col overflow-hidden h-full' : 'hidden'}>
-              <div className="p-3 bg-[var(--bg-color)] border-b border-[var(--border-color)] flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 overflow-hidden min-w-0">
-                  <img src={viewStream.thumbnail} alt="Preview" className="w-12 h-8 rounded object-cover bg-[var(--bg-color)] shrink-0" />
-                  <div className="flex flex-col overflow-hidden leading-tight">
-                    <p className="text-xs font-medium truncate">{viewStream.title}</p>
-                    <span className="flex items-center gap-2">
-                      <a href={viewStream.url} target="_blank" rel="noreferrer" className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1">
-                        <ExternalLink className="w-3 h-3" /> Watch
-                      </a>
-                      <a href={chatSrc} target="_blank" rel="noreferrer" className="text-xs text-[var(--text-label)] hover:underline flex items-center gap-1" title="Buka URL chat di tab baru">
-                        <ExternalLink className="w-3 h-3" /> Popout
-                      </a>
-                    </span>
-                  </div>
-                </div>
-                <span className="flex items-center gap-1 shrink-0">
-                  <ZoomControls value={zooms.chat} onChange={(v) => setZoom('chat', v)} label="Zoom panel Chat" />
-                  <button onClick={() => setShowChatSettings((p) => !p)} className="p-2 text-[var(--text-label)] hover:text-[var(--text-main)] cursor-pointer rounded-md" title="Chat settings">
-                    <Settings className="w-4 h-4" />
-                  </button>
-                </span>
-              </div>
-              {showChatSettings && (
-                <div className="p-3 bg-[var(--bg-color)] border-b border-[var(--border-color)] flex flex-col gap-2">
-                  <label className="text-xs font-medium text-[var(--text-label)]">Default Video ID</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={manualInput}
-                      onChange={(e) => setManualInput(e.target.value)}
-                      placeholder="Video ID"
-                      className="flex-1 text-xs px-3 py-2 border border-[var(--border-color)] bg-[var(--panel-bg)] rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                    />
-                    <button onClick={saveManualVideoId} className="px-4 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer">
-                      Save
-                    </button>
-                  </div>
-                </div>
-              )}
-              <div className="flex-grow relative">
-                <ZoomableFrame
-                  src={chatSrc}
-                  title="Live Chat"
-                  zoom={zooms.chat}
-                  frameClass={isDragging ? 'pointer-events-none' : undefined}
-                />
-              </div>
-              <span className="absolute bottom-2 right-3 text-[8px] tracking-widest font-bold uppercase text-[var(--text-label)] opacity-40 pointer-events-none">
-                LIVE CHAT
-              </span>
-            </div>
-
-          <div className={chatTab === 'bgm' ? 'flex-grow flex flex-col overflow-y-auto mdock-scroll p-3 h-full gap-4' : 'hidden'}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2"></div>
-                <button onClick={() => setShowBgmSettings((p) => !p)} className="p-1.5 text-[var(--text-label)] hover:text-[var(--text-main)] cursor-pointer" title="BGM settings">
-                  <Settings className="w-4 h-4" />
-                </button>
-              </div>
-
-              {showBgmSettings && (
-                <div className="p-3 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-md space-y-3">
-                  <input
-                    type="text"
-                    value={bgmRoomId}
-                    onChange={(e) => setBgmRoomId(e.target.value)}
-                    placeholder={`Room ID (kosong = private key)`}
-                    className="w-full text-xs px-3 py-2 border border-[var(--border-color)] bg-[var(--panel-bg)] rounded-md"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => saveBgmRoom(bgmRoomId, true)}
-                      className="flex-1 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer"
-                    >
-                      Connect
-                    </button>
-                    <button
-                      onClick={() => saveBgmRoom(bgmRoomId, false)}
-                      className="flex-1 py-2 text-xs font-medium text-red-500 bg-red-500/10 rounded-md cursor-pointer"
-                    >
-                      Disconnect
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Now playing + kontrol — sama seperti widget request queue */}
-              <div className="rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-4 space-y-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Music className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-[12px] truncate">{current ? current.title : 'Belum ada lagu'}</div>
-                    {current && (
-                      <div className="text-[var(--text-label)] text-[9px] truncate">
-                        req by {current.requestedBy} • {current.platform}
-                      </div>
-                    )}
-                  </div>
-                  <span className={`text-[9px] font-bold uppercase ${song?.isPlaying ? 'text-emerald-500' : 'text-[var(--text-label)]'}`}>
-                    {song?.isPlaying ? 'Play' : 'Stop'}
-                  </span>
-                </div>
-                {/* prev / play-pause / next inline + progress */}
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => songControl('prev')}
-                    className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--bg-color)] hover:opacity-80 border border-[var(--border-color)] text-[var(--text-main)] cursor-pointer"
-                    title="Sebelumnya"
-                  >
-                    <SkipBack className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => songControl(song?.isPlaying ? 'pause' : 'play')}
-                    className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--text-main)] text-[var(--bg-color)] hover:opacity-85 cursor-pointer"
-                    title={song?.isPlaying ? 'Pause' : 'Play'}
-                  >
-                    {song?.isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                  </button>
-                  <button
-                    onClick={() => songControl('next')}
-                    className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--bg-color)] hover:opacity-80 border border-[var(--border-color)] text-[var(--text-main)] cursor-pointer"
-                    title="Berikutnya"
-                  >
-                    <SkipForward className="w-3.5 h-3.5" />
-                  </button>
-                  <div className="flex-1 min-w-0 mt-3">
-                    <input
-                      type="range"
-                      value={Math.min(effPos, Math.max(effDur, 1))}
-                      min={0}
-                      max={Math.max(effDur, 1)}
-                      onChange={(e) => songControl('seek', { seconds: parseFloat(e.target.value) })}
-                      className="w-full h-1 appearance-none cursor-pointer accent-[var(--accent)] bg-[var(--border-color)] rounded-full"
-                    />
-                    <div className="flex justify-between text-[9px] font-mono text-[var(--text-label)] mt-1">
-                      <span>{formatTime(effPos)}</span>
-                      <span>{formatTime(effDur)}</span>
-                    </div>
-                  </div>
-                </div>
-                {/* tambah manual */}
-                <div className="flex gap-2">
-                  <input
-                    value={newBgmUrl}
-                    onChange={(e) => setNewBgmUrl(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddManual(); }}
-                    placeholder={`Paste URL YouTube / MP3… (atau ${cmd} di chat)`}
-                    className="flex-1 h-9 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-xl px-3 text-[11px] text-[var(--text-main)] placeholder:text-[var(--text-label)] focus:outline-none"
-                  />
-                  <button onClick={handleAddManual} className="shrink-0 w-9 h-9 grid place-items-center rounded-xl bg-[var(--text-main)] text-[var(--bg-color)] hover:opacity-85 cursor-pointer" title="Tambah ke queue">
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-                {song?.lastError && (
-                  <div className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">
-                    {song.lastError}
-                  </div>
-                )}
-              </div>
-
-              {/* Choose song — sama seperti widget request queue */}
-              <div className="rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-3 space-y-2">
-                  <h4 className="text-[var(--text-label)] text-[9px] font-bold uppercase flex items-center justify-between">
-                    Choose Song ({queue.length})
-                    {queue.length > 0 && (
-                      <button onClick={() => songControl('clear')} className="text-[9px] text-red-500 hover:underline cursor-pointer normal-case font-medium">Clear</button>
-                    )}
-                  </h4>
-                  <div className="space-y-1.5 max-h-[220px] overflow-y-auto mdock-scroll">
-                    {!song || queue.length === 0 ? (
-                      <div className="text-[10px] text-[var(--text-label)] italic opacity-70">Queue kosong. Ketik {cmd} + URL di chat.</div>
-                    ) : (
-                      queue.map((q, i) => (
-                        <div
-                          key={q.id}
-                          className={`flex items-center gap-2 p-1.5 rounded-lg border cursor-pointer transition-colors ${
-                            current && q.id === current.id
-                              ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30'
-                              : 'bg-[var(--bg-color)] border-[var(--border-color)]'
-                          }`}
-                          onClick={() => songControl('choose', { index: i })}
-                          title="Klik untuk putar"
-                        >
-                          <span className={`text-[9px] font-mono w-4 shrink-0 ${current && q.id === current.id ? 'text-[var(--accent)]' : 'text-[var(--text-label)]'}`}>
-                            {String(i + 1).padStart(2, '0')}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-bold text-[var(--text-main)] truncate">{q.title}</div>
-                            <div className="text-[8px] text-[var(--text-label)] truncate">{q.requestedBy}</div>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              songControl('remove', { index: i });
-                            }}
-                            className="shrink-0 p-1 text-[var(--text-label)] hover:text-red-400 cursor-pointer"
-                            title="Hapus"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-              {/* Cari YouTube (tambahan mobile-dock) */}
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={bgmSearchQuery}
-                    onChange={(e) => setBgmSearchQuery(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') searchBgm(); }}
-                    placeholder="Cari lagu YouTube..."
-                    className="flex-1 text-xs px-3 py-2 border border-[var(--border-color)] bg-[var(--panel-bg)] rounded-md"
-                  />
-                  <button onClick={searchBgm} disabled={bgmIsSearching} className="px-3 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer disabled:opacity-50">
-                    {bgmIsSearching ? '...' : 'Cari'}
-                  </button>
-                </div>
-                {bgmSearchError && <p className="text-[10px] text-red-500">{bgmSearchError}</p>}
-                {bgmSearchResults.length > 0 && (
-                  <div className="space-y-1 border border-[var(--border-color)] rounded-md p-1.5 max-h-48 overflow-y-auto mdock-scroll">
-                    {bgmSearchResults.map((track: YtSearchItem) => (
-                      <div
-                        key={track.id?.videoId}
-                        onClick={() => addBgmUrl(`https://www.youtube.com/watch?v=${track.id?.videoId}`, track.snippet?.title)}
-                        className="p-2 cursor-pointer flex items-center gap-2 rounded-md hover:bg-[var(--bg-color)]"
-                      >
-                        {track.snippet?.thumbnails?.default?.url && (
-                          <img src={track.snippet.thumbnails.default.url} alt="" className="w-8 h-8 rounded object-cover bg-[var(--bg-color)] shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-xs truncate">{track.snippet?.title}</p>
-                          <p className="text-[10px] truncate text-[var(--text-label)]">{track.snippet?.channelTitle}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-        </div>
+      {/* DOCKABLE LAYOUT — drag tab panel ke atas/bawah/kiri/kanan/tengah (tab stacking), resize via handle */}
+      <div ref={containerRef} className="flex-grow pt-12 pb-16 md:pb-0 flex h-screen select-none relative gap-0.5 px-0.5">
+        <DockableLayout
+          layout={dockLayout}
+          onChange={handleDockLayoutChange}
+          panels={knownPanels}
+          renderTitle={(id) => dockTitles[id] ?? id}
+          renderBody={renderDockPanel}
+          isMobile={isMobile}
+          mobilePanel={mobilePanel}
+          onMobilePanelChange={setMobilePanel}
+          onResizeActive={setIsDockResizing}
+        />
       </div>
 
-      {/* MOBILE DOCK */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t-2 border-[var(--border-color)] bg-[var(--dock-bg)] backdrop-blur-md flex items-center justify-around px-2 z-50">
-        {([
-          { id: 'deck', label: 'Deck', Icon: Tv },
-          { id: 'control', label: 'Control', Icon: Sliders },
-          { id: 'chat', label: 'Chat', Icon: MessageSquare },
-        ] as const).map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveMobileTab(id)}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${activeMobileTab === id ? 'text-[var(--text-main)]' : 'text-[var(--text-label)]'}`}
-          >
-            <Icon className="w-5 h-5" />
-            <span className="text-[9px] font-bold uppercase tracking-wide">{label}</span>
-          </button>
-        ))}
+      {/* MOBILE DOCK — nav mengikuti panel yang terlihat di layout */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t-2 border-[var(--border-color)] bg-[var(--dock-bg)] backdrop-blur-md flex items-center justify-around px-2 z-50 overflow-x-auto">
+        {dockVisiblePanels(dockLayout.root).map((id) => {
+          const customTitle = dockTitles[id] ?? id;
+          const meta = {
+            deck: { label: 'Deck', Icon: Tv },
+            control: { label: 'Control', Icon: Sliders },
+            alert: { label: 'Alert', Icon: AlertCircle },
+            monitor: { label: 'Monitor', Icon: Eye },
+            chat: { label: 'Chat', Icon: MessageSquare },
+            bgm: { label: 'BGM', Icon: Music },
+          }[id] ?? { label: customTitle, Icon: Tv };
+          const { label, Icon } = meta;
+          return (
+            <button
+              key={id}
+              onClick={() => setMobilePanel(id)}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-colors shrink-0 px-2 ${mobilePanel === id ? 'text-[var(--text-main)]' : 'text-[var(--text-label)]'}`}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-[9px] font-bold uppercase tracking-wide">{label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* SETTINGS MODAL */}
@@ -1621,6 +1755,50 @@ export default function MobileDockPage() {
                   <p className="text-[9px] text-[var(--text-label)] opacity-85">{f.hint}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Panel kustom — tambah dock baru dengan URL sendiri */}
+            <div className="space-y-3 pt-2 border-t-2 border-[var(--border-color)]">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-label)]">Panel kustom ({tmpCustom.length}/20)</p>
+                <button
+                  onClick={() => setTmpCustom((p) => (p.length >= 20 ? p : [...p, { id: `custom_${Date.now().toString(36)}`, title: `Custom ${p.length + 1}`, url: '' }]))}
+                  className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] hover:underline cursor-pointer"
+                >
+                  + Tambah panel
+                </button>
+              </div>
+              <p className="text-[9px] text-[var(--text-label)] opacity-85">Dock baru dengan URL apapun (bisa pakai {'{videoId}'}). Setelah disimpan, panel muncul di layout dan bisa di-drag seperti panel lain.</p>
+              {tmpCustom.map((c, i) => (
+                <div key={c.id} className="space-y-1 border border-[var(--border-color)] p-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={c.title}
+                      onChange={(e) => setTmpCustom((p) => p.map((x, xi) => (xi === i ? { ...x, title: e.target.value } : x)))}
+                      placeholder="Nama panel"
+                      className="flex-1 min-w-0 text-xs font-bold px-3 py-2 border-2 border-[var(--border-color)] bg-[var(--bg-color)] focus:outline-none"
+                    />
+                    <button
+                      onClick={() => setTmpCustom((p) => p.filter((_, xi) => xi !== i))}
+                      className="shrink-0 p-2 text-[var(--text-label)] hover:text-red-400 cursor-pointer"
+                      title="Hapus panel ini"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={c.url}
+                    onChange={(e) => setTmpCustom((p) => p.map((x, xi) => (xi === i ? { ...x, url: e.target.value } : x)))}
+                    placeholder="https://… (URL embed)"
+                    className="w-full text-xs font-mono px-3 py-2 border-2 border-[var(--border-color)] bg-[var(--bg-color)] focus:outline-none"
+                  />
+                </div>
+              ))}
+              {tmpCustom.length === 0 && (
+                <p className="text-[10px] text-[var(--text-label)] italic">Belum ada panel kustom.</p>
+              )}
             </div>
 
             {saveError && (
