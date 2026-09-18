@@ -289,6 +289,8 @@ export default function DockableLayout(props: DockableLayoutProps) {
   const [dragPanel, setDragPanel] = useState<string | null>(null);
   const [hoverZone, setHoverZone] = useState<{ tabsId: string; pos: DockDropPos } | null>(null);
   const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null);
+  // Konfirmasi sembunyikan panel — anti kepencet di tablet/mobile (tap ✕ tidak langsung hapus)
+  const [confirmHide, setConfirmHide] = useState<string | null>(null);
 
   const visible = useMemo(() => dockVisiblePanels(layout.root), [layout.root]);
   const visibleSet = useMemo(() => new Set(visible), [visible]);
@@ -434,18 +436,53 @@ export default function DockableLayout(props: DockableLayoutProps) {
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
-                        hidePanel(p);
+                        setConfirmHide(p);
                       }}
-                      className={`p-0.5 rounded ${active ? 'hover:bg-white/20' : 'hover:bg-[var(--bg-color)]'} opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer`}
-                      title="Sembunyikan panel (bisa dikembalikan via menu Layout)"
+                      className={`p-1 rounded ${active ? 'hover:bg-white/20' : 'hover:bg-[var(--bg-color)]'} opacity-50 hover:opacity-100 transition-opacity cursor-pointer touch-manipulation`}
+                      title="Sembunyikan panel"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
               );
             })}
           </div>
+          {/* Konfirmasi sembunyikan (anti salah pencet di touch) */}
+          {confirmHide && node.panels.includes(confirmHide) && (
+            <>
+              <button
+                aria-hidden
+                tabIndex={-1}
+                onClick={() => setConfirmHide(null)}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="absolute inset-0 z-[140] cursor-default bg-black/40 border-none p-0"
+              />
+              <div className="absolute top-9 right-1 z-[150] w-52 rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-3 shadow-xl">
+                <p className="text-[11px] font-bold text-[var(--text-main)]">
+                  Sembunyikan “{String(renderTitle(confirmHide))}”?
+                </p>
+                <p className="mt-1 text-[10px] text-[var(--text-label)]">Bisa dikembalikan kapan saja via menu Layout di header.</p>
+                <div className="mt-2.5 flex gap-2">
+                  <button
+                    onClick={() => setConfirmHide(null)}
+                    className="flex-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-md bg-[var(--bg-color)] text-[var(--text-main)] cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={() => {
+                      hidePanel(confirmHide);
+                      setConfirmHide(null);
+                    }}
+                    className="flex-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-md bg-red-500 text-white cursor-pointer"
+                  >
+                    Sembunyikan
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
           {/* Bodies: semua tetap mounted, yang non-aktif hidden (iframe tidak reload) */}
           <div className="flex-1 min-h-0 relative">
             {node.panels.map((p) => (
@@ -483,11 +520,17 @@ export default function DockableLayout(props: DockableLayoutProps) {
     );
   };
 
-  // ---- mobile: satu panel penuh
+  // ---- mobile: satu panel penuh, panel lain tetap mounted (hidden) agar iframe tidak reload saat pindah tab
   if (isMobile) {
     if (!effMobile) return null;
     return (
-      <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden">{renderBody(effMobile)}</div>
+      <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden relative">
+        {visible.map((id) => (
+          <div key={id} className={id === effMobile ? 'absolute inset-0 flex flex-col min-h-0' : 'hidden'} aria-hidden={id !== effMobile}>
+            {renderBody(id)}
+          </div>
+        ))}
+      </div>
     );
   }
 
