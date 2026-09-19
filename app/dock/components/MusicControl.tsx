@@ -88,6 +88,13 @@ export default function MusicControl({
 }) {
   const [song, setSong] = useState<SongState | null>(null);
   const [addUrl, setAddUrl] = useState('');
+  // Search lagu via backend (YouTube Data API resmi, fallback scrape bila key/quota habis).
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Array<{ videoId: string; title: string; channel: string; thumbnail: string; url: string }>>([]);
+  const [searchSource, setSearchSource] = useState('');
+  const [searchWarning, setSearchWarning] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lyrics, setLyrics] = useState<{ synced: LyricLine[]; plain: string }>({ synced: [], plain: '' });
   const [lyricsFor, setLyricsFor] = useState('');
   // Posisi drag slider (seek) — dikirim ke server saat dilepas agar tidak spam.
@@ -122,6 +129,13 @@ export default function MusicControl({
       setSong(st);
     };
     s.on('song-update', onUpdate);
+    const onSearchResult = (res: { q?: string; results?: Array<{ videoId: string; title: string; channel: string; thumbnail: string; url: string }>; source?: string; warning?: string }) => {
+      setSearching(false);
+      setSearchResults(Array.isArray(res?.results) ? res.results : []);
+      setSearchSource(String(res?.source || ''));
+      setSearchWarning(typeof res?.warning === 'string' ? res.warning : null);
+    };
+    s.on('song-search-result', onSearchResult);
     s.on('connect', () => {
       s.emit('join-room', room);
       s.emit('song-get', { privateKey: room });
@@ -133,6 +147,8 @@ export default function MusicControl({
     }
     return () => {
       s.off('song-update', onUpdate);
+      s.off('song-search-result', onSearchResult);
+      if (searchTimer.current) clearTimeout(searchTimer.current);
       s.disconnect();
       socketRef.current = null;
     };
@@ -168,6 +184,40 @@ export default function MusicControl({
     } catch {}
     s.emit('song-add', { privateKey: getRoom(), url, requestedBy: who });
     setAddUrl('');
+  };
+
+  const dockWho = () => {
+    try {
+      const raw = localStorage.getItem('obs-login');
+      const email = raw ? JSON.parse(raw).email : '';
+      if (email) return String(email).split('@')[0];
+    } catch {}
+    return 'dock';
+  };
+
+  // Search debounce 500ms ke backend (pakai YouTube API resmi bila YOUTUBE_API_KEY di-set).
+  const handleSearchChange = (v: string) => {
+    setSearchQuery(v);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!v.trim()) {
+      setSearchResults([]);
+      setSearchWarning(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    searchTimer.current = setTimeout(() => {
+      getSocket()?.emit('song-search', { q: v.trim(), maxResults: 6 });
+    }, 500);
+  };
+
+  const handlePickResult = (r: { videoId: string; title: string; channel: string; thumbnail: string; url: string }) => {
+    const s = getSocket();
+    if (!s) return;
+    s.emit('song-add', { privateKey: getRoom(), url: r.url, title: r.title, requestedBy: dockWho(), platform: 'dock' });
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchWarning(null);
   };
 
   const dur = song?.duration || 0;
@@ -261,6 +311,44 @@ export default function MusicControl({
           <button onClick={handleAdd} className="shrink-0 w-9 h-9 grid place-items-center rounded-xl bg-white text-black hover:bg-zinc-200" title="Tambah ke queue">
             <Plus className="w-4 h-4" />
           </button>
+        </div>
+        {/* search via YouTube API resmi (backend) */}
+        <div className="space-y-1.5">
+          <div className="flex gap-2">
+            <input
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Cari judul di YouTube… (resmi API)"
+              className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl px-3 text-[11px] text-white placeholder:text-gray-600 focus:outline-none focus:border-white/20"
+            />
+            <span className="shrink-0 h-9 px-2 grid place-items-center rounded-xl bg-white/5 border border-white/10 text-[9px] font-black uppercase text-gray-400">
+              {searching ? '…' : searchSource === 'youtube-api' ? 'API' : searchSource === 'scrape' ? 'Cad.' : 'YT'}
+            </span>
+          </div>
+          {searchWarning && (
+            <div className="text-[9px] font-bold text-yellow-300/90">{searchWarning}</div>
+          )}
+          {searchResults.length > 0 && (
+            <div className="space-y-1 max-h-[180px] overflow-y-auto custom-scrollbar">
+              {searchResults.map((r) => (
+                <button
+                  key={r.videoId}
+                  onClick={() => handlePickResult(r)}
+                  className="w-full flex items-center gap-2 p-1.5 rounded-lg border bg-white/5 border-white/5 hover:bg-white/10 text-left"
+                  title="Klik untuk tambah ke queue"
+                >
+                  {r.thumbnail ? (
+                    <img src={r.thumbnail} alt="" className="w-10 h-[22px] rounded object-cover shrink-0" loading="lazy" />
+                  ) : null}
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[10px] font-bold text-white truncate">{r.title}</span>
+                    {r.channel && <span className="block text-[8px] text-gray-500 truncate">{r.channel}</span>}
+                  </span>
+                  <Plus className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {lastError && (
           <div className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">

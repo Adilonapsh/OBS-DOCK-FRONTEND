@@ -23,6 +23,23 @@ import { ChatMessage, DockStatus } from "../types/dockTypes";
 import { decrypt, isEncrypted } from "../utils/encryption";
 import { gooeyToast } from "goey-toast";
 
+// Fallback key persisten: sessionStorage (per-tab) → localStorage (antar-tab) → ?key= di URL.
+// Dipakai semua getRoom agar socket tetap di room yang benar walau state belum terisi.
+function readStoredDockKey(includeUrl = false): string {
+    if (typeof window === "undefined") return "";
+    try {
+        const fromSession =
+            sessionStorage.getItem("dock_private_verified") ||
+            sessionStorage.getItem("bypass_private_key") ||
+            "";
+        if (fromSession) return fromSession;
+        const fromLocal = localStorage.getItem("dock_private_key") || "";
+        if (fromLocal) return fromLocal;
+        if (includeUrl) return new URLSearchParams(window.location.search).get("key") || "";
+    } catch {}
+    return "";
+}
+
 function TwitchIcon({ className }: { className?: string }) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -244,6 +261,8 @@ export default function Home() {
                     if (typeof window !== "undefined") {
                         sessionStorage.setItem("bypass_private_key", keyFromUrl);
                         sessionStorage.setItem("dock_private_verified", keyFromUrl);
+                        // Backup persisten antar-tab/session: sessionStorage hilang saat tab baru.
+                        try { localStorage.setItem("dock_private_key", keyFromUrl); } catch {}
                     }
                     setPrivateKeyLoading(false);
                     (async () => {
@@ -276,7 +295,9 @@ export default function Home() {
                             }
                         } catch {}
                     })();
-                    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("key")) router.replace("/dock");
+                    // SENGAJA tidak router.replace("/dock"): ?key= dipertahankan di URL
+                    // agar refresh / reload di OBS Custom Browser Dock tidak kehilangan key
+                    // (storage CEF OBS terpisah dari browser utama).
                     return;
                 }
             }
@@ -289,6 +310,9 @@ export default function Home() {
                     if (isValid) {
                         setPrivateKey(bypassKey);
                         setPrivateKeyVerified(true);
+                        if (typeof window !== "undefined") {
+                            try { localStorage.setItem("dock_private_key", bypassKey); } catch {}
+                        }
                         try {
                             const { data: all } = await (supabase as any).rpc("get_all_by_private_key", { p_key: bypassKey });
                             if (all && !all.error) {
@@ -331,6 +355,30 @@ export default function Home() {
                     setPrivateKeyLoading(false);
                     return;
                 }
+                // Fallback persisten: tab baru / sessionStorage kosong tapi pernah verifikasi di perangkat ini.
+                const storedKey = typeof window !== "undefined" ? (() => { try { return localStorage.getItem("dock_private_key"); } catch { return null; } })() : null;
+                if (storedKey) {
+                    let ok = false;
+                    try {
+                        const { data: isValid } = await (supabase as any).rpc("verify_private_key", { p_key: storedKey });
+                        ok = !!isValid;
+                    } catch {
+                        ok = /^[a-f0-9]{32,64}$/i.test(storedKey) || storedKey.startsWith("guest_") || storedKey.length >= 16;
+                    }
+                    if (ok) {
+                        setPrivateKey(storedKey);
+                        setPrivateKeyInput(storedKey);
+                        setPrivateKeyVerified(true);
+                        try {
+                            sessionStorage.setItem("bypass_private_key", storedKey);
+                            sessionStorage.setItem("dock_private_verified", storedKey);
+                        } catch {}
+                        setPrivateKeyLoading(false);
+                        return;
+                    } else {
+                        try { localStorage.removeItem("dock_private_key"); } catch {}
+                    }
+                }
                 setPrivateKeyLoading(false);
                 return;
             }
@@ -353,7 +401,10 @@ export default function Home() {
                 const verified = typeof window !== "undefined" ? sessionStorage.getItem("dock_private_verified") : null;
                 if (verified === key || !verified) {
                     setPrivateKeyVerified(true);
-                    if (typeof window !== "undefined") sessionStorage.setItem("dock_private_verified", key);
+                    if (typeof window !== "undefined") {
+                        sessionStorage.setItem("dock_private_verified", key);
+                        try { localStorage.setItem("dock_private_key", key); } catch {}
+                    }
                 }
                 // background fetch config (decrypt biar sama kayak Config) + simpan ke localStorage biar sinkron
                 (async () => {
@@ -439,6 +490,7 @@ export default function Home() {
             if (typeof window !== "undefined") {
                 sessionStorage.setItem("bypass_private_key", input);
                 sessionStorage.setItem("dock_private_verified", input);
+                try { localStorage.setItem("dock_private_key", input); } catch {}
             }
             // fetch semua config tanpa login (opsional, jangan block jika gagal)
             try {
@@ -479,6 +531,14 @@ export default function Home() {
         }
     };
 
+    // URL siap paste ke OBS > View > Docks > Custom Browser Docks.
+    // Key di URL = cara paling andal di OBS dock (storage CEF terpisah dari browser).
+    const handleCopyObsDockUrl = async () => {
+        const key = privateKey || privateKeyInput.trim();
+        if (!key || typeof window === "undefined") return;
+        await navigator.clipboard.writeText(`${window.location.origin}/dock?key=${key}`);
+    };
+
     const handleRegeneratePrivateKey = async () => {
         if (!confirm("Regenerate private key? Koneksi TikTok lama yang pakai key lama akan terputus.")) return;
         const { data, error } = await (supabase as any).rpc("regenerate_private_key");
@@ -486,7 +546,10 @@ export default function Home() {
             setPrivateKey(data as string);
             setPrivateKeyVerified(false);
             setPrivateKeyInput("");
-            if (typeof window !== "undefined") sessionStorage.removeItem("dock_private_verified");
+            if (typeof window !== "undefined") {
+                sessionStorage.removeItem("dock_private_verified");
+                try { localStorage.removeItem("dock_private_key"); } catch {}
+            }
         }
     };
 
@@ -611,7 +674,7 @@ export default function Home() {
     useEffect(() => {
         const s = io(getSocketUrl(), { transports: ['websocket','polling'] as const });
         pollSocketRef.current = s;
-        const getRoom = () => privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const getRoom = () => privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         s.on('connect', () => {
             const room = getRoom();
             s.emit('join-room', room);
@@ -630,7 +693,7 @@ export default function Home() {
     }, []);
     useEffect(()=>{
         if(pollSocketRef.current?.connected){
-            const room = privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+            const room = privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
             pollSocketRef.current.emit('join-room', room);
             pollSocketRef.current.emit('poll-get', { privateKey: room });
             pollSocketRef.current.emit('task-get', { privateKey: room });
@@ -728,7 +791,7 @@ export default function Home() {
         sbSocketRef.current.send(JSON.stringify(payload));
         createPoll(question, options, duration);
         // also emit to poll widget (real OBS data)
-        const room = privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         if (pollSocketRef.current?.connected) {
             pollSocketRef.current.emit('poll-create', { privateKey: room, question, options, duration, theme: 'bar', visible: showPoll });
         } else {
@@ -744,25 +807,25 @@ export default function Home() {
         setLayout({ ...layout, createPoll: false });
     }
     const handlePausePoll = () => {
-        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         if (!pollSocketRef.current) return;
         if (activePoll?.paused) pollSocketRef.current.emit('poll-resume', { privateKey: room });
         else pollSocketRef.current.emit('poll-pause', { privateKey: room });
     };
     const handleStopPoll = () => {
-        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         if (!confirm('Stop polling? Hasil akhir akan tetap tampil di OBS sampai poll baru.')) return;
         pollSocketRef.current?.emit('poll-end', { privateKey: room });
     };
     const handleClearPoll = () => {
-        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         pollSocketRef.current?.emit('poll-clear', { privateKey: room });
         setActivePoll(null);
     };
     const handleToggleShowPoll = () => {
         const next = !showPoll;
         setShowPoll(next);
-        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         pollSocketRef.current?.emit('poll-visibility', { privateKey: room, visible: next });
     };
 
@@ -784,25 +847,25 @@ export default function Home() {
     const handleAddTask = () => {
         const text = newTaskText.trim();
         if (!text) { alert('Teks task tidak boleh kosong!'); return; }
-        const room = privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         pollSocketRef.current?.emit('task-add', { privateKey: room, text });
         setNewTaskText("");
     }
     const handleToggleTask = (id: string) => {
-        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         pollSocketRef.current?.emit('task-toggle', { privateKey: room, id });
     }
     const handleRemoveTask = (id: string) => {
-        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         pollSocketRef.current?.emit('task-remove', { privateKey: room, id });
     }
     const handleClearTasks = () => {
         if (!confirm('Hapus semua tasks?')) return;
-        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         pollSocketRef.current?.emit('task-clear', { privateKey: room });
         setActiveTasks(null);
     }
-    const getTimerRoom = () => privateKey || (typeof window !== 'undefined' ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '') : '') || 'global';
+    const getTimerRoom = () => privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
     // Bridge Streamer.bot -> backend -> widget. Pakai pollSocket (selalu konek),
     // fallback ke tkSocket (hanya ada kalau TikTok pernah di-connect).
     // Sebelumnya semua emit sb-* pakai tkSocket saja -> chat/gift/follow/viewer
@@ -1033,7 +1096,7 @@ export default function Home() {
     // Ambil payload connect terakhir (tanpa alert) untuk dipakai auto-retry
     const getTikTokRetryPayload = () => {
         const username = tiktokConfig.username.trim() || (typeof window !== "undefined" ? localStorage.getItem("tiktokUsername") || "" : "");
-        const key = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null);
+        const key = privateKey || (typeof window !== "undefined" ? (readStoredDockKey(true)) : null);
         if (!username || !key) return null;
         return { username, privateKey: key };
     };
@@ -1074,7 +1137,7 @@ export default function Home() {
             alert("Silakan masukkan username TikTok!");
             return;
         }
-        const effectiveKey = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null);
+        const effectiveKey = privateKey || (typeof window !== "undefined" ? (readStoredDockKey(true)) : null);
         const isVerified = privateKeyVerified || !!effectiveKey;
         if (!effectiveKey || !isVerified) {
             alert("Akses dock butuh private key. Silakan verifikasi private key di atas.");
@@ -1088,7 +1151,7 @@ export default function Home() {
             localStorage.setItem("tiktok-config", JSON.stringify(tiktokConfig));
         }
 
-        const effectivePrivateKey = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null) || privateKey;
+        const effectivePrivateKey = privateKey || (typeof window !== "undefined" ? (readStoredDockKey(true)) : null) || privateKey;
         const payload = { username, privateKey: effectivePrivateKey };
 
         if (!tkSocketRef.current) {
@@ -1519,7 +1582,7 @@ export default function Home() {
     }
 
     const syncConfigsFromDb = async () => {
-        const key = privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified") || new URLSearchParams(window.location.search).get("key")) : null);
+        const key = privateKey || (typeof window !== "undefined" ? (readStoredDockKey(true)) : null);
         if (!key) {
             gooeyToast.error("Private key belum ada, verifikasi terlebih dahulu");
             return;
@@ -2217,6 +2280,8 @@ export default function Home() {
                                     </div>
                                     <code className="block text-[10px] break-all text-cyan-400 font-mono-custom bg-white/5 p-2 rounded border border-white/5">{privateKey}</code>
                                     <button onClick={handleRegeneratePrivateKey} className="text-[10px] font-bold text-red-400 hover:text-red-300">Regenerate private key</button>
+                                    <button onClick={handleCopyObsDockUrl} className="block w-full h-9 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 font-black text-[10px] uppercase tracking-widest">Copy URL Dock OBS</button>
+                                    <p className="text-[9px] text-gray-500 leading-relaxed">Paste ke OBS → View → Docks → Custom Browser Docks. URL berisi <code className="text-cyan-400">?key=</code> agar key tidak hilang saat OBS dibuka ulang.</p>
                                 </div>
                             )}
                             <div>
@@ -2225,7 +2290,7 @@ export default function Home() {
                             </div>
                             {privateKeyError && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold px-3 py-2 rounded-lg">{privateKeyError}</div>}
                             <button onClick={handleVerifyPrivateKey} className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[11px] uppercase tracking-widest">Verifikasi & Masuk Dock</button>
-                            <button onClick={async () => { await supabase.auth.signOut(); if (typeof window !== "undefined") sessionStorage.removeItem("dock_private_verified"); router.push("/login"); }} className="w-full h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest">Logout</button>
+                            <button onClick={async () => { await supabase.auth.signOut(); if (typeof window !== "undefined") { sessionStorage.removeItem("dock_private_verified"); try { localStorage.removeItem("dock_private_key"); } catch {} } router.push("/login"); }} className="w-full h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest">Logout</button>
                         </div>
                     </div>
                 </div>
@@ -3371,7 +3436,7 @@ export default function Home() {
                                     {tab.id === 'music' && (
                                         <div className="p-3 max-h-[380px] overflow-y-auto custom-scrollbar">
                                             <MusicControl
-                                                getRoom={() => privateKey || (typeof window !== "undefined" ? (sessionStorage.getItem("dock_private_verified") || sessionStorage.getItem("bypass_private_key") || "") : "") || "global"}
+                                                getRoom={() => privateKey || readStoredDockKey(true) || "global"}
                                             />
                                         </div>
                                     )}

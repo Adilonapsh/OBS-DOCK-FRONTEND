@@ -1069,7 +1069,7 @@ export default function MobileDockPage() {
     const q = bgmSearchQuery.trim();
     if (!q) return;
     if (!YOUTUBE_API_KEY) {
-      setBgmSearchError('NEXT_PUBLIC_YOUTUBE_API_KEY belum di-set di .env');
+      setBgmSearchError('NEXT_PUBLIC_YOUTUBE_API_KEY belum di-set di frontend/.env (Google Cloud Console → YouTube Data API v3, gratis 100 search/hari)');
       return;
     }
     setBgmIsSearching(true);
