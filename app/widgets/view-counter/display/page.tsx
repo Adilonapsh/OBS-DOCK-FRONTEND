@@ -85,7 +85,8 @@ function ViewCounterInner() {
       if (!Number.isNaN(n)) setCounts((prev) => ({ ...prev, [normPlatform(d.platform)]: n }));
     });
     socket.on('song-update', (data: Record<string, unknown>) => {
-      const d = data as { queue?: { id: string; title: string; requestedBy: string }[]; currentIndex?: number };
+      const d = data as { room?: string; queue?: { id: string; title: string; requestedBy: string }[]; currentIndex?: number };
+      if (d.room && d.room !== room) return;
       if (Array.isArray(d.queue)) {
         const q = d.queue.map((s) => ({ id: String(s.id), title: String(s.title), requestedBy: String(s.requestedBy || '') }));
         setSongs(q);

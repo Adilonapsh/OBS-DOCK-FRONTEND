@@ -90,6 +90,8 @@ export default function MusicControl({
   const [addUrl, setAddUrl] = useState('');
   const [lyrics, setLyrics] = useState<{ synced: LyricLine[]; plain: string }>({ synced: [], plain: '' });
   const [lyricsFor, setLyricsFor] = useState('');
+  // Posisi drag slider (seek) — dikirim ke server saat dilepas agar tidak spam.
+  const [seekDrag, setSeekDrag] = useState<number | null>(null);
   // Posisi lokal: server hanya update bila display player terbuka,
   // jadi dock menghitung sendiri agar highlight lirik tetap jalan.
   const [localPos, setLocalPos] = useState(0);
@@ -110,23 +112,31 @@ export default function MusicControl({
 
   // Koneksi socket sendiri (jangan nebeng socket dock) — dijamin ada
   // sehingga refresh dock tidak pernah kehilangan queue.
+  // Filter by room: backend broadcast global, jadi abaikan update milik room lain.
+  const room = getRoom();
   useEffect(() => {
     const s = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     socketRef.current = s;
-    const room = getRoom();
-    const onUpdate = (st: SongState) => setSong(st);
+    const onUpdate = (st: SongState & { room?: string }) => {
+      if (st && st.room && st.room !== room) return;
+      setSong(st);
+    };
     s.on('song-update', onUpdate);
     s.on('connect', () => {
       s.emit('join-room', room);
       s.emit('song-get', { privateKey: room });
     });
+    // room bisa berubah setelah privateKey terverifikasi — sinkron ulang
+    if (s.connected) {
+      s.emit('join-room', room);
+      s.emit('song-get', { privateKey: room });
+    }
     return () => {
       s.off('song-update', onUpdate);
       s.disconnect();
       socketRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [room]);
 
   const getSocket = () => socketRef.current;
 
@@ -160,7 +170,14 @@ export default function MusicControl({
     setAddUrl('');
   };
 
-  const pct = song && song.duration > 0 ? Math.min(100, (effPos / song.duration) * 100) : 0;
+  const dur = song?.duration || 0;
+  // Nilai slider: saat di-drag tampilkan posisi drag, selain itu ikuti server.
+  const sliderPos = seekDrag ?? Math.min(effPos, Math.max(dur, 0));
+  const commitSeek = () => {
+    if (seekDrag === null) return;
+    control('seek', { seconds: seekDrag });
+    setSeekDrag(null);
+  };
   const cmd = (song as (SongState & { settings?: { command?: string } }) | null)?.settings?.command || '!song';
   const lastError = (song as (SongState & { lastError?: string | null }) | null)?.lastError || null;
   const activeLyric =
@@ -210,12 +227,25 @@ export default function MusicControl({
             <SkipForward className="w-3.5 h-3.5" />
           </button>
           <div className="flex-1 min-w-0 mt-3">
-            <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-              <div className="h-full rounded-full bg-green-500 transition-all duration-1000" style={{ width: `${pct}%` }} />
-            </div>
+            {/* Slider seek — kontrol progress hanya dari dock (desktop/mobile).
+                Widget display murni penampil, tidak bisa seek. */}
+            <input
+              type="range"
+              value={sliderPos}
+              min={0}
+              max={Math.max(dur, 1)}
+              step={1}
+              disabled={dur <= 0}
+              onChange={(e) => setSeekDrag(parseFloat(e.target.value))}
+              onPointerUp={commitSeek}
+              onKeyUp={commitSeek}
+              onBlur={commitSeek}
+              className="w-full h-1 appearance-none cursor-pointer accent-green-500 bg-white/10 rounded-full disabled:opacity-40 disabled:cursor-not-allowed"
+              title={dur > 0 ? 'Geser untuk seek' : 'Belum ada lagu'}
+            />
             <div className="flex justify-between text-[9px] font-mono text-gray-500 mt-1">
-              <span>{fmtTime(effPos)}</span>
-              <span>{fmtTime(song?.duration || 0)}</span>
+              <span>{fmtTime(seekDrag ?? effPos)}</span>
+              <span>{fmtTime(dur)}</span>
             </div>
           </div>
         </div>

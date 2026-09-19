@@ -78,6 +78,7 @@ type SongUpdate = {
   isPlaying: boolean;
   position: number;
   duration: number;
+  reporterId?: string | null;
 };
 
 declare global {
@@ -104,13 +105,16 @@ declare global {
 }
 
 type YTPlayer = {
-  loadVideoById: (id: string) => void;
+  loadVideoById: (id: string, startSeconds?: number) => void;
   cueVideoById: (id: string) => void;
   playVideo: () => void;
   pauseVideo: () => void;
   seekTo: (s: number, allowSeekAhead?: boolean) => void;
   getCurrentTime: () => number;
   getDuration: () => number;
+  mute: () => void;
+  unMute: () => void;
+  setVolume: (v: number) => void;
   destroy?: () => void;
 };
 
@@ -200,6 +204,39 @@ function MusicInner() {
   const [animClass, setAnimClass] = useState<string>(showAnimation);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Identitas tab ini — server hanya menerima laporan progres dari SATU reporter
+  // agar banyak tab/OBS source tidak saling menimpa posisi. Semua tab tetap
+  // memutar audio masing-masing (biar kedengaran di tiap tempat), dan semua
+  // tab mengikuti seek dari dock.
+  const [clientId] = useState(() => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
+  const clientIdRef = useRef(clientId);
+  const [reporterId, setReporterId] = useState<string | null>(null);
+  const isLeader = !reporterId || reporterId === clientId;
+  // Cermin untuk dibaca dari callback/interval (tanpa akses ref saat render).
+  const leaderRef = useRef(true);
+  useEffect(() => { leaderRef.current = isLeader; }, [isLeader]);
+
+  // Deteksi audio diblokir browser (autoplay policy) — tampilkan tombol suara.
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  const blockedRef = useRef(false);
+  const lastAdvanceRef = useRef({ pos: -1, at: 0 });
+  const markBlocked = () => {
+    if (!blockedRef.current) {
+      blockedRef.current = true;
+      setAudioBlocked(true);
+    }
+  };
+
+  // Gesture pengguna membuka suara permanen (per load halaman).
+  // Sebelum ada gesture: tab browser memutar BISU (diizinkan policy) agar
+  // progres tetap jalan & sync; OBS (obs=1) langsung coba bersuara.
+  const [unblocked, setUnblocked] = useState(false);
+  const unblockedRef = useRef(false);
+
+  // Late-joiner (pindah scene / buka tab belakangan): kejar posisi server
+  // saat lagu dimuat, agar semua tema/scene langsung sync.
+  const pendingSeekRef = useRef(0);
+
   // visibility ala media-player: autoHide setelah displayDuration
   const setVisibility = (v: boolean) => {
     if (hideTimeoutRef.current) { clearTimeout(hideTimeoutRef.current); hideTimeoutRef.current = null; }
@@ -267,7 +304,13 @@ function MusicInner() {
       socket.emit('song-get', auth);
     });
     socket.on('disconnect', () => setConnected(false));
-    socket.on('song-update', (data: SongUpdate) => {
+    socket.on('song-update', (data: SongUpdate & { room?: string }) => {
+      // Backend broadcast global — hanya terima update milik room sendiri
+      // agar queue tidak tertukar antar streamer / tidak kosong karena room lain.
+      if (data && data.room && data.room !== room) return;
+      if (typeof data.reporterId === 'string' || data.reporterId === null || data.reporterId === undefined) {
+        setReporterId(data.reporterId ?? null);
+      }
       const q = Array.isArray(data.queue) ? data.queue : [];
       setQueue(q);
       const idx = Math.max(0, Math.min(typeof data.currentIndex === 'number' ? data.currentIndex : 0, Math.max(0, q.length - 1)));
@@ -278,9 +321,12 @@ function MusicInner() {
       if (cur && cur.id !== prevId) {
         liveRef.current.currentId = cur.id;
         setPosition(typeof data.position === 'number' ? data.position : 0);
+        // Ingat posisi server — player yang baru dimuat langsung kejar ke sini
+        // (penting saat pindah scene / tab dibuka belakangan).
+        pendingSeekRef.current = typeof data.position === 'number' && data.position > 2 ? data.position : 0;
         setVisibility(true);
       } else if (typeof data.position === 'number' && Math.abs(data.position - liveRef.current.position) > 3) {
-        // Server seek — sinkronkan player
+        // Server seek (dari dock) — semua tab sinkronkan player masing-masing
         const a = audioRef.current;
         if (cur?.kind === 'audio' && a) {
           try { a.currentTime = data.position; } catch { /* abaikan */ }
@@ -299,11 +345,21 @@ function MusicInner() {
     };
   }, [privateKey, simulate]);
 
-  const emitControl = (action: 'play' | 'pause' | 'toggle' | 'next' | 'prev' | 'choose' | 'remove' | 'clear' | 'seek', index?: number, seconds?: number) => {
+  // Display murni penampil: satu-satunya kontrol yang dikirim adalah 'next'
+  // otomatis saat lagu selesai (disertai songId agar server bisa dedup bila
+  // banyak tab melapor bersamaan). Kontrol lain (seek/play/pause) hanya dari dock.
+  const emitEnded = () => {
     const s = socketRef.current;
     if (!s || simulate) return;
     const room = privateKey || 'global';
-    s.emit('song-control', { key: privateKey, privateKey, room, action, ...(index !== undefined ? { index } : {}), ...(seconds !== undefined ? { seconds } : {}) });
+    s.emit('song-control', {
+      key: privateKey,
+      privateKey,
+      room,
+      clientId: clientIdRef.current,
+      action: 'next',
+      songId: liveRef.current.currentId,
+    });
   };
 
   const current: Song | null = queue.length ? queue[Math.min(currentIndex, queue.length - 1)] : null;
@@ -327,8 +383,9 @@ function MusicInner() {
             onReady: () => { ytReadyRef.current = true; },
             onStateChange: (e) => {
               const ended = window.YT?.PlayerState?.ENDED ?? 0;
-              if (e.data === ended) emitControl('next');
+              if (e.data === ended) emitEnded();
             },
+            onError: () => { markBlocked(); },
           },
         });
       } catch { /* player gagal dibuat — audio tetap jalan */ }
@@ -337,7 +394,7 @@ function MusicInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [simulate]);
 
-  // --- Sinkron player mengikuti current + isPlaying ---
+  // --- Sinkron player mengikuti current + isPlaying (semua tab bunyi) ---
   useEffect(() => {
     if (simulate || !current) return;
     if (curKind === 'youtube') {
@@ -355,8 +412,9 @@ function MusicInner() {
                 onReady: () => { ytReadyRef.current = true; },
                 onStateChange: (e) => {
                   const ended = window.YT?.PlayerState?.ENDED ?? 0;
-                  if (e.data === ended) emitControl('next');
+                  if (e.data === ended) emitEnded();
                 },
+                onError: () => { markBlocked(); },
               },
             });
           } catch { return; }
@@ -366,11 +424,21 @@ function MusicInner() {
         const apply = () => {
           if (cancelled) return;
           try {
+            // Suara diizinkan: OBS langsung, tab browser setelah ada gesture.
+            // Sebelum itu putar bisu (diizinkan policy) agar progres tetap jalan & sync.
+            const allowSound = obsMode || unblockedRef.current;
             // Muat ulang HANYA bila lagu berganti — resume cukup play/pause
             if (lastVideoRef.current !== curVideoId) {
               lastVideoRef.current = curVideoId || '';
               if (curVideoId) yt.loadVideoById(curVideoId);
+              // Kejar posisi server (pindah scene / tab dibuka belakangan)
+              const ps = pendingSeekRef.current;
+              if (ps > 0) {
+                try { yt.seekTo(ps, true); } catch { /* poll akan retry */ }
+              }
             }
+            if (!allowSound) { try { yt.mute(); } catch { /* abaikan */ } }
+            else { try { yt.unMute(); yt.setVolume(100); } catch { /* abaikan */ } }
             if (liveRef.current.isPlaying) yt.playVideo();
             else yt.pauseVideo();
           } catch { /* coba lagi tick berikut */ }
@@ -386,20 +454,72 @@ function MusicInner() {
       const a = audioRef.current;
       if (!a) return;
       if (a.src !== curUrl) a.src = curUrl;
-      if (liveRef.current.isPlaying) a.play().catch(() => { /* tunggu gesture / metadata */ });
-      else a.pause();
+      a.volume = 1;
+      a.muted = !(obsMode || unblockedRef.current);
+      if (liveRef.current.isPlaying) {
+        a.play().catch((err) => {
+          // Browser memblokir autoplay tanpa gesture — putar bisu dulu
+          // agar progres tetap sync, suara dibuka saat ada klik.
+          if (err?.name === 'NotAllowedError') {
+            markBlocked();
+            try { a.muted = true; a.play().catch(() => {}); } catch { /* abaikan */ }
+          }
+        });
+      } else a.pause();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curId, curKind, curVideoId, curUrl, isPlaying, simulate]);
 
-  // --- Poll posisi media (UI) ---
+  // --- Poll posisi media (UI) + deteksi audio macet/diblokir ---
   useEffect(() => {
     if (simulate) return;
     const id = setInterval(() => {
       const cur = liveRef.current;
+      // Deteksi macet: seharusnya jalan tapi posisi tidak maju >6 detik
+      // (autoplay diblokir / stream gagal) → tampilkan tombol suara.
+      if (cur.isPlaying) {
+        if (Math.abs(cur.position - lastAdvanceRef.current.pos) > 0.01) {
+          lastAdvanceRef.current = { pos: cur.position, at: Date.now() };
+          if (blockedRef.current) {
+            blockedRef.current = false;
+            setAudioBlocked(false);
+          }
+        } else if (Date.now() - lastAdvanceRef.current.at > 6000) {
+          markBlocked();
+          // Kemungkinan autoplay diblokir — putar bisu dulu agar progres
+          // tetap jalan & sync antar scene, suara dibuka saat ada klik.
+          if (!unblockedRef.current) {
+            try {
+              const song = queue[Math.min(currentIndex, queue.length - 1)];
+              if (song?.kind === 'youtube' && ytReadyRef.current && ytPlayerRef.current) {
+                ytPlayerRef.current.mute();
+                ytPlayerRef.current.playVideo();
+              } else if (song?.kind === 'audio' && audioRef.current) {
+                audioRef.current.muted = true;
+                audioRef.current.play().catch(() => {});
+              }
+            } catch { /* abaikan */ }
+          }
+        }
+      } else {
+        lastAdvanceRef.current = { pos: cur.position, at: Date.now() };
+      }
       if (!cur.isPlaying) return;
       const song = queue[Math.min(currentIndex, queue.length - 1)];
       if (!song) return;
+      // Retry kejar posisi server bila apply() sebelumnya belum siap
+      if (pendingSeekRef.current > 0) {
+        const ps = pendingSeekRef.current;
+        try {
+          if (song.kind === 'audio' && audioRef.current && isFinite(audioRef.current.duration)) {
+            audioRef.current.currentTime = ps;
+            pendingSeekRef.current = 0;
+          } else if (song.kind === 'youtube' && ytPlayerRef.current && ytReadyRef.current) {
+            ytPlayerRef.current.seekTo(ps, true);
+            pendingSeekRef.current = 0;
+          }
+        } catch { /* coba lagi tick berikut */ }
+      }
       if (song.kind === 'audio' && audioRef.current) {
         const a = audioRef.current;
         if (isFinite(a.currentTime)) {
@@ -428,24 +548,26 @@ function MusicInner() {
     return () => clearInterval(id);
   }, [simulate, queue, currentIndex]);
 
-  // --- Lapor progress ke server tiap 1 detik ---
+  // --- Lapor progress ke server tiap 1 detik (hanya reporter) ---
   useEffect(() => {
     if (simulate) return;
     const id = setInterval(() => {
       const s = socketRef.current;
       if (!s || !liveRef.current.isPlaying) return;
+      if (!leaderRef.current) return;
       const room = privateKey || 'global';
       s.emit('song-progress', {
         key: privateKey,
         privateKey,
         room,
+        clientId: clientIdRef.current,
         position: liveRef.current.position,
         duration: liveRef.current.duration,
         isPlaying: true,
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [privateKey, simulate]);
+  }, [privateKey, simulate, reporterId]);
 
   const fontFamily = `'${font}', sans-serif`;  const pct = duration > 0 ? Math.max(0, Math.min(100, (position / duration) * 100)) : 0;
 
@@ -505,6 +627,70 @@ function MusicInner() {
   const wrapperVisible = visible || !autoHide || showWhilePaused;
   const themeWrapper = `theme-${theme}`;
 
+  // Klik/sentuhan pengguna = gesture yang membuka blokir autoplay browser.
+  // Dipanggil dari tombol suara maupun listener global (klik di mana saja).
+  const unblockAudio = () => {
+    unblockedRef.current = true;
+    setUnblocked(true);
+    blockedRef.current = false;
+    setAudioBlocked(false);
+    lastAdvanceRef.current = { pos: liveRef.current.position, at: Date.now() };
+    pendingSeekRef.current = 0;
+    let ytDone = false;
+    const tryPlay = () => {
+      try {
+        const a = audioRef.current;
+        if (a && current?.kind === 'audio') {
+          if (a.src !== curUrl) a.src = curUrl;
+          a.muted = false;
+          a.volume = 1;
+          a.play().catch(() => { /* tetap diblokir — tombol muncul lagi */ });
+        }
+      } catch { /* abaikan */ }
+      try {
+        if (current?.kind === 'youtube' && ytReadyRef.current && ytPlayerRef.current) {
+          if (lastVideoRef.current !== curVideoId && curVideoId) {
+            lastVideoRef.current = curVideoId;
+            ytPlayerRef.current.loadVideoById(curVideoId);
+          }
+          ytPlayerRef.current.unMute();
+          ytPlayerRef.current.setVolume(100);
+          ytPlayerRef.current.playVideo();
+          ytDone = true;
+        }
+      } catch { /* abaikan */ }
+    };
+    tryPlay();
+    // Player YouTube kadang belum siap saat diklik — coba lagi sampai siap (maks 10 detik).
+    if (current?.kind === 'youtube' && !ytDone) {
+      const t = setInterval(() => {
+        tryPlay();
+        if (ytDone) clearInterval(t);
+      }, 500);
+      setTimeout(() => clearInterval(t), 10000);
+    }
+  };
+
+  // Cermin stabil untuk listener global (daftar sekali, selalu panggil versi terbaru).
+  const unblockRef = useRef(unblockAudio);
+  useEffect(() => { unblockRef.current = unblockAudio; });
+
+  // Gesture pertama di mana saja langsung buka suara — ala widget donasi.
+  useEffect(() => {
+    if (simulate) return;
+    const h = () => {
+      if (!unblockedRef.current) unblockRef.current();
+    };
+    window.addEventListener('pointerdown', h);
+    window.addEventListener('keydown', h);
+    window.addEventListener('touchstart', h);
+    return () => {
+      window.removeEventListener('pointerdown', h);
+      window.removeEventListener('keydown', h);
+      window.removeEventListener('touchstart', h);
+    };
+  }, [simulate]);
+
   // Force html/body transparent saat obs=1 (seperti media-player)
   useEffect(() => {
     if (!obsMode) return;
@@ -549,15 +735,31 @@ function MusicInner() {
       <div ref={ytHostRef} style={{ width: 2, height: 2, position: 'absolute', bottom: 0, right: 0, opacity: 0, pointerEvents: 'none' }} />
       <audio
         ref={audioRef}
-        onEnded={() => emitControl('next')}
+        onEnded={() => emitEnded()}
+        onError={() => { markBlocked(); }}
         onLoadedMetadata={(e) => {
           const d = e.currentTarget.duration;
           if (isFinite(d) && d > 0) {
             setDuration(d);
             liveRef.current.duration = d;
           }
+          // Langsung kejar posisi server (pindah scene / tab telat dibuka)
+          if (pendingSeekRef.current > 0) {
+            try { e.currentTarget.currentTime = pendingSeekRef.current; } catch { /* abaikan */ }
+            pendingSeekRef.current = 0;
+          }
         }}
       />
+      {/* Browser memblokir suara autoplay — klik untuk membuka.
+          Disembunyikan di mode OBS agar tidak bocor ke stream. */}
+      {!simulate && !obsMode && current && (audioBlocked || (isPlaying && !unblocked)) && (
+        <button
+          onClick={unblockAudio}
+          className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-yellow-400 text-black text-[11px] font-black uppercase tracking-widest rounded-full shadow-2xl hover:bg-yellow-300 cursor-pointer"
+        >
+          🔊 Klik untuk mengaktifkan suara
+        </button>
+      )}
       <div id="music-player-root" className={`w-full h-full flex p-4 ${alignmentCls} ${themeWrapper}`} style={{ ...posStyle, maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%', background: obsMode ? 'transparent' : undefined } as React.CSSProperties}>
         {current ? (
           <div className={`${qpRow ? 'flex flex-row items-start gap-2' : 'flex flex-col gap-2'} relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${'anim-' + animClass} theme-${theme}`}>

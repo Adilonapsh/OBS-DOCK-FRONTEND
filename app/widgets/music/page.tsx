@@ -33,6 +33,7 @@ function MusicSettingsInner() {
     });
     s.on('song-update', (st: any) => {
       if (hydrated.current || !st?.settings) return;
+      if (st.room && st.room !== room) return;
       hydrated.current = true;
       const sv = st.settings;
       if (typeof sv.command === 'string' && sv.command !== state.command) update('command', sv.command);
