@@ -997,9 +997,16 @@ export default function Home() {
             setPinnedChat(null);
             setPinnedExiting(false);
         }, 300);
-        if (tkSocketRef.current && tkSocketRef.current.connected) {
-            tkSocketRef.current.emit("unpin-chat", privateKey ? { privateKey } : {});
-        }
+        // Pakai pollSocket (selalu konek) + fallback tkSocket.
+        // Sebelumnya hanya tkSocket → unpin tidak sampai ke widget kalau TikTok tidak konek (mis. hanya YouTube/Twitch).
+        // Room pakai getTimerRoom() (ada fallback sessionStorage) agar sama dengan chat/event lain.
+        const payload = { privateKey: getTimerRoom() };
+        try {
+            if (pollSocketRef.current?.connected) pollSocketRef.current.emit("unpin-chat", payload);
+        } catch {}
+        try {
+            if (tkSocketRef.current?.connected) tkSocketRef.current.emit("unpin-chat", payload);
+        } catch {}
     }
 
     const pinMessage = (user: string, text: string, platform: string, avatar?: string) => {
@@ -1007,13 +1014,20 @@ export default function Home() {
         setPinnedExiting(false);
         setPinnedChat({ user, text, platform, avatar });
 
-        if (tkSocketRef.current && tkSocketRef.current.connected) {
-            tkSocketRef.current.emit("pin-chat", {
-                username: tiktokConfig.username || "global",
-                privateKey: privateKey || undefined,
-                chat: { nickname: user, comment: text, profilePictureUrl: avatar, platform: platform }
-            });
-        }
+        // Pakai pollSocket (selalu konek) + fallback tkSocket.
+        // Sebelumnya hanya tkSocket → pin chat YouTube/Twitch tidak muncul di widget kalau TikTok tidak konek.
+        // Room pakai getTimerRoom() (ada fallback sessionStorage) agar sama dengan chat/event lain.
+        const payload = {
+            username: tiktokConfig.username || "global",
+            privateKey: getTimerRoom(),
+            chat: { nickname: user, comment: text, profilePictureUrl: avatar, platform: platform }
+        };
+        try {
+            if (pollSocketRef.current?.connected) pollSocketRef.current.emit("pin-chat", payload);
+        } catch {}
+        try {
+            if (tkSocketRef.current?.connected) tkSocketRef.current.emit("pin-chat", payload);
+        } catch {}
     }
 
     // Ambil payload connect terakhir (tanpa alert) untuk dipakai auto-retry
