@@ -1,0 +1,40 @@
+export type ChatItem = {
+  id: string;
+  nickname: string;
+  comment: string;
+  profilePictureUrl?: string;
+  platform?: string;
+  timestamp?: number;
+};
+
+export type ChatThemeProps = {
+  chats: ChatItem[];
+  font: string;
+  accent: string;
+  bg: string;
+  accent2?: string;
+  maxMessages: number;
+  showAvatar: boolean;
+  showPlatform: boolean;
+  showTimestamp: boolean;
+  anim: string;
+  horizontalAnim?: string;
+  hideAnim?: string;
+  hideAfter: number;
+  fontSize: number;
+  bgOpacity: number;
+  textColor?: string;
+  compact?: boolean;
+  horizontal?: boolean;
+  inline?: boolean;
+  cuteBubbleBg?: string;
+  cuteResubFrom?: string;
+  cuteResubTo?: string;
+  cuteBadgeBg?: string;
+  cuteBadgeText?: string;
+  cuteNameMod?: string;
+  cuteNameUser?: string;
+  exitingIds?: Set<string>;
+  charDelayMs?: number;
+  charDurationS?: number;
+};

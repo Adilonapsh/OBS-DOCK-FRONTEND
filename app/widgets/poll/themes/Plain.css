@@ -1,0 +1,11 @@
+/* Plain - teks polos di atas transparan, tanpa card/border/shadow/background */
+.poll-plain-theme {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  animation: pollPlainIn 0.4s ease both;
+}
+@keyframes pollPlainIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
