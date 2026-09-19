@@ -3,7 +3,7 @@ import type { EventThemeProps } from './types';
 function actionText(e: EventThemeProps['events'][number]): string {
   if (e.type === 'gift') return `mengirim ${e.giftName || 'Gift'} ×${e.repeatCount ?? 1}`;
   if (e.type === 'like') return `menyukai ×${e.likeCount ?? 1}`;
-  return 'bergabung';
+  return e.label || 'bergabung';
 }
 
 export default function PlainTheme({ events, font, accent, fontSize, maxEvents, horizontal, inline, exitingIds }: EventThemeProps) {

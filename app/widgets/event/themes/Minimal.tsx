@@ -28,7 +28,7 @@ export default function MinimalTheme({ events, font, accent, bg, showAvatar, ani
             </span>
             <span className="font-black text-[11px] truncate" style={{ color: isLight ? '#111':'#fff' }}>{e.nickname}</span>
             <span className="text-[11px] opacity-30">•</span>
-            <span className="text-[11px] truncate" style={{ color: isLight ? '#222':'rgba(255,255,255,0.9)' }}>{e.type==='gift'? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : 'joined'}</span>
+            <span className="text-[11px] truncate" style={{ color: isLight ? '#222':'rgba(255,255,255,0.9)' }}>{e.type==='gift'? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : (e.label || 'joined')}</span>
           </div>
         ))}
       </div>
@@ -46,7 +46,7 @@ export default function MinimalTheme({ events, font, accent, bg, showAvatar, ani
           </span>
           <span className="font-black text-[11px] truncate" style={{ color: isLight ? '#111':'#fff' }}>{e.nickname}</span>
           <span className="text-[11px] opacity-30">•</span>
-          <span className="text-[11px] truncate" style={{ color: isLight ? '#222':'rgba(255,255,255,0.9)' }}>{e.type==='gift'? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : 'joined'}</span>
+          <span className="text-[11px] truncate" style={{ color: isLight ? '#222':'rgba(255,255,255,0.9)' }}>{e.type==='gift'? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : (e.label || 'joined')}</span>
         </div>
       ))}
     </div>

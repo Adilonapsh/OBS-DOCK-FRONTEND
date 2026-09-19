@@ -28,7 +28,7 @@ export default function StandardTheme({ events, font, accent, bg, showAvatar, an
             </span>
             <span className="font-black text-[11px] text-white truncate">{e.nickname}</span>
             <span className="text-white/40 text-[11px]">•</span>
-            <span className="text-white/80 text-[11px] truncate">{e.type==='gift'? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : 'joined'}</span>
+            <span className="text-white/80 text-[11px] truncate">{e.type==='gift'? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : (e.label || 'joined')}</span>
           </div>
         ))}
       </div>
@@ -50,7 +50,7 @@ export default function StandardTheme({ events, font, accent, bg, showAvatar, an
             </span>
             <span className="font-black text-[11px] text-white truncate">{e.nickname}</span>
             <span className="text-white/40 text-[11px]">•</span>
-            <span className="text-white/80 text-[11px] truncate flex-1">{e.type==='gift'? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : 'joined'}</span>
+            <span className="text-white/80 text-[11px] truncate flex-1">{e.type==='gift'? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : (e.label || 'joined')}</span>
           </div>
         ))}
       </div>
@@ -76,7 +76,7 @@ export default function StandardTheme({ events, font, accent, bg, showAvatar, an
               <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase ${e.type==='gift'?'bg-[#FE2C55] text-white': e.type==='like'?'bg-pink-500 text-white':'bg-white/10 text-white/70'}`}>{e.type}</span>
             </div>
             <div className="text-white/80 text-[12px] leading-tight truncate">
-              {e.type === 'gift' ? <span>{e.giftName} ×{e.repeatCount} {e.diamondCount ? `• ♦${e.diamondCount}` : ''}</span> : e.type === 'like' ? <span>+{e.likeCount} likes</span> : <span>joined the live</span>}
+              {e.type === 'gift' ? <span>{e.giftName} ×{e.repeatCount} {e.diamondCount ? `• ♦${e.diamondCount}` : ''}</span> : e.type === 'like' ? <span>+{e.likeCount} likes</span> : <span>{e.label || 'joined the live'}</span>}
             </div>
           </div>
           {e.giftPictureUrl && e.type==='gift' && <img src={e.giftPictureUrl} alt={e.giftName} className="w-10 h-10 rounded-xl object-contain bg-white p-1 shrink-0" />}

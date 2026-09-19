@@ -5,6 +5,10 @@ export type EventItem = {
   type: EventType;
   nickname: string;
   profilePictureUrl?: string;
+  platform?: string;
+  // Label aksi subscribe ("subscribed", "resubscribed • 3 mo", ...).
+  // Kosong = teks default tema ("joined"/"bergabung").
+  label?: string;
   giftName?: string;
   giftPictureUrl?: string;
   repeatCount?: number;

@@ -1,13 +1,16 @@
 import type { SocialRotatorThemeProps } from './types';
-import { resolveBg, resolveTextColor } from '../../_shared/utils/color';
+import { resolveBg, autoTextOn } from '../../_shared/utils/color';
 import { platformLogo, platformGlyph } from '../../_shared/utils/platform';
 import './Pill.css';
 
 export default function PillTheme({ socials, index, font, fontSize, accent, bg, bgOpacity, textColor, showIcon, showHandle, showLabel, anim }: SocialRotatorThemeProps) {
   const item = socials[index % socials.length];
   if (!item) return null;
+  // Background solid (tanpa opacity) untuk hitung kontras teks.
+  const bgSolid = bg && bg !== 'transparent' ? bg : (item.accent || accent || '#121212');
   const bgColor = resolveBg(bg, item.accent || accent, '#121212', bgOpacity);
-  const color = resolveTextColor(textColor, '#ffffff');
+  // Putih default di atas aksen terang (kuning/cyan/putih) tidak terbaca → otomatis gelap.
+  const color = autoTextOn(bgSolid, textColor);
   const eff = anim || 'elegantIn';
   const logo = platformLogo(item.platform);
   return (
@@ -22,7 +25,7 @@ export default function PillTheme({ socials, index, font, fontSize, accent, bg, 
         )
       )}
       <div className="flex flex-col min-w-0 leading-none">
-        {showLabel && <span className="text-[10px] font-black uppercase tracking-widest opacity-60" style={{ color, fontSize: `${Math.round(fontSize * 0.7)}px` }}>{item.label || item.platform}</span>}
+        {showLabel && <span className="text-[10px] font-black uppercase tracking-widest" style={{ color, opacity: 0.75, fontSize: `${Math.round(fontSize * 0.7)}px` }}>{item.label || item.platform}</span>}
         {showHandle && <span className="font-black text-[13px] truncate" style={{ color, fontSize: `${fontSize}px` }}>{item.handle}</span>}
       </div>
     </div>

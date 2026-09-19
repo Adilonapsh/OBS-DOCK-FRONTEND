@@ -26,7 +26,7 @@ export default function StandardTheme({ follows, font, accent, bg, showAvatar, a
             {showAvatar && <img src={f.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.nickname)}&background=ec4899&color=fff`} alt={f.nickname} className="w-6 h-6 rounded-full object-cover border border-white/10 shrink-0" />}
             <Heart className="w-4 h-4 text-pink-400 fill-pink-400 shrink-0" />
             <span className="font-black text-[11px] text-white truncate">{f.nickname}</span>
-            <span className="text-pink-300 text-[10px] font-bold">followed</span>
+            <span className="text-pink-300 text-[10px] font-bold">{f.label || 'followed'}</span>
           </div>
         ))}
       </div>
@@ -45,7 +45,7 @@ export default function StandardTheme({ follows, font, accent, bg, showAvatar, a
           <div className="w-8 h-8 rounded-xl bg-pink-500 flex items-center justify-center shrink-0"><Heart className="w-4 h-4 text-white fill-white" /></div>
           <div className="flex-1 min-w-0">
             <div className="font-black text-[11px] text-white leading-none truncate">{f.nickname}</div>
-            <div className="text-pink-200 text-[11px] font-bold">followed you • welcome! 🎉</div>
+            <div className="text-pink-200 text-[11px] font-bold">{f.label ? `${f.label} • welcome! 🎉` : 'followed you • welcome! 🎉'}</div>
           </div>
           <UserPlus className="w-4 h-4 text-pink-400 shrink-0" />
         </div>

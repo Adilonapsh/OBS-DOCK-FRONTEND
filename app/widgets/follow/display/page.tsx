@@ -14,6 +14,7 @@ import CuteTheme from '../themes/Cute';
 import PlainTheme from '../themes/Plain';
 import { DEMO_FOLLOWS } from '../config';
 import type { FollowItem } from '../themes/types';
+import { subLabelFor } from '../../_shared/utils/subLabel';
 
 function FollowInner() {
   const searchParams = useSearchParams();
@@ -93,8 +94,10 @@ function FollowInner() {
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
     socket.on('disconnect', () => setConnected(false));
     const handleFollow = (data: Record<string, unknown>) => {
-      const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; displayName?: string };
-      pushFollow({ id: `follow_${Date.now()}_${Math.random().toString(36).slice(2,4)}`, nickname: d.nickname || d.uniqueId || d.displayName || 'Someone', profilePictureUrl: d.profilePictureUrl, platform: 'tiktok', timestamp: Date.now() },);
+      const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; displayName?: string; platform?: string; displayType?: string; count?: number; months?: number };
+      // displayType = nama event Streamer.bot (Sub/ReSub/NewSponsor/...) → label.
+      // Follow TikTok native tanpa displayType → label default "followed".
+      pushFollow({ id: `follow_${Date.now()}_${Math.random().toString(36).slice(2,4)}`, nickname: d.nickname || d.uniqueId || d.displayName || 'Someone', profilePictureUrl: d.profilePictureUrl, platform: d.platform || 'tiktok', label: subLabelFor(d.displayType, { count: d.count, months: d.months }), timestamp: Date.now() },);
     };
     socket.on('tiktok-follow', handleFollow);
     socket.on('tiktok-member', (data: Record<string, unknown>) => {

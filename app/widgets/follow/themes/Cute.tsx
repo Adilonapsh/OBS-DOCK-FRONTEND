@@ -24,7 +24,7 @@ export default function CuteTheme({ follows, font, anim, hideAnim, fontSize, bgO
           </div>
           <div className="px-3.5 py-2.5 flex items-center gap-2.5 rounded-[12px] w-full" style={{ background: 'linear-gradient(90deg, #c4a2f8 0%, #fca4d4 100%)', opacity: bgOpacity/100 }}>
             <Heart className="w-5 h-5 text-white fill-white shrink-0" />
-            <span className="text-white font-bold text-[13px] flex-1 truncate">{f.nickname} just followed!</span>
+            <span className="text-white font-bold text-[13px] flex-1 truncate">{f.label && f.label !== 'followed' ? `${f.nickname} ${f.label}!` : `${f.nickname} just followed!`}</span>
             <span className="text-white/80 text-[11px]">🎉</span>
           </div>
         </div>

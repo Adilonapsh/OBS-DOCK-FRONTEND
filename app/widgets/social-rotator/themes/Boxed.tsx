@@ -1,12 +1,14 @@
 import type { SocialRotatorThemeProps } from './types';
-import { resolveBg, resolveTextColor } from '../../_shared/utils/color';
+import { resolveBg, autoTextOn } from '../../_shared/utils/color';
 import './Boxed.css';
 
 export default function BoxedTheme({ socials, index, font, fontSize, accent, bg, bgOpacity, textColor, anim }: SocialRotatorThemeProps) {
   const item = socials[index % socials.length];
   if (!item) return null;
+  const bgSolid = bg && bg !== 'transparent' ? bg : '#1e1e1e';
   const bgColor = resolveBg(bg, accent, '#1e1e1e', bgOpacity);
-  const color = resolveTextColor(textColor, '#ffffff');
+  // Jaga-jaga user set bg terang + teks masih putih default → otomatis gelap.
+  const color = autoTextOn(bgSolid, textColor);
   const eff = anim || 'elegantIn';
   return (
     <div key={`${item.id}-${index}`} className="social-boxed w-[260px] rounded-[18px] border overflow-hidden will-change-transform" style={{ fontFamily: `'${font}', sans-serif`, background: bgColor, borderColor: `${color}1A`, animation: `${eff} 0.52s cubic-bezier(0.16,1,0.3,1) both` } as any}>

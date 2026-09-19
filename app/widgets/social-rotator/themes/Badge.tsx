@@ -1,5 +1,5 @@
 import type { SocialRotatorThemeProps } from './types';
-import { resolveBg, resolveTextColor } from '../../_shared/utils/color';
+import { resolveBg, autoTextOn, contrastText } from '../../_shared/utils/color';
 import { platformLogo, platformGlyph } from '../../_shared/utils/platform';
 import './Badge.css';
 
@@ -17,14 +17,20 @@ export default function BadgeTheme({ socials, index, font, fontSize, accent, bg,
   const isEven = index % 2 === 0;
   const isKick = item.platform.toLowerCase() === 'kick';
   // Respect settings: bg untuk pill, accent per-item untuk bubble, textColor untuk pill text, fontSize & font
-  const pillBg = isEven ? resolveBg(bg, undefined, '#2e2b4a', bgOpacity) : resolveBg(bg, undefined, '#ffffff', bgOpacity);
-  const pillColor = isEven ? resolveTextColor(textColor, '#ffffff') : resolveTextColor(textColor, '#2e2b4a');
-  // Bubble: pakai item.accent || accent jika ada, else fallback light/dark sesuai HTML
+  // Pill ganjil = putih → teks default putih tidak terbaca di atasnya (bug low-contrast).
+  // autoTextOn: custom textColor dihormati, default putih otomatis jadi gelap di bg terang.
+  const pillSolid = bg && bg !== 'transparent' ? bg : (isEven ? '#2e2b4a' : '#ffffff');
+  const pillBg = resolveBg(bg, undefined, isEven ? '#2e2b4a' : '#ffffff', bgOpacity);
+  const pillColor = autoTextOn(pillSolid, textColor);
+  // Bubble: pakai item.accent || accent jika ada, else fallback light/dark sesuai HTML.
+  // Glyph di atas bubble custom harus ikut kontras (aksen terang → glyph gelap).
   const bubbleBg = item.accent || accent;
   const bubbleIsCustom = !!bubbleBg && bubbleBg !== '#8b5cf6' && bubbleBg !== 'transparent';
+  const bubbleFg = bubbleIsCustom ? contrastText(bubbleBg) : undefined;
   const bubbleClassBase = isEven ? 'light' : 'dark';
-  const bubbleClass = isKick ? `icon-bubble ${bubbleClassBase}` : `icon-bubble ${bubbleClassBase} speech-tail`;
-  const bubbleStyle: any = bubbleIsCustom ? { background: bubbleBg, color: isEven ? '#ffffff' : '#ffffff', fontSize: 20 } : { fontSize: 20 };
+  // Tail (::after) warnanya dari CSS dan tidak bisa ngikutin aksen custom → sembunyikan saat custom.
+  const bubbleClass = isKick || bubbleIsCustom ? `icon-bubble ${bubbleClassBase}` : `icon-bubble ${bubbleClassBase} speech-tail`;
+  const bubbleStyle: any = bubbleIsCustom ? { background: bubbleBg, color: bubbleFg, fontSize: 20 } : { fontSize: 20 };
 
   return (
     <>

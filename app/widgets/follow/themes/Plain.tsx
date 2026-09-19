@@ -30,7 +30,7 @@ export default function PlainTheme({ follows, font, accent, fontSize, maxFollows
             >
               <span style={{ color: accent, fontWeight: 700 }}>{f.nickname}</span>
               <span style={{ color: 'rgba(255,255,255,0.5)' }}> • </span>
-              <span style={{ color: '#fff' }}>mengikuti</span>
+              <span style={{ color: '#fff' }}>{f.label || 'mengikuti'}</span>
             </div>
           );
         })}

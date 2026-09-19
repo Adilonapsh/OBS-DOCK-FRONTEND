@@ -1918,8 +1918,9 @@ export default function Home() {
                 request: "Subscribe",
                 id: "dock",
                 events: {
-                    Twitch: ["ChatMessage", "Follow", "StreamOnline", "StreamOffline", "Cheer", "Sub", "GiftSub", "RewardRedemption", "PresentViewers"],
-                    YouTube: ["Message", "BroadcastStarted", "BroadcastUpdated", "BroadcastEnded", "BroadcastAdded", "BroadcastMonitoringStarted", "BroadcastMonitoringEnded", "StatisticsUpdated", "PresentViewers", "SuperChat", "SuperSticker", "NewSponsor"],
+                    Twitch: ["ChatMessage", "Follow", "StreamOnline", "StreamOffline", "Cheer", "Sub", "ReSub", "GiftSub", "GiftBomb", "GiftPaidUpgrade", "PrimePaidUpgrade", "RewardRedemption", "PresentViewers"],
+                    YouTube: ["Message", "BroadcastStarted", "BroadcastUpdated", "BroadcastEnded", "BroadcastAdded", "BroadcastMonitoringStarted", "BroadcastMonitoringEnded", "StatisticsUpdated", "PresentViewers", "SuperChat", "SuperSticker", "NewSponsor", "MembershipGift", "GiftMembershipReceived", "MemberMileStone", "NewSubscriber"],
+                    Kick: ["Follow", "Subscription", "Resubscription", "GiftSubscription", "MassGiftSubscription"],
                 },
             }));
             // Verifikasi akun YouTube terhubung di Streamer.bot + ambil viewer aktif awal.
@@ -2079,12 +2080,21 @@ export default function Home() {
                         });
                     }
 
-                    if (["Follow", "Sub", "ReSub", "NewSponsor", "MembershipGift"].includes(type)) {
+                    // Follow + subscribe (nama event persis docs Streamer.bot).
+                    // Twitch: Follow/Sub/ReSub/GiftPaidUpgrade/PrimePaidUpgrade
+                    // YouTube: NewSponsor/MembershipGift/GiftMembershipReceived/MemberMileStone/NewSubscriber
+                    // Kick: Follow/Subscription/Resubscription
+                    if (["Follow", "Sub", "ReSub", "GiftPaidUpgrade", "PrimePaidUpgrade", "NewSponsor", "MembershipGift", "GiftMembershipReceived", "MemberMileStone", "NewSubscriber", "Subscription", "Resubscription"].includes(type)) {
                         const user = data.user?.name || data.userName || data.user?.login || "User";
                         const avatar = data.user?.profileImageUrl || data.user?.avatar || null;
                         const pf = (platform === "youtube" || platform === "kick" ? platform : "twitch") as ChatMessage["platform"];
-                        addActivityLog(`➕ ${user} mengikuti (${type})`, pf);
-                        addSystemLog(`➕ [SB ${type?.toUpperCase()}] ${user}`, "success");
+                        const subCount = (data as any).count ?? (data as any).total ?? 0;
+                        const subMonths = (data as any).cumulativeMonths ?? (data as any).durationMonths ?? (data as any).duration_months ?? (data as any).months ?? 0;
+                        const subTier = (data as any).subTier ?? (data as any).sub_tier ?? (data as any).tier ?? (data as any).subscriptionTier ?? "";
+                        const tl = type.toLowerCase();
+                        const detail = tl === "membershipgift" && Number(subCount) > 0 ? ` gift ${subCount}x` : (["resub", "resubscription", "membermilestone"].includes(tl) && Number(subMonths) > 0 ? ` ${subMonths} bln` : (subTier ? ` ${subTier}` : ""));
+                        addActivityLog(`➕ ${user} ${tl === "follow" ? "mengikuti" : "subscribe"} (${type}${detail})`, pf);
+                        addSystemLog(`➕ [SB ${type?.toUpperCase()}] ${user}${detail}`, "success");
                         emitSbBridge("sb-event", {
                             privateKey: getTimerRoom(),
                             eventType: type,
@@ -2092,14 +2102,18 @@ export default function Home() {
                             nickname: user,
                             profilePictureUrl: avatar,
                             platform: pf,
+                            count: Number(subCount) || 0,
+                            months: Number(subMonths) || 0,
+                            tier: String(subTier || ""),
                         });
                     }
 
-                    if (["Cheer", "GiftSub", "GiftBomb", "RewardRedemption", "SuperChat", "SuperSticker"].includes(type)) {
+                    if (["Cheer", "GiftSub", "GiftBomb", "GiftSubscription", "MassGiftSubscription", "RewardRedemption", "SuperChat", "SuperSticker"].includes(type)) {
                         const user = data.user?.name || data.userName || data.user?.login || "User";
                         const avatar = data.user?.profileImageUrl || data.user?.avatar || null;
                         const amount = data.bits ?? data.amount ?? data.displayString ?? data.tier ?? "";
-                        const text = amount ? `${type}: ${amount}` : type;
+                        const giftCount = Number((data as any).totalGifts ?? (data as any).count ?? (data as any).repeatCount ?? 1) || 1;
+                        const text = amount ? `${type}: ${amount}` : (giftCount > 1 ? `${type} ×${giftCount}` : type);
                         addGiftLog(user, text, platform || "twitch", { amount: String(amount), giftName: type, avatar: avatar || undefined });
                         addSystemLog(`🎁 [GIFT ${platform}] ${user}: ${text}`, "info");
                         emitSbBridge("sb-event", {
@@ -2110,7 +2124,7 @@ export default function Home() {
                             profilePictureUrl: avatar,
                             platform: platform || "twitch",
                             giftName: text,
-                            repeatCount: 1,
+                            repeatCount: giftCount,
                         });
                     }
                 }

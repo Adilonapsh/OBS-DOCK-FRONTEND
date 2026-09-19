@@ -96,6 +96,7 @@ export const DEMO_EVENTS: EventItem[] = [
   { id: 'd2', type: 'gift', nickname: 'SitiPlay', giftName: 'Rose', giftPictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/99efffccdfcd15c325cdd029c379a613~tplv-obj.png', repeatCount: 5, diamondCount: 5, profilePictureUrl: 'https://ui-avatars.com/api/?name=Siti&background=FE2C55&color=fff', timestamp: Date.now() - 4000 },
   { id: 'd3', type: 'like', nickname: 'ViewerTwitch', likeCount: 12, profilePictureUrl: 'https://ui-avatars.com/api/?name=Viewer&background=9146ff&color=fff', timestamp: Date.now() - 2000 },
   { id: 'd4', type: 'join', nickname: 'BudiSantuy', profilePictureUrl: 'https://ui-avatars.com/api/?name=Budi&background=06b6d4&color=fff', timestamp: Date.now() - 1000 },
+  { id: 'd5', type: 'join', nickname: 'KakMember', label: 'resubscribed • 6 mo', platform: 'youtube', profilePictureUrl: 'https://ui-avatars.com/api/?name=Kak&background=ff0000&color=fff', timestamp: Date.now() - 500 },
 ];
 
 export function buildEventUrl(base: string, s: EventSettings): string {

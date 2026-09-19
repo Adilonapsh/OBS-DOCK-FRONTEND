@@ -15,6 +15,7 @@ import PerCharTheme from '../themes/PerChar';
 import PlainTheme from '../themes/Plain';
 import { DEMO_EVENTS } from '../config';
 import type { EventItem } from '../themes/types';
+import { subLabelFor, isFollowDisplayType } from '../../_shared/utils/subLabel';
 
 function EventInner() {
   const searchParams = useSearchParams();
@@ -113,11 +114,31 @@ function EventInner() {
     if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
+    // Anti dobel: backend mengirim follow/subscribe sebagai tiktok-follow DAN
+    // tiktok-member (TikTok native follow juga dobel) — tampilkan sekali saja.
+    const seenJoin = new Map<string, number>();
+    const pushJoin = (nickname: string, profilePictureUrl: string | undefined, platform: string | undefined, label: string | undefined) => {
+      const key = `${nickname}•${label || 'joined'}`;
+      const now = Date.now();
+      if ((seenJoin.get(key) || 0) > now - 5000) return;
+      seenJoin.set(key, now);
+      pushEvent({ id: `join_${now}_${Math.random().toString(36).slice(2,4)}`, type: 'join', nickname, profilePictureUrl, platform, label, timestamp: now }, showJoin);
+    };
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
     socket.on('disconnect', () => setConnected(false));
+    socket.on('tiktok-follow', (data: Record<string, unknown>) => {
+      // Follow TikTok native (tanpa displayType) sudah tampil via tiktok-member —
+      // lewati agar tidak dobel. Follow/subscribe Streamer.bot selalu bawa displayType.
+      const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; platform?: string; displayType?: string; count?: number; months?: number };
+      if (!d.displayType && !(d.platform && !String(d.platform).toLowerCase().includes('tiktok'))) return;
+      const nick = d.nickname || d.uniqueId || 'Someone';
+      pushJoin(nick, d.profilePictureUrl, d.platform, subLabelFor(d.displayType, { count: d.count, months: d.months }));
+    });
     socket.on('tiktok-member', (data: Record<string, unknown>) => {
-      const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string };
-      pushEvent({ id: `join_${Date.now()}_${Math.random().toString(36).slice(2,4)}`, type: 'join', nickname: d.nickname || d.uniqueId || 'Someone', profilePictureUrl: d.profilePictureUrl, timestamp: Date.now() }, showJoin);
+      const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; platform?: string; displayType?: string; count?: number; months?: number };
+      // Duplikat follow/subscribe (sudah ditangani handler tiktok-follow berlabel) — lewati.
+      if (isFollowDisplayType(d.displayType)) return;
+      pushJoin(d.nickname || d.uniqueId || 'Someone', d.profilePictureUrl, d.platform, undefined);
     });
     socket.on('tiktok-gift', (data: Record<string, unknown>) => {
       const d = data as { nickname?: string; uniqueId?: string; giftName?: string; giftPictureUrl?: string; repeatCount?: number; diamondCount?: number; profilePictureUrl?: string };

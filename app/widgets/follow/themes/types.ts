@@ -3,6 +3,8 @@ export type FollowItem = {
   nickname: string;
   profilePictureUrl?: string;
   platform?: string;
+  // Label aksi ("subscribed", "new member", ...). Kosong = "followed".
+  label?: string;
   timestamp: number;
 };
 

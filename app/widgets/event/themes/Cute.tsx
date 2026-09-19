@@ -31,7 +31,7 @@ export default function CuteTheme({ events, font, anim, horizontalAnim, hideAnim
               </span>
               <span className="font-black text-[11px] text-white truncate">{e.nickname}</span>
               <span className="text-white/40 text-[11px]">•</span>
-              <span className="text-white text-[11px] truncate">{isGift? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : 'joined'}</span>
+              <span className="text-white text-[11px] truncate">{isGift? `${e.giftName} ×${e.repeatCount}` : e.type==='like'? `+${e.likeCount} likes` : (e.label || 'joined')}</span>
             </div>
           );
         })}
@@ -60,7 +60,7 @@ export default function CuteTheme({ events, font, anim, horizontalAnim, hideAnim
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-white font-bold text-[12px] truncate">
-                  {isGift ? <span>{e.giftName} ×{e.repeatCount} {e.diamondCount ? `• ♦${e.diamondCount}`:''}</span> : isLike ? <span>+{e.likeCount} likes</span> : <span>joined the live</span>}
+                  {isGift ? <span>{e.giftName} ×{e.repeatCount} {e.diamondCount ? `• ♦${e.diamondCount}`:''}</span> : isLike ? <span>+{e.likeCount} likes</span> : <span>{e.label || 'joined the live'}</span>}
                 </div>
               </div>
               {isGift && e.giftPictureUrl && <img src={e.giftPictureUrl} alt={e.giftName} className="w-10 h-10 rounded-xl object-contain bg-white p-1 shrink-0" />}

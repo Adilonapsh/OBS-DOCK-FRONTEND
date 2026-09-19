@@ -21,7 +21,7 @@ export default function MinimalTheme({ follows, font, accent, bg, showAvatar, an
           {showAvatar && <img src={f.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.nickname)}`} alt={f.nickname} className="w-5 h-5 rounded-full object-cover shrink-0" />}
           <Heart className="w-3 h-3 text-pink-500 fill-pink-500 shrink-0" />
           <span className="font-black text-[11px] truncate" style={{ color: isLight ? '#111':'#fff' }}>{f.nickname}</span>
-          <span className="text-[11px] opacity-30">followed</span>
+          <span className="text-[11px] opacity-30">{f.label || 'followed'}</span>
         </div>
       ))}
     </div>

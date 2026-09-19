@@ -75,6 +75,7 @@ export type FollowSettings = typeof FOLLOW_DEFAULTS;
 export const DEMO_FOLLOWS: FollowItem[] = [
   { id: 'd1', nickname: 'Rizky_JR', profilePictureUrl: 'https://ui-avatars.com/api/?name=Rizky&background=ec4899&color=fff', platform: 'tiktok', timestamp: Date.now() - 4000 },
   { id: 'd2', nickname: 'SitiPlay', profilePictureUrl: 'https://ui-avatars.com/api/?name=Siti&background=8b5cf6&color=fff', platform: 'twitch', timestamp: Date.now() - 2000 },
+  { id: 'd3', nickname: 'BangSub', profilePictureUrl: 'https://ui-avatars.com/api/?name=BangSub&background=ff0000&color=fff', platform: 'youtube', label: 'new member', timestamp: Date.now() - 1000 },
 ];
 
 export function buildFollowUrl(base: string, s: FollowSettings): string {
