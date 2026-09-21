@@ -6,6 +6,7 @@ import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/u
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, KEYFRAMES_CSS } from '../../_shared/constants/animations';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import CleanTheme from '../themes/Clean';
 import BoxedTheme from '../themes/Boxed';
 import GlassTheme from '../themes/Glass';
@@ -90,7 +91,9 @@ function InfoSlidesInner() {
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@400;700;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; }`}</style>
       <div className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen ${theme === 'timer-glass' ? 'flex items-center justify-center p-6' : `flex p-6`}`}`} style={{ fontFamily: `'${font}', sans-serif`, background: obsMode ? 'transparent' : theme === 'timer-glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : '#0a0a0a', ...posStyle } as any}>
-        {theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'timer-glass' ? <TimerGlassTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : <CleanTheme {...themeProps} />}
+        <AutoScale defaultBase={640} baseWidth={theme === 'timer-glass' ? 576 : 640}>
+          {theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'timer-glass' ? <TimerGlassTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : <CleanTheme {...themeProps} />}
+        </AutoScale>
       </div>
       {!obsMode && (
         <div className="fixed bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 backdrop-blur border border-white/10 rounded-full px-3 py-1.5">

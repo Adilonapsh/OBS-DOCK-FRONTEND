@@ -7,6 +7,7 @@ import { getSocketUrl } from '../../_shared/utils/socket';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
@@ -111,19 +112,21 @@ function ViewCounterInner() {
         .vc-idle > .vc-idle-inner { position: relative; border-radius: 999px; }
         @keyframes vcSpin { to { transform: rotate(360deg); } }`}</style>
       <div className="w-full h-full flex" style={posStyle as React.CSSProperties}>
-        <VcIdle active={idleFx === 'gradient'} accent={accent}>
-          {theme === 'minimal' ? (
-            <MinimalTheme {...themeProps} />
-          ) : theme === 'cute' ? (
-            <CuteTheme {...themeProps} />
-          ) : theme === 'plain' ? (
-            <PlainTheme {...themeProps} />
-          ) : theme === 'music' ? (
-            <MusicTheme {...themeProps} />
-          ) : (
-            <StandardTheme {...themeProps} />
-          )}
-        </VcIdle>
+        <AutoScale defaultBase={300} baseWidth={theme === 'music' ? 320 : 300}>
+          <VcIdle active={idleFx === 'gradient'} accent={accent}>
+            {theme === 'minimal' ? (
+              <MinimalTheme {...themeProps} />
+            ) : theme === 'cute' ? (
+              <CuteTheme {...themeProps} />
+            ) : theme === 'plain' ? (
+              <PlainTheme {...themeProps} />
+            ) : theme === 'music' ? (
+              <MusicTheme {...themeProps} />
+            ) : (
+              <StandardTheme {...themeProps} />
+            )}
+          </VcIdle>
+        </AutoScale>
         {!obsMode && !simulate && !connected && rows.length === 0 && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan…</div>
         )}

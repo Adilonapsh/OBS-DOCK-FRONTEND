@@ -8,6 +8,7 @@ import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/u
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, ANIM_OUT_MAP, KEYFRAMES_CSS, isElegantAnim } from '../../_shared/constants/animations';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import FocusTheme from '../themes/Focus';
 import MinimalTheme from '../themes/Minimal';
 import GlassTheme from '../themes/Glass';
@@ -183,7 +184,9 @@ function TaskInner() {
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@600;700;800;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#e6c8bf'}; }`}</style>
       <div className={`${obsMode ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4' : 'w-full min-h-screen flex p-6'}`} style={{ ...posStyle, background: obsMode ? 'transparent' : theme === 'glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : 'linear-gradient(135deg, #eacbc2 0%, #dfb8ad 100%)' } as any}>
-        {theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'minimal' ? <MinimalTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : <FocusTheme {...themeProps} />}
+        <AutoScale defaultBase={360} baseWidth={theme === 'glass' ? 420 : theme === 'focus' ? 330 : 360}>
+          {theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'minimal' ? <MinimalTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : <FocusTheme {...themeProps} />}
+        </AutoScale>
       </div>
     </>
   );

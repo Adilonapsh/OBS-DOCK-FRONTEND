@@ -8,6 +8,7 @@ import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/u
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, ANIM_OUT_MAP, KEYFRAMES_CSS, isElegantAnim } from '../../_shared/constants/animations';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
@@ -151,7 +152,9 @@ function FollowInner() {
         {!obsMode && !connected && follows.length === 0 && <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0,6)}…` : 'global'} • server http://localhost:3000</div>}
         {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">FOLLOW • {theme} • {connected ? 'connected' : 'offline'} • {follows.length}/{maxFollows}</div>}
         <button onClick={() => { if (soundEnabled && soundUrl) { const a = new Audio(soundUrl); a.volume = soundVolume/100; a.play().catch(()=>{}); } }} className="absolute top-16 right-4 hidden">test</button>
-        {renderTheme()}
+        <AutoScale defaultBase={420} baseWidth={theme === 'cute' || theme === 'minimal' ? 360 : 420}>
+          {renderTheme()}
+        </AutoScale>
       </div>
       {/* allow audio autoplay in OBS: need user interaction, but Browser Source allows */}
       <audio preload="auto" style={{ display: 'none' }} />

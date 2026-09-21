@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import { getStringParam } from '../../_shared/utils/url';
 import StandardTheme from '../themes/Standard';
 import MatteTheme from '../themes/Matte';
@@ -341,11 +342,12 @@ function MediaPlayerInner() {
         .anim-slide-out-right { animation: slide-out-right 0.5s ease forwards }
       `}</style>
       <div id="media-player-root" className={`min-h-screen w-screen flex p-6 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined, ...posStyle } as any}>
-        <div
-          id="main-container"
-          className={`flex w-full ${alignmentCls} ${themeWrapper}`}
-          style={{ maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%' }}
-        >
+        <AutoScale defaultBase={500} baseWidth={maxWidth > 0 ? maxWidth : 500}>
+          <div
+            id="main-container"
+            className={`flex w-full ${alignmentCls} ${themeWrapper}`}
+            style={{ maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%' }}
+          >
           <div
             id="main-wrapper"
             className={`relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${'anim-' + animClass}`}
@@ -386,6 +388,7 @@ function MediaPlayerInner() {
             )}
           </div>
         </div>
+        </AutoScale>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </>

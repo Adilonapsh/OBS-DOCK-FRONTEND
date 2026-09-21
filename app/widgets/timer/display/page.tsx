@@ -9,6 +9,7 @@ import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, KEYFRAMES_CSS } from '../../_shared/constants/animations';
 import { getTimerTheme } from '../themes/registry';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 
 function TimerInner() {
   const searchParams = useSearchParams();
@@ -39,6 +40,19 @@ function TimerInner() {
   const [addedSeconds, setAddedSeconds] = useState<number | null>(null);
   const addedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevTotalRef = useRef(focusMinutesParam * 60);
+
+  // Tampilkan flash delta (+5:00 / -5:00); paksa remount via jeda null singkat
+  // agar klik beruntun dengan nilai sama tetap me-restart animasi.
+  const flashDelta = (delta: number) => {
+    if (!delta || !Number.isFinite(delta)) return;
+    if (addedTimeoutRef.current) clearTimeout(addedTimeoutRef.current);
+    setAddedSeconds(null);
+    addedTimeoutRef.current = setTimeout(() => {
+      setAddedSeconds(delta);
+      if (addedTimeoutRef.current) clearTimeout(addedTimeoutRef.current);
+      addedTimeoutRef.current = setTimeout(() => setAddedSeconds(null), 2200);
+    }, 40);
+  };
 
   // hanya reset totalSeconds saat URL focusMinutes berubah DAN belum ada socket (awal load), bukan saat mode ganti - mode ganti harus lanjut 13:20 → 13:19
   useEffect(() => { if (!hasSocketTimer) { setTotalSeconds(focusMinutesParam * 60); setIsRunning(false); setCurrentSession(1); } }, [focusMinutesParam, hasSocketTimer]);
@@ -82,9 +96,7 @@ function TimerInner() {
         const diff = sec - prev;
         const deltaToShow = explicitDelta !== null ? explicitDelta : (Math.abs(diff) >= 5 && hasSocketTimerRef.current ? diff : null);
         if (deltaToShow !== null && deltaToShow !== 0) {
-          if (addedTimeoutRef.current) clearTimeout(addedTimeoutRef.current);
-          setAddedSeconds(deltaToShow);
-          addedTimeoutRef.current = setTimeout(() => setAddedSeconds(null), 2200);
+          flashDelta(deltaToShow);
         }
         prevTotalRef.current = sec;
         // simpan base asli, bukan live, biar tick tidak double-subtract
@@ -105,9 +117,11 @@ function TimerInner() {
     return () => { s.disconnect(); timerSocketRef.current = null; if (addedTimeoutRef.current) clearTimeout(addedTimeoutRef.current); };
   }, [privateKey]);
 
-  // local tick - sinkron dengan server via updatedAt, overlay 100% ikut dock jika hasSocketTimer
+  // local tick - sinkron dengan server via updatedAt, overlay 100% ikut dock jika hasSocketTimer.
+  // mode paused dari dock ikut menghentikan countdown (biarpun isRunning masih true).
+  const pausedByMode = subathonMode === 'paused';
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning || pausedByMode) return;
     const id = setInterval(() => {
       if (hasSocketTimerRef.current) {
         const elapsed = Math.floor((Date.now() - timerUpdateRef.current.updatedAt) / 1000);
@@ -127,15 +141,13 @@ function TimerInner() {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [isRunning, focusMinutes, totalSessions, hasSocketTimer]);
+  }, [isRunning, pausedByMode, focusMinutes, totalSessions, hasSocketTimer]);
 
   const animName = ANIM_MAP[anim] || 'elegantIn';
   // Global position - 1 line align + justify, langsung tersimulasi di live preview
   const posStyle = getPositionStyle(pos);
   const handleAddTime = (sec: number) => {
-    if (addedTimeoutRef.current) clearTimeout(addedTimeoutRef.current);
-    setAddedSeconds(sec);
-    addedTimeoutRef.current = setTimeout(() => setAddedSeconds(null), 2200);
+    flashDelta(sec);
     // optimistic update biar UI langsung, lalu sinkron ke server (dock master)
     setTotalSeconds((prev) => {
       const next = Math.max(0, prev + sec);
@@ -152,7 +164,7 @@ function TimerInner() {
       (timerSocketRef.current as any).emit('timer-control', { privateKey: room, action: sec >= 0 ? 'add' : 'sub', seconds: Math.abs(sec) });
     }
   };
-  const themeProps = { font, fontSize, accent, bg, bgOpacity, textColor, pos, timerSeconds: totalSeconds, isRunning, currentSession, totalSessions, onToggleTimer: () => setIsRunning((v) => !v), onResetTimer: () => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); }, onNextSession: () => { setCurrentSession((c) => (c < totalSessions ? c + 1 : 1)); setTotalSeconds(focusMinutes * 60); setIsRunning(false); }, onAddTime: handleAddTime, anim: animName, subathonMode, addedSeconds } as const;
+  const themeProps = { font, fontSize, accent, bg, bgOpacity, textColor, pos, timerSeconds: totalSeconds, isRunning: isRunning && !pausedByMode, currentSession, totalSessions, onToggleTimer: () => setIsRunning((v) => !v), onResetTimer: () => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); }, onNextSession: () => { setCurrentSession((c) => (c < totalSessions ? c + 1 : 1)); setTotalSeconds(focusMinutes * 60); setIsRunning(false); }, onAddTime: handleAddTime, anim: animName, subathonMode, addedSeconds } as const;
   const Theme = getTimerTheme(theme);
   // subathonMode sengaja tidak dimasukkan ke displayKey - mode diubah dari dock tidak boleh
   // menyebabkan Theme remount (yang akan memicu ulang animasi entry dan membuat timer tampak reset)
@@ -164,10 +176,12 @@ function TimerInner() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode && !simulate ? 'transparent !important' : '#e6c8bf'}; }`}</style>
       <div className={`${obsMode && !simulate ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen flex p-6 relative`}`} style={{ ...posStyle, background: obsMode && !simulate ? 'transparent' : theme === 'subathon' ? '#abb3f8' : theme === 'glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : 'linear-gradient(135deg, #eacbc2 0%, #dfb8ad 100%)' } as any}>
         <div className="flex flex-col items-center gap-4">
-          <Theme key={displayKey} {...themeProps} />
+          <AutoScale defaultBase={360} baseWidth={theme === 'focus' ? 330 : theme === 'glass' ? 576 : 360}>
+            <Theme key={displayKey} {...themeProps} />
+          </AutoScale>
           {simulate && (
             <div className="flex items-center gap-2">
-              <button onClick={() => setIsRunning((v) => !v)} className="h-7 px-3 bg-white text-black rounded-full text-[10px] font-black uppercase shadow">{isRunning ? 'Pause' : 'Play'}</button>
+              <button onClick={() => setIsRunning((v) => !v)} className="h-7 px-3 bg-white text-black rounded-full text-[10px] font-black uppercase shadow">{isRunning && !pausedByMode ? 'Pause' : 'Play'}</button>
               <button onClick={() => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); setCurrentSession(1); }} className="h-7 px-3 bg-white/10 border border-white/10 rounded-full text-white text-[10px] font-black uppercase">Reset</button>
               <span className="text-[10px] font-mono text-white/60 ml-2">SIMULATE • {String(theme).toUpperCase()} • {focusMinutes}m</span>
             </div>

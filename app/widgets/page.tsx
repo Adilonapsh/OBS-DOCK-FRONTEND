@@ -6,7 +6,7 @@ import {
   Layers, Monitor, Search, Eye, EyeOff, ExternalLink, Sparkles,
   Gift, Heart, UserPlus, Zap, LayoutGrid, Filter,
   Settings2, AlertCircle, Menu, Palette, Pencil,
-  Music, Cog, GripVertical, Volume2, Pin
+  Music, Cog, GripVertical, Volume2, Pin, QrCode
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { createClient } from "@/utils/supabase/client";
@@ -21,7 +21,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music";
+  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr";
   recommended?: boolean;
   w: number;
   h: number;
@@ -195,6 +195,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "music",
     recommended: true,
     w: 420, h: 220,
+  },
+  {
+    id: "qr",
+    title: "QR Code",
+    desc: "QR statis untuk donasi / link / sosial - 7 tema (Standard/Bubble/Clean/Boxed/Minimal/Cute/Plain), logo custom di tengah, warna & error correction bisa diatur.",
+    category: "info",
+    tags: ["QR", "Donasi", "Link", "Saweria"],
+    layout: "qr",
+    params: "theme=standard&font=Outfit&value=https%3A%2F%2Fsaweria.co%2Fusername&label=SCAN+UNTUK+DONASI",
+    preview: "qr",
+    recommended: true,
+    w: 300, h: 340,
   },
   {
     id: "custom",
@@ -417,6 +429,20 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "qr") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-2 gap-1.5">
+        <div className="bg-white rounded-lg p-1.5 grid grid-cols-5 gap-[2px]">
+          <span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-white" /><span className="w-2 h-2 bg-black rounded-[1px]" />
+          <span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-white" /><span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-white" /><span className="w-2 h-2 bg-white" />
+          <span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-white" /><span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-black rounded-[1px]" />
+          <span className="w-2 h-2 bg-white" /><span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-white" /><span className="w-2 h-2 bg-white" /><span className="w-2 h-2 bg-black rounded-[1px]" />
+          <span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-white" /><span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-black rounded-[1px]" /><span className="w-2 h-2 bg-white" />
+        </div>
+        <span className="text-white font-black text-[7px] uppercase tracking-widest">Scan untuk donasi</span>
+      </div>
+    );
+  }
   // full
   return (    <div className="w-full h-full bg-black relative p-2 overflow-hidden">
       <div className="absolute top-2 left-2 flex gap-1">
@@ -528,6 +554,10 @@ function WidgetsListing() {
     }
     if (item.id === 'music') {
       const base = `${window.location.origin}/widgets/music/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'qr') {
+      const base = `${window.location.origin}/widgets/qr/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     if (item.id === 'clock') {
@@ -720,6 +750,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/music${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'qr' ? (
+                        <Link href={`/widgets/qr${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'clock' ? (
                         <Link href={`/widgets/clock${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
@@ -754,7 +788,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'music' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'music' || item.id === 'qr' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

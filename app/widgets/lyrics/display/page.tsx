@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import { getStringParam as getStringParamShared } from '../../_shared/utils/url';
 import StandardTheme from '../themes/Standard';
 import MatteTheme from '../themes/Matte';
@@ -405,7 +406,8 @@ function LyricsDisplayInner() {
         .anim-slide-out-right { animation: slide-out-right 0.5s ease forwards }
       `}</style>
       <div id="lyrics-root" className={`min-h-screen w-screen flex p-6 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined, ...posStyle } as any}>
-        <div id="main-container" className={`flex w-full ${alignmentCls} ${themeWrapper}`} style={{ maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%' }}>
+        <AutoScale defaultBase={560} baseWidth={maxWidth > 0 ? maxWidth : 560}>
+          <div id="main-container" className={`flex w-full ${alignmentCls} ${themeWrapper}`} style={{ maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%' }}>
           <div id="main-wrapper" className={`relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${'anim-' + animClass}`} style={containerStyle}>
             {(() => {
               const themeProps = {
@@ -443,6 +445,7 @@ function LyricsDisplayInner() {
             )}
           </div>
         </div>
+        </AutoScale>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } } .spinning{ animation: spin 8s linear infinite }`}</style>
     </>

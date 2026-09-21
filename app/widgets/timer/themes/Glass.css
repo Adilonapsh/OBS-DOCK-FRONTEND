@@ -37,3 +37,25 @@
 }
 .seconds-accent { color: #c3d3ff; }
 .glass-theme { }
+
+/* Delta flash (+5:00 / -5:00): tambah = fade up in + fade up out, kurang = fade down in + fade down out */
+@keyframes deltaUpIn {
+  0% { opacity: 0; transform: translateY(14px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes deltaUpOut {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-14px) scale(0.95); }
+}
+@keyframes deltaDownIn {
+  0% { opacity: 0; transform: translateY(-14px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes deltaDownOut {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(14px) scale(0.95); }
+}
+.delta-up-in { animation: deltaUpIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.delta-up-out { animation: deltaUpOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.delta-down-in { animation: deltaDownIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.delta-down-out { animation: deltaDownOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }

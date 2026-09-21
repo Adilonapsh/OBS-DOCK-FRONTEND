@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { TimerThemeProps } from './types';
 import { hexToRgba, resolveTextColor } from '../../_shared/utils/color';
 import './Glass.css';
@@ -13,6 +14,14 @@ function formatHMS(sec: number) {
     sOnes: String(s).padStart(2, '0')[1],
     sStr: String(s).padStart(2, '0'),
   };
+}
+
+// Format delta mengikuti label tombol dock: >= 60 detik → +5:00 / -2:30, selain itu → +30s / -45s
+function formatDelta(sec: number) {
+  const a = Math.abs(sec);
+  const sign = sec > 0 ? '+' : '-';
+  if (a >= 60) return `${sign}${Math.floor(a / 60)}:${String(a % 60).padStart(2, '0')}`;
+  return `${sign}${a}s`;
 }
 
 export default function GlassTheme({ font, fontSize, timerSeconds, isRunning, onToggleTimer, anim, subathonMode, textColor, bg, bgOpacity, accent, onAddTime, addedSeconds }: TimerThemeProps & { subathonMode?: string; textColor?: string; onAddTime?: (sec: number) => void; addedSeconds?: number | null }) {
@@ -32,7 +41,20 @@ export default function GlassTheme({ font, fontSize, timerSeconds, isRunning, on
     else (window as unknown as { __glassAddTime?: (sec: number) => void }).__glassAddTime?.(sec);
   };
 
-  const addedLabel = addedSeconds ? (Math.abs(addedSeconds) >= 60 ? `${addedSeconds > 0 ? '+' : '-'}${Math.floor(Math.abs(addedSeconds)/60)}m` : `${addedSeconds > 0 ? '+' : ''}${addedSeconds}s`) : null;
+  const addedLabel = addedSeconds ? formatDelta(addedSeconds) : null;
+  const isAdd = (addedSeconds ?? 0) > 0;
+
+  // Fase tampil: 'in' (fade arah sesuai tambah/kurang) lalu 'out' (hilang ke arah yang sama).
+  const [deltaPhase, setDeltaPhase] = useState<'in' | 'out' | null>(null);
+  useEffect(() => {
+    if (addedSeconds == null || addedSeconds === 0) {
+      setDeltaPhase(null);
+      return;
+    }
+    setDeltaPhase('in');
+    const t = setTimeout(() => setDeltaPhase('out'), 1400);
+    return () => clearTimeout(t);
+  }, [addedSeconds]);
 
   const mode = String(subathonMode || 'powerup');
   const modeLabel = mode === 'powerup' ? 'POWER-UP' : mode === 'sleep' ? 'SLEEP' : mode === 'locked' ? 'LOCKED' : 'PAUSED';
@@ -48,6 +70,20 @@ export default function GlassTheme({ font, fontSize, timerSeconds, isRunning, on
       </div>
 
       <div className="timer-overlay-card w-full px-10 gap-20 py-5 sm:px-8 sm:py-6 flex items-center justify-between relative overflow-hidden mt-2" style={{ background: glassBg, borderColor: glassBorder }}>
+        {addedLabel && deltaPhase && (
+          <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <span
+              className={`inline-block px-3 py-1 rounded-full font-mono font-black text-[13px] tabular-nums border backdrop-blur-md ${deltaPhase === 'in' ? (isAdd ? 'delta-up-in' : 'delta-down-in') : (isAdd ? 'delta-up-out' : 'delta-down-out')}`}
+              style={{
+                background: glassBg,
+                borderColor: glassBorder,
+                color: isAdd ? '#4ade80' : '#f87171',
+              }}
+            >
+              {addedLabel}
+            </span>
+          </div>
+        )}
         <div className="clock-badge w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0" style={{ borderColor: `${color}D9` }}>
           <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" fill="none" stroke={color} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2.5 2.5" />

@@ -8,6 +8,7 @@ import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/u
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, ANIM_OUT_MAP, KEYFRAMES_CSS, isElegantAnim } from '../../_shared/constants/animations';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import StandardTheme from '../themes/Standard';
 import BubbleTheme from '../themes/Bubble';
 import CleanTheme from '../themes/Clean';
@@ -149,7 +150,9 @@ function ChatInner() {
           <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0, 6)}…` : 'global'} • server http://localhost:3000</div>
         )}
         {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">CHAT • {theme} • {connected ? 'connected' : 'offline'} • {chats.length}/{maxMessages}</div>}
-        {renderTheme()}
+        <AutoScale defaultBase={420} baseWidth={theme === 'perchar' ? 480 : theme === 'boxed' ? 440 : 420}>
+          {renderTheme()}
+        </AutoScale>
       </div>
     </>
   );

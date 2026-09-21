@@ -7,6 +7,7 @@ import { getSocketUrl } from '../../_shared/utils/socket';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import { ANIM_MAP, KEYFRAMES_CSS } from '../../_shared/constants/animations';
 
 function platformLogo(p?: string) {
@@ -219,6 +220,7 @@ function PinnedInner() {
             style={{ '--pin-accent': fxColor } as React.CSSProperties}
           >
           <div key={`${pinned.nickname}-${pinned.comment}`} style={{ animation: exiting ? 'pinOut 0.38s cubic-bezier(0.16,1,0.3,1) both' : `${animName} 0.45s cubic-bezier(0.16,1,0.3,1) both` }}>
+          <AutoScale defaultBase={420} baseWidth={theme === 'island' ? 360 : theme === 'minimal' || theme === 'plain' ? 560 : theme === 'card' ? 380 : 420}>
           {theme === 'monkey' || theme === 'typing' ? (
             <div className="pinned-font flex flex-col gap-2 w-[420px] max-w-[90vw]">
               <div className="flex items-center gap-2">
@@ -344,6 +346,7 @@ function PinnedInner() {
               </SpinWrap>
             </div>
           )}
+          </AutoScale>
           </div>
           </div>
         ) : (

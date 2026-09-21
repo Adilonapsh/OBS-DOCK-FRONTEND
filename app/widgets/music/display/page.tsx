@@ -7,6 +7,7 @@ import { getSocketUrl } from '../../_shared/utils/socket';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { AutoScale } from '../../_shared/components/AutoScale';
 import {
   ClassicTheme,
   MatteTheme,
@@ -812,8 +813,9 @@ function MusicInner() {
           🔊 Klik untuk mengaktifkan suara
         </button>
       )}
-      <div id="music-player-root" className={`w-full h-full flex p-4 ${alignmentCls} ${themeWrapper}`} style={{ ...posStyle, maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%', background: obsMode ? 'transparent' : undefined } as React.CSSProperties}>
+      <div id="music-player-root" className={`w-full h-full flex p-4 ${alignmentCls} ${themeWrapper}`} style={{ ...posStyle, background: obsMode ? 'transparent' : undefined } as React.CSSProperties}>
         {current ? (
+          <AutoScale defaultBase={500} baseWidth={maxWidth > 0 ? maxWidth : theme === 'minimal' ? 420 : 340}>
           <div className={`${qpRow ? 'flex flex-row items-start gap-2' : 'flex flex-col gap-2'} relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${'anim-' + animClass} theme-${theme}`}>
           {qpFirst && (
             <QueueList queue={queue} currentIndex={currentIndex} accent={accent} showQueue={showQueue && theme !== 'minimal'} className={qpNarrow} />
@@ -897,6 +899,7 @@ function MusicInner() {
             <QueueList queue={queue} currentIndex={currentIndex} accent={accent} showQueue={showQueue && theme !== 'minimal'} className={qpNarrow} />
           )}
           </div>
+          </AutoScale>
         ) : (
           !obsMode && (
             <div className="px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">
