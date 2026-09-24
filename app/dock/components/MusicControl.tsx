@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { Play, Pause, SkipForward, SkipBack, Trash2, Plus, Music } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Trash2, Plus, Music, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { getSocketUrl } from '../../widgets/_shared/utils/socket';
 
 export type SongItem = {
@@ -99,6 +99,9 @@ export default function MusicControl({
   const [lyricsFor, setLyricsFor] = useState('');
   // Posisi drag slider (seek) — dikirim ke server saat dilepas agar tidak spam.
   const [seekDrag, setSeekDrag] = useState<number | null>(null);
+  // Sort queue via drag handle / tombol up-down — dikirim ke server (song-control move).
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
   // Posisi lokal: server hanya update bila display player terbuka,
   // jadi dock menghitung sendiri agar highlight lirik tetap jalan.
   const [localPos, setLocalPos] = useState(0);
@@ -169,6 +172,13 @@ export default function MusicControl({
     const s = getSocket();
     if (!s) return;
     s.emit('song-control', { privateKey: getRoom(), action, ...extra });
+  };
+
+  // Pindah posisi queue (sort). Server menyesuaikan currentIndex by id.
+  const moveSong = (from: number, to: number) => {
+    const len = song?.queue.length || 0;
+    if (from === to || from < 0 || to < 0 || from >= len || to >= len) return;
+    control('move', { from, to });
   };
 
   const handleAdd = () => {
@@ -389,14 +399,43 @@ export default function MusicControl({
               song.queue.map((q, i) => (
                 <div
                   key={q.id}
-                  className={`flex items-center gap-2 p-1.5 rounded-lg border cursor-pointer transition-colors ${
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(i);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dragFrom !== null) moveSong(dragFrom, i);
+                    setDragFrom(null);
+                    setDragOver(null);
+                  }}
+                  className={`flex items-center gap-1.5 p-1.5 rounded-lg border cursor-pointer transition-colors ${
                     current && q.id === current.id
                       ? 'bg-green-500/10 border-green-500/30'
                       : 'bg-white/5 border-white/5 hover:bg-white/10'
+                  } ${dragOver === i ? 'ring-1 ring-green-400 border-green-400' : ''} ${
+                    dragFrom === i ? 'opacity-50' : ''
                   }`}
                   onClick={() => control('choose', { index: i })}
-                  title="Klik untuk putar"
+                  title="Klik untuk putar • drag handle / tombol ↑↓ untuk sort"
                 >
+                  <span
+                    draggable
+                    onDragStart={(e) => {
+                      e.stopPropagation();
+                      setDragFrom(i);
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
+                    onDragEnd={() => {
+                      setDragFrom(null);
+                      setDragOver(null);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="shrink-0 p-1 -ml-1 cursor-grab active:cursor-grabbing text-gray-600 hover:text-white touch-none"
+                    title="Drag untuk sort"
+                  >
+                    <GripVertical className="w-3.5 h-3.5" />
+                  </span>
                   <span className={`text-[9px] font-mono w-4 shrink-0 ${current && q.id === current.id ? 'text-green-400' : 'text-gray-600'}`}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
@@ -404,6 +443,24 @@ export default function MusicControl({
                     <div className="text-[10px] font-bold text-white truncate">{q.title}</div>
                     <div className="text-[8px] text-gray-500 truncate">{q.requestedBy}</div>
                   </div>
+                  <span className="shrink-0 flex flex-col" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => moveSong(i, i - 1)}
+                      disabled={i === 0}
+                      className="p-0.5 text-gray-600 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                      title="Naik"
+                    >
+                      <ChevronUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => moveSong(i, i + 1)}
+                      disabled={song !== null && i >= song.queue.length - 1}
+                      className="p-0.5 text-gray-600 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                      title="Turun"
+                    >
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+                  </span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

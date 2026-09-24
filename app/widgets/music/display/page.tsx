@@ -26,37 +26,105 @@ function ytThumb(videoId?: string): string | null {
   return `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
 }
 
-function QueueList({ queue, currentIndex, accent, showQueue, className }: {
+function QueueRotator({ queue, currentIndex, accent, showQueue, maxQueue, className }: {
   queue: Song[];
   currentIndex: number;
   accent: string;
   showQueue: boolean;
+  maxQueue: number;
   className?: string;
 }) {
-  if (!showQueue || queue.length === 0) return null;
+  // Urutan putar: semua kecuali yang sedang main, mulai dari setelah current.
+  const upcoming = (() => {
+    if (queue.length <= 1) return [];
+    const after = queue.slice(currentIndex + 1);
+    const before = queue.slice(0, currentIndex);
+    // current sendiri dilewati; kalau currentIndex di tengah, before = lagu yang sudah lewat → taruh belakang
+    const ordered = [...after, ...before].filter((s) => s.id !== queue[Math.min(currentIndex, queue.length - 1)]?.id);
+    return ordered.slice(0, Math.max(1, maxQueue));
+  })();
+
+  const [rotIdx, setRotIdx] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+  // Crossfade BG: simpan thumb sebelumnya sebagai overlay yang fade-out
+  // di atas BG baru, jadi pergantian album terasa smooth.
+  const [bgPrev, setBgPrev] = useState<string | null>(null);
+  const prevThumbRef = useRef<string | null>(null);
+
+  // Reset bila queue berubah (lagu habis / reorder) agar tidak out-of-bounds.
+  useEffect(() => {
+    setRotIdx(0);
+    setLeaving(false);
+  }, [queue.map((s) => s.id).join(','), currentIndex]);
+
+  // Siklus: tampil (fade up) → tahan → fade down → next.
+  useEffect(() => {
+    if (upcoming.length <= 1) return;
+    const HOLD_MS = 2600;
+    const OUT_MS = 450;
+    const hold = setTimeout(() => setLeaving(true), HOLD_MS);
+    const next = setTimeout(() => {
+      setRotIdx((i) => (i + 1) % upcoming.length);
+      setLeaving(false);
+    }, HOLD_MS + OUT_MS);
+    return () => {
+      clearTimeout(hold);
+      clearTimeout(next);
+    };
+  }, [rotIdx, upcoming.length, queue.map((s) => s.id).join(','), currentIndex]);
+
+  const item = upcoming[Math.min(rotIdx, upcoming.length - 1)];
+  // Nomor antrian asli (1-based) biar konsisten dengan dock.
+  const origIdx = item ? queue.findIndex((s) => s.id === item.id) : -1;
+  const thumb = item ? ytThumb(item.videoId) : null;
+
+  // BG crossfade: tiap thumb berubah, overlay BG lama di-fade-out di atas BG baru.
+  useEffect(() => {
+    const t = thumb ?? null;
+    const p = prevThumbRef.current;
+    if (p === t) return;
+    prevThumbRef.current = t;
+    if (p) {
+      setBgPrev(p);
+      const timer = setTimeout(() => setBgPrev(null), 650);
+      return () => clearTimeout(timer);
+    }
+    setBgPrev(null);
+  }, [thumb]);
+
+  if (!showQueue || upcoming.length === 0 || !item) return null;
+
+  const bgOf = (th: string | null) =>
+    th
+      ? { background: `linear-gradient(0deg, rgba(0,0,0,0.82), rgba(0,0,0,0.82)), url('${th}') center/cover` }
+      : { background: 'rgba(0,0,0,0.7)' };
+
   return (
-    <div className={`w-[340px] max-w-[90vw] rounded-xl overflow-hidden border border-white/10 bg-black/70 backdrop-blur-md px-3 py-2 space-y-1 ${className || ''}`}>
-      <div className="text-[8px] font-black uppercase tracking-widest text-white/40">Queue ({queue.length})</div>
-      {queue.slice(0, 8).map((s, i) => {
-        const isCur = i === currentIndex;
-        const thumb = ytThumb(s.videoId);
-        return (
-          <div key={s.id} className="flex items-center gap-2 min-w-0">
-            {thumb ? (
-              <img src={thumb} alt="" className="w-8 h-[18px] rounded object-cover shrink-0" loading="lazy" />
-            ) : (
-              <span className="text-[10px] font-mono shrink-0" style={{ color: isCur ? accent : 'rgba(255,255,255,0.35)' }}>
-                {isCur ? '▶' : i + 1}
-              </span>
-            )}
-            <span className={`text-[12px] truncate flex-1 ${isCur ? 'text-white font-black' : 'text-white/60 font-bold'}`}>{s.title}</span>
-            {s.requestedBy && <span className="text-white/35 text-[10px] truncate shrink-0 max-w-[100px]">{s.requestedBy}</span>}
-          </div>
-        );
-      })}
-      {queue.length > 8 && (
-        <div className="text-white/35 text-[10px] font-bold">+{queue.length - 8} lagi</div>
+    <div
+      className={`relative w-full rounded-xl overflow-hidden border-0 px-3 py-2 ${className || ''}`}
+      style={{ ...bgOf(thumb), boxShadow: 'none', filter: 'none' }}
+    >
+      {bgPrev && bgPrev !== thumb && (
+        <div key={bgPrev} className="absolute inset-0 queue-bg-fadeout" style={{ ...bgOf(bgPrev), boxShadow: 'none' }} />
       )}
+      <div className="relative">
+      <div className="text-[8px] font-black uppercase tracking-widest text-white/40">
+        Up Next ({queue.length - 1})
+      </div>
+      <div
+        key={item.id}
+        className={`flex items-center gap-2 min-w-0 mt-1 pointer-events-none select-none ${leaving ? 'queue-fade-down' : 'queue-fade-up'}`}
+      >
+        <span className="text-[10px] font-mono shrink-0 tabular-nums" style={{ color: accent }}>
+          {origIdx >= 0 ? String(origIdx + 1).padStart(2, '0') : '•'}
+        </span>
+        {thumb ? (
+          <img src={thumb} alt="" className="w-8 h-[18px] rounded object-cover shrink-0" loading="lazy" />
+        ) : null}
+        <span className="text-[12px] truncate flex-1 text-white font-black">{item.title}</span>
+        {item.requestedBy && <span className="text-white/35 text-[10px] truncate shrink-0 max-w-[100px]">{item.requestedBy}</span>}
+      </div>
+      </div>
     </div>
   );
 }
@@ -774,6 +842,12 @@ function MusicInner() {
         @keyframes slide-out-bottom { to{transform:translateY(20px);opacity:0} }
         @keyframes slide-out-left { to{transform:translateX(-20px);opacity:0} }
         @keyframes slide-out-right { to{transform:translateX(20px);opacity:0} }
+        @keyframes queue-fade-up { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
+        @keyframes queue-fade-down { from{transform:translateY(0);opacity:1} to{transform:translateY(12px);opacity:0} }
+        @keyframes queue-bg-fadeout { from{opacity:1} to{opacity:0} }
+        .queue-fade-up { animation: queue-fade-up 0.5s ease forwards }
+        .queue-fade-down { animation: queue-fade-down 0.45s ease forwards }
+        .queue-bg-fadeout { animation: queue-bg-fadeout 0.6s ease forwards }
         .anim-fade-in { animation: fade-in 0.5s ease forwards }
         .anim-fade-out { animation: fade-out 0.5s ease forwards }
         .anim-slide-in-from-top { animation: slide-in-from-top 0.5s ease forwards }
@@ -818,7 +892,7 @@ function MusicInner() {
           <AutoScale defaultBase={500} baseWidth={maxWidth > 0 ? maxWidth : theme === 'minimal' ? 420 : 340}>
           <div className={`${qpRow ? 'flex flex-row items-start gap-2' : 'flex flex-col gap-2'} relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${'anim-' + animClass} theme-${theme}`}>
           {qpFirst && (
-            <QueueList queue={queue} currentIndex={currentIndex} accent={accent} showQueue={showQueue && theme !== 'minimal'} className={qpNarrow} />
+            <QueueRotator queue={queue} currentIndex={currentIndex} accent={accent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} />
           )}
           {theme === 'minimal' ? (
             <div className="max-w-[420px]">
@@ -860,7 +934,7 @@ function MusicInner() {
           ) : theme === 'vinyl' ? (
             <VinylTheme {...mediaProps} />
           ) : (
-            <div className="w-[340px] max-w-[90vw] rounded-2xl overflow-hidden border border-white/10 backdrop-blur-md shadow-2xl" style={{ background: 'rgba(0,0,0,0.7)' }}>
+            <div className="w-full rounded-2xl overflow-hidden border border-white/10 backdrop-blur-md shadow-2xl" style={{ background: 'rgba(0,0,0,0.7)' }}>
               <div className="flex items-center gap-2.5 px-3 py-2.5">
                 {ytThumb(current.videoId) ? (
                   <img src={ytThumb(current.videoId) as string} alt="" className="w-14 h-8 rounded-lg object-cover shrink-0" loading="lazy" />
@@ -896,7 +970,7 @@ function MusicInner() {
             </div>
           )}
           {qpLast && (
-            <QueueList queue={queue} currentIndex={currentIndex} accent={accent} showQueue={showQueue && theme !== 'minimal'} className={qpNarrow} />
+            <QueueRotator queue={queue} currentIndex={currentIndex} accent={accent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} />
           )}
           </div>
           </AutoScale>

@@ -17,7 +17,7 @@ import {
   Play, Pause, SkipForward, SkipBack, Plus,
   Trash2, Radio, Sliders, ExternalLink, MessageSquare,
   Tv, AlertCircle, Eye, EyeOff, Loader2, KeyRound, Music, Minus, RotateCcw,
-  LayoutGrid,
+  LayoutGrid, GripVertical, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import DockableLayout, {
   createDefaultDockLayout,
@@ -498,6 +498,9 @@ export default function MobileDockPage() {
   const [bgmSearchResults, setBgmSearchResults] = useState<YtSearchItem[]>([]);
   const [bgmIsSearching, setBgmIsSearching] = useState(false);
   const [bgmSearchError, setBgmSearchError] = useState<string | null>(null);
+  // Sort queue BGM: drag handle (desktop) + tombol ↑↓ (touch-friendly)
+  const [bgmDragFrom, setBgmDragFrom] = useState<number | null>(null);
+  const [bgmDragOver, setBgmDragOver] = useState<number | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -1036,6 +1039,13 @@ export default function MobileDockPage() {
     socketRef.current?.emit('song-control', { privateKey: room, action, ...extra });
   };
 
+  // Pindah posisi queue (sort by queue). Server menyesuaikan currentIndex by id.
+  const moveBgmSong = (from: number, to: number) => {
+    const len = queue.length;
+    if (from === to || from < 0 || to < 0 || from >= len || to >= len) return;
+    songControl('move', { from, to });
+  };
+
   const effPos = song?.isPlaying ? Math.max(song.position || 0, localPos) : (song?.position || 0);
   const effDur = song?.duration || 0;
   const cmd = song?.settings?.command || '!song';
@@ -1444,14 +1454,43 @@ export default function MobileDockPage() {
                 queue.map((q, i) => (
                   <div
                     key={q.id}
-                    className={`flex items-center gap-2 p-1.5 rounded-lg border cursor-pointer transition-colors ${
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setBgmDragOver(i);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (bgmDragFrom !== null) moveBgmSong(bgmDragFrom, i);
+                      setBgmDragFrom(null);
+                      setBgmDragOver(null);
+                    }}
+                    className={`flex items-center gap-1.5 p-1.5 rounded-lg border cursor-pointer transition-colors ${
                       current && q.id === current.id
                         ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30'
                         : 'bg-[var(--bg-color)] border-[var(--border-color)]'
+                    } ${bgmDragOver === i ? 'ring-1 ring-[var(--accent)] border-[var(--accent)]' : ''} ${
+                      bgmDragFrom === i ? 'opacity-50' : ''
                     }`}
                     onClick={() => songControl('choose', { index: i })}
-                    title="Klik untuk putar"
+                    title="Klik untuk putar • drag handle / tombol ↑↓ untuk sort"
                   >
+                    <span
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation();
+                        setBgmDragFrom(i);
+                        e.dataTransfer.effectAllowed = 'move';
+                      }}
+                      onDragEnd={() => {
+                        setBgmDragFrom(null);
+                        setBgmDragOver(null);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="shrink-0 p-1 -ml-1 cursor-grab active:cursor-grabbing text-[var(--text-label)] hover:text-[var(--text-main)] touch-none"
+                      title="Drag untuk sort"
+                    >
+                      <GripVertical className="w-3.5 h-3.5" />
+                    </span>
                     <span className={`text-[9px] font-mono w-4 shrink-0 ${current && q.id === current.id ? 'text-[var(--accent)]' : 'text-[var(--text-label)]'}`}>
                       {String(i + 1).padStart(2, '0')}
                     </span>
@@ -1459,6 +1498,24 @@ export default function MobileDockPage() {
                       <div className="text-[10px] font-bold text-[var(--text-main)] truncate">{q.title}</div>
                       <div className="text-[8px] text-[var(--text-label)] truncate">{q.requestedBy}</div>
                     </div>
+                    <span className="shrink-0 flex flex-col" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => moveBgmSong(i, i - 1)}
+                        disabled={i === 0}
+                        className="p-0.5 text-[var(--text-label)] hover:text-[var(--text-main)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                        title="Naik"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => moveBgmSong(i, i + 1)}
+                        disabled={i >= queue.length - 1}
+                        className="p-0.5 text-[var(--text-label)] hover:text-[var(--text-main)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                        title="Turun"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

@@ -1,17 +1,43 @@
 'use client';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getBoolParam } from '../../_shared/utils/url';
-import { renderTemplate } from '../../_shared/utils/template';
+import { getBoolParam, getStringParam } from '../../_shared/utils/url';
+import { renderTemplate, buildTemplateData } from '../../_shared/utils/template';
+import { useLiveTemplateData } from '../../_shared/hooks/useLiveTemplateData';
 
 type Layer = { id: string; type: string; x:number; y:number; w:number; h:number; template:string; css:string; visible:boolean; js?: string; anim?: string; opacity?: number; rotate?: number; scale?: number; zIndex?: number; radius?: number; shadow?: boolean; bg?: string };
 
 function CustomInner() {
   const searchParams = useSearchParams();
-  const obsMode = getBoolParam(new URLSearchParams(searchParams.toString()), 'obs', false);
+  const params = useMemo(() => new URLSearchParams(searchParams.toString()), [searchParams]);
+  const obsMode = getBoolParam(params, 'obs', false);
+  const simulate = getBoolParam(params, 'simulate', false) || getBoolParam(params, 'preview', false);
+  const privateKey = getStringParam(params, 'key', getStringParam(params, 'privateKey', getStringParam(params, 'room', '')));
   const layersParam = searchParams.get('layers');
   const [layers, setLayers] = useState<Layer[]>([]);
-  const [demo, setDemo] = useState({ username: 'Rizky_JR', message: 'Gass keun! 🔥', date: new Date().toLocaleDateString('id-ID'), timer: '13:20', clock: new Date().toLocaleTimeString('id-ID'), polls: 'ML 42%', platform: 'tiktok', handle: '@adilonapsh' });
+
+  // Live sync: {{cover}} = thumbnail YT asli / SMTC art, {{timer}} = sisa real,
+  // {{username}}/{{message}} = chat terakhir, {{question}}/{{polls}} = poll aktif, dst.
+  const { data: live } = useLiveTemplateData({
+    privateKey,
+    simulate,
+    smtcAddress: params.get('smtcBridgeAddress') || '',
+    smtcPort: params.get('smtcBridgePort') || '5000',
+  });
+
+  // Base = demo + ?params URL, lalu timpa dengan live (yang non-kosong menang).
+  const data = useMemo(() => {
+    const base = buildTemplateData(params);
+    const merged: Record<string, any> = { ...base };
+    for (const [k, v] of Object.entries(live)) {
+      if (v !== '' && v !== null && v !== undefined) merged[k] = v;
+    }
+    merged.date = new Date().toLocaleDateString('id-ID');
+    merged.time = new Date().toLocaleTimeString('id-ID');
+    merged.clock = new Date().toLocaleTimeString('id-ID');
+    return merged;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params, live]);
 
   useEffect(() => {
     if (layersParam) {
@@ -19,8 +45,6 @@ function CustomInner() {
     } else {
       try { const raw = localStorage.getItem('custom-overlay-layers'); if (raw) setLayers(JSON.parse(raw)); } catch {}
     }
-    const t = setInterval(() => setDemo(d => ({ ...d, clock: new Date().toLocaleTimeString('id-ID'), date: new Date().toLocaleDateString('id-ID') })), 1000);
-    return () => clearInterval(t);
   }, [layersParam]);
 
   return (
@@ -45,7 +69,7 @@ function CustomInner() {
               ref={el => { if (el && (l as any).js) { try { const fn = new Function('el', (l as any).js); const target = el.querySelector('.layer-content') as HTMLElement | null; if (target) fn(target); else fn(el); } catch {} } }}
             >
               <style dangerouslySetInnerHTML={{ __html: l.css }} />
-              <div className="layer-content w-full h-full text-white text-sm" dangerouslySetInnerHTML={{ __html: renderTemplate(l.template, demo as any) }} />
+              <div className="layer-content w-full h-full text-white text-sm" dangerouslySetInnerHTML={{ __html: renderTemplate(l.template, data) }} />
             </div>
           ))}
           {layers.length===0 && <div className="absolute inset-0 grid place-items-center text-white/40 text-sm">No layers - add di /widgets/editor</div>}

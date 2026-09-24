@@ -1,19 +1,20 @@
 'use client';
-import { useEffect, useState, useRef, Suspense } from 'react';
+import { useEffect, useMemo, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Copy, Check, Eye, ExternalLink, Sparkles, Palette, Layers, Monitor, Save, Trash2, Plus, GripVertical, EyeOff, Settings2, Menu, Move, Type, Clock, Hash, Zap, MessageSquare, Timer, BarChart3, Share2 } from 'lucide-react';
+import Editor from '@monaco-editor/react';
+import { ArrowLeft, Copy, Check, Eye, ExternalLink, Layers, Monitor, Save, Trash2, Plus, GripVertical, EyeOff, Settings2, Menu, Type, Clock, MessageSquare, Timer, BarChart3, Share2, Pencil, X, Code2, FileCode2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import Sidebar from '../../components/Sidebar';
-import { renderTemplate, TEMPLATE_VARS } from '../_shared/utils/template';
-import { getPositionStyle } from '../_shared/constants/positions';
+import { renderTemplate, TEMPLATE_VARS, getTemplateDemoData, buildTemplateData } from '../_shared/utils/template';
+import { useLiveTemplateData, getLiveDemoData } from '../_shared/hooks/useLiveTemplateData';
 
 type LayerType = 'chat' | 'timer' | 'clock' | 'poll' | 'social' | 'custom';
 type Layer = {
   id: string;
   type: LayerType;
   x: number; y: number; w: number; h: number; // 0-100 %
-  template: string;
+  template: string; // HTML + {{variable}}
   css: string;
   js: string; // JS animation - el.animate(...) - pakai JS biar bisa custom easing/timeline
   anim: string; // CSS anim name (elegantIn etc) - kalau js kosong pakai ini
@@ -30,19 +31,65 @@ type Layer = {
 };
 
 const DEFAULT_TEMPLATES: Record<LayerType, string> = {
-  chat: '<div class="chat-bubble"><span class="user">{{username}}</span>: <span class="msg">{{message}}</span> <small>{{date}}</small></div>',
-  timer: '<div class="timer">{{timer}}</div>',
-  clock: '<div class="clock">{{clock}}</div>',
-  poll: '<div class="poll">{{polls}}</div>',
-  social: '<div class="social"><span>{{platform}}</span> {{handle}}</div>',
-  custom: '<div class="custom">{{username}} - {{message}} - {{timer}} - {{clock}}</div>',
+  chat: `<div class="chat-bubble">
+  <span class="user">{{username}}</span>
+  <span class="sep">:</span>
+  <span class="msg">{{message}}</span>
+  <small class="date">{{date}}</small>
+</div>`,
+  timer: `<div class="timer">
+  <span class="timer-value">{{timer}}</span>
+</div>`,
+  clock: `<div class="clock">
+  <span class="clock-value">{{clock}}</span>
+</div>`,
+  poll: `<div class="poll">
+  <div class="poll-question">{{question}}</div>
+  <div class="poll-result">{{polls}}</div>
+</div>`,
+  social: `<div class="social">
+  <span class="platform">{{platform}}</span>
+  <span class="handle">{{handle}}</span>
+</div>`,
+  custom: `<div class="custom">
+  <span class="user">{{username}}</span>
+  <span class="msg">{{message}}</span>
+  <span class="timer">{{timer}}</span>
+  <span class="clock">{{clock}}</span>
+</div>`,
 };
+
+const DEFAULT_CSS: Record<LayerType, string> = {
+  chat: '.chat-bubble{background:rgba(22,22,22,0.9);border:1px solid #333;border-radius:12px;padding:8px 12px;color:#fff;font-family:Outfit}\n.user{font-weight:800;color:#a78bfa}',
+  timer: '.timer{font-size:32px;font-weight:900;color:#fff;background:#594d4a;border-radius:16px;padding:8px 16px;text-align:center}',
+  clock: '.clock{font-size:28px;font-weight:800;color:#fff;text-align:center}',
+  poll: '.poll{font-size:14px;font-weight:700;color:#fff;background:rgba(255,255,255,0.06);border-radius:12px;padding:8px 12px}',
+  social: '.social{font-size:14px;font-weight:700;color:#fff;background:rgba(255,255,255,0.08);border-radius:999px;padding:8px 16px}',
+  custom: '.custom{font-size:14px;color:#fff;background:rgba(255,255,255,0.06);border-radius:12px;padding:8px 12px}',
+};
+
+const JS_PRESETS = [
+  { label: 'JS Fade', code: "el.animate([{opacity:0},{opacity:1}],{duration:500,easing:'ease'})" },
+  { label: 'JS SlideUp', code: "el.animate([{opacity:0,transform:'translateY(20px) scale(0.97)',filter:'blur(8px)'},{opacity:1,transform:'translateY(0) scale(1)',filter:'blur(0)'}],{duration:620,easing:'cubic-bezier(0.16,1,0.3,1)'})" },
+  { label: 'JS Bounce', code: "el.animate([{transform:'scale(0.8)',opacity:0},{transform:'scale(1.05)',opacity:1,offset:0.6},{transform:'scale(1)',opacity:1}],{duration:600,easing:'cubic-bezier(0.34,1.56,0.64,1)'})" },
+];
 
 const LAYER_ICON: Record<LayerType, any> = {
   chat: MessageSquare, timer: Timer, clock: Clock, poll: BarChart3, social: Share2, custom: Type,
 };
 
+type ModalTab = 'template' | 'css' | 'js';
+
 function genId() { return Math.random().toString(36).slice(2, 6); }
+
+function makeDraft(type: LayerType, zIndex: number): Layer {
+  return {
+    id: genId(), type, x: 20 + Math.random() * 20, y: 20 + Math.random() * 30, w: 30, h: 15,
+    template: DEFAULT_TEMPLATES[type], css: DEFAULT_CSS[type], js: '', anim: 'elegantIn',
+    opacity: 100, rotate: 0, scale: 1, zIndex, radius: 12, shadow: false,
+    bg: 'transparent', visible: true, locked: false,
+  };
+}
 
 function EditorContent() {
   const searchParams = useSearchParams();
@@ -65,27 +112,169 @@ function EditorContent() {
   const [selected, setSelected] = useState<string>(layers[0]?.id || '');
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [drag, setDrag] = useState<{ id: string; dx: number; dy: number } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // ---- Modal state: tambah & edit template/html/css/js hanya di modal ----
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [modalTab, setModalTab] = useState<ModalTab>('template');
+  const [draft, setDraft] = useState<Layer | null>(null);
+  const [varSearch, setVarSearch] = useState('');
+  const [tick, setTick] = useState(0);
+  useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 1000); return () => clearInterval(t); }, []);
 
   const selLayer = layers.find(l => l.id === selected) || null;
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setUser(data.user)); }, [supabase]);
+  // Auto-load key seperti /widgets: URL ?key= → profiles.private_key → user_private_keys → sessionStorage.
+  // Tanpa key, display jatuh ke room=global: chat masih masuk, tapi song/poll/timer per-room tidak → terlihat "belum live".
+  useEffect(() => {
+    if (privateKey) return;
+    const init = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          try {
+            const { data: p } = await supabase.from('profiles').select('private_key').eq('id', session.user.id).single();
+            const k = (p as any)?.private_key;
+            if (k) { setPrivateKey(k); return; }
+          } catch {}
+          try {
+            const { data: s } = await supabase.from('user_private_keys').select('private_key').eq('user_id', session.user.id).single();
+            const k = (s as any)?.private_key;
+            if (k) { setPrivateKey(k); return; }
+          } catch {}
+        }
+      } catch {}
+      try {
+        const stored = sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '';
+        if (stored) setPrivateKey(stored);
+      } catch {}
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => { localStorage.setItem('custom-overlay-layers', JSON.stringify(layers)); }, [layers]);
 
-  // demo data for placeholders
-  const demoData: Record<string, string> = {
-    username: 'Rizky_JR', message: 'Gass keun bang! 🔥', date: new Date().toLocaleDateString('id-ID'),
-    timer: '13:20', clock: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-    polls: 'ML 42% • Valorant 28%', platform: 'tiktok', handle: '@adilonapsh', label: 'TikTok',
-  };
+  // demo data: SEMUA params widgets jadi {{variable}} di template HTML.
+  // Prioritas: live socket (fungsi widget asli) > demo realistis > ?params URL.
+  // Jadi {{cover}} = thumbnail YT asli, {{timer}} = sisa real, dst.
+  const { data: liveData, connected: liveConnected } = useLiveTemplateData({ privateKey });
+  const demoData: Record<string, any> = useMemo(() => {
+    const merged: Record<string, any> = {
+      ...getTemplateDemoData(),
+      ...getLiveDemoData(),
+      ...Object.fromEntries(searchParams.entries()),
+    };
+    for (const [k, v] of Object.entries(liveData)) {
+      if (v !== '' && v !== null && v !== undefined) merged[k] = v;
+    }
+    merged.date = new Date().toLocaleDateString('id-ID');
+    merged.time = new Date().toLocaleTimeString('id-ID');
+    merged.clock = new Date().toLocaleTimeString('id-ID');
+    return merged;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveData, privateKey, tick]);
+  void buildTemplateData;
 
-  const addLayer = (type: LayerType) => {
-    const nl: Layer = { id: genId(), type, x: 20 + Math.random()*20, y: 20 + Math.random()*30, w: 30, h: 15, template: DEFAULT_TEMPLATES[type], css: '', js: '', anim: 'elegantIn', opacity: 100, rotate: 0, scale: 1, zIndex: layers.length + 1, radius: 12, shadow: false, bg: 'transparent', visible: true, locked: false };
-    setLayers(v => [...v, nl]); setSelected(nl.id);
-  };
   const updateLayer = (id: string, patch: Partial<Layer>) => setLayers(v => v.map(l => l.id === id ? { ...l, ...patch } : l));
   const removeLayer = (id: string) => setLayers(v => v.filter(l => l.id !== id));
+
+  // ---- Modal actions ----
+  const openCreate = (type: LayerType) => {
+    setDraft(makeDraft(type, layers.length + 1));
+    setModalMode('create');
+    setModalTab('template');
+    setModalOpen(true);
+  };
+  const openEdit = (id: string, tab: ModalTab = 'template') => {
+    const l = layers.find(x => x.id === id);
+    if (!l) return;
+    setDraft({ ...l });
+    setModalMode('edit');
+    setModalTab(tab);
+    setModalOpen(true);
+  };
+  const closeModal = () => { setModalOpen(false); setDraft(null); };
+  const updateDraft = (patch: Partial<Layer>) => setDraft(d => (d ? { ...d, ...patch } : d));
+  const saveModal = () => {
+    if (!draft) return;
+    if (modalMode === 'create') {
+      setLayers(v => [...v, draft]);
+      setSelected(draft.id);
+    } else {
+      setLayers(v => v.map(l => (l.id === draft.id ? draft : l)));
+      setSelected(draft.id);
+    }
+    closeModal();
+  };
+
+  // ---- Monaco refs + autocomplete ala VSCode ----
+  const editorRef = useRef<any>(null);
+  const monacoRef = useRef<any>(null);
+  const handleEditorMount = (editor: any, monaco: any) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+    // Autocomplete {{variable}} untuk HTML
+    try {
+      monaco.languages.registerCompletionItemProvider('html', {
+        triggerCharacters: ['{', '.'],
+        provideCompletionItems: (model: any, position: any) => {
+          const word = model.getWordUntilPosition(position);
+          const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
+          const suggestions = TEMPLATE_VARS.map(v => ({
+            label: `{{${v.key}}}`,
+            kind: monaco.languages.CompletionItemKind.Variable,
+            insertText: `{{${v.key}}}`,
+            detail: `${v.group} • ${v.desc}`,
+            documentation: `Contoh: ${v.example}`,
+            range,
+          }));
+          return { suggestions };
+        },
+      });
+      // Snippet el.animate untuk JS
+      monaco.languages.registerCompletionItemProvider('javascript', {
+        triggerCharacters: ['e', '.'],
+        provideCompletionItems: (model: any, position: any) => {
+          const word = model.getWordUntilPosition(position);
+          const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
+          return {
+            suggestions: [
+              ...JS_PRESETS.map(p => ({
+                label: p.label, kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: p.code, detail: 'Preset animasi', range,
+              })),
+              { label: 'el', kind: monaco.languages.CompletionItemKind.Variable, insertText: 'el', detail: 'Layer element', documentation: "Pakai el.animate([...], {duration:500})", range },
+            ],
+          };
+        },
+      });
+    } catch {}
+  };
+
+  const insertVarModal = (v: string) => {
+    if (!draft) return;
+    const placeholder = `{{${v}}}`;
+    const ed = editorRef.current;
+    if (ed && modalTab === 'template') {
+      const sel = ed.getSelection();
+      ed.executeEdits('insert-var', [{ range: sel ?? ed.getModel()?.getFullModelRange(), text: placeholder, forceMoveMarkers: true }]);
+      ed.focus();
+    } else {
+      updateDraft({ template: draft.template + placeholder });
+    }
+  };
+
+  const varGroups = useMemo(() => {
+    const map = new Map<string, typeof TEMPLATE_VARS>();
+    for (const v of TEMPLATE_VARS) {
+      if (varSearch && !v.key.toLowerCase().includes(varSearch.toLowerCase()) && !v.desc.toLowerCase().includes(varSearch.toLowerCase()) && !v.group.toLowerCase().includes(varSearch.toLowerCase())) continue;
+      if (!map.has(v.group)) map.set(v.group, [] as any);
+      (map.get(v.group) as any).push(v);
+    }
+    return Array.from(map.entries());
+  }, [varSearch]);
 
   const onMouseDown = (e: React.MouseEvent, id: string) => {
     const layer = layers.find(l => l.id === id);
@@ -103,29 +292,23 @@ function EditorContent() {
     window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
   };
 
-  const insertVar = (v: string) => {
-    if (!selLayer) return;
-    const ta = document.getElementById('custom-template') as HTMLTextAreaElement | null;
-    const cur = selLayer.template;
-    const placeholder = `{{${v}}}`;
-    if (ta && typeof ta.selectionStart === 'number') {
-      const s = ta.selectionStart; const e = ta.selectionEnd;
-      const next = cur.slice(0, s) + placeholder + cur.slice(e);
-      updateLayer(selLayer.id, { template: next });
-      setTimeout(() => { ta.focus(); ta.setSelectionRange(s + placeholder.length, s + placeholder.length); }, 0);
-    } else {
-      updateLayer(selLayer.id, { template: cur + placeholder });
-    }
-  };
+  // ESC untuk tutup modal
+  useEffect(() => {
+    if (!modalOpen) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [modalOpen]);
 
   const layersQuery = encodeURIComponent(JSON.stringify(layers));
+  // Live data TIDAK dikirim lewat URL — display mengambilnya via socket (room = key).
+  // URL hanya membawa layers + key. Tanpa key → room=global → song/poll/timer tidak masuk.
   const obsUrl = typeof window !== 'undefined' ? `${window.location.origin}/widgets/custom/display?layers=${layersQuery}${privateKey ? `&key=${privateKey}` : ''}&obs=1` : '';
-  const previewUrl = obsUrl.replace('&obs=1', '&simulate=1');
+  const previewUrl = `${obsUrl.replace('&obs=1', '')}${obsUrl.includes('?') ? '&' : '?'}simulate=1`;
 
   const handleCopy = async () => { await navigator.clipboard.writeText(obsUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); };
   const handleSave = async () => {
     localStorage.setItem('custom-overlay-layers', JSON.stringify(layers));
-    // also save to Supabase if logged in (optional)
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -156,25 +339,33 @@ function EditorContent() {
           </div>
         </header>
 
-        <div className="bg-[#161616] border-b border-white/5 px-4 md:px-6 py-2 flex gap-2 sm:items-center overflow-x-auto">
-          <div className="flex-1 min-w-0 flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2">
-            <code className="flex-1 text-[11px] font-mono truncate text-white/70">{obsUrl.slice(0, 80)}…</code>
-            <button onClick={handleCopy} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white text-black">{copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}</button>
+        <div className="bg-[#161616] border-b border-white/5 px-4 md:px-6 py-2 space-y-1.5">
+          <div className="flex gap-2 sm:items-center overflow-x-auto">
+            <div className="flex-1 min-w-0 flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2">
+              <code className="flex-1 text-[11px] font-mono truncate text-white/70">{obsUrl.slice(0, 80)}…</code>
+              <button onClick={handleCopy} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white text-black">{copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}</button>
+            </div>
+            <input value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="key" className="hidden sm:block w-32 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-[11px] font-mono text-white" />
           </div>
-          <input value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="key" className="hidden sm:block w-32 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-[11px] font-mono text-white" />
+          <div className={`text-[10px] leading-relaxed ${privateKey ? 'text-green-400/80' : 'text-yellow-300/90'}`}>
+            {privateKey
+              ? `● Live via socket room=${privateKey.slice(0, 6)}… — buka URL OBS ini, {{cover}}/{{timer}}/{{polls}} terisi otomatis saat ada lagu/timer/poll. Preview = demo (simulate=1, tanpa socket).`
+              : '○ Key kosong — Copy OBS akan jatuh ke room=global: chat masih masuk, tapi music/timer/poll tidak. Isi key (otomatis dari dashboard) agar live sync jalan.'}
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-          {/* Left: Layers + Add */}
+          {/* Left: Layers + Add (via modal) */}
           <div className="w-full lg:w-[260px] shrink-0 bg-[#121212] border-b lg:border-b-0 lg:border-r border-white/5 flex flex-col max-h-[30vh] lg:max-h-none lg:h-[calc(100vh-112px)] overflow-hidden">
             <div className="p-3 border-b border-white/5">
-              <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Plus className="w-3 h-3" /> Add Layer</div>
+              <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Plus className="w-3 h-3" /> Add Layer — via modal</div>
               <div className="grid grid-cols-3 gap-1.5 mt-2">
                 {(['chat','timer','clock','poll','social','custom'] as LayerType[]).map(t => {
                   const Icon = LAYER_ICON[t];
-                  return <button key={t} onClick={() => addLayer(t)} className="h-16 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl flex flex-col items-center justify-center gap-1 text-white"><Icon className="w-5 h-5" /><span className="text-[9px] font-black uppercase">{t}</span></button>;
+                  return <button key={t} onClick={() => openCreate(t)} className="h-16 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl flex flex-col items-center justify-center gap-1 text-white"><Icon className="w-5 h-5" /><span className="text-[9px] font-black uppercase">{t}</span></button>;
                 })}
               </div>
+              <p className="mt-2 text-[10px] text-gray-500 leading-relaxed">Klik tipe → modal Template/HTML + CSS + JS → <span className="text-white font-bold">Simpan</span> untuk menambahkan layer.</p>
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
               <div className="text-gray-500 font-black uppercase text-[9px] tracking-widest px-1">Layers ({layers.length})</div>
@@ -182,6 +373,7 @@ function EditorContent() {
                 <div key={l.id} onClick={() => setSelected(l.id)} className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer ${selected===l.id ? 'bg-white text-black border-white' : 'bg-white/5 text-white border-white/10 hover:bg-white/10'}`}>
                   <GripVertical className="w-3 h-3 opacity-50" />
                   <span className="flex-1 text-[11px] font-bold truncate uppercase">{l.type} • {l.id}</span>
+                  <button title="Edit template/css/js (modal)" onClick={e=>{e.stopPropagation(); openEdit(l.id,'template')}} className="w-6 h-6 grid place-items-center rounded-lg bg-black/10 hover:bg-black/20"><Pencil className="w-3 h-3" /></button>
                   <button onClick={e=>{e.stopPropagation(); updateLayer(l.id,{visible:!l.visible})}} className="w-6 h-6 grid place-items-center rounded-lg bg-black/10">{l.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}</button>
                   <button onClick={e=>{e.stopPropagation(); removeLayer(l.id)}} className="w-6 h-6 grid place-items-center rounded-lg bg-red-500/20 text-red-300"><Trash2 className="w-3 h-3" /></button>
                 </div>
@@ -192,17 +384,17 @@ function EditorContent() {
           {/* Center: Canvas 16:9 */}
           <div className="flex-1 bg-[#0a0a0a] p-4 flex flex-col min-h-[400px] overflow-auto">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Monitor className="w-3 h-3" /> Canvas 1920×1080 • drag to move, pos global t/l/b/r</span>
+              <span className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Monitor className="w-3 h-3" /> Canvas 1920×1080 • drag to move • double-click untuk edit modal</span>
               <span className="text-gray-500 text-[10px] font-mono">{layers.length} layers</span>
             </div>
             <div ref={canvasRef} className="relative w-full aspect-video bg-black border border-white/10 rounded-2xl overflow-hidden shadow-2xl shrink-0" style={{ background: 'radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px) 0 0 / 20px 20px, #0a0a0a' }}>
-              {/* 9-grid guide */}
               <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-[0.04]"><div className="border-r border-white" /><div className="border-r border-white" /><div /><div className="border-t border-white border-r" /><div className="border-t border-r border-white" /><div className="border-t border-white" /><div className="border-t border-r border-white" /><div className="border-t border-r border-white" /><div className="border-t border-white" /></div>
                   {layers.filter(l=>l.visible).map(l => (
                 <div
                   key={`${l.id}-${l.template}-${l.js}-${l.anim}-${l.opacity}-${l.rotate}-${l.scale}`}
                   onMouseDown={e=>onMouseDown(e,l.id)}
                   onClick={()=>setSelected(l.id)}
+                  onDoubleClick={()=>openEdit(l.id,'template')}
                   className={`absolute border cursor-move select-none overflow-hidden ${selected===l.id ? 'border-violet-500 ring-2 ring-violet-500/30' : 'border-white/20 hover:border-white/40'} ${l.locked ? 'opacity-60' : ''}`}
                   style={{ left: `${l.x}%`, top: `${l.y}%`, width: `${l.w}%`, height: `${l.h}%`, background: l.bg && l.bg !== 'transparent' ? l.bg : 'rgba(255,255,255,0.02)', opacity: (l.opacity ?? 100)/100, transform: `rotate(${l.rotate||0}deg) scale(${l.scale||1})`, zIndex: l.zIndex||1, borderRadius: `${l.radius||0}px`, boxShadow: l.shadow ? '0 8px 24px rgba(0,0,0,0.4)' : undefined, animation: !l.js && l.anim ? `${l.anim} 0.52s cubic-bezier(0.16,1,0.3,1) both` : undefined } as any}
                   ref={el => { if (el && l.js) { try { const fn = new Function('el', l.js); const target = el.querySelector('.layer-content') as HTMLElement | null; if (target) fn(target); else fn(el); } catch {} } }}
@@ -214,10 +406,10 @@ function EditorContent() {
                 </div>
               ))}
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">Drag layer di canvas • gunakan PositionPicker di kanan untuk snap ke t/l/b/r/center/tl - live preview iframe di kanan pakai 1 file `/widgets/custom/display`</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">Template / HTML / CSS / JS hanya lewat modal (klik <span className="text-white font-bold">Add</span> atau ikon <span className="text-white font-bold">✏️</span> / double-click layer) • panel kanan hanya posisi & style cepat</div>
           </div>
 
-          {/* Right: Properties + Template */}
+          {/* Right: Properties cepat saja (tanpa textarea template/css/js) */}
           <div className="w-full lg:w-[380px] shrink-0 bg-[#121212] border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col max-h-[45vh] lg:max-h-none lg:h-[calc(100vh-112px)] overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
               {!selLayer ? (
@@ -250,46 +442,24 @@ function EditorContent() {
                     </div>
                     <label className="block"><span className="text-[9px] font-bold text-gray-400">Background</span><div className="flex gap-1.5 mt-1"><input type="color" value={selLayer.bg === 'transparent' ? '#000000' : selLayer.bg} onChange={e=>updateLayer(selLayer.id,{bg:e.target.value})} className="w-8 h-8 rounded-lg p-1 bg-black/40 border border-white/10" /><button onClick={()=>updateLayer(selLayer.id,{bg:'transparent'})} className={`flex-1 h-8 rounded-lg text-[10px] font-black uppercase border ${selLayer.bg==='transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-white font-black uppercase text-[10px] tracking-widest">Template - drag variable</div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {TEMPLATE_VARS.map(v => (
-                        <button key={v.key} draggable onDragStart={e=>e.dataTransfer.setData('text/plain', `{{${v.key}}}`)} onClick={()=>insertVar(v.key)} className="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-[10px] font-bold text-white" title={`${v.desc} - ${v.example}`}>{'{{'}<span className="text-violet-300">{v.key}</span>{'}}'}</button>
-                      ))}
+
+                  {/* Konten: ringkasan + edit via modal */}
+                  <div className="space-y-2 p-2.5 bg-violet-500/10 border border-violet-500/20 rounded-xl">
+                    <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Code2 className="w-3 h-3 text-violet-300" /> Konten Layer — edit di modal</div>
+                    <div className="grid grid-cols-3 gap-1.5 text-[10px] font-mono">
+                      <div className="bg-black/40 border border-white/10 rounded-lg p-2"><div className="text-gray-500 text-[9px] font-sans font-bold uppercase">HTML</div><div className="text-white truncate">{selLayer.template.length} char</div></div>
+                      <div className="bg-black/40 border border-white/10 rounded-lg p-2"><div className="text-gray-500 text-[9px] font-sans font-bold uppercase">CSS</div><div className="text-white truncate">{selLayer.css.length} char</div></div>
+                      <div className="bg-black/40 border border-white/10 rounded-lg p-2"><div className="text-gray-500 text-[9px] font-sans font-bold uppercase">JS</div><div className="text-white truncate">{selLayer.js ? `${selLayer.js.length} char` : selLayer.anim || '-'}</div></div>
                     </div>
-                    <textarea id="custom-template" value={selLayer.template} onChange={e=>updateLayer(selLayer.id,{template:e.target.value})} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault(); const txt=e.dataTransfer.getData('text/plain'); if(txt) updateLayer(selLayer.id,{template: selLayer.template + txt});}} placeholder="<div>{{username}}: {{message}}</div>" className="w-full h-28 bg-black/40 border border-white/10 rounded-xl p-2 text-xs font-mono text-white" />
-                    <div className="text-[10px] text-gray-500">Drag chip di atas ke textarea • pakai <code className="bg-white/10 px-1 rounded">{"{{username}} {{message}} {{date}} {{timer}} {{clock}} {{polls}} {{handle}} {{platform}}"}</code></div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-white font-black uppercase text-[10px] tracking-widest">Custom CSS (per layer)</div>
-                    <textarea value={selLayer.css} onChange={e=>updateLayer(selLayer.id,{css:e.target.value})} placeholder=".chat-bubble{...}" className="w-full h-28 bg-black/40 border border-white/10 rounded-xl p-2 text-xs font-mono text-white" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center justify-between"><span>Animasi - CSS atau JS</span><span className="text-[9px] font-normal normal-case text-gray-500">{selLayer.js ? 'JS' : 'CSS'}</span></div>
-                    <select value={selLayer.anim || 'elegantIn'} onChange={e=>updateLayer(selLayer.id,{anim:e.target.value, js: ''})} className="w-full h-8 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white">
-                      <option value="elegantIn" className="bg-zinc-900">CSS - Elegant In (blur + slide)</option>
-                      <option value="softPopIn" className="bg-zinc-900">CSS - Soft Pop</option>
-                      <option value="slideUp" className="bg-zinc-900">CSS - Slide Up</option>
-                      <option value="fadeIn" className="bg-zinc-900">CSS - Fade</option>
-                    </select>
                     <div className="grid grid-cols-3 gap-1.5">
-                      {[
-                        { label: 'JS Fade', code: "el.animate([{opacity:0},{opacity:1}],{duration:500,easing:'ease'})" },
-                        { label: 'JS SlideUp', code: "el.animate([{opacity:0,transform:'translateY(20px) scale(0.97)',filter:'blur(8px)'},{opacity:1,transform:'translateY(0) scale(1)',filter:'blur(0)'}],{duration:620,easing:'cubic-bezier(0.16,1,0.3,1)'})" },
-                        { label: 'JS Bounce', code: "el.animate([{transform:'scale(0.8)',opacity:0},{transform:'scale(1.05)',opacity:1,offset:0.6},{transform:'scale(1)',opacity:1}],{duration:600,easing:'cubic-bezier(0.34,1.56,0.64,1)'})" },
-                      ].map(p => (
-                        <button key={p.label} onClick={()=>updateLayer(selLayer.id,{js:p.code, anim: ''})} className={`h-8 rounded-lg border text-[10px] font-bold ${selLayer.js===p.code ? 'bg-violet-600 text-white border-violet-600' : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'}`}>{p.label}</button>
-                      ))}
+                      <button onClick={()=>openEdit(selLayer.id,'template')} className="h-8 rounded-lg bg-white text-black text-[10px] font-black uppercase flex items-center justify-center gap-1"><FileCode2 className="w-3 h-3" /> HTML</button>
+                      <button onClick={()=>openEdit(selLayer.id,'css')} className="h-8 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-[10px] font-black uppercase">CSS</button>
+                      <button onClick={()=>openEdit(selLayer.id,'js')} className="h-8 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-[10px] font-black uppercase">JS</button>
                     </div>
-                    <textarea value={selLayer.js || ''} onChange={e=>updateLayer(selLayer.id,{js:e.target.value})} placeholder="JS: el.animate([...], {duration:500}) - pakai 'el' untuk layer element" className="w-full h-20 bg-black/40 border border-white/10 rounded-xl p-2 text-xs font-mono text-white" />
-                    <div className="text-[10px] text-gray-500">Kosongkan JS untuk pakai CSS anim di atas. Pakai <code className="bg-white/10 px-1 rounded">el</code> di JS - contoh: <code className="bg-white/10 px-1 rounded">el.animate([{`{opacity:0}`},{`{opacity:1}`}],{"{duration:400}"})</code></div>
-                    {selLayer.js ? <button onClick={()=>updateLayer(selLayer.id,{js:''})} className="text-[10px] text-red-400 underline">Hapus JS, pakai CSS</button> : null}
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-white font-black uppercase text-[10px] tracking-widest">Preview layer</div>
+                    <button onClick={()=>openEdit(selLayer.id,'template')} className="w-full h-9 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase flex items-center justify-center gap-1.5"><Pencil className="w-3 h-3" /> Edit Template / CSS / JS</button>
                     <div className="bg-black border border-white/10 rounded-xl p-3">
                       <style dangerouslySetInnerHTML={{ __html: selLayer.css }} />
-                      <div ref={el => { if(el && selLayer.js) { try { const fn = new Function('el', selLayer.js); fn(el); } catch {} } }} dangerouslySetInnerHTML={{ __html: renderTemplate(selLayer.template, demoData) }} style={!selLayer.js && selLayer.anim ? { animation: `${selLayer.anim} 0.52s cubic-bezier(0.16,1,0.3,1) both` } as any : undefined} />
+                      <div dangerouslySetInnerHTML={{ __html: renderTemplate(selLayer.template, demoData) }} style={!selLayer.js && selLayer.anim ? { animation: `${selLayer.anim} 0.52s cubic-bezier(0.16,1,0.3,1) both` } as any : undefined} />
                     </div>
                   </div>
                 </>
@@ -298,6 +468,145 @@ function EditorContent() {
           </div>
         </div>
       </div>
+
+      {/* ===== Modal tambah / edit layer — diperbesar, VSCode, preview atas, panel kiri + kode kanan ===== */}
+      {modalOpen && draft && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={closeModal} />
+          <div className="relative w-full max-w-[1400px] h-[94vh] flex flex-col bg-[#1e1e1e] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/10 bg-[#252526] shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-white grid place-items-center shrink-0"><Layers className="w-4 h-4 text-black" /></div>
+              <div className="flex-1 min-w-0">
+                <div className="text-white font-black text-[12px] uppercase tracking-widest">{modalMode === 'create' ? 'Tambah Layer' : `Edit Layer • ${draft.id}`}</div>
+                <div className="text-gray-400 text-[10px]">Template / HTML + CSS + JS — Simpan untuk menambahkan ke canvas</div>
+              </div>
+              <div className="hidden md:flex items-center gap-1.5">
+                {(['template','css','js'] as ModalTab[]).map(t => (
+                  <button key={t} onClick={()=>setModalTab(t)} className={`h-8 px-4 rounded-lg text-[10px] font-black uppercase border ${modalTab===t ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                    {t === 'template' ? 'HTML' : t.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              {modalMode === 'create' && (
+                <select value={draft.type} onChange={e=>{ const t = e.target.value as LayerType; setDraft({ ...makeDraft(t, layers.length + 1), id: draft.id, x: draft.x, y: draft.y, w: draft.w, h: draft.h }); }} className="h-8 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white">
+                  {(['chat','timer','clock','poll','social','custom'] as LayerType[]).map(t => <option key={t} value={t} className="bg-zinc-900">{t}</option>)}
+                </select>
+              )}
+              <span className="hidden lg:inline text-[10px] font-mono text-gray-500">{draft.type} • {draft.id}</span>
+              <button onClick={closeModal} className="w-8 h-8 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300"><X className="w-4 h-4" /></button>
+            </div>
+            {/* Tabs mobile */}
+            <div className="md:hidden flex items-center gap-1.5 px-4 py-2 border-b border-white/5 bg-[#252526]">
+              {(['template','css','js'] as ModalTab[]).map(t => (
+                <button key={t} onClick={()=>setModalTab(t)} className={`flex-1 h-8 rounded-lg text-[10px] font-black uppercase border ${modalTab===t ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>
+                  {t === 'template' ? 'HTML' : t.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {/* Live preview — di atas (data asli fungsi widget, bukan contoh statis) */}
+            <div className="px-4 py-2 border-b border-white/10 bg-[#1e1e1e] shrink-0">
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5 flex items-center gap-2"><Eye className="w-3 h-3" /> Live preview — {modalTab === 'template' ? 'HTML' : modalTab.toUpperCase()}
+                <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${liveConnected ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-white/5 text-gray-400 border border-white/10'}`}>{liveConnected ? '● LIVE SYNC' : '○ DEMO'}</span>
+                {liveConnected ? null : <span className="normal-case font-bold text-gray-600">isi key untuk sync real • {'{{cover}}'} = thumb YT asli saat ada lagu</span>}
+              </div>
+              <div className="bg-black border border-white/10 rounded-xl px-4 py-3 overflow-auto min-h-[84px] max-h-[130px]">
+                <style dangerouslySetInnerHTML={{ __html: draft.css }} />
+                <div ref={el => { if (el && draft.js) { try { const fn = new Function('el', draft.js); fn(el); } catch {} } }} dangerouslySetInnerHTML={{ __html: renderTemplate(draft.template, demoData) }} style={!draft.js && draft.anim ? { animation: `${draft.anim} 0.52s cubic-bezier(0.16,1,0.3,1) both` } as any : undefined} />
+              </div>
+            </div>
+
+            {/* Body: kiri panel template, kanan input kode */}
+            <div className="flex-1 flex min-h-0">
+              {/* Kiri: panel Template / snippets */}
+              <div className="w-[280px] lg:w-[320px] shrink-0 border-r border-white/10 bg-[#252526] flex flex-col min-h-0 max-sm:hidden">
+                <div className="p-3 border-b border-white/5">
+                  <input value={varSearch} onChange={e=>setVarSearch(e.target.value)} placeholder={modalTab === 'template' ? 'Cari variable… (theme, timer, tz)' : 'Cari…'} className="w-full h-8 bg-[#1e1e1e] border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/60" />
+                </div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                  {modalTab === 'template' && varGroups.map(([g, list]) => (
+                    <div key={g}>
+                      <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">{g} ({list.length})</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(list as typeof TEMPLATE_VARS).map(v => (
+                          <button key={v.key} onClick={()=>insertVarModal(v.key)} title={`${v.desc} — ex: ${v.example}`} className="px-2 py-1 bg-white/10 hover:bg-violet-600 hover:border-violet-500 border border-white/10 rounded-md text-[10px] font-mono text-gray-200 transition-colors">{`{{${v.key}}}`}</button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {modalTab === 'template' && varGroups.length === 0 && <div className="text-gray-600 text-xs text-center py-6">Tidak ketemu.</div>}
+                  {modalTab === 'css' && (
+                    <div className="space-y-1.5">
+                      <div className="text-[9px] font-black uppercase tracking-widest text-gray-500">Snippet CSS</div>
+                      {[
+                        { label: 'Center flex', code: '.wrap{display:flex;align-items:center;justify-content:center;}' },
+                        { label: 'Pill', code: '.pill{background:rgba(255,255,255,0.08);border-radius:999px;padding:8px 16px;}' },
+                        { label: 'Glass', code: '.glass{background:rgba(20,20,25,0.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:16px;}' },
+                        { label: 'Outline text', code: '.txt{font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.6);}' },
+                      ].filter(s => !varSearch || s.label.toLowerCase().includes(varSearch.toLowerCase())).map(s => (
+                        <button key={s.label} onClick={()=>updateDraft({ css: (draft.css ? draft.css + '\n' : '') + s.code })} className="w-full text-left px-2.5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[11px] font-mono text-gray-200">{s.label}<span className="block text-[10px] text-gray-500 truncate">{s.code}</span></button>
+                      ))}
+                      <div className="text-[10px] text-gray-500 leading-relaxed pt-1">Scoped per layer via <code className="bg-white/10 px-1 rounded">&lt;style&gt;</code>.</div>
+                    </div>
+                  )}
+                  {modalTab === 'js' && (
+                    <div className="space-y-1.5">
+                      <div className="text-[9px] font-black uppercase tracking-widest text-gray-500">Preset JS — klik untuk pakai</div>
+                      {JS_PRESETS.map(p => (
+                        <button key={p.label} onClick={()=>updateDraft({ js: p.code, anim: '' })} className={`w-full text-left px-2.5 py-2 border rounded-lg text-[11px] font-bold ${draft.js===p.code ? 'bg-violet-600 text-white border-violet-500' : 'bg-white/5 text-gray-200 border-white/10 hover:bg-white/10'}`}>{p.label}<span className="block text-[10px] font-mono font-normal opacity-70 truncate">{p.code.slice(0, 60)}…</span></button>
+                      ))}
+                      <div className="text-[10px] text-gray-500 leading-relaxed pt-1">Pakai <code className="bg-white/10 px-1 rounded">el</code> — <code className="bg-white/10 px-1 rounded">el.animate([...], {"{duration:400}"})</code>. Ketik <code className="bg-white/10 px-1 rounded">el</code> di kanan untuk autocomplete.</div>
+                      {draft.js ? <button onClick={()=>updateDraft({ js:'' })} className="text-[10px] text-red-400 underline">Hapus JS, pakai CSS</button> : null}
+                    </div>
+                  )}
+                </div>
+                {modalTab === 'template' && <div className="p-3 border-t border-white/5 text-[10px] text-gray-500 leading-relaxed">Klik chip untuk sisipkan di kursor • ketik <code className="bg-white/10 px-1 rounded">{"{{"}</code> di kanan untuk autocomplete semua params.</div>}
+              </div>
+
+              {/* Kanan: input kode ala VSCode */}
+              <div className="flex-1 flex flex-col min-w-0 bg-[#1e1e1e]">
+                {modalTab === 'js' && (
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 shrink-0 overflow-x-auto">
+                    <span className="text-[10px] font-black uppercase text-gray-400 shrink-0">CSS anim:</span>
+                    <select value={draft.anim || 'elegantIn'} onChange={e=>updateDraft({ anim: e.target.value, js: '' })} className="h-7 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white shrink-0">
+                      <option value="elegantIn" className="bg-zinc-900">Elegant In</option>
+                      <option value="softPopIn" className="bg-zinc-900">Soft Pop</option>
+                      <option value="slideUp" className="bg-zinc-900">Slide Up</option>
+                      <option value="fadeIn" className="bg-zinc-900">Fade</option>
+                    </select>
+                    <span className="text-[10px] text-gray-600 shrink-0">atau tulis JS di bawah ({draft.js ? 'JS aktif' : 'CSS aktif'})</span>
+                  </div>
+                )}
+                <div className="flex-1 min-h-0">
+                  {modalTab === 'template' && (
+                    <Editor key="html" height="100%" language="html" theme="vs-dark" value={draft.template} onChange={v=>updateDraft({ template: v ?? '' })} onMount={handleEditorMount}
+                      options={{ minimap: { enabled: false }, fontSize: 13, wordWrap: 'on', scrollBeyondLastLine: false, padding: { top: 12 }, suggestOnTriggerCharacters: true, quickSuggestions: true, tabSize: 2, automaticLayout: true }} />
+                  )}
+                  {modalTab === 'css' && (
+                    <Editor key="css" height="100%" language="css" theme="vs-dark" value={draft.css} onChange={v=>updateDraft({ css: v ?? '' })} onMount={handleEditorMount}
+                      options={{ minimap: { enabled: false }, fontSize: 13, wordWrap: 'on', scrollBeyondLastLine: false, padding: { top: 12 }, suggestOnTriggerCharacters: true, quickSuggestions: true, tabSize: 2, automaticLayout: true }} />
+                  )}
+                  {modalTab === 'js' && (
+                    <Editor key="js" height="100%" language="javascript" theme="vs-dark" value={draft.js || ''} onChange={v=>updateDraft({ js: v ?? '' })} onMount={handleEditorMount}
+                      options={{ minimap: { enabled: false }, fontSize: 13, wordWrap: 'on', scrollBeyondLastLine: false, padding: { top: 12 }, suggestOnTriggerCharacters: true, quickSuggestions: true, tabSize: 2, automaticLayout: true }} />
+                  )}
+                </div>
+                <div className="px-3 py-1.5 border-t border-white/5 text-[10px] font-mono text-gray-500 shrink-0 flex items-center gap-3">
+                  <span>{modalTab === 'template' ? 'HTML' : modalTab.toUpperCase()} • vs-dark</span>
+                  <span>{(modalTab === 'template' ? draft.template : modalTab === 'css' ? draft.css : draft.js || '').length} char</span>
+                  {modalTab === 'template' && <span className="hidden sm:inline">autocomplete: ketik {"{{"} + ctrl+space</span>}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 px-4 py-3 border-t border-white/10 bg-[#252526] shrink-0">
+              <button onClick={closeModal} className="flex-1 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-black uppercase text-gray-300">Batal</button>
+              <button onClick={saveModal} className="flex-[2] h-10 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-black uppercase flex items-center justify-center gap-1.5"><Check className="w-4 h-4" /> {modalMode === 'create' ? 'Simpan & Tambahkan Layer' : 'Simpan Perubahan'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
