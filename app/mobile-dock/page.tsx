@@ -68,8 +68,11 @@ type StreamInfo = {
 };
 
 type YtSearchItem = {
-  id?: { videoId?: string };
-  snippet?: { title?: string; channelTitle?: string; thumbnails?: { default?: { url?: string } } };
+  videoId: string;
+  title: string;
+  channel: string;
+  thumbnail: string;
+  url: string;
 };
 
 type PanelUrls = {
@@ -174,8 +177,6 @@ function loadDockLayout(knownPanels?: string[]): DockLayoutState {
 const FALLBACK_VIDEO_ID = 'jfKfPfyJRdk';
 
 const EMPTY_URLS: PanelUrls = { deckUrl: '', controlUrl: '', alertUrl: '', monitorUrl: '', chatUrl: '' };
-
-const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
 
 function readLS(key: string, fallback: string): string {
   if (typeof window === 'undefined') return fallback;
@@ -498,6 +499,9 @@ export default function MobileDockPage() {
   const [bgmSearchResults, setBgmSearchResults] = useState<YtSearchItem[]>([]);
   const [bgmIsSearching, setBgmIsSearching] = useState(false);
   const [bgmSearchError, setBgmSearchError] = useState<string | null>(null);
+  // Search via backend (API key sama dengan dock desktop: YOUTUBE_API_KEY server).
+  const [bgmSearchWarning, setBgmSearchWarning] = useState<string | null>(null);
+  const [bgmSearchSource, setBgmSearchSource] = useState('');
   // Sort queue BGM: drag handle (desktop) + tombol ↑↓ (touch-friendly)
   const [bgmDragFrom, setBgmDragFrom] = useState<number | null>(null);
   const [bgmDragOver, setBgmDragOver] = useState<number | null>(null);
@@ -958,6 +962,17 @@ export default function MobileDockPage() {
       setSong(st);
     };
     s.on('song-update', onUpdate);
+    s.on('song-search-result', (res: { q?: string; results?: YtSearchItem[]; source?: string; warning?: string }) => {
+      setBgmIsSearching(false);
+      setBgmSearchResults(Array.isArray(res?.results) ? res.results : []);
+      setBgmSearchSource(String(res?.source || ''));
+      setBgmSearchWarning(typeof res?.warning === 'string' ? res.warning : null);
+      if (!res?.results || res.results.length === 0) {
+        setBgmSearchError('Tidak ketemu — coba kata kunci lain atau paste link langsung.');
+      } else {
+        setBgmSearchError(null);
+      }
+    });
     s.on('connect', () => {
       setSocketConnected(true);
       s.emit('join-room', room);
@@ -966,6 +981,7 @@ export default function MobileDockPage() {
     s.on('disconnect', () => setSocketConnected(false));
     return () => {
       s.off('song-update', onUpdate);
+      s.off('song-search-result');
       s.disconnect();
       socketRef.current = null;
       setSocketConnected(false);
@@ -1075,28 +1091,27 @@ export default function MobileDockPage() {
     setNewBgmUrl('');
   };
 
-  const searchBgm = async () => {
+  // Cari lagu via backend (sama seperti dock desktop — pakai YOUTUBE_API_KEY server,
+  // bukan key frontend. Hasil + warning sumber (API/cadangan) datang via song-search-result).
+  const searchBgm = () => {
     const q = bgmSearchQuery.trim();
     if (!q) return;
-    if (!YOUTUBE_API_KEY) {
-      setBgmSearchError('NEXT_PUBLIC_YOUTUBE_API_KEY belum di-set di frontend/.env (Google Cloud Console → YouTube Data API v3, gratis 100 search/hari)');
+    const s = socketRef.current;
+    if (!s) {
+      setBgmSearchError('Belum terhubung — aktifkan BGM / cek koneksi dulu.');
       return;
     }
     setBgmIsSearching(true);
     setBgmSearchError(null);
-    try {
-      const res = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=${encodeURIComponent(q)}&key=${YOUTUBE_API_KEY}`,
-      );
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message || 'YouTube API error');
-      setBgmSearchResults(data.items || []);
-    } catch (e) {
-      console.error('YouTube search error:', e);
-      setBgmSearchError('Gagal mencari video.');
-    } finally {
-      setBgmIsSearching(false);
-    }
+    setBgmSearchWarning(null);
+    s.emit('song-search', { q: q.slice(0, 100), maxResults: 6 });
+  };
+
+  const handlePickBgmResult = (r: YtSearchItem) => {
+    addBgmUrl(r.url, r.title);
+    setBgmSearchQuery('');
+    setBgmSearchResults([]);
+    setBgmSearchWarning(null);
   };
 
   const openSettings = () => {
@@ -1532,7 +1547,7 @@ export default function MobileDockPage() {
             </div>
           </div>
 
-          {/* Cari YouTube (tambahan mobile-dock) */}
+          {/* Cari YouTube via backend (API key sama dengan dock desktop) */}
           <div className="space-y-2">
             <div className="flex gap-2">
               <input
@@ -1546,22 +1561,26 @@ export default function MobileDockPage() {
               <button onClick={searchBgm} disabled={bgmIsSearching} className="px-3 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer disabled:opacity-50">
                 {bgmIsSearching ? '...' : 'Cari'}
               </button>
+              <span className="shrink-0 px-2 py-2 text-[9px] font-bold rounded-md border border-[var(--border-color)] text-[var(--text-label)]">
+                {bgmIsSearching ? '…' : bgmSearchSource === 'youtube-api' ? 'API' : bgmSearchSource === 'scrape' ? 'Cad.' : 'YT'}
+              </span>
             </div>
+            {bgmSearchWarning && <p className="text-[10px] text-yellow-500">{bgmSearchWarning}</p>}
             {bgmSearchError && <p className="text-[10px] text-red-500">{bgmSearchError}</p>}
             {bgmSearchResults.length > 0 && (
               <div className="space-y-1 border border-[var(--border-color)] rounded-md p-1.5 max-h-48 overflow-y-auto mdock-scroll">
                 {bgmSearchResults.map((track: YtSearchItem) => (
                   <div
-                    key={track.id?.videoId}
-                    onClick={() => addBgmUrl(`https://www.youtube.com/watch?v=${track.id?.videoId}`, track.snippet?.title)}
+                    key={track.videoId}
+                    onClick={() => handlePickBgmResult(track)}
                     className="p-2 cursor-pointer flex items-center gap-2 rounded-md hover:bg-[var(--bg-color)]"
                   >
-                    {track.snippet?.thumbnails?.default?.url && (
-                      <img src={track.snippet.thumbnails.default.url} alt="" className="w-8 h-8 rounded object-cover bg-[var(--bg-color)] shrink-0" />
+                    {track.thumbnail && (
+                      <img src={track.thumbnail} alt="" className="w-8 h-8 rounded object-cover bg-[var(--bg-color)] shrink-0" />
                     )}
                     <div className="min-w-0">
-                      <p className="text-xs truncate">{track.snippet?.title}</p>
-                      <p className="text-[10px] truncate text-[var(--text-label)]">{track.snippet?.channelTitle}</p>
+                      <p className="text-xs truncate">{track.title}</p>
+                      {track.channel && <p className="text-[10px] truncate text-[var(--text-label)]">{track.channel}</p>}
                     </div>
                   </div>
                 ))}

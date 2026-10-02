@@ -26,6 +26,138 @@ function ytThumb(videoId?: string): string | null {
   return `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
 }
 
+type AccentPalette = {
+  Vibrant: string;
+  Muted: string;
+  DarkVibrant: string;
+  DarkMuted: string;
+  LightVibrant: string;
+  LightMuted: string;
+};
+
+const vibrantDefaults: AccentPalette = {
+  Vibrant: '#22c55e',
+  Muted: '#6b7280',
+  DarkVibrant: '#1d1d1d',
+  DarkMuted: '#111827',
+  LightVibrant: '#22c55e',
+  LightMuted: '#e5e7eb',
+};
+
+// Sama seperti media-player: ekstrak palet dari thumbnail/cover art.
+// Berlapis agar tidak pernah gagal diam-diam:
+// 1) node-vibrant (kualitas terbaik) → 2) canvas manual (tanpa dependensi,
+//    aman bila chunk/worker Vibrant gagal dimuat) → 3) hue dari judul lagu
+//    (untuk MP3 tanpa cover art — tiap lagu tetap dapat warna sendiri).
+function hashHue(s: string): number {
+  let h = 0;
+  const str = String(s || 'music');
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h % 360;
+}
+
+function hslHex(h: number, s: number, l: number): string {
+  s = Math.max(0, Math.min(100, s)) / 100;
+  l = Math.max(0, Math.min(100, l)) / 100;
+  const k = (n: number) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const to = (x: number) => Math.round(x * 255).toString(16).padStart(2, '0');
+  return `#${to(f(0))}${to(f(8))}${to(f(4))}`;
+}
+
+function paletteFromHue(hue: number): AccentPalette {
+  return {
+    Vibrant: hslHex(hue, 85, 55),
+    Muted: hslHex(hue, 25, 55),
+    DarkVibrant: hslHex(hue, 70, 26),
+    DarkMuted: hslHex(hue, 35, 11),
+    LightVibrant: hslHex(hue, 95, 65),
+    LightMuted: hslHex(hue, 25, 85),
+  };
+}
+
+type RGB = { r: number; g: number; b: number };
+
+async function canvasPalette(src: string): Promise<AccentPalette | null> {
+  try {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('thumb load gagal'));
+      img.src = src;
+    });
+    const S = 48;
+    const cv = document.createElement('canvas');
+    cv.width = S;
+    cv.height = S;
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, S, S);
+    const d = ctx.getImageData(0, 0, S, S).data;
+    let r = 0, g = 0, b = 0, n = 0;
+    let vr = 0, vg = 0, vb = 0, vn = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 128) continue;
+      const R = d[i], G = d[i + 1], B = d[i + 2];
+      r += R; g += G; b += B; n++;
+      const mx = Math.max(R, G, B), mn = Math.min(R, G, B);
+      const sat = mx === 0 ? 0 : (mx - mn) / mx;
+      const li = (mx + mn) / 2 / 255;
+      if (sat > 0.3 && li > 0.12 && li < 0.92) { vr += R; vg += G; vb += B; vn++; }
+    }
+    if (!n) return null;
+    const avg: RGB = { r: r / n, g: g / n, b: b / n };
+    const vib: RGB = vn > 0 ? { r: vr / vn, g: vg / vn, b: vb / vn } : avg;
+    const hex = (c: RGB) =>
+      '#' + [c.r, c.g, c.b].map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+    const scale = (c: RGB, t: number): RGB => ({ r: c.r * t, g: c.g * t, b: c.b * t });
+    const mix = (c: RGB, o: RGB, t: number): RGB => ({ r: c.r + (o.r - c.r) * t, g: c.g + (o.g - c.g) * t, b: c.b + (o.b - c.b) * t });
+    const white: RGB = { r: 255, g: 255, b: 255 };
+    return {
+      Vibrant: hex(vib),
+      Muted: hex(avg),
+      DarkVibrant: hex(scale(vib, 0.45)),
+      DarkMuted: hex(scale(avg, 0.22)),
+      LightVibrant: hex(mix(vib, white, 0.25)),
+      LightMuted: hex(mix(avg, white, 0.55)),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function getVibrantPalette(src: string | null, seed = ''): Promise<AccentPalette> {
+  const hueFallback = () => paletteFromHue(hashHue(seed));
+  if (!src || src.includes('placeholder.com')) return hueFallback();
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mod: any = await import('node-vibrant/browser');
+    const Vibrant = mod.Vibrant || mod.default;
+    const builder = Vibrant.from(src);
+    if (builder.maxDimension) builder.maxDimension(200);
+    const swatches = await builder.getPalette();
+    const pick = (k: string) => swatches[k]?.hex as string | undefined;
+    const vib = pick('Vibrant');
+    const lightVib = pick('LightVibrant');
+    // Vibrant kadang mengembalikan semua-null (canvas tainted dsb) → fallback canvas.
+    if (!vib && !lightVib) {
+      return (await canvasPalette(src)) || hueFallback();
+    }
+    return {
+      Vibrant: vib || vibrantDefaults.Vibrant,
+      Muted: pick('Muted') || vibrantDefaults.Muted,
+      DarkVibrant: pick('DarkVibrant') || vibrantDefaults.DarkVibrant,
+      DarkMuted: pick('DarkMuted') || vibrantDefaults.DarkMuted,
+      LightVibrant: lightVib || vibrantDefaults.LightVibrant,
+      LightMuted: pick('LightMuted') || vibrantDefaults.LightMuted,
+    };
+  } catch {
+    return (await canvasPalette(src)) || hueFallback();
+  }
+}
+
 function QueueRotator({ queue, currentIndex, accent, showQueue, maxQueue, className }: {
   queue: Song[];
   currentIndex: number;
@@ -260,6 +392,13 @@ function MusicInner() {
   const displayDuration = getIntParam(params, 'displayDuration', 5);
   const showAnimation = getStringParam(params, 'showAnimation', 'slide-in-from-bottom');
   const hideAnimation = getStringParam(params, 'hideAnimation', 'slide-out-bottom');
+  // Auto color dari thumbnail (ala media-player). ?autoColor=0 untuk paksa manual.
+  const autoColor = getBoolParam(params, 'autoColor', true);
+  // Judul lagu ikut warna aksen. ?colorText=0 untuk putih polos.
+  const colorText = getBoolParam(params, 'colorText', true);
+  // Fade-out saat queue habis: visual + volume. ?fadeOut=0 untuk mati langsung.
+  const fadeOut = getBoolParam(params, 'fadeOut', true);
+  const fadeOutMs = Math.max(200, Math.min(3000, getIntParam(params, 'fadeOutMs', 800)));
   // ?muted=1 → tab ini bisu permanen dan TIDAK pernah jadi reporter.
   // Pakai untuk preview browser agar tidak rebutan posisi dengan OBS.
   const forceMuted = getBoolParam(params, 'muted', false) || getBoolParam(params, 'mute', false);
@@ -278,6 +417,13 @@ function MusicInner() {
   const [connected, setConnected] = useState(false);
   const [visible, setVisible] = useState(true);
   const [animClass, setAnimClass] = useState<string>(showAnimation);
+  // Palet auto-color dari thumbnail lagu aktif (ala media-player).
+  const [palette, setPalette] = useState<AccentPalette>(vibrantDefaults);
+  // Fade-out saat queue habis: tahan lagu terakhir di layar sambil opacity → 0,
+  // lalu lepas setelah fadeOutMs. Selama fading, audio ikut di-fade volumenya.
+  const [displaySong, setDisplaySong] = useState<Song | null>(null);
+  const [fadingOut, setFadingOut] = useState(false);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Identitas tab ini — server hanya menerima laporan progres dari SATU reporter
@@ -472,6 +618,99 @@ function MusicInner() {
   const curKind = current?.kind || 'youtube';
   const curVideoId = current?.videoId || '';
   const curUrl = current?.url || '';
+  const curThumb = ytThumb(current?.videoId);
+  // Ada musik yang benar-benar bunyi (bukan pause/stop/queue kosong).
+  // SEMUA transisi audible → tidak audible wajib fade-out: pause, stop,
+  // hapus queue, clear, maupun lagu habis natural.
+  const audible = !!current && isPlaying;
+
+  // --- Auto color: ekstrak palet dari thumbnail tiap ganti lagu (ala media-player) ---
+  // Seed = judul lagu agar MP3 tanpa cover art tetap dapat warna sendiri per lagu.
+  useEffect(() => {
+    if (!autoColor) return;
+    let cancelled = false;
+    getVibrantPalette(curThumb, current?.title || curId).then((pal) => {
+      if (!cancelled) setPalette(pal);
+    });
+    return () => { cancelled = true; };
+  }, [curThumb, curId, autoColor]);
+
+  // --- Fade-out: tiap transisi "ada musik bunyi" → "tidak ada yang bunyi" ---
+  // Mencakup: pause/stop dari dock, hapus/clear queue, lagu habis natural.
+  // Saat queue habis: tahan lagu terakhir + turunkan volume bertahap (tanpa ini
+  // audio lama terus bunyi karena efek sync early-return saat !current).
+  // Saat pause/stop: player (YT/audio) sudah di-pause instan oleh efek sync,
+  // jadi cukup fade visual; lagu ditahan agar play → fade-in mulus.
+  useEffect(() => {
+    if (simulate) return;
+    if (audible && current) {
+      if (fadeTimerRef.current) { clearTimeout(fadeTimerRef.current); fadeTimerRef.current = null; }
+      setFadingOut(false);
+      setDisplaySong(current);
+      return;
+    }
+    if (current) {
+      // Pause/stop, queue masih utuh — fade visual saja, tahan lagu untuk fade-in.
+      setDisplaySong(current);
+      setFadingOut(true);
+      return;
+    }
+    // Queue kosong: kalau tidak ada lagu yang ditahan, tidak ada yang perlu di-fade.
+    if (!displaySong) return;
+    if (!fadeOut) {
+      // Tanpa fade: stop langsung.
+      try { audioRef.current?.pause(); } catch { /* abaikan */ }
+      try {
+        if (ytPlayerRef.current && ytReadyRef.current) {
+          ytPlayerRef.current.pauseVideo();
+        }
+      } catch { /* abaikan */ }
+      setFadingOut(false);
+      if (fadeTimerRef.current) { clearTimeout(fadeTimerRef.current); fadeTimerRef.current = null; }
+      fadeTimerRef.current = setTimeout(() => setDisplaySong(null), 50);
+      return;
+    }
+    setFadingOut(true);
+    // Ramp volume → 0 selama fadeOutMs, lalu pause + lepas tampilan.
+    const steps = 10;
+    const stepMs = Math.max(20, Math.floor(fadeOutMs / steps));
+    let step = 0;
+    const tick = setInterval(() => {
+      step += 1;
+      const v = Math.max(0, 1 - step / steps);
+      try {
+        if (audioRef.current) audioRef.current.volume = v;
+      } catch { /* abaikan */ }
+      try {
+        if (ytPlayerRef.current && ytReadyRef.current) ytPlayerRef.current.setVolume(Math.round(v * 100));
+      } catch { /* abaikan */ }
+      if (step >= steps) {
+        clearInterval(tick);
+        try { audioRef.current?.pause(); } catch { /* abaikan */ }
+        try {
+          if (ytPlayerRef.current && ytReadyRef.current) ytPlayerRef.current.pauseVideo();
+        } catch { /* abaikan */ }
+      }
+    }, stepMs);
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = setTimeout(() => {
+      clearInterval(tick);
+      setDisplaySong(null);
+      setFadingOut(false);
+      try {
+        if (audioRef.current) audioRef.current.volume = 1;
+      } catch { /* abaikan */ }
+      try {
+        if (ytPlayerRef.current && ytReadyRef.current) ytPlayerRef.current.setVolume(100);
+      } catch { /* abaikan */ }
+    }, fadeOutMs + 100);
+    return () => clearInterval(tick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, isPlaying, simulate, fadeOut, fadeOutMs]);
+
+  useEffect(() => () => {
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+  }, []);
 
   // --- YT IFrame API: load sekali ---
   useEffect(() => {
@@ -692,27 +931,37 @@ function MusicInner() {
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   };
 
-  // Adapter: state lagu → props tema media-player (dipakai ulang langsung)
-  const curThumb = ytThumb(current?.videoId);
+  // Adapter: state lagu → props tema media-player (dipakai ulang langsung).
+  // Saat fading-out (queue habis), pakai lagu terakhir agar animasi keluar smooth.
+  const shownSong = current ?? displaySong;
+  const shownThumb = ytThumb(shownSong?.videoId) || curThumb;
   const alignmentCls = verticalAlignment === 'align-to-top' ? 'items-start' : verticalAlignment === 'align-to-bottom' ? 'items-end' : 'items-center';
   const textAlignCls = textAlignment === 'center' ? 'text-center' : textAlignment === 'right' ? 'text-right' : 'text-left';
-  const resolvedBg = useCustomColors ? color2 : '#000000';
-  const resolvedAccent = useCustomColors ? color1 : accent;
-  const resolvedText = useCustomColors ? color1 : '#ffffff';
-  const primaryText = swapArtistTrack ? (current?.requestedBy || '') : (current?.title || '');
-  const secondaryText = swapArtistTrack ? (current?.title || '') : (current?.requestedBy || '');
+  // Prioritas warna: custom > auto (vibrant dari thumbnail) > aksen manual.
+  const autoAccent = palette.LightVibrant || palette.Vibrant || accent;
+  const autoBg = palette.DarkMuted || palette.DarkVibrant || '#000000';
+  const resolvedBg = useCustomColors ? color2 : autoColor ? autoBg : '#000000';
+  const resolvedAccent = useCustomColors ? color1 : autoColor ? autoAccent : accent;
+  // Teks judul ikut aksen (Vibrant dipilih agar kontras di bg gelap maupun terang).
+  // Tema media-player yang teksnya inherit (standard/classic/mattedark/compact)
+  // ikut berwarna via textColor; tema ber-bg hardcoded (card/matte/vinyl/simple)
+  // tetap pakai warna bawaannya agar kontras aman.
+  const accentText = useCustomColors ? color1 : autoColor ? (palette.Vibrant || autoAccent) : accent;
+  const resolvedText = useCustomColors ? color1 : colorText ? accentText : '#ffffff';
+  const primaryText = swapArtistTrack ? (shownSong?.requestedBy || '') : (shownSong?.title || '');
+  const secondaryText = swapArtistTrack ? (shownSong?.title || '') : (shownSong?.requestedBy || '');
   const mediaProps = {
     track: primaryText,
     artist: secondaryText,
-    art: curThumb || '',
-    bgArt: curThumb || '',
+    art: shownThumb || '',
+    bgArt: shownThumb || '',
     palette: {
-      Vibrant: resolvedAccent,
-      Muted: resolvedAccent,
-      DarkVibrant: resolvedAccent,
+      Vibrant: autoColor && !useCustomColors ? palette.Vibrant : resolvedAccent,
+      Muted: autoColor && !useCustomColors ? palette.Muted : resolvedAccent,
+      DarkVibrant: autoColor && !useCustomColors ? palette.DarkVibrant : resolvedAccent,
       DarkMuted: resolvedBg,
-      LightVibrant: resolvedAccent,
-      LightMuted: resolvedAccent,
+      LightVibrant: autoColor && !useCustomColors ? palette.LightVibrant : resolvedAccent,
+      LightMuted: autoColor && !useCustomColors ? palette.LightMuted : resolvedAccent,
     },
     accent: resolvedAccent,
     bgColor: resolvedBg,
@@ -820,6 +1069,14 @@ function MusicInner() {
     return () => { document.documentElement.style.background = ''; document.body.style.background = ''; };
   }, [obsMode]);
 
+  // Penanda build di console — untuk memastikan tab/OBS menjalankan kode terbaru
+  // (cache basi adalah penyebab umum "fitur baru tidak jalan").
+  useEffect(() => {
+    console.info(
+      `[music-display] build=2026-10-03-fade-v3 fadeOut=${fadeOut} fadeOutMs=${fadeOutMs} autoColor=${autoColor} colorText=${colorText} theme=${theme}`,
+    );
+  }, [fadeOut, fadeOutMs, autoColor, colorText, theme]);
+
   return (
     <div className="w-screen h-screen overflow-hidden bg-transparent" style={{ fontFamily }}>
       {obsMode && <style>{`html,body{background:transparent !important;--background:transparent !important}`}</style>}
@@ -887,33 +1144,47 @@ function MusicInner() {
           🔊 Klik untuk mengaktifkan suara
         </button>
       )}
+      {/* Indikator pause di preview (non-OBS): widget di-fade sesuai aturan main,
+          jadi kasih tahu user lagunya pause — play lagi dari dock. */}
+      {!simulate && !obsMode && current && !isPlaying && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 bg-white/10 border border-white/15 rounded-full text-white/70 text-[10px] font-black uppercase tracking-widest backdrop-blur">
+          ⏸ Paused — play dari dock untuk fade-in
+        </div>
+      )}
       <div id="music-player-root" className={`w-full h-full flex p-4 ${alignmentCls} ${themeWrapper}`} style={{ ...posStyle, background: obsMode ? 'transparent' : undefined } as React.CSSProperties}>
-        {current ? (
+        {shownSong ? (
           <AutoScale defaultBase={500} baseWidth={maxWidth > 0 ? maxWidth : theme === 'minimal' ? 420 : 340}>
-          <div className={`${qpRow ? 'flex flex-row items-start gap-2' : 'flex flex-col gap-2'} relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${'anim-' + animClass} theme-${theme}`}>
+          <div
+            // Saat fadingOut, class animasi entrance WAJIB dilepas: keyframe-nya pakai
+            // fill `forwards` (opacity:1) yang menimpa inline opacity:0 sehingga fade
+            // tidak pernah kelihatan dan widget hilang mendadak.
+            className={`${qpRow ? 'flex flex-row items-start gap-2' : 'flex flex-col gap-2'} relative w-full overflow-hidden ${wrapperVisible && !fadingOut ? '' : 'opacity-0 pointer-events-none'} ${fadingOut ? '' : 'anim-' + animClass} theme-${theme}`}
+            // Transition selalu dipasang agar fade-in saat resume juga mulus.
+            style={{ opacity: fadingOut ? 0 : 1, transition: `opacity ${fadeOutMs}ms ease`, pointerEvents: fadingOut ? 'none' : undefined } as React.CSSProperties}
+          >
           {qpFirst && (
-            <QueueRotator queue={queue} currentIndex={currentIndex} accent={accent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} />
+            <QueueRotator queue={queue} currentIndex={currentIndex} accent={resolvedAccent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} />
           )}
           {theme === 'minimal' ? (
             <div className="max-w-[420px]">
               <div className="flex items-center gap-2">
-                {isPlaying && (
+                {isPlaying && !fadingOut && (
                   <span className="music-eq shrink-0">
-                    <span style={{ background: accent }} />
-                    <span style={{ background: accent }} />
-                    <span style={{ background: accent }} />
+                    <span style={{ background: resolvedAccent }} />
+                    <span style={{ background: resolvedAccent }} />
+                    <span style={{ background: resolvedAccent }} />
                   </span>
                 )}
-                <div className="text-white font-black truncate leading-tight" style={{ fontSize }}>
-                  {current.title}
+                <div className="font-black truncate leading-tight" style={{ fontSize, color: resolvedText }}>
+                  {shownSong.title}
                 </div>
               </div>
-              {current.requestedBy && (
-                <div className="text-white/50 text-[11px] font-bold truncate mt-0.5">req. {current.requestedBy}</div>
+              {shownSong.requestedBy && (
+                <div className="text-white/50 text-[11px] font-bold truncate mt-0.5">req. {shownSong.requestedBy}</div>
               )}
               {showProgress && (
                 <div className="mt-1.5 h-[3px] rounded-full bg-white/15 overflow-hidden w-48 max-w-full">
-                  <div className="h-full rounded-full transition-[width]" style={{ width: `${pct}%`, background: accent }} />
+                  <div className="h-full rounded-full transition-[width]" style={{ width: `${pct}%`, background: resolvedAccent }} />
                 </div>
               )}
             </div>
@@ -934,43 +1205,43 @@ function MusicInner() {
           ) : theme === 'vinyl' ? (
             <VinylTheme {...mediaProps} />
           ) : (
-            <div className="w-full rounded-2xl overflow-hidden border border-white/10 backdrop-blur-md shadow-2xl" style={{ background: 'rgba(0,0,0,0.7)' }}>
+            <div className="w-full rounded-2xl overflow-hidden border border-white/10 backdrop-blur-md shadow-2xl" style={{ background: autoColor && !useCustomColors ? `${resolvedBg}e6` : 'rgba(0,0,0,0.7)' }}>
               <div className="flex items-center gap-2.5 px-3 py-2.5">
-                {ytThumb(current.videoId) ? (
-                  <img src={ytThumb(current.videoId) as string} alt="" className="w-14 h-8 rounded-lg object-cover shrink-0" loading="lazy" />
+                {ytThumb(shownSong.videoId) ? (
+                  <img src={ytThumb(shownSong.videoId) as string} alt="" className="w-14 h-8 rounded-lg object-cover shrink-0" loading="lazy" />
                 ) : (
-                  <span className="w-9 h-9 rounded-xl grid place-items-center shrink-0" style={{ background: `${accent}26` }}>
-                    {isPlaying ? (
+                  <span className="w-9 h-9 rounded-xl grid place-items-center shrink-0" style={{ background: `${resolvedAccent}26` }}>
+                    {isPlaying && !fadingOut ? (
                       <span className="music-eq">
-                        <span style={{ background: accent }} />
-                        <span style={{ background: accent }} />
-                        <span style={{ background: accent }} />
+                        <span style={{ background: resolvedAccent }} />
+                        <span style={{ background: resolvedAccent }} />
+                        <span style={{ background: resolvedAccent }} />
                       </span>
                     ) : (
-                      <span className="text-[13px] font-black" style={{ color: accent }}>♪</span>
+                      <span className="text-[13px] font-black" style={{ color: resolvedAccent }}>♪</span>
                     )}
                   </span>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-white font-black truncate leading-tight" style={{ fontSize }}>{current.title}</div>
+                  <div className="font-black truncate leading-tight" style={{ fontSize, color: resolvedText }}>{shownSong.title}</div>
                   <div className="text-white/50 text-[11px] font-bold truncate">
-                    {current.requestedBy ? `req. ${current.requestedBy}` : current.kind === 'youtube' ? 'YouTube' : 'Audio'}
+                    {shownSong.requestedBy ? `req. ${shownSong.requestedBy}` : shownSong.kind === 'youtube' ? 'YouTube' : 'Audio'}
                     {duration > 0 ? ` • ${fmt(position)} / ${fmt(duration)}` : ''}
                   </div>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full text-black shrink-0" style={{ background: accent }}>
-                  {isPlaying ? 'Play' : 'Pause'}
+                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full text-black shrink-0" style={{ background: resolvedAccent }}>
+                  {fadingOut ? 'End' : isPlaying ? 'Play' : 'Pause'}
                 </span>
               </div>
               {showProgress && (
                 <div className="h-0.5 bg-white/10">
-                  <div className="h-full transition-[width]" style={{ width: `${pct}%`, background: accent }} />
+                  <div className="h-full transition-[width]" style={{ width: `${pct}%`, background: resolvedAccent }} />
                 </div>
               )}
             </div>
           )}
           {qpLast && (
-            <QueueRotator queue={queue} currentIndex={currentIndex} accent={accent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} />
+            <QueueRotator queue={queue} currentIndex={currentIndex} accent={resolvedAccent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} />
           )}
           </div>
           </AutoScale>

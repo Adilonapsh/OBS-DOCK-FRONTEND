@@ -38,7 +38,10 @@ export function MusicSettingsForm({ state, update }: Props) {
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Type className="w-4 h-4 text-green-400" /> Warna</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Aksen</span>
+          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Auto Color (dari thumbnail)</span><input type="checkbox" checked={(state as unknown as { autoColor?: boolean }).autoColor !== false} onChange={(e) => update('autoColor' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
+          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Judul ikut warna aksen</span><input type="checkbox" checked={(state as unknown as { colorText?: boolean }).colorText !== false} onChange={(e) => update('colorText' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
+          <p className="text-[10px] text-gray-500">Sama seperti Media Player: ambil palet via node-vibrant dari thumbnail YouTube / cover art.</p>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Aksen (dipakai bila Auto Color mati)</span>
             <span className="mt-1 flex gap-2">
               <input type="color" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 cursor-pointer shrink-0" />
               <input type="text" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
@@ -83,6 +86,8 @@ export function MusicSettingsForm({ state, update }: Props) {
             <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Peminta</span><input type="checkbox" checked={(state as unknown as { showSecondary: boolean }).showSecondary !== false} onChange={(e) => update('showSecondary' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
           </div>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Tukar Judul/Peminta</span><input type="checkbox" checked={!!(state as unknown as { swapArtistTrack: boolean }).swapArtistTrack} onChange={(e) => update('swapArtistTrack' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
+          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Fade-out saat queue habis</span><input type="checkbox" checked={(state as unknown as { fadeOut?: boolean }).fadeOut !== false} onChange={(e) => update('fadeOut' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Durasi Fade-out ({(state as unknown as { fadeOutMs?: number }).fadeOutMs ?? 800}ms)</span><input type="range" min={200} max={3000} step={100} value={(state as unknown as { fadeOutMs?: number }).fadeOutMs ?? 800} onChange={(e) => update('fadeOutMs' as keyof MusicSettings, parseInt(e.target.value) || 800)} className="mt-1 w-full accent-white cursor-pointer" /></label>
         </div>
       </div>
 

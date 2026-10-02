@@ -49,6 +49,13 @@ export const MUSIC_DEFAULTS = {
   displayDuration: 5,
   showAnimation: 'slide-in-from-bottom' as string,
   hideAnimation: 'slide-out-bottom' as string,
+  // Auto color dari thumbnail (ala media-player via node-vibrant).
+  autoColor: true as boolean,
+  // Judul lagu ikut warna aksen (bukan putih polos).
+  colorText: true as boolean,
+  // Fade-out saat queue habis (visual + volume audio).
+  fadeOut: true as boolean,
+  fadeOutMs: 800 as number,
 } as const;
 
 export type MusicSettings = typeof MUSIC_DEFAULTS;
@@ -78,6 +85,11 @@ export function buildMusicUrl(base: string, s: MusicSettings): string {
   p.set('displayDuration', String((s as unknown as { displayDuration: number }).displayDuration ?? 5));
   p.set('showAnimation', (s as unknown as { showAnimation: string }).showAnimation || 'slide-in-from-bottom');
   p.set('hideAnimation', (s as unknown as { hideAnimation: string }).hideAnimation || 'slide-out-bottom');
+  if ((s as unknown as { autoColor?: boolean }).autoColor === false) p.set('autoColor', '0');
+  else p.set('autoColor', '1');
+  p.set('colorText', (s as unknown as { colorText?: boolean }).colorText === false ? '0' : '1');
+  p.set('fadeOut', (s as unknown as { fadeOut?: boolean }).fadeOut === false ? '0' : '1');
+  p.set('fadeOutMs', String((s as unknown as { fadeOutMs?: number }).fadeOutMs ?? 800));
   const q = p.toString();
   return q ? `${base}?${q}` : base;
 }
