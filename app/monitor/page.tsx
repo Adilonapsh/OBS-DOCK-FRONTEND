@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from "react";
-import { Activity, AlertTriangle, CheckCircle, RefreshCcw, Video, Eye, Menu } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle, RefreshCcw, Video, Eye, Menu, Maximize2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import StreamDetailModal from "./StreamDetailModal";
 import Sidebar from "../components/Sidebar";
@@ -66,7 +66,23 @@ function UptimeTick({ ready, readyTime }: { ready: boolean; readyTime: string })
   return <>{uptimeStr}</>;
 }
 
+const getPrivateKey = () => {
+  if (typeof window === "undefined") return "";
+  return (
+    new URLSearchParams(window.location.search).get("key") ||
+    sessionStorage.getItem("bypass_private_key") ||
+    sessionStorage.getItem("dock_private_verified") ||
+    ""
+  );
+};
+
 function StreamCard({ st, onClick }: { st: StreamItem; onClick: () => void }) {
+  const openFullscreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const key = getPrivateKey();
+    const url = `/monitor/fullscreen?stream=${encodeURIComponent(st.name)}${key ? `&key=${encodeURIComponent(key)}` : ""}`;
+    window.open(url, "_blank");
+  };
   return (
     <div
       onClick={onClick}
@@ -103,6 +119,13 @@ function StreamCard({ st, onClick }: { st: StreamItem; onClick: () => void }) {
           <div className="bg-black/60 backdrop-blur text-white/80 px-1.5 rounded text-[10px] font-medium leading-none py-1 border border-white/10">TLS</div>
           <div className="bg-black/60 backdrop-blur text-white/80 px-1.5 rounded text-[10px] font-medium leading-none py-1 border border-white/10">E2E</div>
         </div>
+        <button
+          onClick={openFullscreen}
+          title="Buka fullscreen / OBS"
+          className="absolute top-2 right-2 p-1.5 bg-black/60 backdrop-blur border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-black/80 opacity-0 group-hover:opacity-100 transition-all"
+        >
+          <Maximize2 size={13} />
+        </button>
       </div>
       <div className="mt-3 pt-3 border-t border-white/5 flex justify-between items-center">
         <span className="text-[10px] text-gray-500 font-mono">

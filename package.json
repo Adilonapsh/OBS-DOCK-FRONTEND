@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "gen:themes": "node scripts/gen-theme-presets.mjs && node scripts/gen-widget-themes.mjs --dir=app/widgets/chat/themes --props=ChatThemeProps --map=chatThemeComponents --options=CHAT_THEME_OPTIONS --default=CHAT_THEME_DEFAULT && node scripts/gen-widget-themes.mjs --dir=app/widgets/ticker/themes --props=TickerThemeProps --map=tickerThemeComponents --options=TICKER_THEME_OPTIONS --default=TICKER_THEME_DEFAULT",
+    "predev": "npm run gen:themes",
+    "prebuild": "npm run gen:themes",
     "dev": "next dev -H 0.0.0.0 --port 3001",
     "build": "next build",
     "start": "next start",
@@ -16,6 +19,7 @@
     "@supabase/supabase-js": "^2.112.4",
     "clsx": "^2.1.1",
     "goey-toast": "^0.5.0",
+    "hls.js": "^1.7.3",
     "lucide-react": "^1.38.0",
     "monaco-editor": "^0.56.0",
     "next": "16.3.3",

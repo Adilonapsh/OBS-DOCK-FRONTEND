@@ -149,6 +149,18 @@ const WIDGETS: WidgetItem[] = [
     w: 640, h: 160,
   },
   {
+    id: "ticker",
+    title: "Ticker",
+    desc: "Running text pengumuman / sponsor loop - 3 tema (Standard/Clean/Neon), kecepatan & arah atur, badge INFO.",
+    category: "info",
+    tags: ["Ticker", "Running Text", "Pengumuman", "Sponsor", "OBS"],
+    layout: "ticker",
+    params: "theme=standard&font=Outfit",
+    preview: "ticker",
+    recommended: true,
+    w: 640, h: 120,
+  },
+  {
     id: "social-rotator",
     title: "Social Rotator",
     desc: "Rotasi handle sosial - Instagram/TikTok/YouTube/Twitch/Discord, 5 tema Pill/Clean/Glass/Boxed/Badge Space Mono, interval 2-20s, posisi global 9-titik.",
@@ -576,6 +588,10 @@ function WidgetsListing() {
       const base = `${window.location.origin}/widgets/info-slides/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
+    if (item.id === 'ticker') {
+      const base = `${window.location.origin}/widgets/ticker/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
     if (item.id === 'social-rotator') {
       const base = `${window.location.origin}/widgets/social-rotator/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
@@ -768,6 +784,10 @@ function WidgetsListing() {
                         </Link>
                       ) : item.id === 'info-slides' ? (
                         <Link href={`/widgets/info-slides${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
+                      ) : item.id === 'ticker' ? (
+                        <Link href={`/widgets/ticker${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'social-rotator' ? (

@@ -15,7 +15,7 @@ export default function StandardTheme({ counts, total, font, fontSize, accent, b
           const meta = PLATFORM_META[p] || PLATFORM_META.tiktok;
           return (
             <span key={p} className="flex items-center gap-1 shrink-0" title={meta.label}>
-              <img src={meta.logo} alt={meta.label} className="w-5 h-5 object-contain invert" />
+              <img src={meta.logo} alt={meta.label} className="w-5 h-5 rounded-full bg-white p-0.5 object-contain shrink-0" />
               <span className="text-white text-[10px] font-black tabular-nums">{fmtCount(n)}</span>
             </span>
           );
@@ -34,7 +34,7 @@ export default function StandardTheme({ counts, total, font, fontSize, accent, b
         const meta = PLATFORM_META[p] || PLATFORM_META.tiktok;
         return (
           <span key={p} className="flex items-center gap-1 shrink-0" title={meta.label}>
-            <img src={meta.logo} alt={meta.label} className="w-5 h-5 object-contain invert" />
+            <img src={meta.logo} alt={meta.label} className="w-5 h-5 rounded-full bg-white p-0.5 object-contain shrink-0" />
             <span className="text-white text-[10px] font-black tabular-nums">{fmtCount(n)}</span>
           </span>
         );

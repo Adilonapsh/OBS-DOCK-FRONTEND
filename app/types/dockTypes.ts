@@ -17,6 +17,8 @@ export interface DockStatus {
 }
 
 
+export type ChatBadge = "broadcaster" | "mod" | "vip" | "sub" | "owner" | "member" | "verified";
+
 export interface ChatMessage {
     id: number;
     user: string;
@@ -24,4 +26,6 @@ export interface ChatMessage {
     platform: "twitch" | "youtube" | "tiktok" | "kick";
     avatar?: string;
     emotes?: Array<{ name: string; imageUrl: string }>;
+    badges?: ChatBadge[];
+    color?: string;
 }

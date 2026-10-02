@@ -69,6 +69,23 @@ function ViewCounterInner() {
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'vc-font'), [font]);
 
+  // Mode simulate: angka penonton naik-turun halus seperti live (bukan angka mati)
+  useEffect(() => {
+    if (!simulate) return;
+    const t = window.setInterval(() => {
+      setCounts((prev) => {
+        if (Object.keys(prev).length === 0) return prev;
+        const next: Record<string, number> = {};
+        for (const [k, v] of Object.entries(prev)) {
+          const d = Math.floor(Math.random() * 7) - 3;
+          next[k] = Math.max(0, v + d);
+        }
+        return next;
+      });
+    }, 3000);
+    return () => window.clearInterval(t);
+  }, [simulate]);
+
   useEffect(() => {
     if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });

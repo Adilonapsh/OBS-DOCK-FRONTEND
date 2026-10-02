@@ -1,30 +1,40 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { sanitizeParams } from './sbArgs';
 
 export type TtSbEventKey = 'chat' | 'gift' | 'like' | 'follow' | 'member';
-export type TtSbEntry = { enabled: boolean; action: string };
+export type TtSbEntry = { enabled: boolean; action: string; params: Record<string, string> };
 export type TtSbMap = Record<TtSbEventKey, TtSbEntry>;
 
 export const TT_SB_KEYS: TtSbEventKey[] = ['chat', 'gift', 'like', 'follow', 'member'];
 
+// Variabel yang tersedia per event (bisa dipakai sebagai {variabel} di parameter custom).
+export const TT_SB_PARAMS: Record<TtSbEventKey, string[]> = {
+  chat: ['nickname', 'comment', 'profilePictureUrl', 'platform'],
+  gift: ['nickname', 'giftName', 'repeatCount', 'diamondCount', 'profilePictureUrl', 'platform'],
+  like: ['nickname', 'likeCount', 'totalLikeCount', 'platform'],
+  follow: ['nickname', 'profilePictureUrl', 'platform'],
+  member: ['nickname', 'profilePictureUrl', 'platform'],
+};
+
 export const TT_SB_DEFAULTS: TtSbMap = {
-  chat: { enabled: false, action: 'TikTok_Chat' },
-  gift: { enabled: false, action: 'TikTok_Gift' },
-  like: { enabled: false, action: 'TikTok_Like' },
-  follow: { enabled: false, action: 'TikTok_Follow' },
-  member: { enabled: false, action: 'TikTok_Member' },
+  chat: { enabled: false, action: 'TikTok_Chat', params: {} },
+  gift: { enabled: false, action: 'TikTok_Gift', params: {} },
+  like: { enabled: false, action: 'TikTok_Like', params: {} },
+  follow: { enabled: false, action: 'TikTok_Follow', params: {} },
+  member: { enabled: false, action: 'TikTok_Member', params: {} },
 };
 
 const STORAGE_KEY = 'tiktok-sb-map';
 
 function sanitize(raw: unknown): TtSbMap {
   const out: TtSbMap = {
-    chat: { ...TT_SB_DEFAULTS.chat },
-    gift: { ...TT_SB_DEFAULTS.gift },
-    like: { ...TT_SB_DEFAULTS.like },
-    follow: { ...TT_SB_DEFAULTS.follow },
-    member: { ...TT_SB_DEFAULTS.member },
+    chat: { ...TT_SB_DEFAULTS.chat, params: {} },
+    gift: { ...TT_SB_DEFAULTS.gift, params: {} },
+    like: { ...TT_SB_DEFAULTS.like, params: {} },
+    follow: { ...TT_SB_DEFAULTS.follow, params: {} },
+    member: { ...TT_SB_DEFAULTS.member, params: {} },
   };
   if (raw && typeof raw === 'object') {
     for (const k of TT_SB_KEYS) {
@@ -34,6 +44,7 @@ function sanitize(raw: unknown): TtSbMap {
         out[k] = {
           enabled: entry.enabled === true,
           action: typeof entry.action === 'string' ? entry.action : TT_SB_DEFAULTS[k].action,
+          params: sanitizeParams(entry.params),
         };
       }
     }

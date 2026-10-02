@@ -1,29 +1,37 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
 import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
-import { DEMO_EVENTS } from '../config';
-import { ANIM_MAP, ANIM_OUT_MAP } from '../../_shared/constants/animations';
+import { ANIM_MAP, ANIM_OUT_MAP, isElegantAnim } from '../../_shared/constants/animations';
+import { SIM_EVENT_POOL } from '../themes/dummySim';
+import { useDummySimulation } from '../../_shared/hooks/useDummySimulation';
+import type { EventItem } from '../themes/types';
 import type { EventSettings } from '../config';
 
 export function EventPreview({ state }: { state: EventSettings }) {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setTick((v) => (v + 1) % DEMO_EVENTS.length), 2400);
-    return () => clearInterval(t);
-  }, []);
-  const count = Math.min(state.maxEvents, 4);
-  const events = useMemo(() => {
-    const all = DEMO_EVENTS.slice(0, count);
-    const start = tick % all.length;
-    const rotated = [...all.slice(start), ...all.slice(0, start)].slice(0, count);
-    return rotated.map((c, i) => ({ ...c, id: `sim_${i}_${tick}` }));
-  }, [count, tick]);
+  const s = state as unknown as Record<string, unknown>;
+  const showJoin = (s.showJoin as boolean) ?? true;
+  const showGift = (s.showGift as boolean) ?? true;
+  const showLike = (s.showLike as boolean) ?? true;
+  const hideAfter = Number(s.hideAfter ?? 0);
+  const hideName = ANIM_OUT_MAP[state.hideAnim] || 'fadeOut';
+  const hideDur = isElegantAnim(hideName) ? 620 : 400;
+
+  // Simulasi live dari dummy: masuk satu per satu + keluar pakai animasi, seperti real
+  const sim = useDummySimulation<EventItem>({
+    enabled: true,
+    pool: SIM_EVENT_POOL,
+    maxItems: state.maxEvents,
+    holdMs: hideAfter > 0 ? hideAfter * 1000 : 8000,
+    hideDur,
+    idPrefix: 'sim_ev',
+    filter: (e) =>
+      (e.type === 'join' && showJoin) || (e.type === 'gift' && showGift) || (e.type === 'like' && showLike),
+  });
 
   const props = {
-    events,
+    events: sim.items,
     font: state.font,
     accent: state.accent,
     bg: state.bg,
@@ -31,7 +39,7 @@ export function EventPreview({ state }: { state: EventSettings }) {
     showAvatar: state.showAvatar,
     anim: ANIM_MAP[state.anim] || 'elegantIn',
     horizontalAnim: ANIM_MAP[(state as unknown as { horizontalAnim: string }).horizontalAnim] || 'elegantIn',
-    hideAnim: ANIM_OUT_MAP[(state as unknown as { hideAnim: string }).hideAnim] || 'fadeOut',
+    hideAnim: hideName,
     fontSize: state.fontSize,
     bgOpacity: state.bgOpacity,
     horizontal: state.horizontal,
@@ -43,6 +51,7 @@ export function EventPreview({ state }: { state: EventSettings }) {
     cuteBadgeText: (state as unknown as { cuteBadgeText?: string }).cuteBadgeText,
     cuteNameMod: (state as unknown as { cuteNameMod?: string }).cuteNameMod,
     cuteNameUser: (state as unknown as { cuteNameUser?: string }).cuteNameUser,
+    exitingIds: sim.exitingIds,
   } as const;
 
   if (state.theme === 'minimal') return <MinimalTheme {...props} />;

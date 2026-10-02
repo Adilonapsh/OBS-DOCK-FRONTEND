@@ -33,7 +33,7 @@ export default function MusicTheme({
     );
   }
   return (
-    <div className="vc-font w-[240px] rounded-2xl overflow-hidden border border-white/10 bg-black shadow-xl" style={{ fontFamily: `'${font}', sans-serif` }}>
+    <div className="vc-font w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-xl" style={{ fontFamily: `'${font}', sans-serif` }}>
       <div className="flex items-center gap-2 px-3 py-2">
         <Music className="w-4 h-4 shrink-0" style={{ color: accent }} />
         {showLabel && <span className="text-white/50 text-[9px] font-black uppercase tracking-widest">Watching</span>}
@@ -46,7 +46,7 @@ export default function MusicTheme({
             const meta = PLATFORM_META[p] || PLATFORM_META.tiktok;
             return (
               <span key={p} className="flex items-center gap-1 shrink-0" title={meta.label}>
-                <img src={meta.logo} alt={meta.label} className="w-4 h-4 object-contain" />
+                <img src={meta.logo} alt={meta.label} className="w-4 h-4 rounded-full bg-white p-px object-contain shrink-0" />
                 <span className="text-white text-[10px] font-black tabular-nums">{fmtCount(n)}</span>
               </span>
             );

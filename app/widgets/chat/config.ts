@@ -1,15 +1,10 @@
 import type { ChatItem } from './themes/types';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 
-export const CHAT_THEMES = [
-  { value: 'standard', label: 'Standard - Dark Glass' },
-  { value: 'bubble', label: 'Bubble - Putih WA-style' },
-  { value: 'clean', label: 'Clean - Baris Minimalis' },
-  { value: 'boxed', label: 'Boxed - Card dengan Header' },
-  { value: 'cute', label: 'Cute - Lavender Pastel' },
-  { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
-] as const;
+// AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
+// Tambah theme baru cukup buat file themes/NamaTema.tsx + themeMeta —
+// otomatis muncul di dropdown settings, preview, dan display (?theme=...).
+export { CHAT_THEME_OPTIONS as CHAT_THEMES } from './themes/registry';
 
 export const CHAT_FONTS = WIDGET_FONTS;
 
@@ -66,6 +61,8 @@ export const CHAT_DEFAULTS = {
   showAvatar: true,
   showPlatform: true,
   showTimestamp: false,
+  showBadges: true,
+  bttv: true,
   anim: 'elegant',
   hideAnim: 'fade',
   horizontal: false,
@@ -80,15 +77,75 @@ export const CHAT_DEFAULTS = {
   cuteNameUser: '#d8cded',
   charDelayMs: 25,
   charDurationS: 0.35,
+  // ---- Appearance (nutty.gg multichat-overlay) ----
+  // TikTok chat tetap sama seperti sekarang (sumber tiktok-chat), ini murni setting tampilan.
+  showUsername: true,
+  showMessage: true,
+  showPronouns: false, // belum ada data pronouns — disimpan untuk kompatibilitas URL nutty
+  timeFormat: '24-hour' as string, // '12-hour' | '24-hour'
+  lineSpacing: 1.4,
+  useChatBubbles: false, // false = tema pakai bg bawaan (perilaku sekarang); true = override bubbleColor
+  bubbleColor: '#1d1d1d',
+  bubbleOpacity: 0.9,
+  // ---- General ----
+  excludeCommands: false, // sembunyikan pesan diawali "!"
+  ignoreChatters: '', // koma-separated, cth: "StreamElements,Streamlabs"
+  scrollDirection: '1' as string, // '1' = Normal, '2' = Reversed
+  groupConsecutiveMessages: false,
+  highlightMentions: false,
+  imageEmbedPermissionLevel: '69420' as string, // 40/30/20/15/10/69420 (Nobody = perilaku sekarang)
+  showYouTubeLinkPreviews: false,
+  // ---- Filter platform: Twitch ----
+  showTwitchMessages: true,
+  showTwitchCheers: false,
+  showTwitchAnnouncements: true,
+  showTwitchFollows: false,
+  showTwitchSubs: true,
+  showTwitchChannelPointRedemptions: true,
+  showTwitchPowerUpRedemptions: true,
+  showTwitchRaids: true,
+  showTwitchWatchStreaks: true,
+  showTwitchSharedChat: '2' as string, // '2' highlight, '1' show, '0' hide
+  showTwitchGIFs: true,
+  // ---- Filter platform: YouTube ----
+  showYouTubeMessages: true,
+  showYouTubeSuperChats: true,
+  showYouTubeSuperStickers: true,
+  showYouTubeJewelsGifted: true,
+  showYouTubeSubscribers: false,
+  showYouTubeMemberships: true,
+  // ---- Filter platform: Kick ----
+  showKickMessages: true,
+  showKickFollows: false,
+  showKickSubs: true,
+  showKickChannelPointRedemptions: true,
+  showKickHosts: true,
+  showKickGifts: true,
+  // ---- Filter platform: TikTok (chat tetap tiktok-chat seperti sekarang) ----
+  enableTikTokSupport: true,
+  showTikTokMessages: true,
+  showTikTokFollows: true,
+  showTikTokLikes: true,
+  showTikTokGifts: true,
+  showTikTokSubs: true,
+  // ---- Donasi / alerts ----
+  showStreamlabsDonations: true,
+  showStreamElementsTips: true,
+  showPatreonMemberships: true,
+  showKofiDonations: true,
+  showTipeeeStreamDonations: true,
+  showFourthwallAlerts: true,
+  skipFourthwallFreeOrders: true,
 } as const;
 
 export type ChatSettings = typeof CHAT_DEFAULTS;
 
 export const DEMO_CHATS: ChatItem[] = [
   { id: 'd1', nickname: 'Rizky_JR', comment: 'Gass keun bang, semangat live-nya! 🔥', profilePictureUrl: 'https://ui-avatars.com/api/?name=Rizky&background=8b5cf6&color=fff', platform: 'tiktok', timestamp: Date.now() - 8000 },
-  { id: 'd2', nickname: 'SitiPlay', comment: 'Lagi main apa nih? seru banget anjir', profilePictureUrl: 'https://ui-avatars.com/api/?name=Siti&background=FE2C55&color=fff', platform: 'youtube', timestamp: Date.now() - 5000 },
-  { id: 'd3', nickname: 'ViewerTwitch', comment: 'Hello dari Twitch! Keren overlay-nya 👍', profilePictureUrl: 'https://ui-avatars.com/api/?name=Twitch&background=9146ff&color=fff', platform: 'twitch', timestamp: Date.now() - 3000 },
-  { id: 'd4', nickname: 'BudiSantuy', comment: 'Tiktok live dari HP? kok jernih bener', profilePictureUrl: 'https://ui-avatars.com/api/?name=Budi&background=06b6d4&color=fff', platform: 'tiktok', timestamp: Date.now() - 1500 },
+  { id: 'd2', nickname: 'SitiPlay', comment: 'Lagi main apa nih? seru banget anjir', profilePictureUrl: 'https://ui-avatars.com/api/?name=Siti&background=FE2C55&color=fff', platform: 'youtube', timestamp: Date.now() - 5000, badges: ['member'], color: '#34d399' },
+  { id: 'd3', nickname: 'ViewerTwitch', comment: 'Hello dari Twitch! Keren overlay-nya 👍 KEKW', profilePictureUrl: 'https://ui-avatars.com/api/?name=Twitch&background=9146ff&color=fff', platform: 'twitch', timestamp: Date.now() - 3000, badges: ['mod'], color: '#00ad03' },
+  { id: 'd4', nickname: 'SubTwitch', comment: 'Sudah sub 3 bulan nih!', profilePictureUrl: 'https://ui-avatars.com/api/?name=Sub&background=9146ff&color=fff', platform: 'twitch', timestamp: Date.now() - 2000, badges: ['sub'], color: '#a970ff' },
+  { id: 'd5', nickname: 'BudiSantuy', comment: 'Tiktok live dari HP? kok jernih bener', profilePictureUrl: 'https://ui-avatars.com/api/?name=Budi&background=06b6d4&color=fff', platform: 'tiktok', timestamp: Date.now() - 1500 },
 ];
 
 export function buildChatUrl(base: string, s: ChatSettings): string {
@@ -105,6 +162,8 @@ export function buildChatUrl(base: string, s: ChatSettings): string {
   p.set('showAvatar', s.showAvatar ? '1' : '0');
   p.set('showPlatform', s.showPlatform ? '1' : '0');
   p.set('showTimestamp', s.showTimestamp ? '1' : '0');
+  p.set('showBadges', s.showBadges ? '1' : '0');
+  p.set('bttv', s.bttv ? '1' : '0');
   p.set('anim', s.anim);
   p.set('hideAnim', (s as unknown as { hideAnim: string }).hideAnim || 'fade');
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
@@ -120,5 +179,65 @@ export function buildChatUrl(base: string, s: ChatSettings): string {
   if (s.cuteNameUser) p.set('cuteNameUser', s.cuteNameUser);
   p.set('charDelayMs', String(s.charDelayMs));
   p.set('charDurationS', String(s.charDurationS));
+  // Appearance (nutty-compatible)
+  p.set('showUsername', s.showUsername ? '1' : '0');
+  p.set('showMessage', s.showMessage ? '1' : '0');
+  p.set('showPronouns', s.showPronouns ? '1' : '0');
+  p.set('timeFormat', s.timeFormat || '24-hour');
+  p.set('lineSpacing', String(s.lineSpacing));
+  p.set('useChatBubbles', s.useChatBubbles ? '1' : '0');
+  if ((s as { useChatBubbles?: boolean }).useChatBubbles) {
+    p.set('bubbleColor', s.bubbleColor);
+    p.set('bubbleOpacity', String(s.bubbleOpacity));
+  }
+  // General
+  p.set('excludeCommands', s.excludeCommands ? '1' : '0');
+  if (s.ignoreChatters) p.set('ignoreChatters', s.ignoreChatters);
+  p.set('scrollDirection', s.scrollDirection || '1');
+  p.set('groupConsecutiveMessages', s.groupConsecutiveMessages ? '1' : '0');
+  p.set('highlightMentions', s.highlightMentions ? '1' : '0');
+  p.set('imageEmbedPermissionLevel', String(s.imageEmbedPermissionLevel));
+  p.set('showYouTubeLinkPreviews', s.showYouTubeLinkPreviews ? '1' : '0');
+  // Twitch
+  p.set('showTwitchMessages', s.showTwitchMessages ? '1' : '0');
+  p.set('showTwitchCheers', s.showTwitchCheers ? '1' : '0');
+  p.set('showTwitchAnnouncements', s.showTwitchAnnouncements ? '1' : '0');
+  p.set('showTwitchFollows', s.showTwitchFollows ? '1' : '0');
+  p.set('showTwitchSubs', s.showTwitchSubs ? '1' : '0');
+  p.set('showTwitchChannelPointRedemptions', s.showTwitchChannelPointRedemptions ? '1' : '0');
+  p.set('showTwitchPowerUpRedemptions', s.showTwitchPowerUpRedemptions ? '1' : '0');
+  p.set('showTwitchRaids', s.showTwitchRaids ? '1' : '0');
+  p.set('showTwitchWatchStreaks', s.showTwitchWatchStreaks ? '1' : '0');
+  p.set('showTwitchSharedChat', String(s.showTwitchSharedChat));
+  p.set('showTwitchGIFs', s.showTwitchGIFs ? '1' : '0');
+  // YouTube
+  p.set('showYouTubeMessages', s.showYouTubeMessages ? '1' : '0');
+  p.set('showYouTubeSuperChats', s.showYouTubeSuperChats ? '1' : '0');
+  p.set('showYouTubeSuperStickers', s.showYouTubeSuperStickers ? '1' : '0');
+  p.set('showYouTubeJewelsGifted', s.showYouTubeJewelsGifted ? '1' : '0');
+  p.set('showYouTubeSubscribers', s.showYouTubeSubscribers ? '1' : '0');
+  p.set('showYouTubeMemberships', s.showYouTubeMemberships ? '1' : '0');
+  // Kick
+  p.set('showKickMessages', s.showKickMessages ? '1' : '0');
+  p.set('showKickFollows', s.showKickFollows ? '1' : '0');
+  p.set('showKickSubs', s.showKickSubs ? '1' : '0');
+  p.set('showKickChannelPointRedemptions', s.showKickChannelPointRedemptions ? '1' : '0');
+  p.set('showKickHosts', s.showKickHosts ? '1' : '0');
+  p.set('showKickGifts', s.showKickGifts ? '1' : '0');
+  // TikTok
+  p.set('enableTikTokSupport', s.enableTikTokSupport ? '1' : '0');
+  p.set('showTikTokMessages', s.showTikTokMessages ? '1' : '0');
+  p.set('showTikTokFollows', s.showTikTokFollows ? '1' : '0');
+  p.set('showTikTokLikes', s.showTikTokLikes ? '1' : '0');
+  p.set('showTikTokGifts', s.showTikTokGifts ? '1' : '0');
+  p.set('showTikTokSubs', s.showTikTokSubs ? '1' : '0');
+  // Donasi
+  p.set('showStreamlabsDonations', s.showStreamlabsDonations ? '1' : '0');
+  p.set('showStreamElementsTips', s.showStreamElementsTips ? '1' : '0');
+  p.set('showPatreonMemberships', s.showPatreonMemberships ? '1' : '0');
+  p.set('showKofiDonations', s.showKofiDonations ? '1' : '0');
+  p.set('showTipeeeStreamDonations', s.showTipeeeStreamDonations ? '1' : '0');
+  p.set('showFourthwallAlerts', s.showFourthwallAlerts ? '1' : '0');
+  p.set('skipFourthwallFreeOrders', s.skipFourthwallFreeOrders ? '1' : '0');
   return `${base}?${p.toString()}`;
 }

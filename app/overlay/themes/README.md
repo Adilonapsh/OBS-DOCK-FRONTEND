@@ -28,9 +28,9 @@ app/overlay/themes/
 
 `app/overlay/components/theme.ts` sekarang cuma **wrapper** `export * from "../themes"` untuk backward compatibility. Import baru disarankan dari `@/app/overlay/themes`.
 
-## Cara nambah tema baru (30 detik)
+## Cara nambah tema baru (auto-register dari nama file)
 
-1. Buat file `app/overlay/themes/presets/namaTema.ts`:
+1. Buat file `app/overlay/themes/presets/namaTema.ts` (nama file = key, `my-theme.ts` → `myTheme`):
 
 ```ts
 import { defineTheme } from "../types";
@@ -54,18 +54,9 @@ export default defineTheme({
 });
 ```
 
-2. Daftarkan di `app/overlay/themes/presets/index.ts`:
+2. Restart dev server (`npm run dev` otomatis menjalankan `npm run gen:themes` via `predev`) atau jalankan manual `npm run gen:themes`.
 
-```ts
-import namaTema from "./namaTema";
-export const themePresets = {
-  dark, light, neon, tiktok, minimal, compact, cyber,
-  pokemon, vtuber, cute,
-  namaTema, // <- tambah di sini
-};
-```
-
-3. Selesai - otomatis muncul di **Editor → Warna → Preset dropdown** dan di URL `?font=...&accent=...&css=...`. Tidak perlu ubah `editor/page.tsx` atau `display/page.tsx`.
+3. Selesai - file `presets/index.ts` ke-generate ulang otomatis dan tema langsung muncul di **Editor → Warna → Preset dropdown** dan di URL `?font=...&accent=...&css=...`. Tidak perlu ubah `editor/page.tsx`, `display/page.tsx`, atau `index.ts` (JANGAN edit manual).
 
 ## Best Practice
 

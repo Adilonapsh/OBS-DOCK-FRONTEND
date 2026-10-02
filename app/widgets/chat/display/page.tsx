@@ -9,15 +9,33 @@ import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, ANIM_OUT_MAP, KEYFRAMES_CSS, isElegantAnim } from '../../_shared/constants/animations';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
+import { chatThemeComponents } from '../themes/registry';
 import StandardTheme from '../themes/Standard';
-import BubbleTheme from '../themes/Bubble';
-import CleanTheme from '../themes/Clean';
-import BoxedTheme from '../themes/Boxed';
-import CuteTheme from '../themes/Cute';
-import PerCharTheme from '../themes/PerChar';
-import PlainTheme from '../themes/Plain';
-import { DEMO_CHATS } from '../config';
+import { getBttvGlobalEmotes, type BttvMap } from '../bttv';
 import type { ChatItem } from '../themes/types';
+import {
+  parseIgnoreList,
+  passPlatformFilter,
+  passCommandFilter,
+  passIgnoreFilter,
+} from '../themes/chatFilters';
+import { useDummyChatSimulation } from '../themes/dummySim';
+
+function getFloatParam(params: URLSearchParams, key: string, fallback: number): number {
+  const v = params.get(key);
+  if (v === null || v === '') return fallback;
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+// Alias nutty.gg: showTimestamps/background/opacity/inlineChat/scrollDirection angka.
+function getBoolAlias(params: URLSearchParams, keys: string[], fallback: boolean): boolean {
+  for (const k of keys) {
+    const v = params.get(k);
+    if (v !== null) return v === 'true' || v === '1';
+  }
+  return fallback;
+}
 
 function ChatInner() {
   const searchParams = useSearchParams();
@@ -29,22 +47,55 @@ function ChatInner() {
   const theme = getStringParam(params, 'theme', 'standard');
   const font = getStringParam(params, 'font', 'Outfit');
   const accent = getStringParam(params, 'accent', '#8b5cf6');
-  const bg = getStringParam(params, 'bg', 'transparent');
+  // alias nutty: background/opacity
+  const bgRaw = params.get('bg') ?? params.get('background') ?? 'transparent';
+  const bg = bgRaw === '' ? 'transparent' : bgRaw;
   const maxMessages = Math.max(1, Math.min(30, getIntParam(params, 'maxMessages', 6)));
   const hideAfter = getIntParam(params, 'hideAfter', 0);
   const showAvatar = getBoolParam(params, 'showAvatar', true);
   const showPlatform = getBoolParam(params, 'showPlatform', true);
-  const showTimestamp = getBoolParam(params, 'showTimestamp', false);
+  // alias nutty: showTimestamps (plural)
+  const showTimestamp = getBoolAlias(params, ['showTimestamp', 'showTimestamps'], false);
+  const showBadges = getBoolParam(params, 'showBadges', true);
+  const bttv = getBoolParam(params, 'bttv', true);
   const anim = getStringParam(params, 'anim', 'elegant');
   const hideAnim = getStringParam(params, 'hideAnim', 'fade');
   const horizontalAnim = getStringParam(params, 'horizontalAnim', 'elegant');
   const fontSize = getIntParam(params, 'fontSize', 14);
-  const bgOpacity = Math.max(10, Math.min(100, getIntParam(params, 'bgOpacity', 100)));
+  const bgOpacityRaw = params.get('bgOpacity') ?? params.get('opacity') ?? '100';
+  const bgOpacity = Math.max(0, Math.min(100, Math.round(parseFloat(bgOpacityRaw) <= 1 && bgOpacityRaw.includes('.') ? parseFloat(bgOpacityRaw) * 100 : parseFloat(bgOpacityRaw) || 100)));
   const textColor = getStringParam(params, 'textColor', '');
   const horizontal = getBoolParam(params, 'horizontal', false);
-  const inline = getBoolParam(params, 'inline', false);
+  // alias nutty: inlineChat
+  const inline = getBoolAlias(params, ['inline', 'inlineChat'], false);
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
+  // Appearance tambahan (nutty)
+  const showUsername = getBoolParam(params, 'showUsername', true);
+  const showMessage = getBoolParam(params, 'showMessage', true);
+  const showPronouns = getBoolParam(params, 'showPronouns', false);
+  const timeFormat = getStringParam(params, 'timeFormat', '24-hour');
+  const lineSpacing = Math.max(0.8, Math.min(3, getFloatParam(params, 'lineSpacing', 1.4)));
+  const useChatBubbles = getBoolParam(params, 'useChatBubbles', false);
+  const bubbleColor = getStringParam(params, 'bubbleColor', '#1d1d1d');
+  const bubbleOpacity = Math.max(0, Math.min(1, getFloatParam(params, 'bubbleOpacity', 0.9)));
+  // General
+  const excludeCommands = getBoolParam(params, 'excludeCommands', false);
+  const ignoreChatters = getStringParam(params, 'ignoreChatters', '');
+  const ignoreList = parseIgnoreList(ignoreChatters);
+  const scrollRaw = getStringParam(params, 'scrollDirection', '1');
+  const reversed = scrollRaw === '2' || scrollRaw.toLowerCase() === 'reversed';
+  // nutty: groupConsecutive diabaikan saat reversed
+  const groupConsecutiveMessages = getBoolParam(params, 'groupConsecutiveMessages', false) && !reversed;
+  const highlightMentions = getBoolParam(params, 'highlightMentions', false);
+  const imageEmbedPermissionLevel = getStringParam(params, 'imageEmbedPermissionLevel', '69420');
+  const showYouTubeLinkPreviews = getBoolParam(params, 'showYouTubeLinkPreviews', false);
+  // Filter platform (chat tetap dari tiktok-chat; filter hanya menyembunyikan per platform)
+  const showTwitchMessages = getBoolParam(params, 'showTwitchMessages', true);
+  const showYouTubeMessages = getBoolParam(params, 'showYouTubeMessages', true);
+  const showKickMessages = getBoolParam(params, 'showKickMessages', true);
+  const showTikTokMessages = getBoolParam(params, 'showTikTokMessages', true);
+  const enableTikTokSupport = getBoolParam(params, 'enableTikTokSupport', true);
   const cuteBubbleBg = getStringParam(params, 'cuteBubbleBg', '#1e1d2b');
   const cuteResubFrom = getStringParam(params, 'cuteResubFrom', '#c4a2f8');
   const cuteResubTo = getStringParam(params, 'cuteResubTo', '#fca4d4');
@@ -55,13 +106,37 @@ function ChatInner() {
   const charDelayMs = Math.max(0, Math.min(500, getIntParam(params, 'charDelayMs', 25)));
   const charDurationS = Math.max(0.05, Math.min(3, parseFloat(params.get('charDurationS') || '') || 0.35));
 
-  const [chats, setChats] = useState<ChatItem[]>(() => (simulate ? [...DEMO_CHATS] : []));
+  const [chats, setChats] = useState<ChatItem[]>([]);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
   const [connected, setConnected] = useState(simulate);
+  const [bttvMap, setBttvMap] = useState<BttvMap>({});
   const hideAnimName = ANIM_OUT_MAP[hideAnim] || 'fadeOut';
   const hideDur = isElegantAnim(hideAnimName) ? 620 : 400;
 
+  // Mode simulate: dummy mengalir seperti real (masuk satu per satu + keluar pakai animasi)
+  const simFilter = (c: ChatItem) =>
+    passPlatformFilter(c, { showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport }) &&
+    passCommandFilter(c, excludeCommands) &&
+    passIgnoreFilter(c, ignoreList);
+  const sim = useDummyChatSimulation({
+    enabled: simulate,
+    maxMessages,
+    holdMs: hideAfter > 0 ? hideAfter * 1000 : 8000,
+    hideDur,
+    filter: simFilter,
+  });
+  const liveChats = simulate ? sim.chats : chats;
+  const liveExiting = simulate ? sim.exitingIds : exitingIds;
+
   useEffect(() => loadGoogleFont(font, '400;700;900', 'chat-font'), [font]);
+
+  // Emote global BetterTTV (sekali per sesi, cache modul). Gagal = chat tetap teks polos.
+  useEffect(() => {
+    if (!bttv) return;
+    let alive = true;
+    getBttvGlobalEmotes().then((m) => { if (alive) setBttvMap(m); });
+    return () => { alive = false; };
+  }, [bttv]);
 
   useEffect(() => {
     if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
@@ -72,7 +147,7 @@ function ChatInner() {
     socket.on('tiktok-chat', (data: Record<string, unknown>) => {
       const comment = String((data as { comment?: string; message?: string }).comment || (data as { message?: string }).message || '');
       if (!comment) return;
-      const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; platform?: string; fromStreamerBot?: boolean };
+      const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; platform?: string; fromStreamerBot?: boolean; badges?: unknown; color?: unknown; emotes?: unknown };
       const item: ChatItem = {
         id: `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         nickname: d.nickname || d.uniqueId || 'User',
@@ -80,7 +155,23 @@ function ChatInner() {
         profilePictureUrl: d.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.nickname || 'U')}&background=222&color=fff`,
         platform: d.platform || (d.fromStreamerBot ? 'twitch' : 'tiktok'),
         timestamp: Date.now(),
+        ...(Array.isArray(d.badges) ? { badges: d.badges.map((b) => String(b)) } : {}),
+        ...(typeof d.color === 'string' && d.color ? { color: d.color } : {}),
+        ...(Array.isArray(d.emotes)
+          ? {
+              emotes: (d.emotes as unknown[])
+                .map((e) => ({
+                  name: String((e as { name?: unknown })?.name || ''),
+                  imageUrl: String((e as { imageUrl?: unknown })?.imageUrl || ''),
+                }))
+                .filter((e) => e.name && e.imageUrl),
+            }
+          : {}),
       };
+      // Filter ala nutty (TikTok chat sumber tetap sama, hanya disaring di sini)
+      if (!passPlatformFilter(item, { showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport })) return;
+      if (!passCommandFilter(item, excludeCommands)) return;
+      if (!passIgnoreFilter(item, ignoreList)) return;
       setChats((prev) => [...prev, item].slice(-maxMessages));
       if (hideAfter > 0) {
         setTimeout(() => {
@@ -93,10 +184,19 @@ function ChatInner() {
       }
     });
     return () => { socket.disconnect(); };
-  }, [privateKey, maxMessages, hideAfter, hideDur, simulate]);
+  }, [privateKey, maxMessages, hideAfter, hideDur, simulate, showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport, excludeCommands, ignoreChatters]);
+
+  // Terapkan filter yang sama untuk mode real agar konsisten dengan simulasi
+  const filteredChats = liveChats.filter((c) => {
+    if (!passPlatformFilter(c, { showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport })) return false;
+    if (!passCommandFilter(c, excludeCommands)) return false;
+    if (!passIgnoreFilter(c, ignoreList)) return false;
+    return true;
+  }).slice(-maxMessages);
+  const visibleChats = reversed ? [...filteredChats].reverse() : filteredChats;
 
   const themeProps = {
-    chats,
+    chats: visibleChats,
     font,
     accent,
     bg,
@@ -104,6 +204,9 @@ function ChatInner() {
     showAvatar,
     showPlatform,
     showTimestamp,
+    showBadges,
+    bttv,
+    bttvMap,
     anim: ANIM_MAP[anim] || 'elegantIn',
     horizontalAnim: ANIM_MAP[horizontalAnim] || 'elegantIn',
     hideAnim: ANIM_OUT_MAP[hideAnim] || 'fadeOut',
@@ -122,19 +225,25 @@ function ChatInner() {
     cuteNameUser,
     charDelayMs,
     charDurationS,
-    exitingIds,
+    exitingIds: liveExiting,
+    showUsername,
+    showMessage,
+    showPronouns,
+    timeFormat,
+    lineSpacing,
+    useChatBubbles,
+    bubbleColor,
+    bubbleOpacity,
+    groupConsecutiveMessages,
+    highlightMentions,
+    imageEmbedPermissionLevel,
+    showYouTubeLinkPreviews,
   };
 
   const renderTheme = () => {
-    switch (theme) {
-      case 'bubble': return <BubbleTheme {...themeProps} />;
-      case 'clean': return <CleanTheme {...themeProps} />;
-      case 'boxed': return <BoxedTheme {...themeProps} />;
-      case 'cute': return <CuteTheme {...themeProps} />;
-      case 'perchar': return <PerCharTheme {...themeProps} />;
-      case 'plain': return <PlainTheme {...themeProps} />;
-      default: return <StandardTheme {...themeProps} />;
-    }
+    // auto-register: theme baru di themes/*.tsx langsung kepakai tanpa tambah case
+    const Theme = chatThemeComponents[theme] ?? StandardTheme;
+    return <Theme {...themeProps} />;
   };
 
   return (
@@ -146,11 +255,11 @@ function ChatInner() {
         className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-2` : `w-full min-h-screen bg-[#0a0a0a] flex p-4`}`}
         style={{ ...posStyle, background: obsMode ? 'transparent' : '#0a0a0a', fontFamily: `'${font}', sans-serif` } as any}
       >
-        {!obsMode && !connected && chats.length === 0 && (
+        {!obsMode && !connected && liveChats.length === 0 && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0, 6)}…` : 'global'} • server http://localhost:3000</div>
         )}
-        {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">CHAT • {theme} • {connected ? 'connected' : 'offline'} • {chats.length}/{maxMessages}</div>}
-        <AutoScale defaultBase={420} baseWidth={theme === 'perchar' ? 480 : theme === 'boxed' ? 440 : 420}>
+        {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">CHAT • {theme} • {simulate ? 'simulate' : connected ? 'connected' : 'offline'} • {filteredChats.length}/{maxMessages}</div>}
+        <AutoScale defaultBase={horizontal ? 960 : 420} baseWidth={horizontal ? 960 : theme === 'perchar' ? 480 : theme === 'boxed' ? 440 : 420}>
           {renderTheme()}
         </AutoScale>
       </div>

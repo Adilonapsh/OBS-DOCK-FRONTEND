@@ -145,6 +145,7 @@ function LyricsDisplayInner() {
   const smtcBridgeAddress = params.get('smtcBridgeAddress') || '127.0.0.1';
   const smtcBridgePort = params.get('smtcBridgePort') || '5000';
   const obsMode = params.get('obs') === '1';
+  const simulate = params.get('simulate') === '1' || params.get('preview') === '1';
   const pos = getStringParamShared(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
   // lyrics specific
@@ -174,6 +175,8 @@ function LyricsDisplayInner() {
 
   const currentSongKeyRef = useRef<string>('');
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Demo/simulate punya loop progres sendiri — tick effect di bawah wajib skip saat demo aktif,
+  // kalau tidak currentPos ditulis 2 interval bergantian (monotonik vs sawtooth) = glitch highlight.
 
   const setVisibility = (v: boolean) => {
     if (hideTimeoutRef.current) { clearTimeout(hideTimeoutRef.current); hideTimeoutRef.current = null; }
@@ -189,9 +192,19 @@ function LyricsDisplayInner() {
     }
   };
 
-  // tick progress
+  const demoActiveRef = useRef(false);
+  const demoPosRef = useRef(0);
+  const demoTimerRef = useRef<number | null>(null);
+  const stopDemoLoop = () => {
+    demoActiveRef.current = false;
+    if (demoTimerRef.current) { clearInterval(demoTimerRef.current); demoTimerRef.current = null; }
+  };
+  // pastikan loop demo bersih saat unmount
+  useEffect(() => () => { if (demoTimerRef.current) clearInterval(demoTimerRef.current); }, []);
+
+  // tick progress (khusus data real — demo/simulate punya loop sendiri, lihat stopDemoLoop)
   useEffect(() => {
-    if (!timeline) return;
+    if (demoActiveRef.current || !timeline) return;
     const interval = setInterval(() => {
       if (playbackStatus !== PlaybackStatus.PLAYING) return;
       const anchor = Date.parse(timeline.LastUpdatedTime.replace(' ', 'T'));
@@ -213,8 +226,9 @@ function LyricsDisplayInner() {
     setActiveIndex(idx);
   }, [currentPos, lyrics]);
 
-  // fetch loop
+  // fetch loop (dilewati saat simulate — pakai demo di bawah)
   useEffect(() => {
+    if (simulate) return;
     let cancelled = false;
     const fetchOnce = async () => {
       try {
@@ -266,6 +280,8 @@ function LyricsDisplayInner() {
           if (pInfo.PlaybackStatus === PlaybackStatus.PLAYING || (showWhilePaused && pInfo.PlaybackStatus === PlaybackStatus.PAUSED)) {
             const newKey = `${mProps.Title}-${mProps.Artist}-${mProps.Thumbnail}`;
             if (newKey !== currentSongKeyRef.current) {
+              // data real masuk — hentikan loop demo agar tidak rebutan currentPos (glitch)
+              stopDemoLoop();
               const newArt = mProps.Thumbnail || PLACEHOLDER;
               const pal = await getVibrantPalette(newArt);
               if (cancelled) return;
@@ -311,7 +327,7 @@ function LyricsDisplayInner() {
     const id = setInterval(fetchOnce, 1000);
     return () => { cancelled = true; clearInterval(id); if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [smtcBridgeAddress, smtcBridgePort, includedApplications, excludedApplications, showWhilePaused, swapArtistTrack, autoHide, displayDuration, lrclibEnabled]);
+  }, [simulate, smtcBridgeAddress, smtcBridgePort, includedApplications, excludedApplications, showWhilePaused, swapArtistTrack, autoHide, displayDuration, lrclibEnabled]);
 
   // Force html/body transparent when obs=1 - fix OBS black bg (globals.css body { background: var(--background:#0a0a0a) })
   useEffect(() => {
@@ -326,11 +342,12 @@ function LyricsDisplayInner() {
   }, [obsMode]);
 
   // demo fallback when no SMTC (for preview) - use dummy lyrics
+  // saat ?simulate=1 langsung tampil cepat tanpa menunggu SMTC bridge
   useEffect(() => {
     if (track || artist || lyrics.length || plainLyrics || error) return;
-    // show demo after 2s if still empty
+    // show demo after 2s if still empty (0.5s saat simulate agar thumbnail langsung hidup)
     const t = setTimeout(() => {
-      if (currentSongKeyRef.current) return;
+      if (currentSongKeyRef.current || demoActiveRef.current) return;
       setTrack('Demo Track - Lyrics Preview');
       setArtist('Preview Artist');
       setArt(PLACEHOLDER);
@@ -340,15 +357,18 @@ function LyricsDisplayInner() {
       setLyrics(parsed);
       setPlainLyrics('');
       setLyricsStatus('demo');
-      // simulate timeline progression for demo
+      // simulate timeline progression for demo — SATU-SATUNYA penulis currentPos saat demo
       setTimeline({ Position: 0, EndTime: 20000, LastUpdatedTime: new Date().toISOString().replace('T',' ').slice(0,19) } as any);
-      let pos = 0;
-      const demoInterval = setInterval(() => { pos += 200; setCurrentPos(pos % 20000); }, 200);
-      // don't clean demo interval if real data arrives? keep simple
-      return () => clearInterval(demoInterval);
-    }, 2000);
+      demoActiveRef.current = true;
+      demoPosRef.current = 0;
+      if (demoTimerRef.current) clearInterval(demoTimerRef.current);
+      demoTimerRef.current = window.setInterval(() => {
+        demoPosRef.current = (demoPosRef.current + 200) % 20000;
+        setCurrentPos(demoPosRef.current);
+      }, 200);
+    }, simulate ? 500 : 2000);
     return () => clearTimeout(t);
-  }, [track, artist, lyrics, plainLyrics, error]);
+  }, [simulate, track, artist, lyrics, plainLyrics, error]);
 
   const progressPercent = (() => {
     if (!timeline || !timeline.EndTime) return 0;
@@ -383,6 +403,8 @@ function LyricsDisplayInner() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;600;800&display=swap');
         html,body{${obsMode ? 'background:transparent !important;' : ''}}
+        html,body{scrollbar-width:none;-ms-overflow-style:none}
+        html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
         #lyrics-root { --accent: ${accent}; --bg: ${bgColor}; --text: ${textColor}; }
         @keyframes fade-in { from{opacity:0} to{opacity:1} }
         @keyframes fade-out { from{opacity:1} to{opacity:0} }

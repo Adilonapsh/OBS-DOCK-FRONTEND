@@ -6,7 +6,7 @@ import { io, Socket } from "socket.io-client";
 import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2,
     RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
-    ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus,
+    ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus, GripVertical,
     Share2, ListPlus, ListChecks, Check, Clock, Search, Pause, Play, Square, Trash2, EyeOff, Minimize2, Maximize2
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
@@ -19,7 +19,9 @@ import { createClient } from "@/utils/supabase/client";
 import Polling, { PollingRef } from "../components/Polling";
 import MusicControl from "./components/MusicControl";
 import { useTtSbMap } from "../hooks/useTtSbMap";
-import { ChatMessage, DockStatus } from "../types/dockTypes";
+import { useWidgetSbMap } from "../hooks/useWidgetSbMap";
+import { resolveSbArgs } from "../hooks/sbArgs";
+import { ChatMessage, ChatBadge, DockStatus } from "../types/dockTypes";
 import { decrypt, isEncrypted } from "../utils/encryption";
 import { gooeyToast } from "goey-toast";
 
@@ -55,6 +57,87 @@ function YoutubeIcon({ className }: { className?: string }) {
             <path d="m10 15 5-3-5-3z" />
         </svg>
     );
+}
+
+// --- Persistensi chat + statistik sesi (tahan refresh, reset saat live/sesi baru) ---
+const CHAT_HISTORY_KEY = "dock-chat-history";
+const CHAT_SESSION_KEY = "dock-chat-session";
+const SESSION_STATS_KEY = "dock-session-stats";
+type ChatSession = { username: string; ended: boolean };
+const EMPTY_STATS = { follows: 0, subs: 0, gifts: 0, likes: 0, chats: 0 };
+
+function readChatSession(): ChatSession | null {
+    if (typeof window === "undefined") return null;
+    try {
+        const raw = localStorage.getItem(CHAT_SESSION_KEY);
+        if (!raw) return null;
+        const s = JSON.parse(raw);
+        return { username: String(s?.username || ""), ended: !!s?.ended };
+    } catch { return null; }
+}
+
+function writeChatSession(s: ChatSession) {
+    if (typeof window === "undefined") return;
+    try { localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(s)); } catch {}
+}
+
+function storedTiktokUsername(): string {
+    if (typeof window === "undefined") return "";
+    try {
+        const raw = localStorage.getItem("tiktok-config");
+        return String(raw ? JSON.parse(raw).username || "" : "").trim().toLowerCase();
+    } catch { return ""; }
+}
+
+// Warna stabil per akun — fallback kalau Streamer.bot tidak mengirim color (mis. YouTube tidak punya warna user).
+function chatColorFor(name: string): string {
+    let h = 0;
+    const s = String(name || "?");
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+    return `hsl(${h}, 75%, 68%)`;
+}
+
+// Twitch ChatMessage: data.user = { role: 0-4 (4=broadcaster,3=mod,2=vip), badges: [{name}], color, subscribed, monthsSubscribed }
+function parseTwitchChatMeta(u: any): { badges: ChatBadge[]; color?: string } {
+    const badges: ChatBadge[] = [];
+    const names: string[] = Array.isArray(u?.badges) ? u.badges.map((b: any) => String(b?.name || "").toLowerCase()) : [];
+    const role = typeof u?.role === "number" ? u.role : -1;
+    if (role === 4 || names.includes("broadcaster")) badges.push("broadcaster");
+    else if (role === 3 || names.includes("moderator") || names.includes("mod")) badges.push("mod");
+    if (role === 2 || names.includes("vip")) badges.push("vip");
+    const isSub = u?.subscribed === true || (typeof u?.monthsSubscribed === "number" && u.monthsSubscribed > 0) || names.includes("subscriber") || names.includes("founder");
+    if (isSub) badges.push("sub");
+    const color = typeof u?.color === "string" && u.color ? u.color : undefined;
+    return { badges, color };
+}
+
+// YouTube Message: data.user = { isOwner, isModerator, isSponsor, isVerified }
+function parseYoutubeChatMeta(u: any): { badges: ChatBadge[] } {
+    const badges: ChatBadge[] = [];
+    if (u?.isOwner) badges.push("owner");
+    if (u?.isModerator) badges.push("mod");
+    if (u?.isSponsor) badges.push("member");
+    else if (u?.isVerified) badges.push("verified");
+    return { badges };
+}
+
+function chatBadgeLabel(b: ChatBadge): string {
+    if (b === "broadcaster") return "Broadcaster";
+    if (b === "mod") return "Mod";
+    if (b === "vip") return "VIP";
+    if (b === "sub") return "Sub";
+    if (b === "owner") return "Owner";
+    if (b === "member") return "Member";
+    return "✔";
+}
+
+function chatBadgeClass(platform: string, b: ChatBadge): string {
+    if (b === "broadcaster" || b === "owner") return "bg-red-500/20 text-red-300";
+    if (b === "mod") return platform === "youtube" ? "bg-slate-500/25 text-slate-200" : "bg-green-500/20 text-green-300";
+    if (b === "vip") return "bg-pink-500/20 text-pink-300";
+    if (b === "sub") return "bg-purple-500/20 text-purple-300";
+    if (b === "member") return "bg-green-500/20 text-green-300";
+    return "bg-white/10 text-gray-300";
 }
 
 export default function Home() {
@@ -134,13 +217,26 @@ export default function Home() {
         cardYt: true,
         cardTw: false,
         cardTt: true,
+        arrivals: true,
+        summary: true,
     };
     const [sectionVisible, setSectionVisible] = useState(defaultSectionVisible);
 
     const [titleValue, setTitleValue] = useState("");
     const [gameValue, setGameValue] = useState("");
     const [pollDuration, setPollDuration] = useState(60);
-    const [chatMessages, setChatMessages] = useState<Array<ChatMessage>>([]);
+    const [chatMessages, setChatMessages] = useState<Array<ChatMessage>>(() => {
+        if (typeof window === "undefined") return [];
+        try {
+            // Refresh di sesi yang sama (username TikTok sama) → kembalikan history.
+            // Username beda = sesi baru → mulai kosong (dibersihkan penuh saat connect).
+            const sess = readChatSession();
+            if (!sess || sess.username !== storedTiktokUsername()) return [];
+            const arr = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || "[]");
+            if (!Array.isArray(arr)) return [];
+            return arr.filter((m: any) => m && typeof m.text === "string" && typeof m.user === "string").slice(0, 50) as ChatMessage[];
+        } catch { return []; }
+    });
     const [pinnedChat, setPinnedChat] = useState<{ user: string; text: string; platform: string; avatar?: string } | null>(null);
     const [pinnedExiting, setPinnedExiting] = useState(false);
     const pinnedExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -148,6 +244,38 @@ export default function Home() {
     const [chatSearch, setChatSearch] = useState("");
     const [activityLogs, setActivityLogs] = useState<Array<{ id: number; text: string; platform?: string; time?: string }>>([]);
     const [giftLogs, setGiftLogs] = useState<Array<{ id: number; user: string; text: string; platform: string; amount?: string; giftName?: string; count?: number; avatar?: string; time?: string }>>([]);
+    // Ringkasan sesi (tidak kepotong limit 50 seperti logs) — tahan refresh, reset saat sesi/live baru.
+    const [sessionStats, setSessionStats] = useState(() => {
+        if (typeof window === "undefined") return { ...EMPTY_STATS };
+        try {
+            const sess = readChatSession();
+            if (!sess || sess.username !== storedTiktokUsername()) return { ...EMPTY_STATS };
+            const s = JSON.parse(localStorage.getItem(SESSION_STATS_KEY) || "null");
+            if (!s) return { ...EMPTY_STATS };
+            return {
+                follows: Number(s?.follows) || 0,
+                subs: Number(s?.subs) || 0,
+                gifts: Number(s?.gifts) || 0,
+                likes: Number(s?.likes) || 0,
+                chats: Number(s?.chats) || 0,
+            };
+        } catch { return { ...EMPTY_STATS }; }
+    });
+    const bumpSessionStat = (key: keyof typeof sessionStats, n = 1) =>
+        setSessionStats((prev) => ({ ...prev, [key]: prev[key] + n }));
+    // Sesi baru (username beda / live sebelumnya sudah berakhir) → nolkan chat + statistik.
+    const startNewChatSession = (username: string) => {
+        const uname = username.trim().toLowerCase();
+        setChatMessages([]);
+        setSessionStats({ ...EMPTY_STATS });
+        if (typeof window !== "undefined") {
+            try {
+                localStorage.removeItem(CHAT_HISTORY_KEY);
+                localStorage.removeItem(SESSION_STATS_KEY);
+            } catch {}
+        }
+        writeChatSession({ username: uname, ended: false });
+    };
     const [tiktokRoomViewerCount, setTiktokRoomViewerCount] = useState<number | null>(null); // viewerCount -> Realtime Penonton
     const [tiktokTotalUser, setTiktokTotalUser] = useState<number | null>(null); // totalUser -> Total User
     const pollingRef = useRef<PollingRef>(null);
@@ -167,6 +295,9 @@ export default function Home() {
         try { const v=localStorage.getItem('dock-taskMinimized'); return v===null ? true : v==='true'; } catch { return true; }
     });
     const [newTaskText,setNewTaskText]=useState("");
+    // Sort task via drag handle / tombol up-down — dikirim ke server (task-move).
+    const [taskDragFrom,setTaskDragFrom]=useState<number|null>(null);
+    const [taskDragOver,setTaskDragOver]=useState<number|null>(null);
     const [activeTimer,setActiveTimer]=useState<any>(null);
     const [timerTick,setTimerTick]=useState(0);
     const [timerCustomMin,setTimerCustomMin]=useState<string>("5");
@@ -607,6 +738,17 @@ export default function Home() {
     const ttSbMapRef = useRef(ttSbMap);
     ttSbMapRef.current = ttSbMap;
 
+    // Pemetaan event Widget → action Streamer.bot. Dikelola di halaman
+    // /integrations section "Widget → Streamer.bot", dieksekusi di sini.
+    const { map: widgetSbMap } = useWidgetSbMap();
+    const widgetSbMapRef = useRef(widgetSbMap);
+    widgetSbMapRef.current = widgetSbMap;
+    // ref transisi untuk deteksi edge (started/ended, bukan setiap update)
+    const prevPollRef = useRef<{ id?: string; ended?: boolean } | null>(null);
+    const prevTasksRef = useRef<{ len: number; done: number } | null>(null);
+    const prevTimerRef = useRef<{ isRunning?: boolean; totalSeconds?: number } | null>(null);
+    const prevSongRef = useRef<{ len: number; index: number } | null>(null);
+
     // Kirim DoAction ke Streamer.bot. Diam jika action kosong / SB tidak konek.
     const fireSbAction = (actionName: string, args: Record<string, unknown>) => {
         const name = actionName.trim();
@@ -619,6 +761,26 @@ export default function Home() {
             id: `ttp_${Date.now()}`,
         }));
         return true;
+    };
+
+    // Helper Widget → SB: cek enabled + kirim DoAction. Key sesuai useWidgetSbMap.
+    // Params custom (template {variabel}) di-resolve dari args aktual lalu digabung.
+    const fireWidgetSb = (key: "poll_started" | "poll_ended" | "task_added" | "task_done" | "task_cleared" | "timer_started" | "timer_finished" | "timer_extended" | "timer_reduced" | "song_requested" | "song_next" | "chat_pinned" | "chat_unpinned", args: Record<string, unknown>) => {
+        try {
+            const entry = widgetSbMapRef.current?.[key];
+            if (!entry?.enabled) return false;
+            const base = { type: key, ...args };
+            return fireSbAction(entry.action, resolveSbArgs(base, (entry as { params?: Record<string, string> }).params));
+        } catch { return false; }
+    };
+
+    // Helper TikTok → SB: sama, resolve params custom dari base args aktual.
+    const fireTtSb = (key: "chat" | "gift" | "like" | "follow" | "member", base: Record<string, unknown>) => {
+        try {
+            const entry = ttSbMapRef.current?.[key];
+            if (!entry?.enabled) return false;
+            return fireSbAction(entry.action, resolveSbArgs(base, (entry as { params?: Record<string, string> }).params));
+        } catch { return false; }
     };
 
     const [briefing, setBriefing] = useState(() =>
@@ -682,11 +844,158 @@ export default function Home() {
             s.emit('task-get', { privateKey: room });
             s.emit('timer-get', { privateKey: room });
         });
-        s.on('poll-update', (p:any)=> { setActivePoll(p); if(typeof p.visible==='boolean') setShowPoll(p.visible); });
-        s.on('poll-clear', ()=> setActivePoll(null));
-        s.on('task-update', (t:any)=> setActiveTasks(t));
-        s.on('task-clear', ()=> setActiveTasks(null));
-        s.on('timer-update', (t:any)=> setActiveTimer(t));
+        s.on('poll-update', (p:any)=> {
+            setActivePoll(p);
+            if(typeof p.visible==='boolean') setShowPoll(p.visible);
+            try {
+                const prev = prevPollRef.current;
+                const isNew = p?.id && p.id !== prev?.id && !p?.ended;
+                const justEnded = p?.id && prev?.id === p.id && !prev?.ended && !!p?.ended;
+                if (isNew) fireWidgetSb('poll_started', {
+                    pollId: String(p?.id || ''),
+                    question: p?.question || '',
+                    options: Array.isArray(p?.options) ? p.options.join(',') : '',
+                    optionsCount: Array.isArray(p?.options) ? p.options.length : 0,
+                    duration: p?.duration || 0,
+                    total: p?.total || 0,
+                    platforms: '',
+                });
+                if (justEnded) {
+                    const votes: number[] = Array.isArray(p?.votes) ? p.votes : [];
+                    const opts: string[] = Array.isArray(p?.options) ? p.options : [];
+                    let winner = '';
+                    let winnerVotes = 0;
+                    if (votes.length && opts.length) {
+                        let bi = 0;
+                        for (let i = 1; i < votes.length; i++) if ((votes[i]||0) > (votes[bi]||0)) bi = i;
+                        winner = opts[bi] || '';
+                        winnerVotes = votes[bi] || 0;
+                    }
+                    // Ringkasan platform asal voter (tiktok/twitch/youtube/kick).
+                    const vp: Record<string, string> = (p?.voterPlatform && typeof p.voterPlatform === 'object') ? p.voterPlatform : {};
+                    const pfCounts: Record<string, number> = {};
+                    for (const pf of Object.values(vp)) {
+                        const k = String(pf || '').toLowerCase() || 'unknown';
+                        pfCounts[k] = (pfCounts[k] || 0) + 1;
+                    }
+                    const platforms = Object.keys(pfCounts).join(',');
+                    const platformVotes = Object.entries(pfCounts).map(([k, v]) => `${k}: ${v}`).join(', ');
+                    fireWidgetSb('poll_ended', {
+                        pollId: String(p?.id || ''),
+                        question: p?.question || '',
+                        options: opts.join(','),
+                        optionsCount: opts.length,
+                        votes: votes.join(','),
+                        results: opts.map((o, i) => `${o}: ${votes[i] || 0}`).join(', '),
+                        total: p?.total || 0,
+                        winner,
+                        winnerVotes,
+                        duration: p?.duration || 0,
+                        platforms,
+                        platformVotes,
+                    });
+                }
+                prevPollRef.current = { id: p?.id, ended: !!p?.ended };
+            } catch {}
+        });
+        s.on('poll-clear', ()=> {
+            setActivePoll(null);
+            prevPollRef.current = null;
+        });
+        s.on('task-update', (t:any)=> {
+            setActiveTasks(t);
+            try {
+                const items: any[] = Array.isArray(t?.items) ? t.items : [];
+                const len = items.length;
+                const done = items.filter((x:any) => !!x?.completed).length;
+                const prev = prevTasksRef.current;
+                if (prev && len > prev.len) {
+                    const added = items[items.length - 1];
+                    fireWidgetSb('task_added', {
+                        taskId: String(added?.id || ''),
+                        text: String(added?.text || ''),
+                        user: String(added?.user || ''),
+                        total: len,
+                    });
+                }
+                if (prev && done > prev.done) {
+                    const newly = items.find((x:any) => !!x?.completed) ;
+                    fireWidgetSb('task_done', {
+                        taskId: String((newly as any)?.id || ''),
+                        text: String((newly as any)?.text || ''),
+                        user: String((newly as any)?.user || ''),
+                        total: len,
+                        doneCount: done,
+                    });
+                }
+                prevTasksRef.current = { len, done };
+            } catch {}
+        });
+        s.on('task-clear', ()=> {
+            try {
+                const prev = prevTasksRef.current;
+                fireWidgetSb('task_cleared', { count: prev?.len || 0 });
+            } catch {}
+            setActiveTasks(null);
+            prevTasksRef.current = { len: 0, done: 0 };
+        });
+        s.on('timer-update', (t:any)=> {
+            try {
+                const prev = prevTimerRef.current;
+                const running = !!t?.isRunning;
+                const secs = typeof t?.totalSeconds === 'number' ? t.totalSeconds : null;
+                const mode = String(t?.mode || '');
+                const session = typeof t?.currentSession === 'number' ? t.currentSession : 1;
+                const totalSessions = typeof t?.totalSessions === 'number' ? t.totalSessions : 1;
+                const timerInfo = { mode, session, totalSessions };
+                if (prev && !prev.isRunning && running) fireWidgetSb('timer_started', { totalSeconds: secs ?? 0, ...timerInfo });
+                if (prev && prev.isRunning && secs === 0) {
+                    fireWidgetSb('timer_finished', { totalSeconds: 0, ...timerInfo });
+                } else {
+                    // Backend menyertakan addedSeconds (delta, negatif bila subtract).
+                    // Jumlahnya ikut dikirim: addedSeconds / reducedSeconds + totalSeconds.
+                    const delta = typeof t?.addedSeconds === 'number' ? t.addedSeconds : null;
+                    if (delta !== null && delta > 0) {
+                        fireWidgetSb('timer_extended', { addedSeconds: delta, totalSeconds: secs ?? 0, ...timerInfo });
+                    } else if (delta !== null && delta < 0) {
+                        fireWidgetSb('timer_reduced', { reducedSeconds: -delta, totalSeconds: secs ?? 0, ...timerInfo });
+                    } else if (prev && secs !== null && prev.totalSeconds !== null && prev.totalSeconds !== undefined) {
+                        // Fallback: deteksi lompatan tanpa delta (mis. timer-set manual).
+                        const jump = secs - (prev.totalSeconds as number);
+                        if (jump >= 60) fireWidgetSb('timer_extended', { addedSeconds: jump, totalSeconds: secs, ...timerInfo });
+                        else if (jump <= -60) fireWidgetSb('timer_reduced', { reducedSeconds: -jump, totalSeconds: secs, ...timerInfo });
+                    }
+                }
+                prevTimerRef.current = { isRunning: running, totalSeconds: secs ?? undefined };
+            } catch {}
+            setActiveTimer(t);
+        });
+        s.on('song-update', (st:any)=> {
+            try {
+                const len = Array.isArray(st?.queue) ? st.queue.length : 0;
+                const idx = typeof st?.currentIndex === 'number' ? st.currentIndex : 0;
+                const prev = prevSongRef.current;
+                const songInfo = (s: any) => ({
+                    songId: String(s?.id || ''),
+                    title: String(s?.title || ''),
+                    url: String(s?.url || ''),
+                    videoId: String(s?.videoId || ''),
+                    kind: String(s?.kind || ''),
+                    requestedBy: String(s?.requestedBy || ''),
+                    platform: String(s?.platform || ''),
+                    queueLength: len,
+                });
+                if (prev && len > prev.len) {
+                    const last = st.queue[st.queue.length - 1];
+                    fireWidgetSb('song_requested', songInfo(last));
+                }
+                if (prev && len === prev.len && idx !== prev.index) {
+                    const cur = st.queue[Math.min(idx, len - 1)];
+                    fireWidgetSb('song_next', songInfo(cur));
+                }
+                prevSongRef.current = { len, index: idx };
+            } catch {}
+        });
         // also join when privateKey changes
         const t = setInterval(()=>{ if(s.connected){ const room=getRoom(); s.emit('poll-get',{privateKey:room}); s.emit('task-get',{privateKey:room}); s.emit('timer-get',{privateKey:room}); } }, 3000);
         return () => { clearInterval(t); s.disconnect(); pollSocketRef.current = null; };
@@ -859,6 +1168,12 @@ export default function Home() {
         const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         pollSocketRef.current?.emit('task-remove', { privateKey: room, id });
     }
+    const handleMoveTask = (from: number, to: number) => {
+        const items = (activeTasks as { items?: unknown[] })?.items || [];
+        if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return;
+        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
+        pollSocketRef.current?.emit('task-move', { privateKey: room, from, to });
+    }
     const handleClearTasks = () => {
         if (!confirm('Hapus semua tasks?')) return;
         const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
@@ -1024,7 +1339,8 @@ export default function Home() {
         return result;
     };
 
-    const handleIncomingMessage = (user: string, text: string, platform: ChatMessage["platform"], avatar?: string, emotes?: Array<{ name: string; imageUrl: string }>) => {
+    const handleIncomingMessage = (user: string, text: string, platform: ChatMessage["platform"], avatar?: string, emotes?: Array<{ name: string; imageUrl: string }>, opts?: { badges?: ChatBadge[]; color?: string }) => {
+        bumpSessionStat("chats", 1);
         setChatMessages(prev => [{
             id: Date.now() + Math.random(),
             user,
@@ -1032,6 +1348,8 @@ export default function Home() {
             platform,
             avatar,
             emotes,
+            badges: opts?.badges,
+            color: opts?.color || ((platform === "youtube" || platform === "twitch") ? chatColorFor(user) : undefined),
         }, ...prev].slice(0, 50));
 
         setViewerData(prev => {
@@ -1070,12 +1388,14 @@ export default function Home() {
         try {
             if (tkSocketRef.current?.connected) tkSocketRef.current.emit("unpin-chat", payload);
         } catch {}
+        fireWidgetSb('chat_unpinned', { platform: pinnedChat?.platform || '' });
     }
 
     const pinMessage = (user: string, text: string, platform: string, avatar?: string) => {
         if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
         setPinnedExiting(false);
         setPinnedChat({ user, text, platform, avatar });
+        fireWidgetSb('chat_pinned', { nickname: user, comment: text, profilePictureUrl: avatar || '', platform });
 
         // Pakai pollSocket (selalu konek) + fallback tkSocket.
         // Sebelumnya hanya tkSocket → pin chat YouTube/Twitch tidak muncul di widget kalau TikTok tidak konek.
@@ -1181,6 +1501,15 @@ export default function Home() {
             tkSocketRef.current.on("tiktok-connected", () => {
                 setTiktokStatus("CONNECTED");
                 setTiktokError(null);
+                // Sesi baru (username beda / live sebelumnya sudah berakhir) → reset chat + statistik.
+                // Reconnect biasa (sesi sama) → chat tetap.
+                const sess = readChatSession();
+                const uname = username.trim().toLowerCase();
+                if (!sess || sess.username !== uname || sess.ended) {
+                    startNewChatSession(username);
+                } else {
+                    writeChatSession({ username: uname, ended: false });
+                }
                 addSystemLog(`Berhasil terhubung ke TikTok Live: @${username}`, "success");
             });
 
@@ -1206,35 +1535,37 @@ export default function Home() {
                 setTiktokRoomViewerCount(null);
                 setTiktokTotalUser(null);
                 addSystemLog("Live TikTok berakhir.", "warn");
+                // Tandai sesi berakhir — chat dibersihkan saat live berikutnya connect.
+                const sess = readChatSession();
+                if (sess) writeChatSession({ ...sess, ended: true });
                 scheduleTikTokRetry("live berakhir, cek apakah live lagi", 5000);
             });
 
             tkSocketRef.current.on("tiktok-chat", (data: { nickname: string; comment: string; profilePictureUrl?: string; platform?: string }) => {
                 const pf = (data.platform === "twitch" || data.platform === "youtube" || data.platform === "kick" ? data.platform : "tiktok") as ChatMessage["platform"];
                 handleIncomingMessage(data.nickname, data.comment, pf, data.profilePictureUrl, []);
-                const m = ttSbMapRef.current.chat;
-                if (m.enabled) fireSbAction(m.action, { type: "chat", nickname: data.nickname, comment: data.comment, profilePictureUrl: data.profilePictureUrl });
+                fireTtSb("chat", { type: "chat", nickname: data.nickname, comment: data.comment, profilePictureUrl: data.profilePictureUrl || "", platform: pf });
             });
 
             tkSocketRef.current.on("tiktok-gift", (data: { nickname: string; giftName: string; repeatCount: number; profilePictureUrl?: string; diamondCount?: number }) => {
                 addGiftLog(data.nickname, `mengirim ${data.giftName} x${data.repeatCount}`, "tiktok", { giftName: data.giftName, count: data.repeatCount, avatar: data.profilePictureUrl });
+                bumpSessionStat("gifts", Number(data.repeatCount) || 1);
                 addSystemLog(`🎁 [TIKTOK GIFT] ${data.nickname} mengirim ${data.giftName} x${data.repeatCount}`, "info");
-                const m = ttSbMapRef.current.gift;
-                if (m.enabled) fireSbAction(m.action, { type: "gift", nickname: data.nickname, giftName: data.giftName, repeatCount: data.repeatCount, diamondCount: data.diamondCount, profilePictureUrl: data.profilePictureUrl });
+                fireTtSb("gift", { type: "gift", nickname: data.nickname, giftName: data.giftName, repeatCount: data.repeatCount, diamondCount: data.diamondCount || 0, profilePictureUrl: data.profilePictureUrl || "", platform: "tiktok" });
             });
 
             tkSocketRef.current.on("tiktok-like", (data: { nickname: string; likeCount: number; totalLikeCount?: number }) => {
                 addActivityLog(`❤️ ${data.nickname} menyukai live! (${data.likeCount} likes)`, "tiktok");
+                bumpSessionStat("likes", Number(data.likeCount) || 1);
                 addSystemLog(`❤️ [TIKTOK LIKE] ${data.nickname} menyukai live! (${data.likeCount} likes)`, "info");
-                const m = ttSbMapRef.current.like;
-                if (m.enabled) fireSbAction(m.action, { type: "like", nickname: data.nickname, likeCount: data.likeCount, totalLikeCount: data.totalLikeCount });
+                fireTtSb("like", { type: "like", nickname: data.nickname, likeCount: data.likeCount, totalLikeCount: data.totalLikeCount || 0, platform: "tiktok" });
             });
 
             tkSocketRef.current.on("tiktok-follow", (data: { nickname?: string; uniqueId?: string; profilePictureUrl?: string }) => {
                 const nick = data.nickname || (data as any).uniqueId || "??";
                 addActivityLog(`💖 ${nick} mengikuti`, "tiktok");
-                const m = ttSbMapRef.current.follow;
-                if (m.enabled) fireSbAction(m.action, { type: "follow", nickname: nick, profilePictureUrl: data.profilePictureUrl });
+                bumpSessionStat("follows", 1);
+                fireTtSb("follow", { type: "follow", nickname: nick, profilePictureUrl: data.profilePictureUrl || "", platform: "tiktok" });
             });
 
             tkSocketRef.current.on("tiktok-member", (data: { nickname?: string; uniqueId?: string; profilePictureUrl?: string }) => {
@@ -1249,8 +1580,7 @@ export default function Home() {
                     },
                 }));
                 addSystemLog(`👋 [TIKTOK JOIN] ${nick} telah bergabung.`, "info");
-                const m = ttSbMapRef.current.member;
-                if (m.enabled) fireSbAction(m.action, { type: "member", nickname: nick, profilePictureUrl: data.profilePictureUrl });
+                fireTtSb("member", { type: "member", nickname: nick, profilePictureUrl: data.profilePictureUrl || "", platform: "tiktok" });
             });
 
             tkSocketRef.current.on("tiktok-roomUser", (data: any) => {
@@ -1517,6 +1847,8 @@ export default function Home() {
                 cardYt: saved["card-yt"] ?? prev.cardYt,
                 cardTw: saved["card-tw"] ?? prev.cardTw,
                 cardTt: saved["card-tt"] ?? prev.cardTt,
+                arrivals: saved["section-arrivals"] ?? (prev as any).arrivals ?? true,
+                summary: saved["section-summary"] ?? (prev as any).summary ?? true,
             }));
         } catch (error) {
             console.error("Layout load failed", error);
@@ -1544,6 +1876,34 @@ export default function Home() {
         localStorage.setItem("streamBriefing", JSON.stringify(briefing));
     }, [briefing]);
 
+    // Persist chat + statistik sesi setiap ada pesan baru (tahan refresh).
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try { localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatMessages.slice(0, 50))); } catch {}
+    }, [chatMessages]);
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try { localStorage.setItem(SESSION_STATS_KEY, JSON.stringify(sessionStats)); } catch {}
+    }, [sessionStats]);
+    // Bangun ulang "Siapa yang Datang" dari history saat refresh.
+    useEffect(() => {
+        setViewerData((prev) => {
+            if (Object.keys(prev).length > 0) return prev;
+            let base: ChatMessage[] = [];
+            try {
+                const arr = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || "[]");
+                if (Array.isArray(arr)) base = arr;
+            } catch {}
+            if (base.length === 0) return prev;
+            const next = { ...prev };
+            for (const m of base) {
+                const u = String(m?.user || "??");
+                if (!next[u]) next[u] = { platform: m.platform || "tiktok", avatar: m.avatar, initials: u.slice(0, 2).toUpperCase() };
+            }
+            return next;
+        });
+    }, []);
+
     // Initialize default outline on first load
     useEffect(() => {
         if (briefing.outline.length === 0) {
@@ -1565,7 +1925,7 @@ export default function Home() {
             const next = { ...prev, [section]: value };
 
             if (typeof window !== "undefined") {
-                const layoutState = {
+                const                 layoutState = {
                     "section-streaming": next.streaming,
                     "section-activity": next.activity,
                     "section-gift": next.gift,
@@ -1573,6 +1933,8 @@ export default function Home() {
                     "card-yt": next.cardYt,
                     "card-tw": next.cardTw,
                     "card-tt": next.cardTt,
+                    "section-arrivals": (next as any).arrivals,
+                    "section-summary": (next as any).summary,
                 };
                 localStorage.setItem("dashboardLayout", JSON.stringify(layoutState));
             }
@@ -2121,18 +2483,35 @@ export default function Home() {
                     }
 
                     if (["ChatMessage", "Message"].includes(type)) {
-                        // Twitch ChatMessage: { user: {login,name}, text: "..." }
-                        // YouTube Message:   { message: "string", user: {name,login,profileImageUrl} }
+                        // Twitch ChatMessage: { user: {login,name,role,badges,color,subscribed,...}, text: "..." }
+                        // YouTube Message:   { message: "string", user: {name,login,profileImageUrl,isOwner,isModerator,isSponsor,isVerified} }
                         const rawMsg: any = (data as any).message;
                         const message = typeof rawMsg === "string" ? rawMsg
                             : (rawMsg?.text || (data as any).text || (data as any).comment || "");
-                        const user = rawMsg?.username || (data as any).user?.name || (data as any).user?.login || (data as any).userName || "User";
-                        const userId = (data as any).user?.id || (data as any).user?.login || user;
-                        const avatar = (data as any).user?.profileImageUrl || (data as any).user?.avatar || null;
+                        const sbUser: any = (data as any).user || {};
+                        const user = rawMsg?.username || sbUser?.name || sbUser?.login || (data as any).userName || "User";
+                        const userId = sbUser?.id || sbUser?.login || user;
+                        const avatar = sbUser?.profileImageUrl || sbUser?.avatar || null;
                         const pf = (platform === "youtube" || platform === "kick" ? platform : "twitch") as ChatMessage["platform"];
                         if (!message) return;
+                        // Role/mod/sub + warna akun dari payload Streamer.bot
+                        let badges: ChatBadge[] | undefined;
+                        let color: string | undefined;
+                        if (pf === "twitch") {
+                            const meta = parseTwitchChatMeta(sbUser);
+                            badges = meta.badges;
+                            color = meta.color;
+                        } else if (pf === "youtube") {
+                            badges = parseYoutubeChatMeta(sbUser).badges;
+                        }
+                        // Emote: Twitch {Name, ImageUrl} / YouTube {name, imageUrl}
+                        const rawEmotes: any[] = Array.isArray((data as any).emotes) ? (data as any).emotes : [];
+                        const emotes = rawEmotes
+                            .map((e: any) => ({ name: String(e?.Name ?? e?.name ?? ""), imageUrl: String(e?.ImageUrl ?? e?.imageUrl ?? "") }))
+                            .filter((e) => e.name && e.imageUrl);
                         // tampil lokal + broadcast ke server agar overlay/widget kebagian
-                        handleIncomingMessage(user, message, pf, avatar, []);
+                        const finalColor = color || ((pf === "youtube" || pf === "twitch") ? chatColorFor(user) : undefined);
+                        handleIncomingMessage(user, message, pf, avatar, emotes, { badges, color: finalColor });
                         emitSbBridge("sb-chat", {
                             privateKey: getTimerRoom(),
                             uniqueId: String(userId).toLowerCase().replace(/\s/g, "_"),
@@ -2140,6 +2519,9 @@ export default function Home() {
                             comment: message,
                             profilePictureUrl: avatar,
                             platform: pf,
+                            badges: badges && badges.length > 0 ? badges : undefined,
+                            color: finalColor,
+                            emotes: emotes.length > 0 ? emotes : undefined,
                         });
                     }
 
@@ -2157,6 +2539,7 @@ export default function Home() {
                         const tl = type.toLowerCase();
                         const detail = tl === "membershipgift" && Number(subCount) > 0 ? ` gift ${subCount}x` : (["resub", "resubscription", "membermilestone"].includes(tl) && Number(subMonths) > 0 ? ` ${subMonths} bln` : (subTier ? ` ${subTier}` : ""));
                         addActivityLog(`➕ ${user} ${tl === "follow" ? "mengikuti" : "subscribe"} (${type}${detail})`, pf);
+                        bumpSessionStat(tl === "follow" ? "follows" : "subs", 1);
                         addSystemLog(`➕ [SB ${type?.toUpperCase()}] ${user}${detail}`, "success");
                         emitSbBridge("sb-event", {
                             privateKey: getTimerRoom(),
@@ -2178,6 +2561,7 @@ export default function Home() {
                         const giftCount = Number((data as any).totalGifts ?? (data as any).count ?? (data as any).repeatCount ?? 1) || 1;
                         const text = amount ? `${type}: ${amount}` : (giftCount > 1 ? `${type} ×${giftCount}` : type);
                         addGiftLog(user, text, platform || "twitch", { amount: String(amount), giftName: type, avatar: avatar || undefined });
+                        bumpSessionStat("gifts", giftCount);
                         addSystemLog(`🎁 [GIFT ${platform}] ${user}: ${text}`, "info");
                         emitSbBridge("sb-event", {
                             privateKey: getTimerRoom(),
@@ -2404,13 +2788,13 @@ export default function Home() {
                                     <BarChart2 className="w-4 h-4" />
                                     Create Poll
                                 </button>
-                                <button onClick={() => {
+                                {/* <button onClick={() => {
                                     setLayout({ ...layout, createTask: true })
                                     setDropdownOpen({ ...dropdownOpen, streamTools: false })
                                 }} className="group flex items-center gap-2 w-full px-4 py-2 text-[10px] font-bold uppercase hover:bg-white/5 transition-colors">
                                     <ListChecks className="w-4 h-4" />
                                     Create Task
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </div>
@@ -2581,6 +2965,9 @@ export default function Home() {
                                         )}
                                     </div>
                                     <span className="text-[8px] font-mono-custom text-gray-500 shrink-0">{filteredChatMessages.length}/{chatMessages.length}</span>
+                                    <button onClick={() => { if (chatMessages.length === 0 || confirm("Bersihkan chat sesi ini?")) setChatMessages([]); }} className="shrink-0 p-1.5 text-gray-500 hover:text-red-400 hover:bg-white/10 rounded transition-colors" title="Bersihkan chat sesi ini">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
                                 </div>
                             </div>
                             {pinnedChat && (
@@ -2617,9 +3004,12 @@ export default function Home() {
                                                 {message.avatar ? <img src={message.avatar} alt={message.user} className="w-8 h-8 rounded-full object-cover" /> : avatarInitials}
                                             </div>
                                             <div className="flex-1 min-w-0 pr-6">
-                                                <div className="flex items-center gap-1.5 mb-0.5">
+                                                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                                                     <Image src={logoSrc} alt={message.platform} width={10} height={10} className="w-2.5 h-2.5 object-contain invert" />
-                                                    <span className="font-black text-white text-[10px] uppercase">{message.user}</span>
+                                                    {(message.badges || []).map((b) => (
+                                                        <span key={b} className={`px-1 py-px rounded text-[7px] font-black uppercase tracking-wider ${chatBadgeClass(message.platform, b)}`}>{chatBadgeLabel(b)}</span>
+                                                    ))}
+                                                    <span className="font-black text-[10px] uppercase" style={{ color: message.color || "#fff" }}>{message.user}</span>
                                                 </div>
                                                 <div className="text-gray-300 leading-relaxed">
                                                     {Array.isArray(parseEmotes(message.text, message.emotes))
@@ -2778,6 +3168,38 @@ export default function Home() {
                                     )}
                                 </div>
 
+                                {(sectionVisible as any).summary !== false && (
+                                <div className="bg-[#161616] border border-white/5 rounded-xl p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-gray-400 text-[9px] font-black uppercase">Ringkasan Sesi</h3>
+                                        <button onClick={() => setSessionStats({ follows: 0, subs: 0, gifts: 0, likes: 0, chats: 0 })} className="text-[8px] font-black uppercase text-gray-500 hover:text-white transition-colors" title="Nolkan semua counter sesi">Reset</button>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div className="bg-white/5 rounded-lg p-2 text-center">
+                                            <div className="text-lg font-black font-mono-custom leading-none text-pink-400">{sessionStats.follows.toLocaleString("id-ID")}</div>
+                                            <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Follow</div>
+                                        </div>
+                                        <div className="bg-white/5 rounded-lg p-2 text-center">
+                                            <div className="text-lg font-black font-mono-custom leading-none text-purple-400">{sessionStats.subs.toLocaleString("id-ID")}</div>
+                                            <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Sub / Member</div>
+                                        </div>
+                                        <div className="bg-white/5 rounded-lg p-2 text-center">
+                                            <div className="text-lg font-black font-mono-custom leading-none text-amber-400">{sessionStats.gifts.toLocaleString("id-ID")}</div>
+                                            <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Gift</div>
+                                        </div>
+                                        <div className="bg-white/5 rounded-lg p-2 text-center">
+                                            <div className="text-lg font-black font-mono-custom leading-none text-red-400">{sessionStats.likes.toLocaleString("id-ID")}</div>
+                                            <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Like TT</div>
+                                        </div>
+                                        <div className="bg-white/5 rounded-lg p-2 text-center col-span-2">
+                                            <div className="text-lg font-black font-mono-custom leading-none text-cyan-400">{sessionStats.chats.toLocaleString("id-ID")}</div>
+                                            <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Chat Masuk</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                )}
+
+                                {(sectionVisible as any).arrivals !== false && (
                                 <div className="flex-1 bg-[#161616] border border-white/5 rounded-xl p-4 flex flex-col overflow-hidden min-h-62.5">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-gray-400 text-[9px] font-black uppercase">Siapa yang Datang</h3>
@@ -2802,6 +3224,7 @@ export default function Home() {
                                         <Users className="w-8 h-8 opacity-30" />
                                     </div>
                                 </div>
+                                )}
                             </div>
                         )}
 
@@ -2930,6 +3353,14 @@ export default function Home() {
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
                                         <span className="text-gray-400 uppercase font-bold text-[8px]">TikTok Graph</span>
                                         <input type="checkbox" checked={sectionVisible.cardTt} onChange={(e) => toggleSection("cardTt", e.target.checked)} className="w-3 h-3 accent-blue-500 cursor-pointer" />
+                                    </div>
+                                    <div className="flex justify-between items-center py-1 border-t border-white/5">
+                                        <span className="text-gray-400 uppercase font-bold text-[8px]">Siapa yang Datang</span>
+                                        <input type="checkbox" checked={(sectionVisible as any).arrivals !== false} onChange={(e) => toggleSection("arrivals" as any, e.target.checked)} className="w-3 h-3 accent-blue-500 cursor-pointer" />
+                                    </div>
+                                    <div className="flex justify-between items-center py-1 border-t border-white/5">
+                                        <span className="text-gray-400 uppercase font-bold text-[8px]">Ringkasan Sesi</span>
+                                        <input type="checkbox" checked={(sectionVisible as any).summary !== false} onChange={(e) => toggleSection("summary" as any, e.target.checked)} className="w-3 h-3 accent-blue-500 cursor-pointer" />
                                     </div>
                                 </div>
 
@@ -3178,9 +3609,15 @@ export default function Home() {
                                         <Zap className="w-3 h-3" /> Kelola Integrasi
                                     </Link>
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
-                                        <span className="text-gray-400 uppercase font-bold text-[8px]">Event aktif</span>
+                                        <span className="text-gray-400 uppercase font-bold text-[8px]">Event TikTok aktif</span>
                                         <span className="text-white font-black uppercase text-[10px]">
                                             {(["chat", "gift", "like", "follow", "member"] as const).filter((k) => ttSbMap[k].enabled).length}/5
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-1 border-t border-white/5">
+                                        <span className="text-gray-400 uppercase font-bold text-[8px]">Event Widget aktif</span>
+                                        <span className="text-white font-black uppercase text-[10px]">
+                                            {Object.values(widgetSbMap).filter((e: any) => e?.enabled).length}/{Object.keys(widgetSbMap).length}
                                         </span>
                                     </div>
                                 </div>
@@ -3348,9 +3785,9 @@ export default function Home() {
                                         </div>
                                     )}
                                     {tab.id === 'task' && (
-                                        <div className="p-3 space-y-2 max-h-[260px] overflow-y-auto custom-scrollbar">
+                                        <div className="p-3 flex flex-col gap-2 h-[380px] max-h-[55vh] min-h-[240px]">
                                             {/* header */}
-                                            <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center justify-between gap-2 shrink-0">
                                                 <div className="flex items-center gap-2">
                                                     <ListChecks className="w-4 h-4 text-cyan-400" />
                                                     <span className="text-white font-black text-[11px] tracking-widest uppercase">Task Control</span>
@@ -3361,25 +3798,77 @@ export default function Home() {
                                                     <button onClick={() => setLayout({ ...layout, createTask: true })} className="w-6 h-6 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400" title="Buka modal"><Plus className="w-3 h-3" /></button>
                                                 </div>
                                             </div>
-                                            {/* list */}
+                                            {/* list — full card, scroll */}
+                                            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-0.5">
                                             {((activeTasks as { items?: any[] })?.items?.length || 0) > 0 ? (
                                                 <div className="space-y-1.5">
-                                                    {activeTasks.items.map((t:any)=>(
-                                                        <div key={t.id} className={`group flex gap-2 items-center px-3 py-2 rounded-xl border text-[11px] font-bold transition-all ${t.completed ? 'bg-white/5 border-white/5 opacity-60 line-through text-gray-400' : 'bg-white/[0.06] border-white/10 text-white hover:border-white/15'}`}>
+                                                    {activeTasks.items.map((t:any, i:number)=>(
+                                                        <div
+                                                            key={t.id}
+                                                            onDragOver={(e) => {
+                                                                e.preventDefault();
+                                                                setTaskDragOver(i);
+                                                            }}
+                                                            onDrop={(e) => {
+                                                                e.preventDefault();
+                                                                if (taskDragFrom !== null) handleMoveTask(taskDragFrom, i);
+                                                                setTaskDragFrom(null);
+                                                                setTaskDragOver(null);
+                                                            }}
+                                                            className={`group flex gap-1.5 items-center px-2 py-2 rounded-xl border text-[11px] font-bold transition-all ${t.completed ? 'bg-white/5 border-white/5 opacity-60 line-through text-gray-400' : 'bg-white/[0.06] border-white/10 text-white hover:border-white/15'} ${taskDragOver === i ? 'ring-1 ring-cyan-400 border-cyan-400' : ''} ${taskDragFrom === i ? 'opacity-50' : ''}`}
+                                                            title="Drag handle / tombol ↑↓ untuk sort"
+                                                        >
+                                                            <span
+                                                                draggable
+                                                                onDragStart={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setTaskDragFrom(i);
+                                                                    e.dataTransfer.effectAllowed = 'move';
+                                                                }}
+                                                                onDragEnd={() => {
+                                                                    setTaskDragFrom(null);
+                                                                    setTaskDragOver(null);
+                                                                }}
+                                                                className="shrink-0 p-1 -ml-1 cursor-grab active:cursor-grabbing text-gray-600 hover:text-white touch-none"
+                                                                title="Drag untuk sort"
+                                                            >
+                                                                <GripVertical className="w-3.5 h-3.5" />
+                                                            </span>
+                                                            <span className="text-[9px] font-mono w-4 shrink-0 text-gray-600">{String(i + 1).padStart(2, '0')}</span>
                                                             <button onClick={()=>handleToggleTask(t.id)} className={`w-5 h-5 rounded-full border-2 grid place-items-center shrink-0 transition-colors ${t.completed ? 'bg-white border-white text-[#1a2233]' : 'border-white/30 hover:border-white/50'}`}>{t.completed && <Check className="w-3 h-3" />}</button>
                                                             <span className="flex-1 truncate">{t.text}</span>
                                                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase ${t.completed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{t.completed ? 'done' : 'todo'}</span>
+                                                            <span className="shrink-0 flex flex-col">
+                                                                <button
+                                                                    onClick={() => handleMoveTask(i, i - 1)}
+                                                                    disabled={i === 0}
+                                                                    className="p-0.5 text-gray-600 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                                                                    title="Naik"
+                                                                >
+                                                                    <ChevronUp className="w-3 h-3" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleMoveTask(i, i + 1)}
+                                                                    disabled={i >= activeTasks.items.length - 1}
+                                                                    className="p-0.5 text-gray-600 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                                                                    title="Turun"
+                                                                >
+                                                                    <ChevronDown className="w-3 h-3" />
+                                                                </button>
+                                                            </span>
                                                             <button onClick={()=>handleRemoveTask(t.id)} className="opacity-0 group-hover:opacity-100 w-6 h-6 grid place-items-center rounded-full hover:bg-red-500/20 text-red-400 transition-opacity"><X className="w-3 h-3" /></button>
                                                         </div>
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <div className="py-6 flex flex-col items-center gap-2 text-center border border-dashed border-white/10 rounded-xl bg-white/[0.02]">
+                                                <div className="h-full min-h-[120px] flex flex-col items-center justify-center gap-2 text-center border border-dashed border-white/10 rounded-xl bg-white/[0.02]">
                                                     <ListChecks className="w-6 h-6 text-gray-600" />
                                                     <span className="text-gray-500 text-[11px] font-bold">Belum ada task - tambah di bawah</span>
                                                 </div>
                                             )}
-                                            <div className="flex gap-2 pt-1">
+                                            </div>
+                                            {/* input — nempel di bawah list */}
+                                            <div className="flex gap-2 pt-2 shrink-0 border-t border-white/5">
                                                 <input value={newTaskText} onChange={(e)=>setNewTaskText(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleAddTask(); }} placeholder="Tambah task..." className="flex-1 h-8 bg-white/5 border border-white/10 rounded-full px-3 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50" />
                                                 <button onClick={handleAddTask} className="h-8 px-4 bg-cyan-600 hover:bg-cyan-500 rounded-full text-white text-[11px] font-black uppercase flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>
                                             </div>

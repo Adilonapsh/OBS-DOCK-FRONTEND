@@ -1,21 +1,29 @@
 import type { ChatThemeProps } from './types';
+import { chatRoles, chatRoleLabel, chatRolePill, chatNameColor } from './roleUtils';
+import { platformLogo } from './platformLogo';
+import { EmoteText } from './EmoteText';
+import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
+import { MessageExtras } from './MessageExtras';
 import './Bubble.css';
 
-function timeLabel(ts?: number) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
+export const themeMeta = { value: 'bubble', label: 'Bubble - Putih WA-style' } as const;
 
-export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showTimestamp, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds }: ChatThemeProps) {
-  const bubbleBg = bg === 'transparent' ? '#ffffff' : bg;
+export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.35, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+  const fallbackBg = bg === 'transparent' ? '#ffffff' : bg;
+  const bgColor = useChatBubbles ? bubbleBg(bubbleColor, bubbleOpacity, fallbackBg) : fallbackBg;
+  const bgOp = useChatBubbles ? 1 : bgOpacity / 100;
   const text = textColor || 'rgba(0,0,0,0.85)';
   const hide = hideAnim || 'fadeOut';
   const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.45s'; return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`; };
+  const hl = (comment: string) => highlightMentions && isMentionMessage(comment);
   if (horizontal) {
     return (
-      <div className="chat-bubble-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-center" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {chats.length === 0 ? null : chats.map((c, i) => (
+      <div className="chat-bubble-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+        {chats.length === 0 ? null : chats.map((c, i) => {
+          const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
+          const showName = showUsername && !grouped;
+          const highlighted = hl(c.comment);
+          return (
           <div
             key={c.id}
             className="chat-bubble-item flex items-center gap-2 shrink-0"
@@ -29,35 +37,54 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showT
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`; }}
               />
             )}
-            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border max-w-[300px]" style={{ background: bubbleBg, borderColor: 'rgba(0,0,0,0.06)', opacity: bgOpacity / 100 }}>
-              <span className="font-black text-[11px] tracking-tight shrink-0" style={{ color: accent }}>{c.nickname}</span>
-              <span className="text-black/30 text-[11px]">:</span>
-              <span className="text-[12px] truncate" style={{ color: text }}>{c.comment}</span>
+            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border max-w-[300px]" style={{ background: bgColor, borderColor: highlighted ? accent : 'rgba(0,0,0,0.06)', opacity: bgOp, boxShadow: highlighted ? `0 0 0 1px ${accent}, 0 8px 24px rgba(0,0,0,0.12)` : undefined }}>
+              {showName && (
+                <>
+                  <span className="font-black text-[11px] tracking-tight shrink-0 flex items-center gap-1" style={{ color: chatNameColor(c, accent) }}>{showPlatform && <img src={platformLogo(c.platform)} alt={c.platform || ''} className="w-3 h-3 rounded-full bg-white p-0.5 object-contain shrink-0" />}{showBadges && chatRoles(c).map((r) => (<span key={r} className={`px-1 py-px rounded text-[8px] font-black uppercase ${chatRolePill(c.platform, r)}`}>{chatRoleLabel(r)}</span>))}{c.nickname}</span>
+                  {showMessage && <span className="text-black/30 text-[11px]">:</span>}
+                </>
+              )}
+              {showMessage && <span className="text-[12px] truncate" style={{ color: text, lineHeight: lineSpacing }}><EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} /><MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark={false} /></span>}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
   if (inline) {
     return (
       <div className="chat-bubble-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {chats.length === 0 ? null : chats.map((c, i) => (
+        {chats.length === 0 ? null : chats.map((c, i) => {
+          const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
+          const showName = showUsername && !grouped;
+          const highlighted = hl(c.comment);
+          return (
           <div key={c.id} className="chat-bubble-item flex items-center gap-2 shrink-0" style={{ animation: getAnim(c.id), animationDelay: `${i * 40}ms` }}>
             {showAvatar && <img src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`} alt={c.nickname} className="w-6 h-6 rounded-full object-cover border border-black/5 shrink-0" />}
-            <div className="flex items-center gap-1.5 rounded-full px-3 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border flex-1 max-w-[92%]" style={{ background: bubbleBg, borderColor: 'rgba(0,0,0,0.06)', opacity: bgOpacity / 100 }}>
-              <span className="font-black text-[11px] shrink-0" style={{ color: accent }}>{c.nickname}</span>
-              <span className="text-black/30 text-[11px]">:</span>
-              <span className="text-[12px] truncate flex-1" style={{ color: text }}>{c.comment}</span>
+            <div className="flex items-center gap-1.5 rounded-full px-3 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border flex-1 max-w-[92%]" style={{ background: bgColor, borderColor: highlighted ? accent : 'rgba(0,0,0,0.06)', opacity: bgOp, boxShadow: highlighted ? `0 0 0 1px ${accent}, 0 8px 24px rgba(0,0,0,0.12)` : undefined }}>
+              {showName && (
+                <>
+                  <span className="font-black text-[11px] shrink-0 flex items-center gap-1" style={{ color: chatNameColor(c, accent) }}>{showPlatform && <img src={platformLogo(c.platform)} alt={c.platform || ''} className="w-3 h-3 rounded-full bg-white p-0.5 object-contain shrink-0" />}{showBadges && chatRoles(c).map((r) => (<span key={r} className={`px-1 py-px rounded text-[8px] font-black uppercase ${chatRolePill(c.platform, r)}`}>{chatRoleLabel(r)}</span>))}{c.nickname}</span>
+                  {showMessage && <span className="text-black/30 text-[11px]">:</span>}
+                </>
+              )}
+              {showMessage && <span className="text-[12px] truncate flex-1" style={{ color: text, lineHeight: lineSpacing }}><EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} /><MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark={false} /></span>}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
   return (
     <div className="chat-bubble-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-      {chats.length === 0 ? null : chats.map((c, i) => (
+      {chats.length === 0 ? null : chats.map((c, i) => {
+        const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
+        const showName = showUsername && !grouped;
+        const highlighted = hl(c.comment);
+        const showHead = showName || (showTimestamp && c.timestamp);
+        return (
         <div
           key={c.id}
           className="chat-bubble-item flex gap-2 items-end"
@@ -73,16 +100,19 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showT
           )}
           <div
             className="relative max-w-[82%] rounded-[18px] rounded-bl-[6px] px-3.5 py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border"
-            style={{ background: bubbleBg, borderColor: 'rgba(0,0,0,0.06)', opacity: bgOpacity / 100 }}
+            style={{ background: bgColor, borderColor: highlighted ? accent : 'rgba(0,0,0,0.06)', opacity: bgOp, boxShadow: highlighted ? `0 0 0 1px ${accent}, 0 8px 24px rgba(0,0,0,0.12)` : undefined }}
           >
+            {showHead ? (
             <div className="flex items-center gap-1.5">
-              <span className="font-black text-[11px] tracking-tight" style={{ color: accent }}>{c.nickname}</span>
-              {showTimestamp && c.timestamp ? <span className="text-black/30 text-[9px] font-mono">{timeLabel(c.timestamp)}</span> : null}
+              {showName && <span className="font-black text-[11px] tracking-tight flex items-center gap-1" style={{ color: chatNameColor(c, accent) }}>{showPlatform && <img src={platformLogo(c.platform)} alt={c.platform || ''} className="w-3 h-3 rounded-full bg-white p-0.5 object-contain shrink-0" />}{showBadges && chatRoles(c).map((r) => (<span key={r} className={`px-1 py-px rounded text-[8px] font-black uppercase ${chatRolePill(c.platform, r)}`}>{chatRoleLabel(r)}</span>))}{c.nickname}</span>}
+              {showTimestamp && c.timestamp ? <span className="text-black/30 text-[9px] font-mono">{formatChatTime(c.timestamp, timeFormat)}</span> : null}
             </div>
-            <p className="text-[13px] leading-[1.35] break-words mt-0.5" style={{ color: text }}>{c.comment}</p>
+            ) : null}
+            {showMessage && <p className="text-[13px] leading-[1.35] break-words mt-0.5" style={{ color: text, lineHeight: lineSpacing }}><EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} /><MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark={false} /></p>}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

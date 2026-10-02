@@ -1,5 +1,5 @@
 'use client';
-import { X, Activity, Server, Clock, HardDrive, Wifi, Shield, ExternalLink, Play, Copy, Check, AlertCircle } from "lucide-react";
+import { X, Activity, Server, Clock, HardDrive, Wifi, Shield, ExternalLink, Play, Copy, Check, AlertCircle, Maximize2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { useEffect, useState, useRef } from "react";
 import { cn } from "../lib/utils";
@@ -72,6 +72,23 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
     navigator.clipboard.writeText(text);
     setCopiedType(type);
     setTimeout(() => setCopiedType(null), 2000);
+  };
+
+  const getPrivateKey = () => {
+    if (typeof window === "undefined") return "";
+    return (
+      new URLSearchParams(window.location.search).get("key") ||
+      sessionStorage.getItem("bypass_private_key") ||
+      sessionStorage.getItem("dock_private_verified") ||
+      ""
+    );
+  };
+
+  const getFullscreenUrl = (streamName: string, absolute: boolean) => {
+    const key = getPrivateKey();
+    const path = `/monitor/fullscreen?stream=${encodeURIComponent(streamName)}${key ? `&key=${encodeURIComponent(key)}` : ""}`;
+    if (absolute && typeof window !== "undefined") return `${window.location.origin}${path}`;
+    return path;
   };
   
   useEffect(() => {
@@ -203,19 +220,63 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
               <div>
                 <h3 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-1.5">
                    <Play size={16} className="text-blue-400" />
-                   Web Live Player (MediaMTX)
+                   Web Live Player
                 </h3>
                 <p className="text-xs text-gray-500">Preview siaran langsung menggunakan player internal WebRTC/HLS.</p>
               </div>
               {s.ready && getStreamUrl() && (
-                 <a 
-                   href={getStreamUrl()} 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black hover:bg-gray-200 transition-colors rounded-lg text-xs font-black uppercase tracking-wide"
-                 >
-                   Open Player in New Tab <ExternalLink size={12} />
-                 </a>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={getFullscreenUrl(s.name, false)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black hover:bg-gray-200 transition-colors rounded-lg text-xs font-black uppercase tracking-wide"
+                  >
+                    <Maximize2 size={12} />
+                  </a>
+                  <a 
+                    href={getStreamUrl()} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors rounded-lg text-xs font-black uppercase tracking-wide text-gray-300"
+                  >
+                   <ExternalLink size={12} />
+                  </a>
+                </div>
+              )}
+              {!s.ready && (
+                <a
+                  href={getFullscreenUrl(s.name, false)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors rounded-lg text-xs font-black uppercase tracking-wide text-gray-300"
+                >
+                  <Maximize2 size={12} /> Buka Layar Offline / OBS
+                </a>
+              )}
+            </div>
+
+            {/* URL OBS (Browser Source) — sudah termasuk private key */}
+            <div className="border border-white/10 rounded-xl p-3 bg-black/30 space-y-2">
+              <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest block">URL OBS (Browser Source)</span>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  readOnly
+                  value={getFullscreenUrl(s.name, true)}
+                  onFocus={(e) => e.target.select()}
+                  className="bg-black/30 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono grow text-white outline-none select-all"
+                />
+                <button
+                  onClick={() => handleCopy(getFullscreenUrl(s.name, true), 'obs')}
+                  className="p-1.5 px-2 border border-white/10 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white flex items-center gap-1 text-xs shrink-0"
+                >
+                  {copiedType === 'obs' ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                  Copy
+                </button>
+              </div>
+              {!getPrivateKey() && (
+                <p className="text-[10px] text-amber-300/70">Belum ada private key di sesi ini — URL tanpa key hanya jalan di browser yang login.</p>
               )}
             </div>
 

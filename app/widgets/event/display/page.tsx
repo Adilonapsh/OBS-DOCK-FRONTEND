@@ -14,8 +14,9 @@ import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
 import PerCharTheme from '../themes/PerChar';
 import PlainTheme from '../themes/Plain';
-import { DEMO_EVENTS } from '../config';
 import type { EventItem } from '../themes/types';
+import { SIM_EVENT_POOL } from '../themes/dummySim';
+import { useDummySimulation } from '../../_shared/hooks/useDummySimulation';
 import { subLabelFor, isFollowDisplayType } from '../../_shared/utils/subLabel';
 
 function EventInner() {
@@ -63,11 +64,26 @@ function EventInner() {
   const charDelayMs = Math.max(0, Math.min(500, getIntParam(params, 'charDelayMs', 25)));
   const charDurationS = Math.max(0.05, Math.min(3, parseFloat(params.get('charDurationS') || '') || 0.35));
 
-  const [events, setEvents] = useState<EventItem[]>(() => (simulate ? [...DEMO_EVENTS] : []));
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
   const [connected, setConnected] = useState(simulate);
   const hideAnimName = ANIM_OUT_MAP[hideAnim] || 'fadeOut';
   const hideDur = isElegantAnim(hideAnimName) ? 620 : 400;
+
+  // Mode simulate: dummy mengalir satu per satu seperti real (masuk + keluar pakai animasi)
+  const simFilter = (e: EventItem) =>
+    (e.type === 'join' && showJoin) || (e.type === 'gift' && showGift) || (e.type === 'like' && showLike);
+  const sim = useDummySimulation<EventItem>({
+    enabled: simulate,
+    pool: SIM_EVENT_POOL,
+    maxItems: maxEvents,
+    holdMs: hideAfter > 0 ? hideAfter * 1000 : 8000,
+    hideDur,
+    idPrefix: 'sim_ev',
+    filter: simFilter,
+  });
+  const liveEvents = simulate ? sim.items : events;
+  const liveExiting = simulate ? sim.exitingIds : exitingIds;
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'event-font'), [font]);
 
@@ -153,7 +169,7 @@ function EventInner() {
   }, [privateKey, maxEvents, hideAfter, hideDur, showJoin, showGift, showLike, simulate]);
 
   const themeProps = {
-    events,
+    events: liveEvents.slice(-maxEvents),
     font,
     accent,
     bg,
@@ -175,7 +191,7 @@ function EventInner() {
     cuteNameUser,
     charDelayMs,
     charDurationS,
-    exitingIds,
+    exitingIds: liveExiting,
   };
 
   const renderTheme = () => {
@@ -193,8 +209,8 @@ function EventInner() {
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@400;700;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; }`}</style>
       <div id="event-display-root" className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-2` : `w-full min-h-screen bg-[#0a0a0a] flex p-4`}`} style={{ background: obsMode ? 'transparent' : '#0a0a0a', fontFamily: `'${font}', sans-serif`, ...posStyle } as any}>
-        {!obsMode && !connected && events.length === 0 && <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0,6)}…` : 'global'} • server http://localhost:3000</div>}
-        {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">EVENT • {theme} • {connected ? 'connected' : 'offline'} • {events.length}/{maxEvents}</div>}
+        {!obsMode && !connected && liveEvents.length === 0 && <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0,6)}…` : 'global'} • server http://localhost:3000</div>}
+        {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">EVENT • {theme} • {simulate ? 'simulate' : connected ? 'connected' : 'offline'} • {liveEvents.length}/{maxEvents}</div>}
         <AutoScale defaultBase={420} baseWidth={theme === 'perchar' ? 480 : 420}>
           {renderTheme()}
         </AutoScale>

@@ -33,6 +33,7 @@ export async function proxy(request: NextRequest) {
   const isGuestAllowed = request.nextUrl.pathname.startsWith('/dock') // dock boleh guest via privateKey
     || request.nextUrl.pathname.startsWith('/overlay/display')
     || request.nextUrl.pathname.startsWith('/widgets/display')
+    || (request.nextUrl.pathname.startsWith('/monitor/fullscreen') && request.nextUrl.searchParams.has('key'))
 
   // Jika akses protected tapi tidak ada user dan tidak ada guest key, redirect ke login
   // Untuk /dock kita izinkan guest jika ada privateKey di query atau cookie session guest

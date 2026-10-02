@@ -7,17 +7,18 @@ function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFont
     if (!plainLyrics) return <div className={`lyrics-empty opacity-40 text-sm italic ${alignCls}`} style={{ fontSize: `${Math.max(12, lyricsFontSize - 2)}px` }}>♪ instrumental - no lyrics ♪</div>;
     return <div className={`lyrics-plain opacity-80 leading-relaxed ${alignCls}`} style={{ fontSize: `${lyricsFontSize}px` }}>{plainLyrics.split('\n').slice(0, maxLyricsLines).join('  •  ')}</div>;
   }
-  const half = Math.floor(maxLyricsLines / 2);
-  let start = Math.max(0, activeIndex - half);
-  let end = start + maxLyricsLines;
-  if (end > lyrics.length) { end = lyrics.length; start = Math.max(0, end - maxLyricsLines); }
-  const win = lyrics.slice(start, end);
+  // Halaman penuh per maxLyricsLines (bukan geser tiap baris) agar jendela stabil & tidak lompat.
+  // Semua baris font-size SAMA — status aktif hanya beda warna/opacity/scale (transform),
+  // jadi tidak ada layout-shift saat highlight pindah (sumber glitch sebelumnya).
+  const safeActive = Math.max(0, activeIndex);
+  const start = Math.floor(safeActive / maxLyricsLines) * maxLyricsLines;
+  const win = lyrics.slice(start, start + maxLyricsLines);
   return (
     <div className={`lyrics-window flex flex-col gap-1.5 ${alignCls}`}>
-      {win.map((l) => {
-        const idx = lyrics.indexOf(l);
+      {win.map((l, i) => {
+        const idx = start + i;
         const isActive = idx === activeIndex;
-        return <div key={idx} className={`lyrics-line leading-tight transition-all duration-300 ${isActive ? 'font-black scale-[1.03]' : 'opacity-40 font-medium'}`} style={{ fontSize: isActive ? `${lyricsFontSize + 2}px` : `${lyricsFontSize - 2}px`, color: isActive ? accent : undefined }}>{l.text || '♪'}</div>;
+        return <div key={idx} className={`lyrics-line lyrics-line-in leading-tight transition-[color,opacity,transform] duration-300 ${isActive ? 'font-black scale-[1.03]' : 'opacity-40 font-medium'}`} style={{ fontSize: `${lyricsFontSize}px`, color: isActive ? accent : undefined }}>{l.text || '♪'}</div>;
       })}
     </div>
   );

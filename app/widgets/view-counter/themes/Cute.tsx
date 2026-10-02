@@ -14,7 +14,7 @@ export default function CuteTheme({ counts, total, font, fontSize, showLabel, sh
           const meta = PLATFORM_META[p] || PLATFORM_META.tiktok;
           return (
             <span key={p} className="flex items-center gap-1 shrink-0" title={meta.label}>
-              <img src={meta.logo} alt={meta.label} className="w-5 h-5 object-contain" />
+              <img src={meta.logo} alt={meta.label} className="w-5 h-5 rounded-full bg-white/90 p-0.5 object-contain shrink-0" />
               <span className="text-white text-[10px] font-black tabular-nums">{fmtCount(n)}</span>
             </span>
           );
@@ -24,7 +24,7 @@ export default function CuteTheme({ counts, total, font, fontSize, showLabel, sh
     );
   }
   return (
-    <div className="vc-font w-[190px] rounded-3xl overflow-hidden border border-[#fca4d4]/30 shadow-xl" style={{ fontFamily: family, background: 'linear-gradient(160deg, #2a2440 0%, #1e1d2b 100%)' }}>
+    <div className="vc-font w-full rounded-3xl overflow-hidden border border-[#fca4d4]/30 shadow-xl" style={{ fontFamily: family, background: 'linear-gradient(160deg, #2a2440 0%, #1e1d2b 100%)' }}>
       <div className="flex items-center gap-1.5 px-3 py-2">
         <Eye className="w-3.5 h-3.5 shrink-0 text-[#f5a8d0]" />
         {showLabel && <span className="font-black uppercase text-[9px] tracking-widest" style={{ color: '#a8a3ce' }}>Watching</span>}
@@ -37,7 +37,7 @@ export default function CuteTheme({ counts, total, font, fontSize, showLabel, sh
             const meta = PLATFORM_META[p] || PLATFORM_META.tiktok;
             return (
               <div key={p} className="flex items-center gap-1.5 rounded-xl px-2 py-1" style={{ background: 'rgba(46,44,69,0.8)' }}>
-                <img src={meta.logo} alt={meta.label} title={meta.label} className="w-4 h-4 object-contain shrink-0" />
+                <img src={meta.logo} alt={meta.label} title={meta.label} className="w-4 h-4 rounded-full bg-white/90 p-px object-contain shrink-0" />
                 <span className="text-[10px] font-black tabular-nums" style={{ color: '#d8cded' }}>{fmtCount(n)}</span>
               </div>
             );

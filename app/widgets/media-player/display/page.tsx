@@ -316,6 +316,8 @@ function MediaPlayerInner() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;600;800&display=swap');
         html,body{${obsMode ? 'background:transparent !important;' : ''}}
+        html,body{scrollbar-width:none;-ms-overflow-style:none}
+        html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
         #media-player-root { --accent: ${accent}; --bg: ${bgColor}; --text: ${textColor}; }
         .marquee-track { display:block; overflow:hidden; white-space:nowrap; position:relative; }
         .marquee-content { display:inline-block; padding-right: 24px; animation: marquee 10s linear infinite; }

@@ -107,6 +107,8 @@ function PollInner(){
         @keyframes winnerPulse { 0%{ transform: scale(1); } 50%{ transform: scale(1.04); } 100%{ transform: scale(1); } }
         @keyframes winnerGlow { 0%{ box-shadow: 0 0 0 rgba(255,255,255,0); } 50%{ box-shadow: 0 0 24px rgba(255,255,255,0.6); } 100%{ box-shadow: 0 0 0 rgba(255,255,255,0); } }
         @keyframes confetti { 0%{ transform: translateY(0) rotate(0); opacity:1; } 100%{ transform: translateY(-24px) rotate(180deg); opacity:0; } }
+        html,body{scrollbar-width:none;-ms-overflow-style:none}
+        html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
       `}</style>
       <div className={`${isTransparent ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4' : 'w-full min-h-screen bg-[#0a0a0a] flex p-6'}`} style={{ ...posStyle, background: isTransparent ? 'transparent' : '#0a0a0a' } as any}>
         {!isTransparent && <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage:"linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize:"40px 40px"}} />}

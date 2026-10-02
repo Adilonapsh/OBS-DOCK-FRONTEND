@@ -165,6 +165,7 @@ function ClockInner() {
     return (
         <>
             {isTransparent && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important}` }} />}
+            <style>{`html,body{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}`}</style>
             <div
                 id="main-container"
                 className={`${isTransparent ? 'fixed inset-0 w-screen h-screen overflow-hidden flex p-6' : 'w-full min-h-screen bg-[#0a0a0a] flex p-6'}`}
@@ -180,7 +181,6 @@ function ClockInner() {
                         gap: `${params.gap}px`,
                         fontFamily: `'${params.font}', sans-serif`,
                         width: '100%',
-                        maxWidth: '900px',
                         alignItems: 'stretch',
                     }}
                 >

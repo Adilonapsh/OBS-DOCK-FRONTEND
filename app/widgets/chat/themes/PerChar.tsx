@@ -1,4 +1,9 @@
 import type { ChatThemeProps } from './types';
+import { chatRoles, chatRoleLabel, chatRolePill, chatNameColor } from './roleUtils';
+import { platformLogo } from './platformLogo';
+import { EmoteText } from './EmoteText';
+import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
+import { MessageExtras } from './MessageExtras';
 import './PerChar.css';
 
 export type PerCharThemeProps = ChatThemeProps & {
@@ -24,36 +29,7 @@ function platformColor(platform?: string, fallback = '#8b5cf6') {
   return fallback;
 }
 
-function platformGlyph(platform?: string) {
-  const v = (platform || '').toLowerCase();
-  if (v.includes('youtube') || v === 'yt') return 'YT';
-  if (v.includes('twitch')) return 'TW';
-  if (v.includes('kick')) return 'K';
-  if (v.includes('tiktok')) return 'TT';
-  return '•';
-}
-
-function timeLabel(ts?: number) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-
-function PerCharText({ text, delayMs, durationS }: { text: string; delayMs: number; durationS: number }) {
-  return (
-    <>
-      {[...text].map((ch, i) => (
-        <span
-          key={i}
-          className="pc-char"
-          style={{ animationDelay: `${(i * delayMs) / 1000}s`, animationDuration: `${durationS}s` }}
-        >
-          {ch}
-        </span>
-      ))}
-    </>
-  );
-}
+export const themeMeta = { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' } as const;
 
 export default function PerCharTheme({
   chats,
@@ -62,6 +38,9 @@ export default function PerCharTheme({
   showAvatar,
   showPlatform,
   showTimestamp,
+  showBadges,
+  bttv,
+  bttvMap,
   fontSize,
   charDelayMs = 25,
   charDurationS = 0.35,
@@ -70,42 +49,80 @@ export default function PerCharTheme({
   horizontal,
   inline,
   textColor,
+  showUsername = true,
+  showMessage = true,
+  timeFormat = '24-hour',
+  lineSpacing = 1.4,
+  useChatBubbles = false,
+  bubbleColor = '#1d1d1d',
+  bubbleOpacity = 0.9,
+  groupConsecutiveMessages = false,
+  highlightMentions = false,
+  imageEmbedPermissionLevel = '69420',
+  showYouTubeLinkPreviews = false,
 }: PerCharThemeProps) {
   const hide = hideAnim || 'fadeOut';
   // horizontal & inline pakai bubble penuh yang sama — cuma arah alir beda
-  const flowCls = horizontal ? 'flex-row flex-wrap items-start' : 'flex-col';
+  const flowCls = horizontal ? 'flex-row flex-wrap items-end' : 'flex-col';
   return (
     <div className={`chat-perchar-theme w-full ${horizontal ? 'max-w-none' : 'max-w-[480px]'} flex ${flowCls}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-      {chats.length === 0 ? null : chats.map((c) => {
+      {chats.length === 0 ? null : chats.map((c, i) => {
         const color = platformColor(c.platform, accent);
         const isExiting = exitingIds?.has(c.id);
+        const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
+        const showName = showUsername && !grouped;
+        const hl = highlightMentions && isMentionMessage(c.comment);
+        const gradient = `linear-gradient(135deg, ${accent}, ${accent}cc)`;
+        const bubbleBackground = useChatBubbles ? bubbleBg(bubbleColor, bubbleOpacity, gradient) : gradient;
+        const showMeta = showName || (showTimestamp && !!c.timestamp);
         return (
           <div key={c.id} className="pc-row" style={isExiting ? { animation: `${hide} 0.4s ease both` } : undefined}>
-            <div className="pc-meta">
-              {showPlatform && (
-                <span className="pc-badge" style={{ background: color }}>
-                  {platformGlyph(c.platform)}
-                </span>
-              )}
-              <span className="pc-username" style={textColor ? { color: textColor } : undefined}>{c.nickname}</span>
-              {showTimestamp && c.timestamp ? <span className="pc-time">{timeLabel(c.timestamp)}</span> : null}
-            </div>
-            <div className="pc-bubble-line">
-              {showAvatar ? (
-                <img
-                  src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`}
-                  alt={c.nickname}
-                  className="pc-avatar"
-                  style={{ borderColor: color }}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`; }}
-                />
-              ) : (
-                <span className="pc-avatar-fallback" style={{ borderColor: color, color }}>{platformGlyph(c.platform)}</span>
-              )}
-              <div className="pc-bubble" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)`, fontSize: `${fontSize}px`, ...(textColor ? { color: textColor } : null) }}>
-                <PerCharText text={c.comment} delayMs={charDelayMs} durationS={charDurationS} />
+            {showMeta ? (
+              <div className="pc-meta">
+                {showName && showPlatform && (
+                  <img
+                    src={platformLogo(c.platform)}
+                    alt={c.platform || ''}
+                    className="pc-logo"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                )}
+                {showName && showBadges && chatRoles(c).map((r) => (
+                  <span key={r} className={`px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase ${chatRolePill(c.platform, r)}`}>{chatRoleLabel(r)}</span>
+                ))}
+                {showName && (
+                  <span className="pc-username" style={{ color: chatNameColor(c, textColor || '#fff') }}>{c.nickname}</span>
+                )}
+                {showTimestamp && c.timestamp ? <span className="pc-time">{formatChatTime(c.timestamp, timeFormat)}</span> : null}
               </div>
-            </div>
+            ) : null}
+            {showMessage ? (
+              <>
+                <div className="pc-bubble-line">
+                  {showAvatar ? (
+                    <img
+                      src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`}
+                      alt={c.nickname}
+                      className="pc-avatar"
+                      style={{ borderColor: color }}
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`; }}
+                    />
+                  ) : (
+                  <img
+                    src={platformLogo(c.platform)}
+                    alt={c.platform || ''}
+                    className="pc-avatar pc-avatar-logo"
+                    style={{ borderColor: color }}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  )}
+                  <div className="pc-bubble" style={{ background: bubbleBackground, fontSize: `${fontSize}px`, lineHeight: lineSpacing, ...(textColor ? { color: textColor } : null), ...(hl ? { boxShadow: `0 0 0 2px ${accent}, 0 4px 18px rgba(0,0,0,0.25)` } : null) }}>
+                    <EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} perChar={{ delayMs: charDelayMs, durationS: charDurationS }} />
+                  </div>
+                </div>
+                <MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark />
+              </>
+            ) : null}
           </div>
         );
       })}
