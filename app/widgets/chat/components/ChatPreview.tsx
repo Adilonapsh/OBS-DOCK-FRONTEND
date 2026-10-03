@@ -5,7 +5,7 @@ import StandardTheme from '../themes/Standard';
 import { chatThemeComponents } from '../themes/registry';
 import { getBttvGlobalEmotes, type BttvMap } from '../bttv';
 import { ANIM_MAP, ANIM_OUT_MAP, isElegantAnim } from '../../_shared/constants/animations';
-import { parseIgnoreList, passPlatformFilter, passCommandFilter, passIgnoreFilter } from '../themes/chatFilters';
+import { parseIgnoreList, passPlatformFilter, passCommandFilter, passSongCommandFilter, passIgnoreFilter } from '../themes/chatFilters';
 import { useDummyChatSimulation } from '../themes/dummySim';
 import type { ChatItem } from '../themes/types';
 import type { ChatSettings } from '../config';
@@ -40,7 +40,7 @@ export function ChatPreview({ state }: { state: ChatSettings }) {
     holdMs: state.hideAfter > 0 ? state.hideAfter * 1000 : 8000,
     hideDur,
     filter: (c: ChatItem) =>
-      passPlatformFilter(c, pf) && passCommandFilter(c, excludeCmds) && passIgnoreFilter(c, ignoreList),
+      passPlatformFilter(c, pf) && passCommandFilter(c, excludeCmds) && passSongCommandFilter(c) && passIgnoreFilter(c, ignoreList),
   });
   const chats = reversed ? [...sim.chats].reverse() : sim.chats;
 

@@ -17,6 +17,7 @@ import {
   parseIgnoreList,
   passPlatformFilter,
   passCommandFilter,
+  passSongCommandFilter,
   passIgnoreFilter,
 } from '../themes/chatFilters';
 import { useDummyChatSimulation } from '../themes/dummySim';
@@ -81,6 +82,9 @@ function ChatInner() {
   const bubbleOpacity = Math.max(0, Math.min(1, getFloatParam(params, 'bubbleOpacity', 0.9)));
   // General
   const excludeCommands = getBoolParam(params, 'excludeCommands', false);
+  // Custom command music (disamakan dengan setting music widget) — default !song.
+  // !skip selalu disembunyikan juga.
+  const songCommand = getStringParam(params, 'songCommand', getStringParam(params, 'command', '!song')) || '!song';
   const ignoreChatters = getStringParam(params, 'ignoreChatters', '');
   const ignoreList = parseIgnoreList(ignoreChatters);
   const scrollRaw = getStringParam(params, 'scrollDirection', '1');
@@ -117,6 +121,7 @@ function ChatInner() {
   const simFilter = (c: ChatItem) =>
     passPlatformFilter(c, { showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport }) &&
     passCommandFilter(c, excludeCommands) &&
+    passSongCommandFilter(c, songCommand) &&
     passIgnoreFilter(c, ignoreList);
   const sim = useDummyChatSimulation({
     enabled: simulate,
@@ -148,6 +153,8 @@ function ChatInner() {
       const comment = String((data as { comment?: string; message?: string }).comment || (data as { message?: string }).message || '');
       if (!comment) return;
       const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; platform?: string; fromStreamerBot?: boolean; badges?: unknown; color?: unknown; emotes?: unknown };
+      const nick = d.nickname || d.uniqueId || 'User';
+      const pf = d.platform || (d.fromStreamerBot ? 'twitch' : 'tiktok');
       const item: ChatItem = {
         id: `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         nickname: d.nickname || d.uniqueId || 'User',
@@ -171,8 +178,26 @@ function ChatInner() {
       // Filter ala nutty (TikTok chat sumber tetap sama, hanya disaring di sini)
       if (!passPlatformFilter(item, { showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport })) return;
       if (!passCommandFilter(item, excludeCommands)) return;
+      // Command music (!song/!skip/custom) jangan tampil di widget chat
+      if (!passSongCommandFilter(item, songCommand)) return;
       if (!passIgnoreFilter(item, ignoreList)) return;
-      setChats((prev) => [...prev, item].slice(-maxMessages));
+      // Dedup berbasis state (tahan 2 socket / StrictMode): pesan sama persis
+      // (nick+comment+platform) yang sudah ada dalam 3 detik terakhir → skip.
+      let dup = false;
+      setChats((prev) => {
+        const nowTs = Date.now();
+        for (let i = prev.length - 1; i >= 0 && i >= prev.length - 5; i--) {
+          const p = prev[i];
+          if (
+            p.nickname === nick &&
+            p.comment === comment &&
+            p.platform === pf &&
+            nowTs - (p.timestamp || nowTs) < 3000
+          ) { dup = true; return prev; }
+        }
+        return [...prev, item].slice(-maxMessages);
+      });
+      if (dup) return;
       if (hideAfter > 0) {
         setTimeout(() => {
           setExitingIds((prev) => new Set(prev).add(item.id));
@@ -184,12 +209,13 @@ function ChatInner() {
       }
     });
     return () => { socket.disconnect(); };
-  }, [privateKey, maxMessages, hideAfter, hideDur, simulate, showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport, excludeCommands, ignoreChatters]);
+  }, [privateKey, maxMessages, hideAfter, hideDur, simulate, showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport, excludeCommands, songCommand, ignoreChatters]);
 
   // Terapkan filter yang sama untuk mode real agar konsisten dengan simulasi
   const filteredChats = liveChats.filter((c) => {
     if (!passPlatformFilter(c, { showTwitchMessages, showYouTubeMessages, showKickMessages, showTikTokMessages, enableTikTokSupport })) return false;
     if (!passCommandFilter(c, excludeCommands)) return false;
+    if (!passSongCommandFilter(c, songCommand)) return false;
     if (!passIgnoreFilter(c, ignoreList)) return false;
     return true;
   }).slice(-maxMessages);

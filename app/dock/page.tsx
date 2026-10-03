@@ -814,6 +814,8 @@ export default function Home() {
     const tkManualDisconnectRef = useRef(false);
     const tkRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pollSocketRef = useRef<Socket | null>(null);
+    // Dedup chat ganda (echo bridge / event dobel Streamer.bot): user+text+platform yang sama dalam 2.5 dtk diabaikan.
+    const lastChatRef = useRef<{ key: string; at: number } | null>(null);
     const getSocketUrl = () => {
         const fromEnv = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
         if (fromEnv) return fromEnv.replace(/\/$/, '');
@@ -1186,14 +1188,15 @@ export default function Home() {
     // Sebelumnya semua emit sb-* pakai tkSocket saja -> chat/gift/follow/viewer
     // dari Twitch/YouTube tidak sampai ke widget kalau TikTok tidak konek.
     const emitSbBridge = (evt: "sb-chat" | "sb-event" | "sb-viewers", payload: Record<string, unknown>) => {
-        let sent = false;
+        // Kirim sekali saja (prioritaskan pollSocket) agar tidak dobel di widget/dock.
+        // Sebelumnya dikirim via KEDUA socket → backend broadcast 2x → 1 chat tampil 2x.
         try {
-            if (pollSocketRef.current?.connected) { pollSocketRef.current.emit(evt, payload); sent = true; }
+            if (pollSocketRef.current?.connected) { pollSocketRef.current.emit(evt, payload); return true; }
         } catch {}
         try {
-            if (tkSocketRef.current?.connected) { tkSocketRef.current.emit(evt, payload); sent = true; }
+            if (tkSocketRef.current?.connected) { tkSocketRef.current.emit(evt, payload); return true; }
         } catch {}
-        return sent;
+        return false;
     };
     const handleTimerControl = (action: string, extra: Record<string, unknown> = {}) => {
         const room = getTimerRoom();
@@ -1340,6 +1343,13 @@ export default function Home() {
     };
 
     const handleIncomingMessage = (user: string, text: string, platform: ChatMessage["platform"], avatar?: string, emotes?: Array<{ name: string; imageUrl: string }>, opts?: { badges?: ChatBadge[]; color?: string }) => {
+        // Abaikan duplikat: pesan sama (user+text+platform) dalam 2.5 dtk hanya tampil 1x.
+        // Menangani echo bridge (pollSocket→tkSocket) & event dobel Streamer.bot.
+        const now = Date.now();
+        const key = `${String(user || '').toLowerCase()}|${platform}|${String(text || '')}`;
+        const last = lastChatRef.current;
+        if (last && last.key === key && now - last.at < 2500) return;
+        lastChatRef.current = { key, at: now };
         bumpSessionStat("chats", 1);
         setChatMessages(prev => [{
             id: Date.now() + Math.random(),

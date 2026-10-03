@@ -70,6 +70,23 @@ export function passCommandFilter(c: ChatItem, excludeCommands: boolean): boolea
   return !String(c.comment || '').trimStart().startsWith('!');
 }
 
+// Command music widget (!song / !skip / custom) — selalu disembunyikan dari widget chat
+// agar request lagu tidak mengotori overlay chat. Dipakai terpisah dari excludeCommands.
+export function isSongCommand(comment: string, customCmd = '!song'): boolean {
+  const t = String(comment || '').trim().toLowerCase();
+  if (!t.startsWith('!')) return false;
+  const cmds = new Set(['!song', '!skip', String(customCmd || '!song').trim().toLowerCase()]);
+  for (const c of cmds) {
+    if (!c) continue;
+    if (t === c || t.startsWith(`${c} `) || t.startsWith(`${c}:`)) return true;
+  }
+  return false;
+}
+
+export function passSongCommandFilter(c: ChatItem, customCmd = '!song'): boolean {
+  return !isSongCommand(c.comment, customCmd);
+}
+
 export function passIgnoreFilter(c: ChatItem, ignoreList: string[]): boolean {
   if (ignoreList.length === 0) return true;
   const nick = String(c.nickname || '').toLowerCase();

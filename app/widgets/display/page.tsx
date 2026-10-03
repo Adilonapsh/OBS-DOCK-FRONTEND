@@ -183,16 +183,31 @@ function WidgetDisplayContent() {
     socket.on("tiktok-disconnected", () => setTiktokConnected(false));
     socket.on("tiktok-chat", (data: any) => {
       if (!showChat) return;
+      const comment = data.comment || data.message || "";
+      if (!comment) return;
+      // Command music (!song/!skip) jangan tampil di chat
+      const low = String(comment).trim().toLowerCase();
+      if (low === '!song' || low.startsWith('!song ') || low.startsWith('!song:') || low === '!skip' || low.startsWith('!skip ') || low.startsWith('!skip:')) return;
+      const nickname = data.nickname || data.uniqueId || "User";
+      const platform = data.platform || "tiktok";
       const item: ChatItem = {
         id: `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        nickname: data.nickname || data.uniqueId || "User",
-        comment: data.comment || data.message || "",
+        nickname,
+        comment,
         profilePictureUrl: data.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nickname || "U")}&background=111&color=fff`,
-        platform: data.platform || "tiktok",
+        platform,
         timestamp: Date.now(),
       };
-      if (!item.comment) return;
-      setChats(prev => [...prev, item].slice(-6));
+      let dup = false;
+      setChats(prev => {
+        const nowTs = Date.now();
+        for (let i = prev.length - 1; i >= 0 && i >= prev.length - 5; i--) {
+          const p = prev[i];
+          if (p.nickname === nickname && p.comment === comment && p.platform === platform && nowTs - (p.timestamp || nowTs) < 3000) { dup = true; return prev; }
+        }
+        return [...prev, item].slice(-6);
+      });
+      if (dup) return;
       if (hideAfter > 0) setTimeout(() => setChats(prev => prev.filter(c => c.id !== item.id)), hideAfter * 1000);
     });
     socket.on("pinned-chat", (data: any) => {
