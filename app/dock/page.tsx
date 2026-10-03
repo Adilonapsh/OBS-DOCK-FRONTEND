@@ -813,6 +813,9 @@ export default function Home() {
     const hasInitialTkConnectRef = useRef(false);
     const tkManualDisconnectRef = useRef(false);
     const tkRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Username + privateKey terakhir yang diminta — dipakai handler socket agar tidak
+    // pakai payload basi (stale closure) saat ganti akun / reconnect otomatis.
+    const tkWantedRef = useRef<{ username: string; privateKey: string | null }>({ username: "", privateKey: null });
     const pollSocketRef = useRef<Socket | null>(null);
     // Dedup chat ganda (echo bridge / event dobel Streamer.bot): user+text+platform yang sama dalam 2.5 dtk diabaikan.
     const lastChatRef = useRef<{ key: string; at: number } | null>(null);
@@ -1483,6 +1486,20 @@ export default function Home() {
 
         const effectivePrivateKey = privateKey || (typeof window !== "undefined" ? (readStoredDockKey(true)) : null) || privateKey;
         const payload = { username, privateKey: effectivePrivateKey };
+        // Ingat akun yang diminta — handler socket (connect/connected/connecting) pakai ini,
+        // bukan payload closure, agar ganti username tidak pakai akun lama yang basi.
+        tkWantedRef.current = { username, privateKey: effectivePrivateKey };
+        // Langsung tunjukkan status CONNECTING + putus sesi lama kalau ganti akun
+        // (server juga paksa 1 sesi per room, ini agar UI tidak ngegantung di akun lama).
+        const prevSess = readChatSession();
+        const prevUname = (prevSess?.username || "").trim().toLowerCase();
+        if (prevUname && prevUname !== username.trim().toLowerCase()) {
+            try {
+                tkSocketRef.current?.emit("disconnect-tiktok", { username: prevSess?.username, privateKey: effectivePrivateKey });
+            } catch {}
+        }
+        setTiktokStatus("CONNECTING");
+        setTiktokError(null);
 
         if (!tkSocketRef.current) {
             tkSocketRef.current = io(getSocketUrl());
@@ -1491,7 +1508,8 @@ export default function Home() {
 
             tkSocketRef.current.on("connect", () => {
                 addSystemLog("Terhubung ke server TikTok lokal.", "info");
-                tkSocketRef.current?.emit("connect-tiktok", payload);
+                const want = tkWantedRef.current;
+                if (want.username) tkSocketRef.current?.emit("connect-tiktok", { username: want.username, privateKey: want.privateKey });
             });
 
             tkSocketRef.current.on("disconnect", () => {
@@ -1505,7 +1523,7 @@ export default function Home() {
             tkSocketRef.current.on("tiktok-connecting", () => {
                 setTiktokStatus("CONNECTING");
                 setTiktokError(null);
-                addSystemLog(`Menghubungkan ke TikTok @${username}...`, "info");
+                addSystemLog(`Menghubungkan ke TikTok @${tkWantedRef.current.username || username}...`, "info");
             });
 
             tkSocketRef.current.on("tiktok-connected", () => {
@@ -1513,14 +1531,16 @@ export default function Home() {
                 setTiktokError(null);
                 // Sesi baru (username beda / live sebelumnya sudah berakhir) → reset chat + statistik.
                 // Reconnect biasa (sesi sama) → chat tetap.
+                // Pakai akun terakhir yang diminta (bukan closure) agar ganti akun tercatat benar.
+                const wantUser = tkWantedRef.current.username || username;
                 const sess = readChatSession();
-                const uname = username.trim().toLowerCase();
+                const uname = wantUser.trim().toLowerCase();
                 if (!sess || sess.username !== uname || sess.ended) {
-                    startNewChatSession(username);
+                    startNewChatSession(wantUser);
                 } else {
                     writeChatSession({ username: uname, ended: false });
                 }
-                addSystemLog(`Berhasil terhubung ke TikTok Live: @${username}`, "success");
+                addSystemLog(`Berhasil terhubung ke TikTok Live: @${wantUser}`, "success");
             });
 
             tkSocketRef.current.on("tiktok-error", (err: string) => {
