@@ -79,6 +79,27 @@ body {
   background: transparent;
 }
 
+/* Scrollbar body khusus route /designer (diaktifkan via layout). */
+html.designer-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.18) transparent;
+}
+html.designer-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html.designer-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+html.designer-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+  border: 2px solid #0a0a0a;
+}
+html.designer-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.28);
+}
+
 .briefing-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);

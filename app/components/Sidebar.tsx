@@ -15,6 +15,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
@@ -25,6 +26,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
@@ -35,6 +37,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video, active: true },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
@@ -45,6 +48,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog, active: true },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
@@ -55,6 +59,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal, active: true },
@@ -65,6 +70,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers, active: true },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
@@ -85,6 +91,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug, active: true },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/config", label: "Config", icon: SlidersHorizontal },
@@ -97,7 +104,7 @@ export default function Sidebar({
   onClose,
   user,
 }: {
-  active?: "dashboard" | "dock" | "account" | "config" | "monitor" | "overlay" | "widgets" | "integrations";
+  active?: "dashboard" | "dock" | "account" | "config" | "monitor" | "overlay" | "widgets" | "integrations" | "designer";
   open: boolean;
   onClose: () => void;
   user?: any;
