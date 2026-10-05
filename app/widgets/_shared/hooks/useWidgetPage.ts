@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useCopy } from './useCopy';
+import { gooeyToast } from "goey-toast";
 
 // Boilerplate yang sebelumnya diduplikasi di 11 halaman settings widget
 // (user, sidebar, copy URL, show/hide private key, popup load/defaults).
@@ -25,7 +26,7 @@ export function useWidgetPageShell(loadFromUrl: (url: string) => void) {
       loadFromUrl(loadUrl);
       setShowLoadPopup(false);
     } catch {
-      alert('URL tidak valid');
+      gooeyToast.error('URL tidak valid');
     }
   };
 

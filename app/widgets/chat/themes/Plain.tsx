@@ -8,7 +8,7 @@ import { MessageExtras } from './MessageExtras';
 
 export const themeMeta = { value: 'plain', label: 'Plain - Teks Polos' } as const;
 
-export default function PlainTheme({ chats, font, accent, bg, maxMessages, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, fontSize, bgOpacity, textColor, exitingIds, horizontal, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+export default function PlainTheme({ chats, font, accent, bg, maxMessages, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, fontSize, bgOpacity, textColor, exitingIds, horizontal, anim, horizontalAnim, hideAnim, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false, plainTextBorder = false, plainBorderColor = '#000000', plainBorderWidth = 1 }: ChatThemeProps & { plainTextBorder?: boolean; plainBorderColor?: string; plainBorderWidth?: number }) {
   const visible = chats.slice(-maxMessages);
   const useBg = bg && bg !== 'transparent';
   // Logo asetnya hitam: background terang -> tampil apa adanya,
@@ -21,6 +21,22 @@ export default function PlainTheme({ chats, font, accent, bg, maxMessages, showA
   const subtle = isLightRow ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.5)';
   const subtleTime = isLightRow ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.4)';
   const bubbleFallback = useBg ? bg : 'transparent';
+  const plainBorderStyle = plainTextBorder ? ({
+    WebkitTextStroke: `${plainBorderWidth}px ${plainBorderColor}`,
+    paintOrder: 'stroke fill' as const,
+    // fallback shadow for browsers that don't support stroke
+    textShadow: `0 1px 0 ${plainBorderColor}, 1px 0 0 ${plainBorderColor}, -1px 0 0 ${plainBorderColor}, 0 -1px 0 ${plainBorderColor}, 0 0 ${plainBorderWidth * 3}px ${plainBorderColor}`,
+  } as React.CSSProperties) : {};
+  const hide = hideAnim || 'fadeOut';
+  const getAnim = (id: string) => {
+    const isExiting = exitingIds?.has(id);
+    const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim) || 'elegantIn';
+    // fallback plainFadeIn jika anim tidak dikenal (legacy)
+    if (name === 'plainFadeIn') return `plainFadeIn 0.3s ease both`;
+    const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name);
+    const d = isEleg ? '0.62s' : '0.4s';
+    return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`;
+  };
   if (horizontal) {
     return (
       <>
@@ -47,7 +63,7 @@ export default function PlainTheme({ chats, font, accent, bg, maxMessages, showA
                   padding: hasBg ? '2px 6px' : 0,
                   margin: 0,
                   borderRadius: hasBg ? 6 : 0,
-                  animation: 'plainFadeIn 0.3s ease both',
+                  animation: getAnim(c.id),
                   opacity: rowOpacity,
                   transition: 'opacity 0.3s ease',
                   lineHeight: lineSpacing,
@@ -70,13 +86,13 @@ export default function PlainTheme({ chats, font, accent, bg, maxMessages, showA
                   />
                 )}
                 {showUsername && (
-                  <span style={{ color: chatNameColor(c, accent), fontWeight: 700 }}>{showBadges && chatRoles(c).map((r) => (<span key={r} style={{ color: chatRoleColor(r), fontWeight: 800, fontSize: '0.8em' }}>[{chatRoleLabel(r)}] </span>))}{c.nickname}</span>
+                  <span style={{ color: chatNameColor(c, accent), fontWeight: 700, ...(plainTextBorder ? plainBorderStyle : {}) }}>{showBadges && chatRoles(c).map((r) => (<span key={r} style={{ color: chatRoleColor(r), fontWeight: 800, fontSize: '0.8em', ...(plainTextBorder ? plainBorderStyle : {}) }}>[{chatRoleLabel(r)}] </span>))}{c.nickname}</span>
                 )}
                 {showUsername && showMessage && (
                   <span style={{ color: subtle }}> • </span>
                 )}
                 {showMessage && (
-                  <span style={{ color: text }}><EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} /><MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark={!isLightRow} /></span>
+                  <span style={{ color: text, ...(plainTextBorder ? plainBorderStyle : {}) }}><EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} /><MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark={!isLightRow} /></span>
                 )}
                 {showTimestamp && c.timestamp ? (
                   <span style={{ color: subtleTime, fontSize: '0.75em', marginLeft: 6, fontFamily: 'monospace' }}>
@@ -139,13 +155,13 @@ export default function PlainTheme({ chats, font, accent, bg, maxMessages, showA
                 />
               )}
               {showName && (
-                <span style={{ color: chatNameColor(c, accent), fontWeight: 700 }}>{showBadges && chatRoles(c).map((r) => (<span key={r} style={{ color: chatRoleColor(r), fontWeight: 800, fontSize: '0.8em' }}>[{chatRoleLabel(r)}] </span>))}{c.nickname}</span>
+                <span style={{ color: chatNameColor(c, accent), fontWeight: 700, ...(plainTextBorder ? plainBorderStyle : {}) }}>{showBadges && chatRoles(c).map((r) => (<span key={r} style={{ color: chatRoleColor(r), fontWeight: 800, fontSize: '0.8em', ...(plainTextBorder ? plainBorderStyle : {}) }}>[{chatRoleLabel(r)}] </span>))}{c.nickname}</span>
               )}
               {showName && showMessage && (
                 <span style={{ color: subtle }}> • </span>
               )}
               {showMessage && (
-                <span style={{ color: text }}><EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} /><MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark={!isLightRow} /></span>
+                <span style={{ color: text, ...(plainTextBorder ? plainBorderStyle : {}) }}><EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} /><MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark={!isLightRow} /></span>
               )}
               {showTimestamp && c.timestamp ? (
                 <span style={{ color: subtleTime, fontSize: '0.75em', marginLeft: 6, fontFamily: 'monospace' }}>

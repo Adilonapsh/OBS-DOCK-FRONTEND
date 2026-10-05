@@ -10,6 +10,8 @@ import type { DesignerDoc } from './lib/types';
 import { listDocs, createDoc, duplicateDoc, deleteDoc } from './lib/store';
 import { PRESETS } from './lib/presets';
 import PsdImportDialog from './components/PsdImportDialog';
+import ConfirmModal from "../components/ConfirmModal";
+import { gooeyToast } from "goey-toast";
 
 function DesignerList() {
   const router = useRouter();
@@ -21,6 +23,8 @@ function DesignerList() {
   const [newName, setNewName] = useState('Lower Third Baru');
   const [psdFile, setPsdFile] = useState<File | null>(null);
   const psdInputRef = useRef<HTMLInputElement>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     setDocs(listDocs());
@@ -44,9 +48,15 @@ function DesignerList() {
   };
 
   const handleDel = (id: string) => {
-    if (!confirm('Hapus desain ini?')) return;
-    deleteDoc(id);
+    setPendingDeleteId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (!pendingDeleteId) return;
+    deleteDoc(pendingDeleteId);
     setDocs(listDocs());
+    setPendingDeleteId(null);
   };
 
   return (
@@ -151,6 +161,18 @@ function DesignerList() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setPendingDeleteId(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Hapus Desain?"
+        description="Hapus desain ini? Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Hapus"
+        variant="danger"
+      />
     </div>
   );
 }

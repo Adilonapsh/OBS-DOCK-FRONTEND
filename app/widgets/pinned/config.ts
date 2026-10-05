@@ -7,6 +7,7 @@ export const PINNED_THEMES = [
   { value: 'monkey', label: 'Monkey - Teks + Keyboard Mengetik' },
   { value: 'island', label: 'Island - Dynamic Island' },
   { value: 'plain', label: 'Plain - Teks Polos' },
+  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
 ] as const;
 
 export const PINNED_FONTS = WIDGET_FONTS;
@@ -46,6 +47,15 @@ export const PINNED_DEFAULTS = {
   font: 'Outfit',
   fontSize: 15,
   accent: '#8b5cf6',
+  brutalistBg: '#FFFFFF' as string,
+  brutalistTextColor: '#000000' as string,
+  brutalistBadgeBg: '#FFFFFF' as string,
+  brutalistBorderColor: '#000000' as string,
+  brutalistShadow: 6 as number,
+  brutalistHalftone: true as boolean,
+  brutalistTail: true as boolean,
+  brutalistItalic: true as boolean,
+  brutalistUppercase: true as boolean,
   bg: 'transparent',
   bgOpacity: 100,
   showAvatar: true,
@@ -88,6 +98,15 @@ export function buildPinnedUrl(base: string, s: PinnedSettings): string {
   p.set('kbCaps', s.kbCaps || 'dark');
   if (s.mkText) p.set('mkText', s.mkText);
   if (s.mkDim) p.set('mkDim', s.mkDim);
+  p.set('brutalistBg', (s as unknown as { brutalistBg?: string }).brutalistBg || '#FFFFFF');
+  p.set('brutalistTextColor', (s as unknown as { brutalistTextColor?: string }).brutalistTextColor || '#000000');
+  p.set('brutalistBadgeBg', (s as unknown as { brutalistBadgeBg?: string }).brutalistBadgeBg || '#FFFFFF');
+  p.set('brutalistBorderColor', (s as unknown as { brutalistBorderColor?: string }).brutalistBorderColor || '#000000');
+  p.set('brutalistShadow', String((s as unknown as { brutalistShadow?: number }).brutalistShadow ?? 6));
+  p.set('brutalistHalftone', (s as unknown as { brutalistHalftone?: boolean }).brutalistHalftone ? '1' : '0');
+  p.set('brutalistTail', (s as unknown as { brutalistTail?: boolean }).brutalistTail ? '1' : '0');
+  p.set('brutalistItalic', (s as unknown as { brutalistItalic?: boolean }).brutalistItalic ? '1' : '0');
+  p.set('brutalistUppercase', (s as unknown as { brutalistUppercase?: boolean }).brutalistUppercase ? '1' : '0');
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   const q = p.toString();
   return q ? `${base}?${q}` : base;

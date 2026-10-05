@@ -20,6 +20,8 @@ import BezierEditor from '../components/BezierEditor';
 import PsdImportDialog from '../components/PsdImportDialog';
 import { ANIM_MAP, ANIM_OUT_MAP } from '../../widgets/_shared/constants/animations';
 import { WIDGET_FONTS } from '../../widgets/_shared/constants/fonts';
+import { gooeyToast } from "goey-toast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const ANIM_IN_OPTIONS = ['elegant', 'softPop', 'blur', 'luxe', 'slideUp', 'slideLeft', 'slideRight', 'pop', 'fade', 'flip', ''];
 const ANIM_OUT_OPTIONS = ['elegant', 'softPop', 'blur', 'luxe', 'slideUp', 'slideLeft', 'slideRight', 'pop', 'fade', 'flip', ''];
@@ -411,6 +413,8 @@ function Editor() {
   const fileRef = useRef<HTMLInputElement>(null);
   const psdFileRef = useRef<HTMLInputElement>(null);
   const [psdFile, setPsdFile] = useState<File | null>(null);
+  const [showImportConfirm, setShowImportConfirm] = useState(false);
+  const [pendingImport, setPendingImport] = useState<{ layers: DesignerLayer[]; canvasW?: number; canvasH?: number } | null>(null);
   // Zoom canvas independen dari ukuran section (default 50%, tersimpan lokal).
   // 'fit' = ikuti ruang tersisa (opsional, bukan default).
   const ZOOM_STEPS = [25, 50, 75, 100];
@@ -840,7 +844,7 @@ function Editor() {
   const handleImageFile = async (file: File) => {
     if (!selected) return;
     if (file.size > 1_800_000) {
-      alert('Image >1.8MB tidak disarankan (localStorage penuh & URL OBS panjang). Kompres dulu.');
+      gooeyToast.warning('Image >1.8MB tidak disarankan (localStorage penuh & URL OBS panjang). Kompres dulu.');
     }
     const dataUrl = await new Promise<string>((res, rej) => {
       const r = new FileReader();
@@ -903,21 +907,31 @@ function Editor() {
       if (!Array.isArray(layers) || layers.length === 0 || !layers.every((l) => l && typeof (l as DesignerLayer).type === 'string')) {
         throw new Error('invalid');
       }
-      if (!confirm(`Import ${layers.length} layer? Layer saat ini akan diganti.`)) return;
       const full = (Array.isArray(parsed) ? {} : parsed) as { canvasW?: unknown; canvasH?: unknown };
-      pushHistory();
-      patchDoc((d) => ({
-        ...d,
-        layers: layers.map((l) => ({ ...l, id: uid('layer') })),
-        canvasW: typeof full.canvasW === 'number' ? clampCanvas(full.canvasW, 320, 7680) : d.canvasW,
-        canvasH: typeof full.canvasH === 'number' ? clampCanvas(full.canvasH, 320, 4320) : d.canvasH,
-      }));
-      setSelectedId(null);
-      setExtraIds([]);
+      setPendingImport({
+        layers,
+        canvasW: typeof full.canvasW === 'number' ? clampCanvas(full.canvasW, 320, 7680) : undefined,
+        canvasH: typeof full.canvasH === 'number' ? clampCanvas(full.canvasH, 320, 4320) : undefined,
+      });
+      setShowImportConfirm(true);
     } catch {
-      alert('File JSON tidak valid untuk designer.');
+      gooeyToast.error('File JSON tidak valid untuk designer.');
     }
     setOpenMenu(null);
+  };
+
+  const confirmImport = () => {
+    if (!pendingImport) return;
+    pushHistory();
+    patchDoc((d) => ({
+      ...d,
+      layers: pendingImport.layers.map((l) => ({ ...l, id: uid('layer') })),
+      canvasW: pendingImport.canvasW ?? d.canvasW,
+      canvasH: pendingImport.canvasH ?? d.canvasH,
+    }));
+    setSelectedId(null);
+    setExtraIds([]);
+    setPendingImport(null);
   };
 
   if (!doc) {
@@ -1711,6 +1725,18 @@ function Editor() {
           </section>
         </aside>
       </div>
+      <ConfirmModal
+        open={showImportConfirm}
+        onClose={() => {
+          setShowImportConfirm(false);
+          setPendingImport(null);
+        }}
+        onConfirm={confirmImport}
+        title="Import Layer?"
+        description={pendingImport ? `Import ${pendingImport.layers.length} layer? Layer saat ini akan diganti.` : "Import layer? Layer saat ini akan diganti."}
+        confirmLabel="Import"
+        variant="default"
+      />
     </div>
   );
 }

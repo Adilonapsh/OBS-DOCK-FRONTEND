@@ -1,0 +1,26 @@
+/* Brutalist - Neo-Brutalist Live Chat Bubble */
+.brutalist-bubble {
+  position: relative;
+}
+
+.brutal-halftone {
+  background-image: radial-gradient(#000 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+.brut-bubble-tail {
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+@keyframes brutalistIn {
+  from { opacity: 0; transform: translateX(-12px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes brutalistOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: 0; transform: translateX(12px) scale(0.98); }
+}
+
+.brutalist-item {
+  animation: brutalistIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

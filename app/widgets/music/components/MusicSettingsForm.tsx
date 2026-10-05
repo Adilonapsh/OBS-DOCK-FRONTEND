@@ -1,7 +1,7 @@
 'use client';
 
-import { Palette, Type, Clock, Monitor, Music } from 'lucide-react';
-import { MUSIC_THEMES, MUSIC_FONTS, MUSIC_QUEUE_POS, type MusicSettings } from '../config';
+import { Palette, Type, Clock, Monitor, Music, Shield } from 'lucide-react';
+import { MUSIC_THEMES, MUSIC_FONTS, MUSIC_QUEUE_POS, SONG_ROLES, type MusicSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
 
 type Props = {
@@ -40,7 +40,7 @@ export function MusicSettingsForm({ state, update }: Props) {
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Auto Color (dari thumbnail)</span><input type="checkbox" checked={(state as unknown as { autoColor?: boolean }).autoColor !== false} onChange={(e) => update('autoColor' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Judul ikut warna aksen</span><input type="checkbox" checked={(state as unknown as { colorText?: boolean }).colorText !== false} onChange={(e) => update('colorText' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
-          <p className="text-[10px] text-gray-500">Sama seperti Media Player: ambil palet via node-vibrant dari thumbnail YouTube / cover art.</p>
+          <p className="text-[10px] text-gray-500">Ambil warna palette dari thumbnail YouTube / cover art.</p>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Aksen (dipakai bila Auto Color mati)</span>
             <span className="mt-1 flex gap-2">
               <input type="color" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 cursor-pointer shrink-0" />
@@ -134,6 +134,56 @@ export function MusicSettingsForm({ state, update }: Props) {
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Filter NSFW</span><input type="checkbox" checked={state.nsfwFilter} onChange={(e) => update('nsfwFilter', e.target.checked)} className="w-4 h-4 accent-white" /></label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Blacklist Lagu (1 baris 1 kata)</span><textarea value={state.songBlacklist} onChange={(e) => update('songBlacklist', e.target.value)} rows={3} placeholder={"contoh:\ndj remix\nparodi"} className="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono" /></label>
           <p className="text-[10px] text-gray-500">Tersimpan ke server (per room). Lagu yang cocok filter/blacklist ditolak otomatis.</p>
+        </div>
+      </div>
+
+      {/* Role Izin Request */}
+      <div className="space-y-3">
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Shield className="w-4 h-4 text-amber-400" /> Izin Request Lagu</h2>
+        <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+          <p className="text-[10px] text-gray-500">Pilih role yang boleh request. Pilih <b className="text-white">Semua User</b> untuk bebaskan semua, atau pilih spesifik (mod, follower, dll).</p>
+          <div className="space-y-1.5">
+            {SONG_ROLES.map((r) => {
+              const allowed = ((state as unknown as { songAllowedRoles?: string[] }).songAllowedRoles || ['all']) as string[];
+              const isAll = allowed.includes('all');
+              const checked = r.value === 'all' ? isAll : !isAll && allowed.includes(r.value);
+              const disabled = r.value !== 'all' && isAll;
+              return (
+                <label
+                  key={r.value}
+                  className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-colors ${checked ? 'bg-white text-black border-white' : 'bg-black/30 border-white/5 text-white hover:bg-black/40'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <span className={`text-[11px] font-bold ${checked ? 'text-black' : 'text-white'}`}>{r.label}</span>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={disabled}
+                    onChange={(e) => {
+                      let next: string[] = [...allowed];
+                      if (r.value === 'all') {
+                        if (e.target.checked) {
+                          next = ['all'];
+                        } else {
+                          next = [];
+                        }
+                      } else {
+                        if (e.target.checked) {
+                          next = next.filter((v) => v !== 'all');
+                          if (!next.includes(r.value)) next.push(r.value);
+                        } else {
+                          next = next.filter((v) => v !== r.value);
+                          if (next.length === 0) next = ['all'];
+                        }
+                      }
+                      update('songAllowedRoles' as unknown as keyof MusicSettings, next);
+                    }}
+                    className="w-4 h-4 accent-white"
+                  />
+                </label>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-gray-500">Jika <b className="text-white">Semua User</b> aktif, role lain diabaikan. Jika hanya <b className="text-white">Follower</b> dicentang, hanya follower yang bisa <span className="font-mono text-white">!song</span>.</p>
         </div>
       </div>
 

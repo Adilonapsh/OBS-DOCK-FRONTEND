@@ -142,6 +142,28 @@ create table if not exists public.dashboard_layouts (
   updated_at timestamptz default now()
 );
 
+-- 11. HIGHLIGHTS (Sorotan 7 hari - TikTok live terbaru + StreamerBot YouTube/Twitch/Kick)
+create table if not exists public.highlights (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  platform text not null check (platform in ('tiktok','youtube','twitch','kick','facebook','instagram','other')),
+  title text not null default '',
+  thumbnail_url text,
+  video_url text,
+  started_at timestamptz not null default now(),
+  ended_at timestamptz,
+  duration_seconds int,
+  viewers int default 0,
+  source text not null default 'streamerbot' check (source in ('tiktok_live','streamerbot','manual')),
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index if not exists idx_highlights_user on public.highlights(user_id);
+create index if not exists idx_highlights_platform on public.highlights(platform);
+create index if not exists idx_highlights_started on public.highlights(started_at desc);
+create index if not exists idx_highlights_user_started on public.highlights(user_id, started_at desc);
+
 -- ============================================
 -- RLS (Row Level Security) - aktif + policy per user
 -- ============================================
@@ -154,6 +176,7 @@ alter table public.obs_configs enable row level security;
 alter table public.tiktok_configs enable row level security;
 alter table public.streamerbot_configs enable row level security;
 alter table public.dashboard_layouts enable row level security;
+alter table public.highlights enable row level security;
 
 -- profiles: read/update/insert milik sendiri (JANGAN using(true):
 -- kolom private_key tidak boleh terbaca publik via anon key)
@@ -194,6 +217,8 @@ drop policy if exists "sbot_owner" on public.streamerbot_configs;
 create policy "sbot_owner" on public.streamerbot_configs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "layout_owner" on public.dashboard_layouts;
 create policy "layout_owner" on public.dashboard_layouts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "highlights_owner" on public.highlights;
+create policy "highlights_owner" on public.highlights for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ============================================
 -- UPDATED_AT trigger
@@ -213,3 +238,34 @@ drop trigger if exists trg_sbot_updated on public.streamerbot_configs;
 create trigger trg_sbot_updated before update on public.streamerbot_configs for each row execute procedure public.set_updated_at();
 drop trigger if exists trg_layout_updated on public.dashboard_layouts;
 create trigger trg_layout_updated before update on public.dashboard_layouts for each row execute procedure public.set_updated_at();
+drop trigger if exists trg_highlights_updated on public.highlights;
+create trigger trg_highlights_updated before update on public.highlights for each row execute procedure public.set_updated_at();
+
+-- ============================================
+-- HIGHLIGHTS RPC (private_key bypass) - untuk dashboard 7 hari
+-- ============================================
+create or replace function public.get_highlights_by_private_key(p_key text, p_days int default 7)
+returns setof public.highlights language sql security definer as $$
+  select h.* from public.highlights h
+  where h.user_id = public.get_user_id_by_private_key(p_key)
+    and h.started_at >= now() - (p_days || ' days')::interval
+  order by h.started_at desc
+  limit 50;
+$$;
+grant execute on function public.get_highlights_by_private_key(text, int) to anon, authenticated;
+
+create or replace function public.upsert_highlight_by_private_key(
+  p_key text, p_platform text, p_title text, p_thumbnail text, p_video text,
+  p_started timestamptz, p_source text, p_metadata jsonb default '{}'::jsonb
+) returns uuid language plpgsql security definer as $$
+declare uid uuid; nid uuid;
+begin
+  uid := public.get_user_id_by_private_key(p_key);
+  if uid is null then raise exception 'Private key tidak valid'; end if;
+  insert into public.highlights (user_id, platform, title, thumbnail_url, video_url, started_at, source, metadata)
+  values (uid, p_platform, p_title, p_thumbnail, p_video, coalesce(p_started, now()), p_source, coalesce(p_metadata,'{}'::jsonb))
+  returning id into nid;
+  return nid;
+end;
+$$;
+grant execute on function public.upsert_highlight_by_private_key(text, text, text, text, text, timestamptz, text, jsonb) to anon, authenticated;

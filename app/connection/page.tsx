@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Monitor, Radio, Settings, Save, TestTube, Eye, EyeOff, Menu, LayoutDashboard, Server, Plus, Trash2, Video, ExternalLink } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Sidebar from "../components/Sidebar";
+import ThemeToggle from "../components/ThemeToggle";
+import ConfirmModal from "../components/ConfirmModal";
 import { gooeyToast } from "goey-toast";
 import Image from "next/image";
 import { encrypt, decrypt } from "../utils/encryption";
@@ -23,6 +25,9 @@ export default function ConfigPage() {
     const [mtxServers, setMtxServers] = useState<Array<{ id: string; serverName: string; apiUrl: string; playerUrlBase: string; basicUser: string; basicPass: string; showPass?: boolean }>>([]);
     const [mtxShowPass, setMtxShowPass] = useState<Record<string, boolean>>({});
     const [editingMtxId, setEditingMtxId] = useState<string | null>(null);
+    const [deleteMtxId, setDeleteMtxId] = useState<string | null>(null);
+    const uniformBtn = "h-9 bg-white text-black hover:bg-zinc-100 border border-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50";
+    const uniformPrimary = "flex-1 h-9 bg-white text-black hover:bg-zinc-100 border border-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm disabled:opacity-50";
 
     const getEncKey = () => {
         if (typeof window !== "undefined") {
@@ -204,8 +209,13 @@ export default function ConfigPage() {
     const updateMtx = (id: string, field: string, value: string) => {
         setMtxServers(prev => prev.map(s => s.id === id ? { ...s, [field]: value } as any : s));
     };
-    const removeMtx = async (id: string) => {
-        if (!confirm("Hapus server MediaMTX ini?")) return;
+    const removeMtx = (id: string) => {
+        if (!id) return;
+        setDeleteMtxId(id);
+    };
+    const handleConfirmDeleteMtx = async () => {
+        const id = deleteMtxId;
+        if (!id) return;
         const bypassKey = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("key") || sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified")) : null;
         const { data: { session } } = await supabase.auth.getSession();
         if (bypassKey) {
@@ -215,6 +225,7 @@ export default function ConfigPage() {
         }
         setMtxServers(prev => prev.filter(s => s.id !== id));
         gooeyToast.success("Server dihapus");
+        setDeleteMtxId(null);
     };
     const saveMtx = async (srv: typeof mtxServers[number]) => {
         if (!srv.serverName.trim() || !srv.apiUrl.trim()) {
@@ -318,21 +329,24 @@ export default function ConfigPage() {
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex">
-            <Sidebar active="config" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
+            <Sidebar active="connection" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
             <div className="flex-1 flex flex-col min-w-0 lg:pl-[240px]">
                 <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0">
                     <div className="flex items-center gap-3">
                         <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-white">CONFIG</span>
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-white">CONNECTION</span>
                         <span className="hidden md:inline text-[11px] text-gray-500 font-bold">OBS • Streamer.bot • TikTok</span>
                     </div>
-                    <Link href="/dock" className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1"><Monitor className="w-3 h-3" /> Dock</Link>
+                    <div className="flex items-center gap-2">
+                        <ThemeToggle />
+                        <Link href="/dock" className="px-3 py-1.5 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm"><Monitor className="w-3 h-3" /> Dock</Link>
+                    </div>
                 </header>
 
                 <main className="flex-1 p-4 md:p-6 max-w-[900px] w-full mx-auto space-y-6">
                     <div>
-                        <h1 className="text-white font-black text-[16px] uppercase tracking-wide">Konfigurasi</h1>
-                        <p className="text-gray-500 text-[11px] mt-1">Mengambil dan menyimpan seluruh konfigurasi dari <span className="text-white font-bold">database</span>. Mendukung parameter <code className="bg-white/10 px-1 rounded">?key=private_key</code> untuk akses tanpa autentikasi.</p>
+                        <h1 className="text-white font-black text-[16px] uppercase tracking-wide">Connection</h1>
+                        <p className="text-gray-500 text-[11px] mt-1">Konfigurasi koneksi untuk berbagai layanan.</p>
                     </div>
 
                     {/* OBS */}
@@ -364,11 +378,11 @@ export default function ConfigPage() {
                             </div>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" checked={obsConfig.autoConnect} onChange={e => setObsConfig({ ...obsConfig, autoConnect: e.target.checked })} className="w-3 h-3 accent-blue-600" />
-                                <span className="text-[11px] font-bold text-gray-400">Auto Connect saat Dock dibuka</span>
+                                <span className="text-[11px] font-bold text-gray-400">Auto Connect</span>
                             </label>
                             <div className="flex gap-2">
-                                <button onClick={saveObs} disabled={saving === "obs"} className="flex-1 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60"><Save className="w-3.5 h-3.5" /> {saving === "obs" ? "Menyimpan..." : "Simpan OBS"}</button>
-                                <button onClick={testObs} disabled={testing === "obs"} className="px-4 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-[10px] uppercase flex items-center gap-1"><TestTube className="w-3.5 h-3.5" /> {testing === "obs" ? "..." : "Test"}</button>
+                                <button onClick={saveObs} disabled={saving === "obs"} className={uniformPrimary}><Save className="w-3.5 h-3.5" /> {saving === "obs" ? "Menyimpan..." : "Simpan OBS"}</button>
+                                <button onClick={testObs} disabled={testing === "obs"} className={`px-4 ${uniformBtn}`}><TestTube className="w-3.5 h-3.5" /> {testing === "obs" ? "..." : "Test"}</button>
                             </div>
                         </div>
                     </div>
@@ -410,8 +424,8 @@ export default function ConfigPage() {
                                 <span className="text-[11px] font-bold text-gray-400">Auto Connect</span>
                             </label>
                             <div className="flex gap-2">
-                                <button onClick={saveSb} disabled={saving === "sb"} className="flex-1 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60"><Save className="w-3.5 h-3.5" /> {saving === "sb" ? "Menyimpan..." : "Simpan Streamer.bot"}</button>
-                                <button onClick={testSb} disabled={testing === "sb"} className="px-4 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-[10px] uppercase flex items-center gap-1"><TestTube className="w-3.5 h-3.5" /> {testing === "sb" ? "..." : "Test"}</button>
+                                <button onClick={saveSb} disabled={saving === "sb"} className={uniformPrimary}><Save className="w-3.5 h-3.5" /> {saving === "sb" ? "Menyimpan..." : "Simpan Streamer.bot"}</button>
+                                <button onClick={testSb} disabled={testing === "sb"} className={`px-4 ${uniformBtn}`}><TestTube className="w-3.5 h-3.5" /> {testing === "sb" ? "..." : "Test"}</button>
                             </div>
                         </div>
                     </div>
@@ -435,7 +449,7 @@ export default function ConfigPage() {
                                 <input type="checkbox" checked={tiktokConfig.autoConnect} onChange={e => setTiktokConfig({ ...tiktokConfig, autoConnect: e.target.checked })} className="w-3 h-3 accent-blue-600" />
                                 <span className="text-[11px] font-bold text-gray-400">Auto Connect</span>
                             </label>
-                            <button onClick={saveTiktok} disabled={saving === "tt"} className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60"><Save className="w-3.5 h-3.5" /> {saving === "tt" ? "Menyimpan..." : "Simpan TikTok"}</button>
+                            <button onClick={saveTiktok} disabled={saving === "tt"} className={`w-full ${uniformBtn}`}><Save className="w-3.5 h-3.5" /> {saving === "tt" ? "Menyimpan..." : "Simpan TikTok"}</button>
                         </div>
                     </div>
 
@@ -447,7 +461,7 @@ export default function ConfigPage() {
                             </h3>
                             <div className="flex items-center gap-2">
                                 <span className="text-[9px] font-bold text-gray-500">{mtxServers.length} server</span>
-                                <button onClick={addMtxServer} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1"><Plus className="w-3 h-3" /> Tambah Server</button>
+                                <button onClick={addMtxServer} className="px-3 py-1.5 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm"><Plus className="w-3 h-3" /> Tambah Server</button>
                             </div>
                         </div>
                         <div className="p-5 space-y-4">
@@ -472,10 +486,10 @@ export default function ConfigPage() {
                                                     {srv.playerUrlBase ? <div className="text-[9px] text-gray-600 truncate">▶ {srv.playerUrlBase}</div> : null}
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0">
-                                                    <button onClick={() => setEditingMtxId(srv.id)} className="px-3 h-8 rounded-lg bg-white text-black font-black text-[10px] uppercase hover:bg-gray-200">Edit</button>
-                                                    <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white"><TestTube className="w-3.5 h-3.5" /></button>
-                                                    <a href={srv.playerUrlBase || "#"} target="_blank" className={`p-2 rounded-lg border ${srv.playerUrlBase ? "bg-white/5 hover:bg-white/10 border-white/10 text-white" : "bg-black/20 border-white/5 text-gray-600 pointer-events-none"}`}><ExternalLink className="w-3.5 h-3.5" /></a>
-                                                    <button onClick={() => removeMtx(srv.id)} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                    <button onClick={() => setEditingMtxId(srv.id)} className="px-3 h-8 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg text-[10px] font-black uppercase shadow-sm">Edit</button>
+                                                    <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className="w-8 h-8 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg flex items-center justify-center shadow-sm disabled:opacity-50"><TestTube className="w-3.5 h-3.5" /></button>
+                                                    <a href={srv.playerUrlBase || "#"} target="_blank" className={`w-8 h-8 border rounded-lg flex items-center justify-center shadow-sm ${srv.playerUrlBase ? "bg-white text-black hover:bg-zinc-100 border-white" : "bg-white/5 border-white/10 text-gray-400 pointer-events-none"}`}><ExternalLink className="w-3.5 h-3.5" /></a>
+                                                    <button onClick={() => removeMtx(srv.id)} className="w-8 h-8 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg flex items-center justify-center shadow-sm hover:text-red-600 hover:border-red-200"><Trash2 className="w-3.5 h-3.5" /></button>
                                                 </div>
                                             </div>
                                         );
@@ -517,9 +531,9 @@ export default function ConfigPage() {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => saveMtx(srv)} disabled={saving === `mtx-${srv.id}`} className="flex-1 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 disabled:opacity-60"><Save className="w-3 h-3" /> {saving === `mtx-${srv.id}` ? "Menyimpan..." : "Simpan Server"}</button>
-                                            <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className="px-3 h-9 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-[10px] uppercase flex items-center gap-1"><TestTube className="w-3 h-3" /> {testing === `mtx-${srv.id}` ? "..." : "Test API"}</button>
-                                            <a href={srv.playerUrlBase || "#"} target="_blank" className={`px-3 h-9 rounded-lg border text-[10px] font-black uppercase flex items-center gap-1 ${srv.playerUrlBase ? "bg-white/5 hover:bg-white/10 border-white/10 text-white" : "bg-black/20 border-white/5 text-gray-600 cursor-not-allowed pointer-events-none"}`}><ExternalLink className="w-3 h-3" /> Player</a>
+                                            <button onClick={() => saveMtx(srv)} disabled={saving === `mtx-${srv.id}`} className={`flex-1 ${uniformBtn}`}><Save className="w-3 h-3" /> {saving === `mtx-${srv.id}` ? "Menyimpan..." : "Simpan Server"}</button>
+                                            <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className={`px-3 ${uniformBtn}`}><TestTube className="w-3 h-3" /> {testing === `mtx-${srv.id}` ? "..." : "Test API"}</button>
+                                            <a href={srv.playerUrlBase || "#"} target="_blank" className={`px-3 h-9 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 shadow-sm ${srv.playerUrlBase ? "bg-white text-black hover:bg-zinc-100 border-white" : "bg-white/5 border-white/10 text-gray-400 pointer-events-none"}`}><ExternalLink className="w-3 h-3" /> Player</a>
                                         </div>
                                         {srv.apiUrl && srv.playerUrlBase && (
                                             <div className="bg-blue-600/5 border border-blue-600/10 rounded-lg p-2">
@@ -533,6 +547,14 @@ export default function ConfigPage() {
                         </div>
                     </div>
                 </main>
+                <ConfirmModal
+                    open={!!deleteMtxId}
+                    onClose={() => setDeleteMtxId(null)}
+                    onConfirm={handleConfirmDeleteMtx}
+                    title="Hapus server MediaMTX?"
+                    description="Server ini akan dihapus permanen."
+                    variant="danger"
+                />
             </div>
         </div>
     );

@@ -1,6 +1,8 @@
+import { gooeyToast } from "goey-toast";
+
 export const toggleStudioMode = (obsSocket: WebSocket | null) => {
     if (!obsSocket || obsSocket.readyState !== WebSocket.OPEN) {
-        alert("OBS tidak terhubung!");
+        gooeyToast.error("OBS tidak terhubung!");
         return;
     }
 
@@ -16,7 +18,7 @@ export const toggleStudioMode = (obsSocket: WebSocket | null) => {
 
 export const triggerTransition = (obsSocket: WebSocket | null) => {
     if (!obsSocket || obsSocket.readyState !== WebSocket.OPEN) {
-        alert("OBS tidak terhubung!");
+        gooeyToast.error("OBS tidak terhubung!");
         return;
     }
 

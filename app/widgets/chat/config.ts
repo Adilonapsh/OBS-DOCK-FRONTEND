@@ -95,6 +95,20 @@ export const CHAT_DEFAULTS = {
   highlightMentions: false,
   imageEmbedPermissionLevel: '69420' as string, // 40/30/20/15/10/69420 (Nobody = perilaku sekarang)
   showYouTubeLinkPreviews: false,
+  // ---- Plain theme border ----
+  plainTextBorder: false as boolean,
+  plainBorderColor: '#000000' as string,
+  plainBorderWidth: 1 as number,
+  // ---- Brutalist theme (Neo-Brutalist Studio) ----
+  brutalistBg: '#FFFFFF' as string,
+  brutalistTextColor: '#000000' as string,
+  brutalistBadgeBg: '#FFFFFF' as string,
+  brutalistBorderColor: '#000000' as string,
+  brutalistShadow: 6 as number,
+  brutalistHalftone: true as boolean,
+  brutalistTail: true as boolean,
+  brutalistItalic: true as boolean,
+  brutalistUppercase: true as boolean,
   // ---- Filter platform: Twitch ----
   showTwitchMessages: true,
   showTwitchCheers: false,
@@ -198,6 +212,21 @@ export function buildChatUrl(base: string, s: ChatSettings): string {
   p.set('highlightMentions', s.highlightMentions ? '1' : '0');
   p.set('imageEmbedPermissionLevel', String(s.imageEmbedPermissionLevel));
   p.set('showYouTubeLinkPreviews', s.showYouTubeLinkPreviews ? '1' : '0');
+  p.set('plainTextBorder', (s as unknown as { plainTextBorder?: boolean }).plainTextBorder ? '1' : '0');
+  if ((s as unknown as { plainTextBorder?: boolean }).plainTextBorder) {
+    p.set('plainBorderColor', (s as unknown as { plainBorderColor?: string }).plainBorderColor || '#000000');
+    p.set('plainBorderWidth', String((s as unknown as { plainBorderWidth?: number }).plainBorderWidth ?? 1));
+  }
+  // Brutalist
+  p.set('brutalistBg', (s as unknown as { brutalistBg?: string }).brutalistBg || '#FFFFFF');
+  p.set('brutalistTextColor', (s as unknown as { brutalistTextColor?: string }).brutalistTextColor || '#000000');
+  p.set('brutalistBadgeBg', (s as unknown as { brutalistBadgeBg?: string }).brutalistBadgeBg || '#FFFFFF');
+  p.set('brutalistBorderColor', (s as unknown as { brutalistBorderColor?: string }).brutalistBorderColor || '#000000');
+  p.set('brutalistShadow', String((s as unknown as { brutalistShadow?: number }).brutalistShadow ?? 6));
+  p.set('brutalistHalftone', (s as unknown as { brutalistHalftone?: boolean }).brutalistHalftone ? '1' : '0');
+  p.set('brutalistTail', (s as unknown as { brutalistTail?: boolean }).brutalistTail ? '1' : '0');
+  p.set('brutalistItalic', (s as unknown as { brutalistItalic?: boolean }).brutalistItalic ? '1' : '0');
+  p.set('brutalistUppercase', (s as unknown as { brutalistUppercase?: boolean }).brutalistUppercase ? '1' : '0');
   // Twitch
   p.set('showTwitchMessages', s.showTwitchMessages ? '1' : '0');
   p.set('showTwitchCheers', s.showTwitchCheers ? '1' : '0');

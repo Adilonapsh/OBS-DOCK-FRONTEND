@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Monitor, UserCog, LogOut, X, SlidersHorizontal, Video, Layers, Grid2x2, Plug } from "lucide-react";
+import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Layers, Grid2x2, Plug } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -18,7 +18,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
-    { href: "/config", label: "Config", icon: SlidersHorizontal },
+    { href: "/connection", label: "Connection", icon: Wifi },
   ],
   dock: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -29,7 +29,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
-    { href: "/config", label: "Config", icon: SlidersHorizontal },
+    { href: "/connection", label: "Connection", icon: Wifi },
   ],
   monitor: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -40,7 +40,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
-    { href: "/config", label: "Config", icon: SlidersHorizontal },
+    { href: "/connection", label: "Connection", icon: Wifi },
   ],
   account: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -51,8 +51,20 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog, active: true },
-    { href: "/config", label: "Config", icon: SlidersHorizontal },
+    { href: "/connection", label: "Connection", icon: Wifi },
   ],
+  connection: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dock", label: "Dock", icon: Monitor },
+    { href: "/monitor", label: "Monitor", icon: Video },
+    // { href: "/overlay", label: "Overlay", icon: Layers },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    // { href: "/designer", label: "Designer", icon: Layers },
+    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/account", label: "Account", icon: UserCog },
+    { href: "/connection", label: "Connection", icon: Wifi, active: true },
+  ],
+  // alias untuk backward compat /config -> /connection
   config: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dock", label: "Dock", icon: Monitor },
@@ -62,7 +74,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
-    { href: "/config", label: "Config", icon: SlidersHorizontal, active: true },
+    { href: "/connection", label: "Connection", icon: Wifi, active: true },
   ],
   overlay: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -73,7 +85,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
-    { href: "/config", label: "Config", icon: SlidersHorizontal },
+    { href: "/connection", label: "Connection", icon: Wifi },
   ],
   widgets: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -83,7 +95,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/widgets", label: "Widgets", icon: Grid2x2, active: true },
     { href: "/integrations", label: "Integrasi", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
-    { href: "/config", label: "Config", icon: SlidersHorizontal },
+    { href: "/connection", label: "Connection", icon: Wifi },
   ],
   integrations: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -94,7 +106,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Integrasi", icon: Plug, active: true },
     { href: "/account", label: "Account", icon: UserCog },
-    { href: "/config", label: "Config", icon: SlidersHorizontal },
+    { href: "/connection", label: "Connection", icon: Wifi },
   ],
 };
 
@@ -104,7 +116,7 @@ export default function Sidebar({
   onClose,
   user,
 }: {
-  active?: "dashboard" | "dock" | "account" | "config" | "monitor" | "overlay" | "widgets" | "integrations" | "designer";
+  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "integrations" | "designer";
   open: boolean;
   onClose: () => void;
   user?: any;
@@ -113,6 +125,24 @@ export default function Sidebar({
   const supabase = createClient();
   const items = NAV[active] || NAV.dashboard;
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Grouping: Tools (Dock/Monitor/Widgets) dan Setup (Connection/Integrasi)
+  const toolsHrefs = new Set(["/dock", "/monitor", "/widgets"]);
+  const setupHrefs = new Set(["/connection", "/integrations"]);
+  const mainItems = items.filter((i) => !toolsHrefs.has(i.href) && !setupHrefs.has(i.href) && i.href !== "/account");
+  const toolsItems = items
+    .filter((i) => toolsHrefs.has(i.href))
+    .sort((a, b) => {
+      const order = ["/dock", "/monitor", "/widgets"];
+      return order.indexOf(a.href) - order.indexOf(b.href);
+    });
+  const setupItems = items
+    .filter((i) => setupHrefs.has(i.href))
+    .sort((a, b) => {
+      const order = ["/connection", "/integrations"];
+      return order.indexOf(a.href) - order.indexOf(b.href);
+    });
+  const accountItems = items.filter((i) => i.href === "/account");
 
   useEffect(() => {
     const loadAvatar = async () => {
@@ -157,18 +187,74 @@ export default function Sidebar({
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
-                item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <item.icon className="w-4 h-4" /> {item.label}
-            </Link>
-          ))}
+          <div className="space-y-1">
+            {mainItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                  item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <item.icon className="w-4 h-4" /> {item.label}
+              </Link>
+            ))}
+          </div>
+
+          {toolsItems.length > 0 && (
+            <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
+              <p className="px-3 mb-1.5 text-[9px] font-black tracking-[0.18em] text-gray-500 uppercase">Tools</p>
+              {toolsItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                    item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" /> {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {setupItems.length > 0 && (
+            <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
+              <p className="px-3 mb-1.5 text-[9px] font-black tracking-[0.18em] text-gray-500 uppercase">Setup</p>
+              {setupItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                    item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" /> {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {accountItems.length > 0 && (
+            <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
+              {accountItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                    item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" /> {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
+
           <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
             <button
               onClick={handleLogout}

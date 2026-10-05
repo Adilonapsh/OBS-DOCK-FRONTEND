@@ -8,6 +8,7 @@ import {
   Settings2, Activity, AlertCircle, Menu, Plus, Palette, Pencil
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import ThemeToggle from "../components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 import { Suspense } from "react";
 import { themeToQuery, themeStorageKey, cssStorageKey, encodeCss } from "./components/theme";
@@ -390,6 +391,7 @@ function OverlayListing() {
             <span className="hidden md:inline text-[11px] text-gray-500 font-bold">{filtered.length} template • {privateKey ? `${privateKey.slice(0, 8)}…` : "butuh private key"}</span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link href={privateKey ? `/overlay/display?key=${privateKey}` : "/overlay/display"} target="_blank" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-200 rounded-xl text-[10px] font-black uppercase text-black">
               <Eye className="w-3 h-3" /> Preview Full
             </Link>

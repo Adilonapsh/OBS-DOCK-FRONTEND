@@ -390,7 +390,7 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
                  <div className="aspect-video bg-white/5 border border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center text-gray-500 p-6 text-center">
                     <AlertCircle size={32} className="mb-2 text-white/20" />
                     <p className="text-sm font-black uppercase tracking-wide text-white">Streaming URL cannot be guessed</p>
-                    <p className="text-xs max-w-sm mt-1 text-gray-500">Silakan konfigurasikan "Streaming / Player URL Base" untuk server ini di menu <b>Config</b> agar web player dapat mendeteksi jalur streaming.</p>
+                    <p className="text-xs max-w-sm mt-1 text-gray-500">Silakan konfigurasikan "Streaming / Player URL Base" untuk server ini di menu <b>Connection</b> agar web player dapat mendeteksi jalur streaming.</p>
                  </div>
                )
             ) : (

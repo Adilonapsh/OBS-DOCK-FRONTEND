@@ -7,6 +7,7 @@ import {
   RefreshCw, Copy, Check, Eye, EyeOff, Play, X,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import ThemeToggle from "../components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 import { useTtSbMap, TT_SB_KEYS, TT_SB_PARAMS, type TtSbEventKey } from "../hooks/useTtSbMap";
 import { useWidgetSbMap, WIDGET_SB_GROUPS, WIDGET_SB_TEST_ARGS, WIDGET_SB_PARAMS, type WidgetSbEventKey } from "../hooks/useWidgetSbMap";
@@ -488,6 +489,7 @@ export default function IntegrationsPage() {
             <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-white"><Plug className="w-3 h-3" /> INTEGRASI</span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <span className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest ${statusColor}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} /> {sbStatus}
             </span>

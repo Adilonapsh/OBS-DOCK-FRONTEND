@@ -94,6 +94,18 @@ function ChatInner() {
   const highlightMentions = getBoolParam(params, 'highlightMentions', false);
   const imageEmbedPermissionLevel = getStringParam(params, 'imageEmbedPermissionLevel', '69420');
   const showYouTubeLinkPreviews = getBoolParam(params, 'showYouTubeLinkPreviews', false);
+  const plainTextBorder = getBoolParam(params, 'plainTextBorder', false);
+  const plainBorderColor = getStringParam(params, 'plainBorderColor', '#000000');
+  const plainBorderWidth = Math.max(0, Math.min(3, getFloatParam(params, 'plainBorderWidth', 1)));
+  const brutalistBg = getStringParam(params, 'brutalistBg', '#FFFFFF');
+  const brutalistTextColor = getStringParam(params, 'brutalistTextColor', '#000000');
+  const brutalistBadgeBg = getStringParam(params, 'brutalistBadgeBg', '#FFFFFF');
+  const brutalistBorderColor = getStringParam(params, 'brutalistBorderColor', '#000000');
+  const brutalistShadow = Math.max(0, Math.min(14, getIntParam(params, 'brutalistShadow', 6)));
+  const brutalistHalftone = getBoolParam(params, 'brutalistHalftone', true);
+  const brutalistTail = getBoolParam(params, 'brutalistTail', true);
+  const brutalistItalic = getBoolParam(params, 'brutalistItalic', true);
+  const brutalistUppercase = getBoolParam(params, 'brutalistUppercase', true);
   // Filter platform (chat tetap dari tiktok-chat; filter hanya menyembunyikan per platform)
   const showTwitchMessages = getBoolParam(params, 'showTwitchMessages', true);
   const showYouTubeMessages = getBoolParam(params, 'showYouTubeMessages', true);
@@ -264,6 +276,18 @@ function ChatInner() {
     highlightMentions,
     imageEmbedPermissionLevel,
     showYouTubeLinkPreviews,
+    plainTextBorder,
+    plainBorderColor,
+    plainBorderWidth,
+    brutalistBg,
+    brutalistTextColor,
+    brutalistBadgeBg,
+    brutalistBorderColor,
+    brutalistShadow,
+    brutalistHalftone,
+    brutalistTail,
+    brutalistItalic,
+    brutalistUppercase,
   };
 
   const renderTheme = () => {

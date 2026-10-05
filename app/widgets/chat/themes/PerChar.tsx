@@ -45,6 +45,8 @@ export default function PerCharTheme({
   charDelayMs = 25,
   charDurationS = 0.35,
   exitingIds,
+  anim,
+  horizontalAnim,
   hideAnim,
   horizontal,
   inline,
@@ -60,8 +62,15 @@ export default function PerCharTheme({
   highlightMentions = false,
   imageEmbedPermissionLevel = '69420',
   showYouTubeLinkPreviews = false,
-}: PerCharThemeProps) {
+}: PerCharThemeProps & { anim?: string; horizontalAnim?: string }) {
   const hide = hideAnim || 'fadeOut';
+  const getAnim = (id: string) => {
+    const isExiting = exitingIds?.has(id);
+    const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim) || 'elegantIn';
+    const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name);
+    const d = isEleg ? '0.62s' : '0.4s';
+    return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`;
+  };
   // horizontal & inline pakai bubble penuh yang sama — cuma arah alir beda
   const flowCls = horizontal ? 'flex-row flex-wrap items-end' : 'flex-col';
   return (
@@ -75,8 +84,8 @@ export default function PerCharTheme({
         const gradient = `linear-gradient(135deg, ${accent}, ${accent}cc)`;
         const bubbleBackground = useChatBubbles ? bubbleBg(bubbleColor, bubbleOpacity, gradient) : gradient;
         const showMeta = showName || (showTimestamp && !!c.timestamp);
-        return (
-          <div key={c.id} className="pc-row" style={isExiting ? { animation: `${hide} 0.4s ease both` } : undefined}>
+          return (
+            <div key={c.id} className="pc-row" style={{ animation: getAnim(c.id) }}>
             {showMeta ? (
               <div className="pc-meta">
                 {showName && showPlatform && (

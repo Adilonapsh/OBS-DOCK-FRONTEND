@@ -32,6 +32,7 @@ import DockableLayout, {
 import { getSocketUrl } from '../widgets/_shared/utils/socket';
 import { createClient } from '@/utils/supabase/client';
 import { encrypt, decrypt, isEncrypted } from '../utils/encryption';
+import { gooeyToast } from "goey-toast";
 import './mobile-dock.css';
 
 // ---------------------------------------------------------------- types
@@ -851,7 +852,7 @@ export default function MobileDockPage() {
     };
     const ok = await persistConfig(cfg);
     if (ok) setShowChatSettings(false);
-    else alert('Gagal Menyimpan Data.');
+    else gooeyToast.error('Gagal Menyimpan Data.');
   };
 
   const saveBgmRoom = async (nextRoom: string, nextEnabled: boolean) => {
@@ -863,7 +864,7 @@ export default function MobileDockPage() {
     };
     const ok = await persistConfig(cfg);
     if (ok) setShowBgmSettings(false);
-    else alert('Gagal Menyimpan Data.');
+    else gooeyToast.error('Gagal Menyimpan Data.');
   };
 
   // ------------------------------------------------------------ effects
@@ -1126,7 +1127,7 @@ export default function MobileDockPage() {
     try {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen()
-          .catch(() => alert('Fullscreen diblokir / tidak diizinkan.'));
+          .catch(() => gooeyToast.error('Fullscreen diblokir / tidak diizinkan.'));
       } else {
         document.exitFullscreen();
       }

@@ -80,6 +80,15 @@ function PinnedInner() {
   const kbCaps = getStringParam(params, 'kbCaps', 'dark');
   const mkText = getStringParam(params, 'mkText', '#ffffff');
   const mkDim = getStringParam(params, 'mkDim', '#ffffff40');
+  const brutalistBg = getStringParam(params, 'brutalistBg', '#FFFFFF');
+  const brutalistTextColor = getStringParam(params, 'brutalistTextColor', '#000000');
+  const brutalistBadgeBg = getStringParam(params, 'brutalistBadgeBg', '#FFFFFF');
+  const brutalistBorderColor = getStringParam(params, 'brutalistBorderColor', '#000000');
+  const brutalistShadow = Math.max(0, Math.min(14, getIntParam(params, 'brutalistShadow', 6)));
+  const brutalistHalftone = getBoolParam(params, 'brutalistHalftone', true);
+  const brutalistTail = getBoolParam(params, 'brutalistTail', true);
+  const brutalistItalic = getBoolParam(params, 'brutalistItalic', true);
+  const brutalistUppercase = getBoolParam(params, 'brutalistUppercase', true);
   const charDelayMs = Math.max(0, Math.min(500, getIntParam(params, 'charDelayMs', 25)));
   const charDurationS = Math.max(0.05, Math.min(3, parseFloat(params.get('charDurationS') || '') || 0.35));
   const typingMs = Math.max(10, Math.min(500, getIntParam(params, 'typingMs', 60)));
@@ -318,6 +327,31 @@ function PinnedInner() {
               </div>
             </div>
             </SpinWrap>
+          ) : theme === 'brutalist' ? (
+            <div className="w-[420px] max-w-[90vw] flex flex-row gap-4 items-start" style={{ fontFamily }}>
+              {showAvatar && (
+                <div className="block shrink-0 mt-1.5 overflow-hidden" style={{ border: `4px solid ${brutalistBorderColor}`, backgroundColor: '#FFFFFF', boxShadow: `3px 3px 0px 0px ${brutalistBorderColor}`, width: 44, height: 44 }}>
+                  <img src={pinned.profilePictureUrl} alt="" className="w-10 h-10 object-cover rotate-[-2deg] scale-110" onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(pinned.nickname)}&background=222&color=fff`; }} />
+                </div>
+              )}
+              <div className="flex flex-col gap-0 max-w-full items-start flex-1 min-w-0">
+                <div className="flex flex-row flex-wrap items-center gap-2 px-3 py-1 mb-[-4px] z-20 rotate-[-1deg]" style={{ border: `4px solid ${brutalistBorderColor}`, backgroundColor: brutalistBadgeBg, color: brutalistTextColor, fontSize: 12, fontWeight: 800, fontFamily: `'Outfit', sans-serif`, boxShadow: `4px 4px 0px 0px ${brutalistBorderColor}` }}>
+                  <span>{pinned.nickname}</span>
+                  {showPlatform && pinned.platform && <img src={platformLogo(pinned.platform)} alt={pinned.platform} style={{ width: 14, height: 14, objectFit: 'contain' }} />}
+                  {showTimestamp && <span className="text-[10px] font-mono" style={{ color: brutalistTextColor, opacity: 0.6 }}>{timeStr}</span>}
+                </div>
+                <div className="relative p-4 px-6 w-full" style={{ border: `4px solid ${brutalistBorderColor}`, backgroundColor: brutalistBg, color: brutalistTextColor, boxShadow: `${brutalistShadow}px ${brutalistShadow}px 0px 0px ${brutalistBorderColor}`, fontStyle: brutalistItalic ? 'italic' : 'normal', textTransform: brutalistUppercase ? 'uppercase' : 'none', fontWeight: 700, fontSize }}>
+                  {brutalistHalftone && <div className="absolute inset-0 z-0 pointer-events-none" style={{ opacity: 0.05, backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '6px 6px' }} />}
+                  {brutalistTail && (
+                    <>
+                      <div className="absolute w-8 h-8 left-10 -bottom-8" style={{ backgroundColor: brutalistBorderColor, clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
+                      <div className="absolute w-8 h-8 left-10 -bottom-8 translate-y-[-4px]" style={{ backgroundColor: brutalistBg, clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
+                    </>
+                  )}
+                  <div className="relative z-10" style={{ wordBreak: 'break-word' }}>{pinned.comment}</div>
+                </div>
+              </div>
+            </div>
           ) : theme === 'plain' ? (
             <div className="pinned-font max-w-[560px]" style={{ animation: 'fadeIn 0.4s ease both' }}>
               <div className="font-black leading-none" style={{ fontSize, color: accent }}>{pinned.nickname}</div>

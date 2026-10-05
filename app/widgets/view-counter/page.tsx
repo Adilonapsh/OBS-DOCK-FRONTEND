@@ -52,7 +52,7 @@ function ViewCounterSettingsInner() {
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px]">
               <iframe key={simulateUrl} src={simulateUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="view-counter-preview" />
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">TikTok dari roomUser backend • Twitch/YouTube/Kick dari Streamer.bot via dock. Buka dock + konek SB agar data SB masuk.</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">TikTok dari</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
               <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>

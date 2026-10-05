@@ -4,6 +4,7 @@
 import type { ComponentType } from "react";
 import type { ChatThemeProps } from "./types";
 import BoxedTheme from "./Boxed";
+import BrutalistTheme from "./Brutalist";
 import BubbleTheme from "./Bubble";
 import CleanTheme from "./Clean";
 import CuteTheme from "./Cute";
@@ -13,6 +14,7 @@ import StandardTheme from "./Standard";
 
 export const chatThemeComponents: Record<string, ComponentType<ChatThemeProps>> = {
   "boxed": BoxedTheme,
+  "brutalist": BrutalistTheme,
   "bubble": BubbleTheme,
   "clean": CleanTheme,
   "cute": CuteTheme,
@@ -23,6 +25,7 @@ export const chatThemeComponents: Record<string, ComponentType<ChatThemeProps>> 
 
 export const CHAT_THEME_OPTIONS = [
   { value: "boxed", label: "Boxed - Card dengan Header" },
+  { value: "brutalist", label: "Brutalist - Neo Brutalist" },
   { value: "bubble", label: "Bubble - Putih WA-style" },
   { value: "clean", label: "Clean - Baris Minimalis" },
   { value: "cute", label: "Cute - Lavender Pastel" },

@@ -9,6 +9,7 @@ import {
   Music, Cog, GripVertical, Volume2, Pin, QrCode
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import ThemeToggle from "../components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 import { Suspense } from "react";
 import { themeToQuery, themeStorageKey, cssStorageKey, encodeCss } from "../overlay/components/theme";
@@ -634,6 +635,7 @@ function WidgetsListing() {
             <span className="hidden md:inline text-[11px] text-gray-500 font-bold">{filtered.length} widget • {privateKey ? `${showPrivateKey ? privateKey.slice(0, 8) : '••••••••'}…` : "butuh private key"}</span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link href={privateKey ? `/widgets/display?key=${privateKey}&widget=full` : "/widgets/display"} target="_blank" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase border border-white">
               <Eye className="w-3 h-3" /> Preview Full
             </Link>
@@ -717,8 +719,8 @@ function WidgetsListing() {
               const urlPreview = getWidgetUrl(item, false);
               return (
                 <div key={item.id} className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden hover:border-white/15 hover:bg-[#1a1a1a] transition-colors flex flex-col">
-                  {/* thumb */}
-                  <div className="aspect-video bg-black relative overflow-hidden border-b border-white/5">
+                  {/* thumb - keep dark in light mode for widget preview */}
+                  <div className="aspect-video bg-black relative overflow-hidden border-b border-white/5 widget-thumb">
                     <PreviewThumb type={item.preview} />
                   </div>
 

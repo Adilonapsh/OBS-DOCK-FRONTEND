@@ -6,6 +6,8 @@ import Image from "next/image";
 import { User, Mail, Lock, Globe, Key, Copy, RefreshCw, Save, LogOut, LayoutDashboard, Monitor, Eye, EyeOff, Camera, CheckCircle2, Menu } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Sidebar from "../components/Sidebar";
+import ThemeToggle from "../components/ThemeToggle";
+import ConfirmModal from "../components/ConfirmModal";
 
 const TIMEZONES = [
     "Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura",
@@ -22,6 +24,7 @@ export default function AccountPage() {
     const [msg, setMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
     const [showPrivate, setShowPrivate] = useState(false);
     const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
+    const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
     const [form, setForm] = useState({ username: "", email: "", avatar_url: "", timezone: "Asia/Jakarta", private_key: "" });
     const [pass, setPass] = useState({ current: "", next: "", confirm: "", show: false });
     const [uploading, setUploading] = useState(false);
@@ -121,8 +124,11 @@ export default function AccountPage() {
         if (form.private_key) { await navigator.clipboard.writeText(form.private_key); setMsg({ type: "success", text: "Private key dicopy." }); }
     };
 
-    const handleRegenerate = async () => {
-        if (!confirm("Regenerate private key? Key lama tidak bisa dipakai untuk bypass/websocket.")) return;
+    const handleRegenerate = () => {
+        setShowRegenerateConfirm(true);
+    };
+
+    const handleConfirmRegenerate = async () => {
         const { data, error } = await (supabase as any).rpc("regenerate_private_key");
         if (error) { setMsg({ type: "error", text: error.message }); return; }
         const newKey = data as string;
@@ -155,6 +161,7 @@ export default function AccountPage() {
                         <span className="hidden md:inline text-[10px] text-gray-500 font-bold truncate max-w-[200px]">{user?.email}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <Link href="/dashboard" className="hidden sm:inline-flex px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300 items-center gap-1"><LayoutDashboard className="w-3 h-3" /> Dashboard</Link>
                         <Link href="/dock" className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1"><Monitor className="w-3 h-3" /> Dock</Link>
                     </div>
@@ -266,7 +273,7 @@ export default function AccountPage() {
                                     <span className="text-[9px] font-bold text-gray-500">Bypass</span>
                                 </div>
                                 <div className="p-5 space-y-3">
-                                <p className="text-[10px] text-gray-500">Bypass tanpa login + isolasi websocket TikTok per user.</p>
+                                <p className="text-[10px] text-gray-500"></p>
                                 <div className="bg-black/30 border border-white/10 rounded-xl p-3">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[8px] font-black tracking-widest uppercase text-gray-500">Private Key</span>
@@ -275,7 +282,7 @@ export default function AccountPage() {
                                     <code className={`block text-[10px] font-mono-custom break-all p-2 bg-white/5 rounded border border-white/5 ${showPrivate ? "text-cyan-400" : "text-white blur-[4px] select-none"}`}>{showPrivate ? form.private_key : form.private_key ? "•".repeat(32) : "- belum ada -"}</code>
                                     <div className="flex gap-2 mt-3">
                                         <button onClick={async () => { await navigator.clipboard.writeText(form.private_key); setMsg({ type: "success", text: "Private key dicopy." }); }} className="flex-1 h-8 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-[10px] font-black uppercase text-white flex items-center justify-center gap-1"><Copy className="w-3 h-3" /> Copy</button>
-                                        <button onClick={async () => { if (!confirm("Regenerate? Key lama tidak bisa dipakai.")) return; const { data } = await (supabase as any).rpc("regenerate_private_key"); if (data) { setForm(prev => ({ ...prev, private_key: data as string })); setMsg({ type: "success", text: "Private key baru dibuat." }); } }} className="flex-1 h-8 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-[10px] font-black uppercase text-red-400 flex items-center justify-center gap-1"><RefreshCw className="w-3 h-3" /> Regenerate</button>
+                                        <button onClick={() => setShowRegenerateConfirm(true)} className="flex-1 h-8 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-[10px] font-black uppercase text-red-400 flex items-center justify-center gap-1"><RefreshCw className="w-3 h-3" /> Regenerate</button>
                                     </div>
                                 </div>
                                 <div className="bg-blue-600/5 border border-blue-600/10 rounded-lg p-2 text-[10px] text-blue-300">Gunakan <code className="bg-white/10 px-1 rounded">?key=PRIVATE_KEY</code> untuk overlay public tanpa login.</div>
@@ -311,6 +318,16 @@ export default function AccountPage() {
                     </div>
                 </main>
             </div>
+            <ConfirmModal
+                open={showRegenerateConfirm}
+                onClose={() => setShowRegenerateConfirm(false)}
+                onConfirm={handleConfirmRegenerate}
+                title="Regenerate Private Key?"
+                description="Key lama tidak bisa dipakai untuk bypass/websocket. Lanjutkan?"
+                confirmLabel="Regenerate"
+                cancelLabel="Batal"
+                variant="danger"
+            />
         </div>
     );
 }

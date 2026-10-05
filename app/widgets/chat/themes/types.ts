@@ -65,4 +65,16 @@ export type ChatThemeProps = {
   highlightMentions?: boolean;
   imageEmbedPermissionLevel?: string;
   showYouTubeLinkPreviews?: boolean;
+  plainTextBorder?: boolean;
+  plainBorderColor?: string;
+  plainBorderWidth?: number;
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
 };

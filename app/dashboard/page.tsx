@@ -6,6 +6,10 @@ import Image from "next/image";
 import { Monitor, LayoutDashboard, LogOut, Key, Copy, RefreshCw, Users, MessageSquare, Gift, Zap, BarChart3, Settings, ExternalLink, Menu, Eye, EyeOff, Layers, Palette } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Sidebar from "../components/Sidebar";
+import Highlights from "./components/Highlights";
+import ConfirmModal from "../components/ConfirmModal";
+import ThemeToggle from "../components/ThemeToggle";
+import { gooeyToast } from "goey-toast";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -17,6 +21,7 @@ export default function DashboardPage() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showPrivate, setShowPrivate] = useState(false);
     const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
+    const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -85,6 +90,7 @@ export default function DashboardPage() {
                     <span className="hidden md:inline text-[10px] text-gray-500 font-bold">{user?.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
+                    <ThemeToggle />
                     <Link href="/dock" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black border border-white rounded-lg text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Dock</Link>
                     <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300">
                         <LogOut className="w-3 h-3" /> Keluar
@@ -92,7 +98,7 @@ export default function DashboardPage() {
                 </div>
             </header>
 
-            <main className="flex-1 p-4 md:p-6 max-w-[1100px] w-full mx-auto space-y-6">
+            <main className="flex-1 p-4 md:p-6 max-w-8xl w-full mx-auto space-y-6">
                 <div className="bg-[#161616] border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-white font-black text-[18px] tracking-tight">Halo, {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "Streamer"}</h1>
@@ -102,6 +108,8 @@ export default function DashboardPage() {
                         <Monitor className="w-4 h-4" /> Buka Dock
                     </Link>
                 </div>
+
+                <Highlights />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="lg:col-span-2 bg-[#161616] border border-white/10 rounded-2xl p-5 space-y-3">
@@ -115,8 +123,8 @@ export default function DashboardPage() {
                             <button onClick={handleCopy} className="shrink-0 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1"><Copy className="w-3 h-3" /> {copied ? "Copied" : "Copy"}</button>
                         </div>
                         <div className="flex gap-2">
-                            <Link href={`/dock?key=${privateKey}`} className="flex-1 h-9 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white"><Monitor className="w-3 h-3" /> Buka Dock (butuh verifikasi)</Link>
-                            <button onClick={async () => { if (confirm("Regenerate private key?")) { const { data } = await (supabase as any).rpc("regenerate_private_key"); if (data) setPrivateKey(data as string); } }} className="px-3 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[10px] font-black uppercase text-red-400 flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Regenerate</button>
+                            <Link href={`/dock?key=${privateKey}`} className="flex-1 h-9 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white"><Monitor className="w-3 h-3" /> Buka Dock</Link>
+                            <button onClick={() => setShowRegenerateConfirm(true)} className="px-3 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[10px] font-black uppercase text-red-400 flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Regenerate</button>
                         </div>
                     </div>
 
@@ -155,6 +163,7 @@ export default function DashboardPage() {
                     </Link>
                 </div>
 
+
                 <div className="bg-[#161616] border border-white/10 rounded-xl p-4 flex items-center justify-between">
                     <span className="text-[10px] text-gray-600 font-bold uppercase">© 2026 OBS Overlays</span>
                     <div className="flex items-center gap-3 text-[10px] font-black uppercase">
@@ -173,6 +182,21 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 )}
+                <ConfirmModal
+                    open={showRegenerateConfirm}
+                    onClose={() => setShowRegenerateConfirm(false)}
+                    onConfirm={async () => {
+                        const { data } = await (supabase as any).rpc("regenerate_private_key");
+                        if (data) {
+                            setPrivateKey(data as string);
+                            gooeyToast.success("Private key berhasil diregenerasi");
+                        }
+                    }}
+                    title="Regenerate Private Key?"
+                    description="Key lama tidak bisa dipakai untuk bypass/websocket. Lanjutkan?"
+                    confirmLabel="Regenerate"
+                    variant="danger"
+                />
             </main>
             </div>
         </div>

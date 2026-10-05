@@ -22,6 +22,15 @@ export const MUSIC_QUEUE_POS = [
   { value: 'right', label: 'Kanan' },
 ] as const;
 
+export const SONG_ROLES = [
+  { value: 'all', label: 'Semua User' },
+  { value: 'broadcaster', label: 'Broadcaster / Owner' },
+  { value: 'mod', label: 'Moderator' },
+  { value: 'vip', label: 'VIP' },
+  { value: 'sub', label: 'Subscriber / Member' },
+  { value: 'follower', label: 'Follower' },
+] as const;
+
 export const MUSIC_DEFAULTS = {
   pos: 'bl' as string,
   theme: 'standard' as string,
@@ -34,6 +43,7 @@ export const MUSIC_DEFAULTS = {
   command: '!song',
   nsfwFilter: true,
   songBlacklist: '',
+  songAllowedRoles: ['all'] as string[],
   queuePos: 'bottom' as string,
   maxWidth: 500,
   verticalAlignment: 'align-to-center' as string,

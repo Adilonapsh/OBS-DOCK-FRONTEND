@@ -24,6 +24,8 @@ import { resolveSbArgs } from "../hooks/sbArgs";
 import { ChatMessage, ChatBadge, DockStatus } from "../types/dockTypes";
 import { decrypt, isEncrypted } from "../utils/encryption";
 import { gooeyToast } from "goey-toast";
+import ThemeToggle from "../components/ThemeToggle";
+import ConfirmModal from "../components/ConfirmModal";
 
 // Fallback key persisten: sessionStorage (per-tab) → localStorage (antar-tab) → ?key= di URL.
 // Dipakai semua getRoom agar socket tetap di room yang benar walau state belum terisi.
@@ -671,17 +673,19 @@ export default function Home() {
     };
 
     const handleRegeneratePrivateKey = async () => {
-        if (!confirm("Regenerate private key? Koneksi TikTok lama yang pakai key lama akan terputus.")) return;
-        const { data, error } = await (supabase as any).rpc("regenerate_private_key");
-        if (!error && data) {
-            setPrivateKey(data as string);
-            setPrivateKeyVerified(false);
-            setPrivateKeyInput("");
-            if (typeof window !== "undefined") {
-                sessionStorage.removeItem("dock_private_verified");
-                try { localStorage.removeItem("dock_private_key"); } catch {}
+        showConfirm({title:"Regenerate private key?", description:"Koneksi TikTok lama yang pakai key lama akan terputus.", variant:"danger", onConfirm: async () => {
+            const { data, error } = await (supabase as any).rpc("regenerate_private_key");
+            if (!error && data) {
+                setPrivateKey(data as string);
+                setPrivateKeyVerified(false);
+                setPrivateKeyInput("");
+                if (typeof window !== "undefined") {
+                    sessionStorage.removeItem("dock_private_verified");
+                    try { localStorage.removeItem("dock_private_key"); } catch {}
+                }
             }
-        }
+        }});
+        return;
     };
 
     const twitchViewerCount = Object.values(viewerData).filter(item => item.platform === "twitch").length;
@@ -837,6 +841,8 @@ export default function Home() {
     const [privateKeyInput, setPrivateKeyInput] = useState("");
     const [privateKeyError, setPrivateKeyError] = useState("");
     const [privateKeyLoading, setPrivateKeyLoading] = useState(false);
+    const [confirmState, setConfirmState] = useState<{open:boolean, title:string, description:string, onConfirm:()=>void, variant?: "danger"|"default"}>({open:false, title:"", description:"", onConfirm:()=>{}});
+    const showConfirm = (opts: {title:string, description?:string, onConfirm:()=>void, variant?: "danger"|"default"}) => setConfirmState({open:true, title: opts.title, description: opts.description || "", onConfirm: opts.onConfirm, variant: opts.variant});
 
     useEffect(() => {
         const s = io(getSocketUrl(), { transports: ['websocket','polling'] as const });
@@ -1017,6 +1023,7 @@ export default function Home() {
 
     const headerControlClass = "dock-control-btn flex items-center justify-center gap-2";
     const connectButtonClass = "system-connect-btn flex items-center justify-center rounded-lg text-white shadow-[0_0_10px_rgba(59,130,246,0.2)]";
+    const systemUniformBtn = "w-full h-9 bg-white text-black hover:bg-zinc-100 border border-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed";
 
     const toggleSimulation = () => {
         if (status.obsStatus === "SIMULATED") {
@@ -1043,12 +1050,12 @@ export default function Home() {
         const game = gameValue.trim();
 
         if (!title) {
-            alert("Judul stream tidak boleh kosong!");
+            gooeyToast.error("Judul stream tidak boleh kosong!");
             return;
         }
 
         if (!sbSocketRef.current || sbSocketRef.current.readyState !== WebSocket.OPEN) {
-            alert("Streamer.bot tidak terhubung!");
+            gooeyToast.error("Streamer.bot tidak terhubung!");
             return;
         }
 
@@ -1077,17 +1084,17 @@ export default function Home() {
         const duration = pollDuration;
 
         if (!question || options.length === 0) {
-            alert("Pertanyaan dan opsi harus diisi!");
+            gooeyToast.error("Pertanyaan dan opsi harus diisi!");
             return;
         }
 
         if (duration < 15) {
-            alert("Durasi minimal 15 detik!");
+            gooeyToast.error("Durasi minimal 15 detik!");
             return;
         }
 
         if (!sbSocketRef.current || sbSocketRef.current.readyState !== WebSocket.OPEN) {
-            alert("Streamer.bot tidak terhubung!");
+            gooeyToast.error("Streamer.bot tidak terhubung!");
             return;
         }
 
@@ -1128,8 +1135,8 @@ export default function Home() {
     };
     const handleStopPoll = () => {
         const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
-        if (!confirm('Stop polling? Hasil akhir akan tetap tampil di OBS sampai poll baru.')) return;
-        pollSocketRef.current?.emit('poll-end', { privateKey: room });
+        showConfirm({title:"Stop polling?", description:"Hasil akhir akan tetap tampil di OBS sampai poll baru.", onConfirm: () => { pollSocketRef.current?.emit('poll-end', { privateKey: room }); }});
+        return;
     };
     const handleClearPoll = () => {
         const room = activePoll?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
@@ -1160,7 +1167,7 @@ export default function Home() {
     }
     const handleAddTask = () => {
         const text = newTaskText.trim();
-        if (!text) { alert('Teks task tidak boleh kosong!'); return; }
+        if (!text) { gooeyToast.error('Teks task tidak boleh kosong!'); return; }
         const room = privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         pollSocketRef.current?.emit('task-add', { privateKey: room, text });
         setNewTaskText("");
@@ -1180,10 +1187,12 @@ export default function Home() {
         pollSocketRef.current?.emit('task-move', { privateKey: room, from, to });
     }
     const handleClearTasks = () => {
-        if (!confirm('Hapus semua tasks?')) return;
-        const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
-        pollSocketRef.current?.emit('task-clear', { privateKey: room });
-        setActiveTasks(null);
+        showConfirm({title:"Hapus semua tasks?", description:"Semua task akan dihapus permanen.", variant:"danger", onConfirm: () => {
+            const room = activeTasks?.room || privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
+            pollSocketRef.current?.emit('task-clear', { privateKey: room });
+            setActiveTasks(null);
+        }});
+        return;
     }
     const getTimerRoom = () => privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
     // Bridge Streamer.bot -> backend -> widget. Pakai pollSocket (selalu konek),
@@ -1216,42 +1225,42 @@ export default function Home() {
     };
 
     const toggleStream = () => {
-        if (!window.confirm("Apakah Anda yakin ingin memulai/menghentikan Streaming?")) return;
-
-        if (obsSocketRef.current && obsSocketRef.current.readyState === WebSocket.OPEN) {
-            obsSocketRef.current.send(JSON.stringify({
-                op: 6,
-                d: {
-                    requestType: "ToggleStream",
-                    requestId: "toggle_stream",
-                },
-            }));
-            return;
-        }
-
-        alert("OBS tidak terhubung!");
+        showConfirm({title:"Toggle Streaming?", description:"Apakah Anda yakin ingin memulai/menghentikan Streaming?", onConfirm: () => {
+            if (obsSocketRef.current && obsSocketRef.current.readyState === WebSocket.OPEN) {
+                obsSocketRef.current.send(JSON.stringify({
+                    op: 6,
+                    d: {
+                        requestType: "ToggleStream",
+                        requestId: "toggle_stream",
+                    },
+                }));
+                return;
+            }
+            gooeyToast.error("OBS tidak terhubung!");
+        }});
+        return;
     }
 
     const toggleRecord = () => {
-        if (!window.confirm("Apakah Anda yakin ingin memulai/menghentikan Recording?")) return;
-
-        if (obsSocketRef.current && obsSocketRef.current.readyState === WebSocket.OPEN) {
-            obsSocketRef.current.send(JSON.stringify({
-                op: 6,
-                d: {
-                    requestType: "ToggleRecord",
-                    requestId: "toggle_record",
-                },
-            }));
-            return;
-        }
-
-        alert("OBS tidak terhubung!");
+        showConfirm({title:"Toggle Recording?", description:"Apakah Anda yakin ingin memulai/menghentikan Recording?", onConfirm: () => {
+            if (obsSocketRef.current && obsSocketRef.current.readyState === WebSocket.OPEN) {
+                obsSocketRef.current.send(JSON.stringify({
+                    op: 6,
+                    d: {
+                        requestType: "ToggleRecord",
+                        requestId: "toggle_record",
+                    },
+                }));
+                return;
+            }
+            gooeyToast.error("OBS tidak terhubung!");
+        }});
+        return;
     }
 
     const toggleStudioMode = () => {
         if (!obsSocketRef.current || obsSocketRef.current.readyState !== WebSocket.OPEN) {
-            alert("OBS tidak terhubung!");
+            gooeyToast.error("OBS tidak terhubung!");
             return;
         }
 
@@ -1269,7 +1278,7 @@ export default function Home() {
 
     const triggerTransition = () => {
         if (!obsSocketRef.current || obsSocketRef.current.readyState !== WebSocket.OPEN) {
-            alert("OBS tidak terhubung!");
+            gooeyToast.error("OBS tidak terhubung!");
             return;
         }
 
@@ -1286,7 +1295,7 @@ export default function Home() {
 
     const toggleVirtualCam = () => {
         if (!obsSocketRef.current || obsSocketRef.current.readyState !== WebSocket.OPEN) {
-            alert("OBS tidak terhubung!");
+            gooeyToast.error("OBS tidak terhubung!");
             return;
         }
         obsSocketRef.current.send(JSON.stringify({
@@ -1300,7 +1309,7 @@ export default function Home() {
 
     const toggleReplayBuffer = () => {
         if (!obsSocketRef.current || obsSocketRef.current.readyState !== WebSocket.OPEN) {
-            alert("OBS tidak terhubung!");
+            gooeyToast.error("OBS tidak terhubung!");
             return;
         }
         obsSocketRef.current.send(JSON.stringify({
@@ -1467,13 +1476,13 @@ export default function Home() {
         clearTikTokRetry();
         const username = tiktokConfig.username.trim();
         if (!username) {
-            alert("Silakan masukkan username TikTok!");
+            gooeyToast.error("Silakan masukkan username TikTok!");
             return;
         }
         const effectiveKey = privateKey || (typeof window !== "undefined" ? (readStoredDockKey(true)) : null);
         const isVerified = privateKeyVerified || !!effectiveKey;
         if (!effectiveKey || !isVerified) {
-            alert("Akses dock butuh private key. Silakan verifikasi private key di atas.");
+            gooeyToast.error("Akses dock butuh private key. Silakan verifikasi private key di atas.");
             setPrivateKeyError("Verifikasi private key diperlukan untuk koneksi TikTok.");
             return;
         }
@@ -1541,6 +1550,9 @@ export default function Home() {
                     writeChatSession({ username: uname, ended: false });
                 }
                 addSystemLog(`Berhasil terhubung ke TikTok Live: @${wantUser}`, "success");
+                // Auto-log highlight TikTok hari ini dari livestream (data asli via dock connect)
+                // Thumbnail bisa diambil dari roomUser nanti, untuk sekarang pakai null (akan fallback)
+                logHighlightForToday("tiktok", `Live TikTok @${wantUser}`, null, `https://www.tiktok.com/@${wantUser}/live`, "tiktok_live", { username: wantUser, live: true });
             });
 
             tkSocketRef.current.on("tiktok-error", (err: string) => {
@@ -1729,7 +1741,7 @@ export default function Home() {
     };
 
     const clearBriefing = () => {
-        if (typeof window !== "undefined" && window.confirm("Hapus semua data briefing?")) {
+        showConfirm({title:"Hapus semua data briefing?", description:"Semua data briefing akan dihapus permanen.", variant:"danger", onConfirm: () => {
             const defaultBriefing = {
                 title: "",
                 goal: "",
@@ -1737,8 +1749,8 @@ export default function Home() {
                 outline: [],
             };
             setBriefing(defaultBriefing);
-            localStorage.removeItem("streamBriefing");
-        }
+            if (typeof window !== "undefined") localStorage.removeItem("streamBriefing");
+        }});
     };
 
     const updateBriefingField = (field: keyof typeof briefing, value: unknown) => {
@@ -1825,6 +1837,87 @@ export default function Home() {
     // Logging helper to match legacy behavior
     const addSystemLog = (msg: string, type: "info" | "success" | "error" | "warn" = "info") => {
         console.log(`[${type.toUpperCase()}] ${msg}`);
+    };
+
+    // Auto-log highlight per hari jika ada livestream (TikTok via dock connect, YouTube via StreamerBot BroadcastStarted)
+    // Sesuai docs.streamer.bot: YouTube BroadcastStarted = broadcast {id,title,channelId,...}
+    const logHighlightForToday = async (
+        platform: "tiktok" | "youtube" | "twitch" | "kick" | "other",
+        title: string,
+        thumbnail_url: string | null,
+        video_url: string | null,
+        source: "tiktok_live" | "streamerbot",
+        metadata: any = {}
+    ) => {
+        try {
+            const effectiveKey = privateKey || (typeof window !== "undefined" ? readStoredDockKey(true) : "");
+            const supabaseLocal = createClient();
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayIso = todayStart.toISOString();
+
+            // Cek sudah ada highlight hari ini untuk platform ini (hindari duplikat)
+            let exists = false;
+            try {
+                if (effectiveKey) {
+                    const { data } = await (supabaseLocal as any).rpc("get_highlights_by_private_key", { p_key: effectiveKey, p_days: 1 });
+                    if (Array.isArray(data)) {
+                        exists = data.some((h: any) => h.platform === platform && new Date(h.started_at).getTime() >= todayStart.getTime());
+                    }
+                } else {
+                    const { data: sess } = await supabaseLocal.auth.getSession();
+                    if (sess.session) {
+                        const { data } = await supabaseLocal.from("highlights").select("id,started_at").eq("platform", platform).gte("started_at", todayIso).limit(1);
+                        exists = !!(data && (data as any).length > 0);
+                    }
+                }
+            } catch {}
+            if (exists) {
+                console.log(`[highlight] skip ${platform} - already logged today`);
+                return;
+            }
+
+            const startedAt = new Date().toISOString();
+            if (effectiveKey) {
+                const { error } = await (supabaseLocal as any).rpc("upsert_highlight_by_private_key", {
+                    p_key: effectiveKey,
+                    p_platform: platform,
+                    p_title: title,
+                    p_thumbnail: thumbnail_url,
+                    p_video: video_url,
+                    p_started: startedAt,
+                    p_source: source,
+                    p_metadata: metadata,
+                });
+                if (!error) addSystemLog(`✅ [highlight] ${platform} tersimpan: ${title}`, "success");
+                else console.warn("highlight upsert error", error);
+            } else {
+                const { data: sess } = await supabaseLocal.auth.getSession();
+                const userId = sess.session?.user?.id;
+                if (!userId) {
+                    // guest: simpan lokal juga
+                    try {
+                        const cur = JSON.parse(localStorage.getItem("highlights-cache") || "[]");
+                        cur.push({ id: `local-${Date.now()}`, platform, title, thumbnail_url, video_url, started_at: startedAt, source, metadata });
+                        localStorage.setItem("highlights-cache", JSON.stringify(cur.slice(-50)));
+                    } catch {}
+                    return;
+                }
+                const { error } = await supabaseLocal.from("highlights").insert({
+                    user_id: userId,
+                    platform,
+                    title,
+                    thumbnail_url,
+                    video_url,
+                    started_at: startedAt,
+                    source,
+                    metadata,
+                } as any);
+                if (!error) addSystemLog(`✅ [highlight] ${platform} tersimpan: ${title}`, "success");
+            }
+        } catch (e) {
+            console.warn("logHighlightForToday error", e);
+        }
     };
 
     const getTiktokButtonText = () => {
@@ -2375,7 +2468,7 @@ export default function Home() {
                 events: {
                     Twitch: ["ChatMessage", "Follow", "StreamOnline", "StreamOffline", "Cheer", "Sub", "ReSub", "GiftSub", "GiftBomb", "GiftPaidUpgrade", "PrimePaidUpgrade", "RewardRedemption", "PresentViewers"],
                     YouTube: ["Message", "BroadcastStarted", "BroadcastUpdated", "BroadcastEnded", "BroadcastAdded", "BroadcastMonitoringStarted", "BroadcastMonitoringEnded", "StatisticsUpdated", "PresentViewers", "SuperChat", "SuperSticker", "NewSponsor", "MembershipGift", "GiftMembershipReceived", "MemberMileStone", "NewSubscriber"],
-                    Kick: ["Follow", "Subscription", "Resubscription", "GiftSubscription", "MassGiftSubscription"],
+                    Kick: ["ChatMessage", "Follow", "StreamOnline", "StreamOffline", "Subscription", "Resubscription", "GiftSubscription", "MassGiftSubscription", "ChannelUpdate", "PresentViewers"],
                 },
             }));
             // Verifikasi akun YouTube terhubung di Streamer.bot + ambil viewer aktif awal.
@@ -2449,6 +2542,27 @@ export default function Home() {
                         }
                         if (platform === "twitch" && ["StreamOnline", "PresentViewers"].includes(type)) {
                             setTwitchLive(true);
+                        }
+
+                        // Auto-log highlight hari ini (YouTube via StreamerBot BroadcastStarted, Twitch/Kick StreamOnline)
+                        // Docs: https://docs.streamer.bot/api/websocket → YouTube BroadcastStarted = {broadcast:{id,title,...}}, Twitch StreamOnline = {title,userName,...}
+                        if (platform === "youtube" && type === "BroadcastStarted") {
+                            const b: any = (data as any).broadcast || data;
+                            const vid = b.id || b.broadcastId || "";
+                            const title = b.title || `YouTube Live ${vid}`.trim() || "YouTube Live";
+                            const thumb = vid ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg` : null;
+                            const url = vid ? `https://www.youtube.com/watch?v=${vid}` : null;
+                            logHighlightForToday("youtube", title, thumb, url, "streamerbot", { broadcast: b, platform: "youtube" });
+                        }
+                        if (platform === "twitch" && type === "StreamOnline") {
+                            const tTitle = (data as any).title || `Twitch Live ${(data as any).userName || ""}`.trim() || "Twitch Live";
+                            const tThumb = (data as any).thumbnailUrl || null;
+                            const tUrl = (data as any).url || null;
+                            logHighlightForToday("twitch", tTitle, tThumb, tUrl, "streamerbot", { data, platform: "twitch" });
+                        }
+                        if (platform === "kick" && type === "StreamOnline") {
+                            const kTitle = (data as any).title || `Kick Live ${(data as any).userName || ""}`.trim() || "Kick Live";
+                            logHighlightForToday("kick", kTitle, null, null, "streamerbot", { data, platform: "kick" });
                         }
 
                         // YouTube StatisticsUpdated: payload FLAT -> { concurrentViewers, likeCount, viewCount, ... }
@@ -2995,7 +3109,7 @@ export default function Home() {
                                         )}
                                     </div>
                                     <span className="text-[8px] font-mono-custom text-gray-500 shrink-0">{filteredChatMessages.length}/{chatMessages.length}</span>
-                                    <button onClick={() => { if (chatMessages.length === 0 || confirm("Bersihkan chat sesi ini?")) setChatMessages([]); }} className="shrink-0 p-1.5 text-gray-500 hover:text-red-400 hover:bg-white/10 rounded transition-colors" title="Bersihkan chat sesi ini">
+                                    <button onClick={() => { if (chatMessages.length===0) setChatMessages([]); else showConfirm({title:"Bersihkan chat sesi ini?", description:"Semua chat sesi ini akan dihapus.", variant:"danger", onConfirm:()=>setChatMessages([])}); }} className="shrink-0 p-1.5 text-gray-500 hover:text-red-400 hover:bg-white/10 rounded transition-colors" title="Bersihkan chat sesi ini">
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
@@ -3354,6 +3468,15 @@ export default function Home() {
 
                         {activeTab === "system" && (
                             <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2 min-h-0">
+                                <h4 className="text-gray-500 text-[9px] font-black uppercase px-1">Tampilan</h4>
+                                <div className="stat-card flex items-center justify-between py-3">
+                                    <div>
+                                        <span className="text-white font-black uppercase text-[11px]">Tema</span>
+                                        <p className="text-gray-500 text-[10px] mt-0.5">Light / Dark — tersimpan otomatis</p>
+                                    </div>
+                                    <ThemeToggle />
+                                </div>
+
                                 <h4 className="text-gray-500 text-[9px] font-black uppercase px-1">Dashboard Layout</h4>
                                 <div className="stat-card space-y-3">
                                     <div className="flex justify-between items-center py-1">
@@ -3447,9 +3570,9 @@ export default function Home() {
                                     </div>
                                     <button
                                         onClick={status.obsStatus === "CONNECTED" ? disconnectOBS : reconnectOBS}
-                                        className={`${connectButtonClass} w-full bg-blue-600 hover:bg-blue-500`}
+                                        className={systemUniformBtn}
                                     >
-                                        {status.obsStatus === "CONNECTED" ? "Disconnect" : "Connect"}
+                                        {status.obsStatus === "CONNECTED" ? "Disconnect" : status.obsStatus === "CONNECTING" ? "Connecting" : "Connect"}
                                     </button>
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
                                         <span className="text-gray-400 uppercase font-bold text-[8px]">Status</span>
@@ -3483,7 +3606,7 @@ export default function Home() {
                                         </div>
                                         <button
                                             onClick={toggleVirtualCam}
-                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${status.virtualCamStatus === "STARTED" ? "bg-red-600 hover:bg-red-500 text-white" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
+                                            className={systemUniformBtn}
                                         >
                                             {status.virtualCamStatus === "STARTED" ? "Stop" : "Activate"}
                                         </button>
@@ -3496,7 +3619,7 @@ export default function Home() {
                                         </div>
                                         <button
                                             onClick={toggleReplayBuffer}
-                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${status.replayBufferStatus === "STARTED" ? "bg-red-600 hover:bg-red-500 text-white" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
+                                            className={systemUniformBtn}
                                         >
                                             {status.replayBufferStatus === "STARTED" ? "Stop" : "Activate"}
                                         </button>
@@ -3573,9 +3696,9 @@ export default function Home() {
                                     </div>
                                     <button
                                         onClick={status.sbotStatus === "CONNECTED" ? disconnectSB : reconnectSB}
-                                        className={`${connectButtonClass} w-full bg-purple-600 hover:bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)]`}
+                                        className={systemUniformBtn}
                                     >
-                                        {status.sbotStatus === "CONNECTED" ? "Disconnect" : "Connect"}
+                                        {status.sbotStatus === "CONNECTED" ? "Disconnect" : status.sbotStatus === "CONNECTING" ? "Connecting" : "Connect"}
                                     </button>
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
                                         <span className="text-gray-400 uppercase font-bold text-[8px]">Status</span>
@@ -3609,7 +3732,8 @@ export default function Home() {
                                         id="btn-tiktok-connect"
                                         onClick={tiktokStatus === "CONNECTED" ? disconnectTikTok : connectTikTok}
                                         disabled={tiktokStatus === "CONNECTING"}
-                                        className={tiktokStatus === "CONNECTED" || tiktokStatus === "CONNECTING" || tiktokStatus === "ERROR" ? `${getTiktokButtonClass()} w-full` : `${connectButtonClass} w-full bg-[#FE2C55] hover:bg-[#E62254] shadow-[0_0_10px_rgba(254,44,85,0.4)]`}>
+                                        className={systemUniformBtn}
+                                    >
                                         {getTiktokButtonText()}
                                     </button>
                                     {tiktokStatus === "ERROR" && tiktokError && (
@@ -4030,6 +4154,7 @@ export default function Home() {
                 </div>
             </div>
         </div>
+        <ConfirmModal open={confirmState.open} onClose={()=>setConfirmState(s=>({...s, open:false}))} onConfirm={()=>{confirmState.onConfirm(); setConfirmState(s=>({...s,open:false}))}} title={confirmState.title} description={confirmState.description} variant={confirmState.variant} />
         </div>
     );
 }

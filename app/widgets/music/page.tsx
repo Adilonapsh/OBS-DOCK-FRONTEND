@@ -42,6 +42,11 @@ function MusicSettingsInner() {
         const text = sv.blacklist.join('\n');
         if (text !== state.songBlacklist) update('songBlacklist', text);
       }
+      if (Array.isArray(sv.allowedRoles)) {
+        const cur = ((state as unknown as { songAllowedRoles?: string[] }).songAllowedRoles || ['all']).join(',');
+        const incoming = sv.allowedRoles.join(',');
+        if (incoming !== cur) update('songAllowedRoles' as any, sv.allowedRoles);
+      }
     });
     return () => {
       if (pushTimer.current) clearTimeout(pushTimer.current);
@@ -60,12 +65,13 @@ function MusicSettingsInner() {
         command: state.command,
         nsfwFilter: state.nsfwFilter,
         blacklist: String(state.songBlacklist || '').split('\n'),
+        allowedRoles: ((state as unknown as { songAllowedRoles?: string[] }).songAllowedRoles || ['all']),
       });
     }, 800);
     return () => {
       if (pushTimer.current) clearTimeout(pushTimer.current);
     };
-  }, [state.command, state.nsfwFilter, state.songBlacklist, privateKey]);
+  }, [state.command, state.nsfwFilter, state.songBlacklist, (state as unknown as { songAllowedRoles?: string[] }).songAllowedRoles, privateKey]);
 
   const widgetUrl = useMemo(() => buildMusicUrl(typeof window !== 'undefined' ? `${window.location.origin}/widgets/music/display` : '', state) + (privateKey ? `&key=${privateKey}` : ''), [state, privateKey]);
   const obsUrl = useMemo(() => `${widgetUrl}&obs=1`, [widgetUrl]);

@@ -4,6 +4,7 @@ import { Activity, AlertTriangle, CheckCircle, RefreshCcw, Video, Eye, Menu, Max
 import { cn } from "../lib/utils";
 import StreamDetailModal from "./StreamDetailModal";
 import Sidebar from "../components/Sidebar";
+import ThemeToggle from "../components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 import { decrypt } from "../utils/encryption";
 
@@ -310,16 +311,19 @@ export default function MonitorPage() {
             <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-white">MONITOR</span>
             <span className="hidden md:inline text-[11px] text-gray-500 font-bold">{mtxServers.length} MediaMTX • {total} streams</span>
           </div>
-          <button
-            onClick={() => {
-              setLoading(true);
-              fetchPaths();
-            }}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-black uppercase bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-gray-300 transition-colors"
-          >
-            <span className={cn("w-1.5 h-1.5 rounded-full bg-green-500", loading && "animate-pulse")}></span>
-            Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => {
+                setLoading(true);
+                fetchPaths();
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-black uppercase bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-gray-300 transition-colors"
+            >
+              <span className={cn("w-1.5 h-1.5 rounded-full bg-green-500", loading && "animate-pulse")}></span>
+              Refresh
+            </button>
+          </div>
         </header>
 
         <div className="flex-1 p-4 md:p-6 max-w-[1400px] w-full mx-auto space-y-6 flex flex-col">
@@ -340,7 +344,7 @@ export default function MonitorPage() {
             <div className="text-xs text-zinc-500">
               {mtxServers.length === 0 ? (
                 <span>
-                  Belum ada server. <a href="/config" className="text-blue-600 underline">Tambah di Config</a>
+                  Belum ada server. <a href="/connection" className="text-blue-600 underline">Tambah di Connection</a>
                 </span>
               ) : (
                 <span>{mtxServers.map((s) => s.serverName).join(", ")}</span>
