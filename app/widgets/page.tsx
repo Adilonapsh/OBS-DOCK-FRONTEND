@@ -6,7 +6,7 @@ import {
   Layers, Monitor, Search, Eye, EyeOff, ExternalLink, Sparkles,
   Gift, Heart, UserPlus, Zap, LayoutGrid, Filter,
   Settings2, AlertCircle, Menu, Palette, Pencil,
-  Music, Cog, GripVertical, Volume2, Pin, QrCode
+  Music, Cog, GripVertical, Volume2, Pin, QrCode, Target
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
@@ -196,6 +196,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "counter",
     recommended: true,
     w: 260, h: 200,
+  },
+  {
+    id: "goals",
+    title: "Goals",
+    desc: "Goal progress untuk Follow / Subs / Like — pilih jenis goal, atur target, live update dari TikTok & Streamer.bot.",
+    category: "progress",
+    tags: ["Goals", "Follow", "Subs", "Like", "TikTok", "Streamer.bot"],
+    layout: "goals",
+    params: "theme=standard&font=Outfit&goalType=follow&target=100",
+    preview: "goal",
+    recommended: true,
+    w: 420, h: 140,
   },
   {
     id: "music",
@@ -442,6 +454,24 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "goal") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col p-2 gap-1.5 justify-center">
+        <div className="flex items-center gap-1.5 px-2 py-1">
+          <Target className="w-3 h-3 text-white" />
+          <span className="text-white font-black text-[6px] uppercase tracking-widest">Follower Goal</span>
+          <span className="ml-auto text-white/60 text-[6px] font-bold">42 / 100</span>
+        </div>
+        <div className="h-2 bg-white/10 rounded-full overflow-hidden border border-white/10">
+          <div className="h-full w-[42%] bg-white rounded-full" />
+        </div>
+        <div className="flex justify-between text-[6px] font-black">
+          <span className="text-white">42%</span>
+          <span className="text-white/60">58 lagi</span>
+        </div>
+      </div>
+    );
+  }
   if (type === "qr") {
     return (
       <div className="w-full h-full bg-black flex flex-col items-center justify-center p-2 gap-1.5">
@@ -563,6 +593,10 @@ function WidgetsListing() {
     }
     if (item.id === 'view-counter') {
       const base = `${window.location.origin}/widgets/view-counter/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'goals') {
+      const base = `${window.location.origin}/widgets/goals/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     if (item.id === 'music') {
@@ -764,6 +798,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/view-counter${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'goals' ? (
+                        <Link href={`/widgets/goals${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'music' ? (
                         <Link href={`/widgets/music${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
@@ -810,7 +848,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'music' || item.id === 'qr' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

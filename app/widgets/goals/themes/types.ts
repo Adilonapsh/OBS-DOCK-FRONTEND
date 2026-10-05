@@ -1,0 +1,23 @@
+export type GoalThemeProps = {
+  title: string;
+  current: number;
+  target: number;
+  percent: number;
+  goalType: string;
+  font: string;
+  fontSize: number;
+  accent: string;
+  bg: string;
+  showLabel: boolean;
+  showCounts: boolean;
+  showBar: boolean;
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
+};
