@@ -134,7 +134,7 @@ async function getVibrantPalette(src: string | null, seed = ''): Promise<AccentP
   if (!src || src.includes('placeholder.com')) return hueFallback();
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mod: any = await import('node-vibrant/browser');
+    const mod: any = await import('node-vibrant');
     const Vibrant = mod.Vibrant || mod.default;
     const builder = Vibrant.from(src);
     if (builder.maxDimension) builder.maxDimension(200);

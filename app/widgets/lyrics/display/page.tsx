@@ -46,7 +46,7 @@ function msToTime(ms: number): string {
 async function getVibrantPalette(src: string): Promise<AccentPalette> {
   if (!src || src.includes('placeholder.com') || src === './images/placeholder.png') return vibrantDefaults;
   try {
-    const mod: any = await import('node-vibrant/browser');
+    const mod: any = await import('node-vibrant');
     const Vibrant = mod.Vibrant || mod.default;
     const builder = Vibrant.from(src);
     if (builder.maxDimension) builder.maxDimension(200);

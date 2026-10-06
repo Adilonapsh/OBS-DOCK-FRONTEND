@@ -50,7 +50,7 @@ async function getVibrantPalette(src: string): Promise<AccentPalette> {
   try {
     // node-vibrant browser build
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mod: any = await import('node-vibrant/browser');
+    const mod: any = await import('node-vibrant');
     const Vibrant = mod.Vibrant || mod.default;
     const builder = Vibrant.from(src);
     // set maxDimension to avoid huge images
