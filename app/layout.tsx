@@ -3,6 +3,7 @@ import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Toaster from "./components/Toaster";
 import ThemeProvider from "./components/ThemeProvider";
+import GoogleAnalytics from "./components/GoogleAnalytics";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col">
+        <GoogleAnalytics />
         <ThemeProvider>
           <Toaster />
           {children}
