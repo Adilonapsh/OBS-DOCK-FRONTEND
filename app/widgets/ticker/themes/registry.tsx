@@ -3,17 +3,20 @@
 
 import type { ComponentType } from "react";
 import type { TickerThemeProps } from "./types";
+import BrutalistTheme from "./Brutalist";
 import CleanTheme from "./Clean";
 import NeonTheme from "./Neon";
 import StandardTheme from "./Standard";
 
 export const tickerThemeComponents: Record<string, ComponentType<TickerThemeProps>> = {
+  "brutalist": BrutalistTheme,
   "clean": CleanTheme,
   "neon": NeonTheme,
   "standard": StandardTheme,
 };
 
 export const TICKER_THEME_OPTIONS = [
+  { value: "brutalist", label: "Brutalist - Neo Brutalist" },
   { value: "clean", label: "Clean - Teks Polos" },
   { value: "neon", label: "Neon - Glow Accent" },
   { value: "standard", label: "Standard - Bar + Badge" },

@@ -14,10 +14,12 @@ import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
 import PerCharTheme from '../themes/PerChar';
 import PlainTheme from '../themes/Plain';
+import BrutalistTheme from '../themes/Brutalist';
 import type { EventItem } from '../themes/types';
 import { SIM_EVENT_POOL } from '../themes/dummySim';
 import { useDummySimulation } from '../../_shared/hooks/useDummySimulation';
 import { subLabelFor, isFollowDisplayType } from '../../_shared/utils/subLabel';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 
 function EventInner() {
   const searchParams = useSearchParams();
@@ -63,6 +65,7 @@ function EventInner() {
   const likeSoundVolume = Math.max(0, Math.min(100, getIntParam(params, 'likeSoundVolume', 80)));
   const charDelayMs = Math.max(0, Math.min(500, getIntParam(params, 'charDelayMs', 25)));
   const charDurationS = Math.max(0.05, Math.min(3, parseFloat(params.get('charDurationS') || '') || 0.35));
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const [events, setEvents] = useState<EventItem[]>([]);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
@@ -192,6 +195,7 @@ function EventInner() {
     charDelayMs,
     charDurationS,
     exitingIds: liveExiting,
+    ...brutalist,
   };
 
   const renderTheme = () => {
@@ -200,6 +204,7 @@ function EventInner() {
       case 'cute': return <CuteTheme {...themeProps} />;
       case 'perchar': return <PerCharTheme {...themeProps} />;
       case 'plain': return <PlainTheme {...themeProps} />;
+      case 'brutalist': return <BrutalistTheme {...themeProps} />;
       default: return <StandardTheme {...themeProps} />;
     }
   };

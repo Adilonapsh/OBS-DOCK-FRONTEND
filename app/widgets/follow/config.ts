@@ -1,4 +1,5 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 import type { FollowItem } from './themes/types';
 
 export const FOLLOW_THEMES = [
@@ -6,6 +7,7 @@ export const FOLLOW_THEMES = [
   { value: 'minimal', label: 'Minimal - Pill' },
   { value: 'cute', label: 'Cute - Lavender Pastel ✨' },
   { value: 'plain', label: 'Plain - Teks Polos' },
+  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
 ] as const;
 
 export const FOLLOW_FONTS = WIDGET_FONTS;
@@ -68,6 +70,7 @@ export const FOLLOW_DEFAULTS = {
   soundEnabled: true,
   soundUrl: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c8ad9c.mp3',
   soundVolume: 80,
+  ...BRUTALIST_DEFAULTS,
 } as const;
 
 export type FollowSettings = typeof FOLLOW_DEFAULTS;
@@ -98,5 +101,6 @@ export function buildFollowUrl(base: string, s: FollowSettings): string {
   p.set('soundEnabled', (s as unknown as { soundEnabled: boolean }).soundEnabled ? '1' : '0');
   if ((s as unknown as { soundUrl: string }).soundUrl) p.set('soundUrl', (s as unknown as { soundUrl: string }).soundUrl);
   p.set('soundVolume', String((s as unknown as { soundVolume: number }).soundVolume ?? 80));
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   return `${base}?${p.toString()}`;
 }

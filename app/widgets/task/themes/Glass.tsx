@@ -71,7 +71,7 @@ export default function GlassTheme({ tasks, font, fontSize, accent, bg, bgOpacit
               {isCollapsed && !isHidden && <span className="text-[8px] font-black uppercase tracking-widest text-white/40 shrink-0">collapsed</span>}
             </div>
           )})}
-          {shouldCollapseView && nextTask && <div className="text-[9px] text-white/40 text-center uppercase tracking-widest">hanya task selanjutnya yang muncul • fade</div>}
+          {shouldCollapseView && nextTask && <div className="text-[9px] text-white/40 text-center uppercase tracking-widest"></div>}
         </div>
       </div>
     </div>

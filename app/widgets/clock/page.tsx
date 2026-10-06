@@ -8,6 +8,8 @@ import { WidgetPageModals, toggleShowKey } from '../_shared/components/WidgetPag
 import { Copy, Check, ExternalLink, Monitor, Clock3, Palette, Type, Settings2, Menu, Eye, EyeOff, Image as ImageIcon, Sparkles, ArrowLeft, RefreshCw, GripVertical } from 'lucide-react';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import { PositionPicker } from '../_shared/components/PositionPicker';
+import { BrutalistSettingsSection } from '../_shared/components/BrutalistSettingsSection';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 
 const fontsList = [...WIDGET_FONTS];
 
@@ -28,9 +30,16 @@ const datePresets = [
   { label: 'Thu, 3 Sep (ddd, D MMM)', value: 'ddd, D MMM' },
 ];
 
+const clockThemes = [
+  { value: 'standard', label: 'Standard - Clean' },
+  { value: 'brutalist', label: 'Brutalist - Neo Brutalism' },
+];
+
 const defaults = {
   font: 'Outfit',
   tz: 'Asia/Jakarta',
+  theme: 'standard',
+  accent: '#FFE600',
   l1: 'hh:mm:ss A',
   s1: 50, w1: '800', c1: '#ffffff', o1: 1, t1: 'uppercase', a1: 'center', v1: true,
   l2: 'ddd D MMM YY',
@@ -40,18 +49,22 @@ const defaults = {
   gap: 2,
   bg: 'transparent',
   pos: 'center',
+  ...BRUTALIST_DEFAULTS,
 };
 
 function buildUrl(base: string, s: any, privateKey: string) {
   const p = new URLSearchParams();
   p.set('font', s.font);
   p.set('tz', s.tz);
+  p.set('theme', s.theme || 'standard');
+  p.set('accent', s.accent || '#FFE600');
   p.set('l1', s.l1); p.set('s1', String(s.s1)); p.set('w1', s.w1); p.set('c1', s.c1); p.set('o1', String(s.o1)); p.set('t1', s.t1); p.set('a1', s.a1); p.set('v1', s.v1 ? '1' : '0');
   p.set('l2', s.l2); p.set('s2', String(s.s2)); p.set('w2', s.w2); p.set('c2', s.c2); p.set('o2', String(s.o2)); p.set('t2', s.t2); p.set('a2', s.a2); p.set('v2', s.v2 ? '1' : '0');
   p.set('l3', s.l3); p.set('s3', String(s.s3)); p.set('w3', s.w3); p.set('c3', s.c3); p.set('o3', String(s.o3)); p.set('t3', s.t3); p.set('a3', s.a3); p.set('v3', s.v3 ? '1' : '0');
   p.set('gap', String(s.gap));
   if (s.bg && s.bg !== 'transparent') p.set('bg', s.bg);
   p.set('pos', s.pos || 'center');
+  appendBrutalistParams(p, s);
   if (privateKey) p.set('key', privateKey);
   return `${base}?${p.toString()}`;
 }
@@ -113,12 +126,14 @@ function ClockEditorInner() {
   const previewUrl = useMemo(() => {
     const p = new URLSearchParams();
     p.set('font', state.font); p.set('tz', state.tz);
+    p.set('theme', state.theme || 'standard'); p.set('accent', state.accent || '#FFE600');
     p.set('l1', state.l1); p.set('s1', String(state.s1)); p.set('w1', state.w1); p.set('c1', state.c1); p.set('o1', String(state.o1)); p.set('t1', state.t1); p.set('a1', state.a1); p.set('v1', state.v1 ? '1':'0');
     p.set('l2', state.l2); p.set('s2', String(state.s2)); p.set('w2', state.w2); p.set('c2', state.c2); p.set('o2', String(state.o2)); p.set('t2', state.t2); p.set('a2', state.a2); p.set('v2', state.v2 ? '1':'0');
     p.set('l3', state.l3); p.set('s3', String(state.s3)); p.set('w3', state.w3); p.set('c3', state.c3); p.set('o3', String(state.o3)); p.set('t3', state.t3); p.set('a3', state.a3); p.set('v3', state.v3 ? '1':'0');
     p.set('gap', String(state.gap));
     if (state.bg !== 'transparent') p.set('bg', state.bg);
     p.set('pos', state.pos || 'center');
+    appendBrutalistParams(p, state);
     return `/widgets/clock/display?${p.toString()}`;
   }, [state]);
 
@@ -173,10 +188,22 @@ function ClockEditorInner() {
                 <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-white"/> Global</h2>
                 <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
                   <label className="block">
+                    <span className="text-[11px] font-bold text-gray-300">Theme</span>
+                    <select value={state.theme} onChange={e=>update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+                      {clockThemes.map(t=> <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+                    </select>
+                  </label>
+                  <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Font Family</span>
                     <input list="fonts" value={state.font} onChange={e=>update('font', e.target.value)} placeholder="Type to search..." className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" />
                     <datalist id="fonts">{fontsList.map(f=> <option key={f} value={f}/>)}</datalist>
                   </label>
+                  {state.theme === 'brutalist' && (
+                    <label className="block">
+                      <span className="text-[11px] font-bold text-gray-300">Accent (Brutalist)</span>
+                      <input type="color" value={state.accent} onChange={e=>update('accent', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" />
+                    </label>
+                  )}
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Timezone</span>
                     <input list="tzs" value={state.tz} onChange={e=>update('tz', e.target.value)} onFocus={()=>setTzSearch('')} placeholder="Asia/Jakarta" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
@@ -193,6 +220,8 @@ function ClockEditorInner() {
                   {/* <label className="block"><span className="text-[11px] font-bold text-gray-300">Private Key (optional, untuk isolasi OBS)</span><input value={privateKey} onChange={e=>setPrivateKey(e.target.value)} placeholder="YOUR_PRIVATE_KEY" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" /></label> */}
                 </div>
               </div>
+
+              {state.theme === 'brutalist' && <BrutalistSettingsSection state={state} update={update} />}
 
               {/* Line 1 */}
               <LineEditor title="Line 1 - Jam Utama" icon={<Clock3 className="w-3.5 h-3.5 text-white"/>} presets={timePresets} value={state.l1} onFormat={(v:string)=>update('l1',v)} state={state} prefix="1" update={update} />

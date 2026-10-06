@@ -7,6 +7,7 @@ export const TIMER_THEMES = [
   { value: 'glass', label: 'Glass - Minimalist Overlay ✨' },
   { value: 'minimal', label: 'Minimal - Clean' },
   { value: 'plain', label: 'Plain - Teks Polos' },
+  { value: 'brutalist', label: 'Brutalist - Neo Brutal White + Hard 6px Shadow' },
 ] as const;
 
 export const TIMER_FONTS = WIDGET_FONTS;

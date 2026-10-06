@@ -18,6 +18,7 @@ import {
   CardTheme,
   VinylTheme,
 } from '../../media-player/themes';
+import BrutalistMusicTheme from '../themes/Brutalist';
 
 type SongKind = 'youtube' | 'audio';
 
@@ -1204,6 +1205,8 @@ function MusicInner() {
             <CardTheme {...mediaProps} />
           ) : theme === 'vinyl' ? (
             <VinylTheme {...mediaProps} />
+          ) : theme === 'brutalist' ? (
+            <BrutalistMusicTheme {...mediaProps} />
           ) : (
             <div className="w-full rounded-2xl overflow-hidden border border-white/10 backdrop-blur-md shadow-2xl" style={{ background: autoColor && !useCustomColors ? `${resolvedBg}e6` : 'rgba(0,0,0,0.7)' }}>
               <div className="flex items-center gap-2.5 px-3 py-2.5">

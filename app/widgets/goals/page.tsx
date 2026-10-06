@@ -10,7 +10,6 @@ import { buildGoalsUrl } from './config';
 import { WidgetShell } from '../_shared/components/WidgetShell';
 import { UrlBar } from '../_shared/components/UrlBar';
 import { GoalSettingsForm } from './components/GoalSettingsForm';
-import { GoalPreview } from './components/GoalPreview';
 
 function GoalsSettingsInner() {
   const { state, update, reset, privateKey, loadFromUrl } = useGoalSettings();
@@ -46,10 +45,10 @@ function GoalsSettingsInner() {
               <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview — {state.theme} • {state.goalType} • pos:{(state as unknown as { pos: string }).pos || 'center'}</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.current}/{state.target} • {state.goalType}</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[280px] flex items-center justify-center p-6">
-              <GoalPreview state={state} />
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px]">
+              <iframe key={simulateUrl} src={simulateUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="goals-preview" />
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">Pilih <b className="text-white">Follow / Subs / Like</b> di kiri, atur Target, lalu progress akan naik otomatis dari livestream (TikTok Streamer.bot) + bisa edit Current manual.</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">Live preview via iframe (<code className="bg-white/10 px-1 rounded text-white">simulate=1</code>) — data real di OBS (<code className="bg-white/10 px-1 rounded text-white">.../goals/display?obs=1</code>).</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
               <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>

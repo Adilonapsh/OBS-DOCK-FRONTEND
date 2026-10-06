@@ -25,4 +25,13 @@ export type FollowThemeProps = {
   exitingIds?: Set<string>;
   soundUrl?: string;
   soundVolume?: number;
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
 };

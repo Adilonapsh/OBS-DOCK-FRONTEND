@@ -18,11 +18,7 @@ export default function CuteTheme({ events, font, anim, horizontalAnim, hideAnim
   if (horizontal || inline) {
     return (
       <div className={`cute-event-theme ${containerClass} p-1`} style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}>
-        {events.length === 0 ? (
-          <div className="px-3.5 py-3 text-white/60 text-[13px] rounded-[12px] flex items-center gap-2" style={{ background: bubbleBg, opacity: bgOpacity/100 }}>
-            <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" /> Menunggu event…
-          </div>
-        ) : events.map((e) => {
+        {events.length === 0 ? null : events.map((e) => {
           const isGift = e.type==='gift';
           return (
             <div key={e.id} className="flex items-center gap-2 px-3 py-2 rounded-full shrink-0 max-w-[300px]" style={{ background: isGift ? resubGrad : bubbleBg, animation: getAnim(e.id), opacity: bgOpacity/100 }}>
@@ -41,11 +37,7 @@ export default function CuteTheme({ events, font, anim, horizontalAnim, hideAnim
 
   return (
     <div className={`cute-event-theme w-full max-w-[420px] flex flex-col gap-3 p-1`} style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}>
-      {events.length === 0 ? (
-        <div className="px-3.5 py-3 text-white/60 text-[13px] rounded-[12px] flex items-center gap-2" style={{ background: bubbleBg, opacity: bgOpacity/100 }}>
-          <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" /> Menunggu event…
-        </div>
-      ) : events.map((e) => {
+      {events.length === 0 ? null : events.map((e) => {
         const isGift = e.type==='gift';
         const isLike = e.type==='like';
         return (

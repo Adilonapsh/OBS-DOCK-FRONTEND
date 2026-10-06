@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, KEYFRAMES_CSS } from '../../_shared/constants/animations';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import CleanTheme from '../themes/Clean';
@@ -12,6 +13,7 @@ import BoxedTheme from '../themes/Boxed';
 import GlassTheme from '../themes/Glass';
 import TimerGlassTheme from '../themes/TimerGlass';
 import PlainTheme from '../themes/Plain';
+import BrutalistTheme from '../themes/Brutalist';
 import { parseSlides } from '../config';
 
 function InfoSlidesInner() {
@@ -33,6 +35,7 @@ function InfoSlidesInner() {
   const anim = getStringParam(params, 'anim', 'elegant');
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const slidesParam = params.get('slides');
   let slides = parseSlides('[]');
@@ -84,6 +87,7 @@ function InfoSlidesInner() {
     duration,
     onPrev: prev,
     onNext: next,
+    ...brutalist,
   };
 
   return (
@@ -92,7 +96,7 @@ function InfoSlidesInner() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@400;700;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; }`}</style>
       <div className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen ${theme === 'timer-glass' ? 'flex items-center justify-center p-6' : `flex p-6`}`}`} style={{ fontFamily: `'${font}', sans-serif`, background: obsMode ? 'transparent' : theme === 'timer-glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : '#0a0a0a', ...posStyle } as any}>
         <AutoScale defaultBase={640} baseWidth={theme === 'timer-glass' ? 576 : 640}>
-          {theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'timer-glass' ? <TimerGlassTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : <CleanTheme {...themeProps} />}
+          {theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'timer-glass' ? <TimerGlassTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : theme === 'brutalist' ? <BrutalistTheme {...themeProps} /> : <CleanTheme {...themeProps} />}
         </AutoScale>
       </div>
       {!obsMode && (

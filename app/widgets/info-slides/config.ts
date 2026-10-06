@@ -1,4 +1,5 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 
 export const INFO_SLIDES_THEMES = [
   { value: 'clean', label: 'Clean - Minimal Transparan' },
@@ -6,6 +7,7 @@ export const INFO_SLIDES_THEMES = [
   { value: 'glass', label: 'Glass - Blur Premium' },
   { value: 'timer-glass', label: 'Timer Glass - Ala Timer (Recommended)' },
   { value: 'plain', label: 'Plain - Teks Polos' },
+  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
 ] as const;
 
 export const INFO_SLIDES_ANIMS = [
@@ -52,6 +54,7 @@ export const INFO_SLIDES_DEFAULTS = {
   showArrows: false,
   anim: 'elegant',
   pos: 'center' as string,
+  ...BRUTALIST_DEFAULTS,
   slidesJson: JSON.stringify(DEFAULT_SLIDES),
 } as const;
 
@@ -88,6 +91,7 @@ export function buildInfoSlidesUrl(base: string, s: InfoSlidesSettings): string 
   p.set('showArrows', s.showArrows ? '1' : '0');
   p.set('anim', s.anim);
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   // slides di-compress via encodeURIComponent biar URL tetap shareable, tapi fallback ke storage jika kepanjangan
   try {
     const slides = parseSlides(s.slidesJson);

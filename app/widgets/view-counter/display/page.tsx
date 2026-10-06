@@ -7,12 +7,14 @@ import { getSocketUrl } from '../../_shared/utils/socket';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
 import MusicTheme from '../themes/Music';
 import PlainTheme from '../themes/Plain';
+import BrutalistTheme from '../themes/Brutalist';
 
 function normPlatform(p?: string): string {
   const v = (p || '').toLowerCase();
@@ -49,6 +51,7 @@ function ViewCounterInner() {
   const idleFx = getStringParam(params, 'idleFx', 'none');
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const [counts, setCounts] = useState<Record<string, number>>((): Record<string, number> =>
     simulate ? { tiktok: 1284, twitch: 342, youtube: 517 } : {},
@@ -119,7 +122,7 @@ function ViewCounterInner() {
   const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const fontFamily = `'${font}', sans-serif`;
   const emptyLabel = simulate ? '' : connected ? 'Menunggu data…' : 'Menghubungkan…';
-  const themeProps = { counts, total, font, fontSize, accent, bg, showLabel, showBreakdown, inline, emptyLabel, songs, currentSong };
+  const themeProps = { counts, total, font, fontSize, accent, bg, showLabel, showBreakdown, inline, emptyLabel, songs, currentSong, ...brutalist };
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-transparent" style={{ fontFamily }}>
@@ -139,6 +142,8 @@ function ViewCounterInner() {
               <PlainTheme {...themeProps} />
             ) : theme === 'music' ? (
               <MusicTheme {...themeProps} />
+            ) : theme === 'brutalist' ? (
+              <BrutalistTheme {...themeProps} />
             ) : (
               <StandardTheme {...themeProps} />
             )}

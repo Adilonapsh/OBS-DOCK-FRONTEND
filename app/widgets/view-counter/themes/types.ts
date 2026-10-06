@@ -9,4 +9,13 @@ export type ViewCounterThemeProps = {
   showBreakdown: boolean;
   inline: boolean;
   emptyLabel: string;
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
 };

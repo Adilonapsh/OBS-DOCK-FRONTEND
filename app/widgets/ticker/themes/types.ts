@@ -1,3 +1,5 @@
+import type { BrutalistSettings } from '../../_shared/constants/brutalist';
+
 export type TickerThemeProps = {
   items: string[];
   font: string;
@@ -10,4 +12,4 @@ export type TickerThemeProps = {
   direction: 'left' | 'right';
   showBadge: boolean;
   badgeText: string;
-};
+} & Partial<BrutalistSettings>;

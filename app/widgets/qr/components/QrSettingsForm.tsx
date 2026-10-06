@@ -2,6 +2,7 @@
 
 import { QR_THEMES, QR_LEVELS, QR_FONTS, type QrSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 import { Palette, Type, Monitor, QrCode, ImagePlus, Trash2 } from 'lucide-react';
 
 type Props = {
@@ -107,6 +108,8 @@ export function QrSettingsForm({ state, update }: Props) {
           </label>
         </div>
       </div>
+
+      {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
 
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Type className="w-4 h-4 text-violet-400" /> Warna</h2>

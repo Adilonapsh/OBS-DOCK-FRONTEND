@@ -59,11 +59,7 @@ export default function PerCharTheme({
   const flowCls = horizontal ? 'flex-row flex-wrap items-start' : 'flex-col';
   return (
     <div className={`event-perchar-theme w-full ${horizontal ? 'max-w-none' : 'max-w-[480px]'} flex ${flowCls}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-      {events.length === 0 ? (
-        <div className="pe-empty">
-          <span className="pe-empty-dot" /> Menunggu event…
-        </div>
-      ) : events.map((e) => {
+      {events.length === 0 ? null : events.map((e) => {
         const badge = eventBadge(e);
         const isExiting = exitingIds?.has(e.id);
         return (

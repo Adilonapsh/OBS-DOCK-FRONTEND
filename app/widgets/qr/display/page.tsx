@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import StandardTheme from '../themes/Standard';
 import BubbleTheme from '../themes/Bubble';
@@ -13,6 +14,7 @@ import BoxedTheme from '../themes/Boxed';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
 import PlainTheme from '../themes/Plain';
+import BrutalistTheme from '../themes/Brutalist';
 
 const LEVELS = ['L', 'M', 'Q', 'H'] as const;
 
@@ -37,10 +39,11 @@ function QrInner() {
   const logo = getStringParam(params, 'logo', '');
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'qr-font'), [font]);
 
-  const themeProps = { value, label, showLabel, size, fg, qrBg, bg, accent, font, fontSize, level, logo };
+  const themeProps = { value, label, showLabel, size, fg, qrBg, bg, accent, font, fontSize, level, logo, ...brutalist };
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-transparent" style={{ fontFamily: `'${font}', sans-serif` }}>
@@ -59,6 +62,8 @@ function QrInner() {
             <CuteTheme {...themeProps} />
           ) : theme === 'plain' ? (
             <PlainTheme {...themeProps} />
+          ) : theme === 'brutalist' ? (
+            <BrutalistTheme {...themeProps} />
           ) : (
             <StandardTheme {...themeProps} />
           )}

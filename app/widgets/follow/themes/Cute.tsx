@@ -12,11 +12,7 @@ export default function CuteTheme({ follows, font, anim, hideAnim, fontSize, bgO
   const containerClass = horizontal ? 'w-full max-w-none flex flex-row flex-wrap gap-2 items-center' : 'w-full max-w-[360px] flex flex-col gap-3';
   return (
     <div className={`cute-follow-theme ${containerClass} p-1`} style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}>
-      {follows.length === 0 ? (
-        <div className="px-3.5 py-3 text-white/60 text-[13px] rounded-[12px] flex items-center gap-2" style={{ background: '#1e1d2b', opacity: bgOpacity/100 }}>
-          <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" /> Menunggu follow…
-        </div>
-      ) : follows.map((f) => (
+      {follows.length === 0 ? null : follows.map((f) => (
         <div key={f.id} className="flex flex-col items-start gap-1" style={{ animation: getAnim(f.id) }}>
           <div className="flex items-center gap-2 px-1">
             <span className="role-badge" style={{ background: '#2e2c45', color: '#f5a8d0' }}>FOLLOW</span>

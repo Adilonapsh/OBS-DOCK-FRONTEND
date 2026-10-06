@@ -16,4 +16,13 @@ export type InfoSlidesThemeProps = {
   duration: number;
   onPrev?: () => void;
   onNext?: () => void;
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
 };

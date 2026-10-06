@@ -18,9 +18,7 @@ export default function MinimalTheme({ events, font, accent, bg, showAvatar, ani
   if (horizontal || inline) {
     return (
       <div className={`event-minimal-theme ${containerClass}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {events.length === 0 ? (
-          <div className="px-3 py-2 rounded-full bg-black text-white/60 text-[11px] border border-white/10 shrink-0">Menunggu event…</div>
-        ) : events.map((e) => (
+        {events.length === 0 ? null : events.map((e) => (
           <div key={e.id} className="flex items-center gap-2 px-3 py-1.5 rounded-full border shrink-0 max-w-[320px]" style={{ background: bgColor, borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)', opacity: bgOpacity / 100, animation: getAnim(e.id) }}>
             {showAvatar && <img src={e.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.nickname)}`} alt={e.nickname} className="w-5 h-5 rounded-full object-cover shrink-0" />}
             <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: e.type==='gift'?'#FE2C55': e.type==='like'?'#ec4899': accent }}>
@@ -36,9 +34,7 @@ export default function MinimalTheme({ events, font, accent, bg, showAvatar, ani
   }
   return (
     <div className={`event-minimal-theme ${containerClass}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-      {events.length === 0 ? (
-        <div className="px-3 py-2 rounded-full bg-black text-white/60 text-[11px] border border-white/10 shrink-0">Menunggu event…</div>
-      ) : events.map((e) => (
+      {events.length === 0 ? null : events.map((e) => (
         <div key={e.id} className="flex items-center gap-2 px-3 py-2 rounded-full border shrink-0" style={{ background: bgColor, borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)', opacity: bgOpacity / 100, animation: getAnim(e.id) }}>
           {showAvatar && <img src={e.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.nickname)}`} alt={e.nickname} className="w-5 h-5 rounded-full object-cover shrink-0" />}
           <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: e.type==='gift'?'#FE2C55': e.type==='like'?'#ec4899': accent }}>

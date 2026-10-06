@@ -1,4 +1,5 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 import type { EventItem } from './themes/types';
 
 export const EVENT_THEMES = [
@@ -7,6 +8,7 @@ export const EVENT_THEMES = [
   { value: 'cute', label: 'Cute - Lavender Pastel' },
   { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
   { value: 'plain', label: 'Plain - Teks Polos' },
+  { value: 'brutalist', label: 'Brutalist - Neo Brutalism' },
 ] as const;
 
 export const EVENT_FONTS = WIDGET_FONTS;
@@ -78,6 +80,7 @@ export const EVENT_DEFAULTS = {
   cuteNameUser: '#d8cded',
   charDelayMs: 25,
   charDurationS: 0.35,
+  ...BRUTALIST_DEFAULTS,
   joinSoundEnabled: true,
   joinSoundUrl: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_9bd4170e1c.mp3',
   joinSoundVolume: 80,
@@ -137,5 +140,6 @@ export function buildEventUrl(base: string, s: EventSettings): string {
   if ((s as unknown as { cuteNameUser: string }).cuteNameUser) p.set('cuteNameUser', (s as unknown as { cuteNameUser: string }).cuteNameUser);
   p.set('charDelayMs', String((s as unknown as { charDelayMs: number }).charDelayMs ?? 25));
   p.set('charDurationS', String((s as unknown as { charDurationS: number }).charDurationS ?? 0.35));
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   return `${base}?${p.toString()}`;
 }

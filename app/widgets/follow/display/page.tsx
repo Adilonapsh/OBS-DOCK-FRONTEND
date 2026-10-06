@@ -13,10 +13,12 @@ import StandardTheme from '../themes/Standard';
 import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
 import PlainTheme from '../themes/Plain';
+import BrutalistTheme from '../themes/Brutalist';
 import type { FollowItem } from '../themes/types';
 import { SIM_FOLLOW_POOL } from '../themes/dummySim';
 import { useDummySimulation } from '../../_shared/hooks/useDummySimulation';
 import { subLabelFor } from '../../_shared/utils/subLabel';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 
 function FollowInner() {
   const searchParams = useSearchParams();
@@ -43,6 +45,7 @@ function FollowInner() {
   const soundVolume = Math.max(0, Math.min(100, getIntParam(params, 'soundVolume', 80)));
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const [follows, setFollows] = useState<FollowItem[]>([]);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
@@ -146,6 +149,7 @@ function FollowInner() {
     bgOpacity,
     horizontal,
     exitingIds: liveExiting,
+    ...brutalist,
   };
 
   const renderTheme = () => {
@@ -153,6 +157,7 @@ function FollowInner() {
       case 'minimal': return <MinimalTheme {...themeProps} />;
       case 'cute': return <CuteTheme {...themeProps} />;
       case 'plain': return <PlainTheme {...themeProps} />;
+      case 'brutalist': return <BrutalistTheme {...themeProps} />;
       default: return <StandardTheme {...themeProps} />;
     }
   };

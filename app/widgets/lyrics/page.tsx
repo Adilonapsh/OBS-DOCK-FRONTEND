@@ -23,6 +23,7 @@ const themes = [
   { value: 'vinyl', label: 'Vinyl' },
   { value: 'color-palette', label: 'Color Palette' },
   { value: 'plain', label: 'Plain' },
+  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
 ];
 const fontsList = [...WIDGET_FONTS];
 const showAnimations = ['fade-in','slide-in-from-top','slide-in-from-bottom','slide-in-from-left','slide-in-from-right'];

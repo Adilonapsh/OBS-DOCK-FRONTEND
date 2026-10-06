@@ -1,4 +1,5 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 
 // AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
 // Tambah theme baru cukup buat file themes/NamaTema.tsx + themeMeta —
@@ -26,6 +27,7 @@ export const TICKER_DEFAULTS = {
   direction: 'left' as string,
   showBadge: true,
   badgeText: 'INFO',
+  ...BRUTALIST_DEFAULTS,
 } as const;
 
 export type TickerSettings = typeof TICKER_DEFAULTS;
@@ -61,5 +63,6 @@ export function buildTickerUrl(base: string, s: TickerSettings): string {
   p.set('showBadge', s.showBadge ? '1' : '0');
   if (s.badgeText) p.set('badgeText', s.badgeText);
   p.set('pos', s.pos || 'b');
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   return `${base}?${p.toString()}`;
 }

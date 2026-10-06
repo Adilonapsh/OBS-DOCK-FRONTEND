@@ -1,0 +1,21 @@
+export type ClockThemeProps = {
+  font: string;
+  accent?: string;
+  bg?: string;
+  line1Text: string;
+  line2Text?: string;
+  line3Text?: string;
+  gap?: number;
+  s1?: number;
+  s2?: number;
+  s3?: number;
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
+};

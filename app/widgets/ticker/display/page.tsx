@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { tickerThemeComponents } from '../themes/registry';
 import StandardTheme from '../themes/Standard';
 import { parseTickerItems, DEMO_TICKER_ITEMS, TICKER_KEYFRAMES_CSS } from '../config';
@@ -28,6 +29,7 @@ function TickerInner() {
   const badgeText = getStringParam(params, 'badgeText', 'INFO');
   const pos = getStringParam(params, 'pos', 'b');
   const posStyle = getPositionStyle(pos);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const rawItems = simulate ? '' : getStringParam(params, 'items', '');
   const parsed = parseTickerItems(rawItems);
@@ -47,6 +49,7 @@ function TickerInner() {
     direction,
     showBadge,
     badgeText,
+    ...brutalist,
   };
 
   // auto-register: theme baru di themes/*.tsx langsung kepakai tanpa tambah case

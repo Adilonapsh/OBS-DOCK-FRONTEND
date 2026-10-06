@@ -1,4 +1,5 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 
 export const QR_THEMES = [
   { value: 'standard', label: 'Standard - Card' },
@@ -8,6 +9,7 @@ export const QR_THEMES = [
   { value: 'minimal', label: 'Minimal - QR Saja' },
   { value: 'cute', label: 'Cute - Pastel' },
   { value: 'plain', label: 'Plain - Transparan' },
+  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
 ] as const;
 
 export const QR_LEVELS = [
@@ -35,6 +37,7 @@ export const QR_DEFAULTS = {
   level: 'M' as string,
   logo: '' as string,
   showLogo: true,
+  ...BRUTALIST_DEFAULTS,
 } as const;
 
 export type QrSettings = typeof QR_DEFAULTS;
@@ -55,6 +58,7 @@ export function buildQrUrl(base: string, s: QrSettings): string {
   if (s.level && s.level !== 'M') p.set('level', s.level);
   if (s.showLogo && s.logo) p.set('logo', s.logo);
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   const q = p.toString();
   return q ? `${base}?${q}` : base;
 }

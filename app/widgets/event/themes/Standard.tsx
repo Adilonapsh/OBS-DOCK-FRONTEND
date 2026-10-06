@@ -16,11 +16,7 @@ export default function StandardTheme({ events, font, accent, bg, showAvatar, an
   if (horizontal) {
     return (
       <div className="event-standard-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-center" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {events.length === 0 ? (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-[12px] shrink-0" style={{ animation: getAnim('__empty__') }}>
-            <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" /> Menunggu event…
-          </div>
-        ) : events.map((e) => (
+        {events.length === 0 ? null : events.map((e) => (
           <div key={e.id} className="flex items-center gap-2 px-3 py-2 rounded-full backdrop-blur-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.4)] shrink-0 max-w-[320px]" style={{ background: bgColor, borderColor: 'rgba(255,255,255,0.10)', opacity: bgOpacity/100, animation: getAnim(e.id) }}>
             {showAvatar && <img src={e.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.nickname)}&background=222&color=fff`} alt={e.nickname} className="w-6 h-6 rounded-full object-cover border border-white/10 shrink-0" />}
             <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: e.type==='gift'?'#FE2C55': e.type==='like'?'#ec4899': accent }}>
@@ -38,11 +34,7 @@ export default function StandardTheme({ events, font, accent, bg, showAvatar, an
   if (inline) {
     return (
       <div className="event-standard-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-        {events.length === 0 ? (
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-full border border-white/10 bg-white/5 text-white/60 text-[12px]" style={{ animation: getAnim('__empty__') }}>
-            <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" /> Menunggu event…
-          </div>
-        ) : events.map((e) => (
+        {events.length === 0 ? null : events.map((e) => (
           <div key={e.id} className="flex items-center gap-2 px-3 py-2.5 rounded-full backdrop-blur-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.4)]" style={{ background: bgColor, borderColor: 'rgba(255,255,255,0.10)', opacity: bgOpacity/100, animation: getAnim(e.id) }}>
             {showAvatar && <img src={e.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.nickname)}&background=222&color=fff`} alt={e.nickname} className="w-6 h-6 rounded-full object-cover border border-white/10 shrink-0" />}
             <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: e.type==='gift'?'#FE2C55': e.type==='like'?'#ec4899': accent }}>
@@ -60,11 +52,7 @@ export default function StandardTheme({ events, font, accent, bg, showAvatar, an
   const bubbleBase = 'flex items-center gap-2.5 backdrop-blur-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-3 py-2.5 will-change-transform';
   return (
     <div className="event-standard-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-      {events.length === 0 ? (
-        <div className={`${bubbleBase} rounded-2xl border-white/10 bg-white/5 text-white/60 text-[13px]`} style={{ animation: getAnim('__empty__') }}>
-          <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" /> Menunggu event… join/gift/like akan muncul di sini
-        </div>
-      ) : events.map((e) => (
+      {events.length === 0 ? null : events.map((e) => (
         <div key={e.id} className={`${bubbleBase} rounded-2xl`} style={{ background: bgColor, borderColor: 'rgba(255,255,255,0.10)', opacity: bgOpacity / 100, animation: getAnim(e.id), borderLeft: `3px solid ${e.type === 'gift' ? '#FE2C55' : e.type === 'like' ? '#ec4899' : accent}` }}>
           {showAvatar && <img src={e.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.nickname)}&background=222&color=fff`} alt={e.nickname} className="w-8 h-8 rounded-xl object-cover border border-white/10 shrink-0" />}
           <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: e.type === 'gift' ? '#FE2C55' : e.type === 'like' ? '#ec4899' : accent }}>

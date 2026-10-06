@@ -5,6 +5,7 @@ import { Palette, Gift, Heart, UserPlus, Monitor, Copy, Volume2 } from 'lucide-r
 import { EVENT_THEMES, EVENT_FONTS, EVENT_ANIMS, EVENT_HORIZONTAL_ANIMS, EVENT_HIDE_ANIMS, type EventSettings } from '../config';
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 
 export function EventSettingsForm({
   state,
@@ -60,6 +61,8 @@ export function EventSettingsForm({
           )}
         </div>
       </div>
+
+      {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
 
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-violet-400" /> Warna</h2>

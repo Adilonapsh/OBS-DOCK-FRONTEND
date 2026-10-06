@@ -2,6 +2,8 @@
 import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
+import BrutalistClockTheme from '../themes/Brutalist';
 
 function formatWithTokens(date: Date, fmt: string, tz: string) {
     if (!fmt) return '';
@@ -95,6 +97,8 @@ function useClockParams(searchParams: URLSearchParams) {
         font: get('font', get('fontFamily', 'Outfit')),
         tz: get('tz', get('timezone', 'Asia/Jakarta')),
         bg: get('bg', get('background', 'transparent')),
+        theme: get('theme', 'standard'),
+        accent: get('accent', '#FFE600'),
         // line 1
         l1: get('l1', get('l1Format', get('line1', 'hh:mm:ss A'))),
         s1: getNum('s1', getNum('line1Size', 50)),
@@ -131,6 +135,7 @@ function ClockInner() {
     const searchParams = useSearchParams();
     const obsMode = searchParams.get('obs') === '1' || searchParams.get('transparent') === '1';
     const params = useClockParams(searchParams as unknown as URLSearchParams);
+    const brutalist = parseBrutalistParams((k) => (searchParams as unknown as URLSearchParams).get(k));
     const [now, setNow] = useState<Date>(() => new Date());
     const [fontLoaded, setFontLoaded] = useState(false);
 
@@ -174,74 +179,97 @@ function ClockInner() {
                 {/* checker for non-transparent preview */}
                 {!isTransparent && <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />}
 
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: `${params.gap}px`,
-                        fontFamily: `'${params.font}', sans-serif`,
-                        width: '100%',
-                        alignItems: 'stretch',
-                    }}
-                >
-                    {params.v1 && (
-                        <label
-                            id="line1"
-                            className="timeLabel"
-                            style={{
-                                fontSize: `${params.s1}px`,
-                                fontWeight: params.w1 as any,
-                                color: params.c1,
-                                opacity: params.o1,
-                                textTransform: params.t1 as any,
-                                textAlign: params.a1 as any,
-                                lineHeight: 1.1,
-                                display: line1Text ? 'block' : 'none',
-                                wordBreak: 'break-word',
-                            }}
-                        >
-                            {line1Text}
-                        </label>
-                    )}
-                    {params.v2 && (
-                        <label
-                            id="line2"
-                            className="timeLabel"
-                            style={{
-                                fontSize: `${params.s2}px`,
-                                fontWeight: params.w2 as any,
-                                color: params.c2,
-                                opacity: params.o2,
-                                textTransform: params.t2 as any,
-                                textAlign: params.a2 as any,
-                                lineHeight: 1.15,
-                                display: line2Text ? 'block' : 'none',
-                                wordBreak: 'break-word',
-                            }}
-                        >
-                            {line2Text}
-                        </label>
-                    )}
-                    {params.v3 && (
-                        <label
-                            id="line3"
-                            className="timeLabel"
-                            style={{
-                                fontSize: `${params.s3}px`,
-                                fontWeight: params.w3 as any,
-                                color: params.c3,
-                                opacity: params.o3,
-                                textTransform: params.t3 as any,
-                                textAlign: params.a3 as any,
-                                lineHeight: 1.2,
-                                display: line3Text ? 'block' : 'none',
-                                wordBreak: 'break-word',
-                            }}
-                        >
-                            {line3Text}
-                        </label>
-                    )}
-                </div>
+                {(params as any).theme === 'brutalist' ? (
+                    <BrutalistClockTheme
+                        font={params.font}
+                        accent={(params as any).accent}
+                        line1Text={line1Text}
+                        line2Text={line2Text}
+                        line3Text={line3Text}
+                        gap={params.gap}
+                        s1={params.s1}
+                        s2={params.s2}
+                        s3={params.s3}
+                        brutalistBg={brutalist.brutalistBg}
+                        brutalistTextColor={brutalist.brutalistTextColor}
+                        brutalistBadgeBg={brutalist.brutalistBadgeBg}
+                        brutalistBorderColor={brutalist.brutalistBorderColor}
+                        brutalistShadow={brutalist.brutalistShadow}
+                        brutalistHalftone={brutalist.brutalistHalftone}
+                        brutalistTail={brutalist.brutalistTail}
+                        brutalistItalic={brutalist.brutalistItalic}
+                        brutalistUppercase={brutalist.brutalistUppercase}
+                    />
+                ) : (
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: `${params.gap}px`,
+                            fontFamily: `'${params.font}', sans-serif`,
+                            width: '100%',
+                            alignItems: 'stretch',
+                        }}
+                    >
+                        {params.v1 && (
+                            <label
+                                id="line1"
+                                className="timeLabel"
+                                style={{
+                                    fontSize: `${params.s1}px`,
+                                    fontWeight: params.w1 as any,
+                                    color: params.c1,
+                                    opacity: params.o1,
+                                    textTransform: params.t1 as any,
+                                    textAlign: params.a1 as any,
+                                    lineHeight: 1.1,
+                                    display: line1Text ? 'block' : 'none',
+                                    wordBreak: 'break-word',
+                                }}
+                            >
+                                {line1Text}
+                            </label>
+                        )}
+                        {params.v2 && (
+                            <label
+                                id="line2"
+                                className="timeLabel"
+                                style={{
+                                    fontSize: `${params.s2}px`,
+                                    fontWeight: params.w2 as any,
+                                    color: params.c2,
+                                    opacity: params.o2,
+                                    textTransform: params.t2 as any,
+                                    textAlign: params.a2 as any,
+                                    lineHeight: 1.15,
+                                    display: line2Text ? 'block' : 'none',
+                                    wordBreak: 'break-word',
+                                }}
+                            >
+                                {line2Text}
+                            </label>
+                        )}
+                        {params.v3 && (
+                            <label
+                                id="line3"
+                                className="timeLabel"
+                                style={{
+                                    fontSize: `${params.s3}px`,
+                                    fontWeight: params.w3 as any,
+                                    color: params.c3,
+                                    opacity: params.o3,
+                                    textTransform: params.t3 as any,
+                                    textAlign: params.a3 as any,
+                                    lineHeight: 1.2,
+                                    display: line3Text ? 'block' : 'none',
+                                    wordBreak: 'break-word',
+                                }}
+                            >
+                                {line3Text}
+                            </label>
+                        )}
+                    </div>
+                )}
 
                 {!isTransparent && (
                     <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/40 backdrop-blur border border-white/5 rounded-full text-[8px] font-black uppercase tracking-widest text-gray-400 pointer-events-none">

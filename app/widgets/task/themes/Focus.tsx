@@ -98,7 +98,7 @@ export default function FocusTheme({ tasks, font, onToggleTask, onAddTask, anim 
             {isCollapsed && !isHidden && <span className="ml-auto text-[8px] font-black uppercase tracking-widest text-white/30 shrink-0">collapsed</span>}
           </div>
         )})}
-        {shouldCollapseView && nextTask && <div className="text-[9px] text-white/30 text-center uppercase tracking-widest">hanya task selanjutnya yang muncul • fade</div>}
+        {shouldCollapseView && nextTask && <div className="text-[9px] text-white/30 text-center uppercase tracking-widest"></div>}
       </div>
     </div>
   );

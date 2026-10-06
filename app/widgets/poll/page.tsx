@@ -21,6 +21,7 @@ const pollThemes = [
   { value:'flower', label:'Flower Timer' },
   { value:'editorial', label:'Editorial' },
   { value:'plain', label:'Plain - Teks Polos' },
+  { value:'brutalist', label:'Brutalist' },
 ];
 
 const defaults = {

@@ -304,10 +304,16 @@ export default function Home() {
     const [timerTick,setTimerTick]=useState(0);
     const [timerCustomMin,setTimerCustomMin]=useState<string>("5");
     const [timerCustomSec,setTimerCustomSec]=useState<string>("0");
+    const [timerCustomHours,setTimerCustomHours]=useState<string>("0");
+    const [timerCustomDays,setTimerCustomDays]=useState<string>("0");
     const [timerAddMin,setTimerAddMin]=useState<string>("5");
     const [timerAddSec,setTimerAddSec]=useState<string>("0");
+    const [timerAddHours,setTimerAddHours]=useState<string>("0");
+    const [timerAddDays,setTimerAddDays]=useState<string>("0");
     const [timerSubMin,setTimerSubMin]=useState<string>("5");
     const [timerSubSec,setTimerSubSec]=useState<string>("0");
+    const [timerSubHours,setTimerSubHours]=useState<string>("0");
+    const [timerSubDays,setTimerSubDays]=useState<string>("0");
     const [timerMinimized,setTimerMinimized]=useState(() => {
         if (typeof window === 'undefined') return true;
         try { const v=localStorage.getItem('dock-timerMinimized'); return v===null ? true : v==='true'; } catch { return true; }
@@ -362,11 +368,13 @@ export default function Home() {
     useEffect(()=>{ if(!autoMinimizeEnabled || !activePoll || activePoll.ended) return; setPollMinimized(false); setLastActivity(Date.now()); },[activePoll?.id, activePoll?.ended]);
     useEffect(()=>{ if(!autoMinimizeEnabled || !activeTasks) return; setTaskMinimized(false); setLastActivity(Date.now()); },[activeTasks?.items?.length]);
     useEffect(()=>{ if(!autoMinimizeEnabled || !activeTimer) return; setTimerMinimized(false); setLastActivity(Date.now()); },[activeTimer?.totalSeconds]);
-    // sync custom input dengan timer yang ada (biar 50:00 → 50m 0s), hanya saat tidak running biar tidak ganggu ketikan
+    // sync custom input dengan timer yang ada (biar 1d 2j 50m 0d → d/j/m/s), hanya saat tidak running biar tidak ganggu ketikan
     useEffect(()=>{
         if(activeTimer?.totalSeconds == null || activeTimer?.isRunning) return;
         const sec = activeTimer.totalSeconds;
-        setTimerCustomMin(String(Math.floor(sec/60)));
+        setTimerCustomDays(String(Math.floor(sec/86400)));
+        setTimerCustomHours(String(Math.floor((sec%86400)/3600)));
+        setTimerCustomMin(String(Math.floor((sec%3600)/60)));
         setTimerCustomSec(String(sec%60));
     },[activeTimer?.totalSeconds, activeTimer?.isRunning]);
 
@@ -1217,9 +1225,11 @@ export default function Home() {
     const handleTimerAdd = (sec: number = 300) => handleTimerControl('add', { seconds: sec });
     const handleTimerSub = (sec: number = 300) => handleTimerControl('sub', { seconds: sec });
     const handleTimerSetCustom = () => {
-        const m = Math.max(0, Math.min(999, parseInt(timerCustomMin) || 0));
+        const d = Math.max(0, Math.min(365, parseInt(timerCustomDays) || 0));
+        const h = Math.max(0, Math.min(23, parseInt(timerCustomHours) || 0));
+        const m = Math.max(0, Math.min(59, parseInt(timerCustomMin) || 0));
         const s = Math.max(0, Math.min(59, parseInt(timerCustomSec) || 0));
-        const total = m * 60 + s;
+        const total = d * 86400 + h * 3600 + m * 60 + s;
         if (total === 0) { if(typeof window!=='undefined') gooeyToast.error('Durasi harus > 0'); return; }
         handleTimerControl('set', { totalSeconds: total });
     };
@@ -4034,7 +4044,7 @@ export default function Home() {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <Clock className="w-4 h-4 text-violet-400" />
-                                                    <span className="text-white font-mono font-black text-[14px]">{(() => { const base = activeTimer?.totalSeconds ?? 50*60; void timerTick; const sec = activeTimer?.isRunning && activeTimer?.updatedAt ? Math.max(0, base - Math.floor((Date.now() - activeTimer.updatedAt)/1000)) : base; const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60; return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; })()}</span>
+                                                    <span className="text-white font-mono font-black text-[14px]">{(() => { const base = activeTimer?.totalSeconds ?? 50*60; void timerTick; const sec = activeTimer?.isRunning && activeTimer?.updatedAt ? Math.max(0, base - Math.floor((Date.now() - activeTimer.updatedAt)/1000)) : base; const d=Math.floor(sec/86400), h=Math.floor((sec%86400)/3600), m=Math.floor((sec%3600)/60), s=sec%60; return `${d}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; })()}</span>
                                                     <span className={`w-2 h-2 rounded-full ${activeTimer?.isRunning?'bg-green-500 animate-pulse':'bg-yellow-500'}`} />
                                                 </div>
                                                 <span className="text-gray-400 text-[10px] font-bold">{activeTimer?.currentSession||1}/{activeTimer?.totalSessions||3} {activeTimer?.mode||'powerup'}</span>
@@ -4044,29 +4054,41 @@ export default function Home() {
                                                 <button onClick={()=>handleTimerControl('reset')} className="h-7 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-bold flex items-center justify-center gap-1"><RefreshCcw className="w-3 h-3" />Reset</button>
                                             </div>
                                             <div className="flex flex-col gap-1.5">
-                                                <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
-                                                    <span className="text-[9px] font-black uppercase text-gray-500 w-8 shrink-0">Set</span>
-                                                    <input type="number" min={0} max={999} value={timerCustomMin} onChange={(e)=>setTimerCustomMin(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                                                    <span className="text-[10px] font-black text-gray-400">m</span>
-                                                    <input type="number" min={0} max={59} value={timerCustomSec} onChange={(e)=>setTimerCustomSec(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                                                    <span className="text-[10px] font-black text-gray-400">s</span>
-                                                    <button onClick={handleTimerSetCustom} className="ml-auto h-7 px-4 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Clock className="w-3 h-3" />Set</button>
+                                                <div className="flex items-center gap-1 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
+                                                    <span className="text-[9px] font-black uppercase text-gray-500 w-6 shrink-0">Set</span>
+                                                    <input type="number" min={0} max={365} value={timerCustomDays} onChange={(e)=>setTimerCustomDays(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">h</span>
+                                                    <input type="number" min={0} max={23} value={timerCustomHours} onChange={(e)=>setTimerCustomHours(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">j</span>
+                                                    <input type="number" min={0} max={59} value={timerCustomMin} onChange={(e)=>setTimerCustomMin(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">m</span>
+                                                    <input type="number" min={0} max={59} value={timerCustomSec} onChange={(e)=>setTimerCustomSec(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">d</span>
+                                                    <button onClick={handleTimerSetCustom} className="ml-auto h-7 px-3 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Clock className="w-3 h-3" />Set</button>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
-                                                    <span className="text-[9px] font-black uppercase text-green-400 w-8 shrink-0">Add</span>
-                                                    <input type="number" min={0} max={999} value={timerAddMin} onChange={(e)=>setTimerAddMin(e.target.value)} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                                                    <span className="text-[10px] font-black text-gray-400">m</span>
-                                                    <input type="number" min={0} max={59} value={timerAddSec} onChange={(e)=>setTimerAddSec(e.target.value)} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                                                    <span className="text-[10px] font-black text-gray-400">s</span>
-                                                    <button onClick={()=>{ const c=(parseInt(timerAddMin)||0)*60+(parseInt(timerAddSec)||0); if(c>0) handleTimerAdd(c); else { handleTimerAdd(300);} }} className="ml-auto h-7 px-4 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Plus className="w-3 h-3" />+ {timerAddMin||5}:{String(timerAddSec||0).padStart(2,'0')}</button>
+                                                <div className="flex items-center gap-1 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
+                                                    <span className="text-[9px] font-black uppercase text-green-400 w-6 shrink-0">Add</span>
+                                                    <input type="number" min={0} max={365} value={timerAddDays} onChange={(e)=>setTimerAddDays(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">h</span>
+                                                    <input type="number" min={0} max={23} value={timerAddHours} onChange={(e)=>setTimerAddHours(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">j</span>
+                                                    <input type="number" min={0} max={59} value={timerAddMin} onChange={(e)=>setTimerAddMin(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">m</span>
+                                                    <input type="number" min={0} max={59} value={timerAddSec} onChange={(e)=>setTimerAddSec(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">d</span>
+                                                    <button onClick={()=>{ const c=(parseInt(timerAddDays)||0)*86400+(parseInt(timerAddHours)||0)*3600+(parseInt(timerAddMin)||0)*60+(parseInt(timerAddSec)||0); if(c>0) handleTimerAdd(c); else { handleTimerAdd(300);} }} className="ml-auto h-7 px-3 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Plus className="w-3 h-3" />+ {timerAddDays && parseInt(timerAddDays) ? `${timerAddDays}h ` : ''}{timerAddHours && parseInt(timerAddHours) ? `${timerAddHours}j ` : ''}{timerAddMin||5}:{String(timerAddSec||0).padStart(2,'0')}</button>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
-                                                    <span className="text-[9px] font-black uppercase text-red-400 w-8 shrink-0">Sub</span>
-                                                    <input type="number" min={0} max={999} value={timerSubMin} onChange={(e)=>setTimerSubMin(e.target.value)} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                                                    <span className="text-[10px] font-black text-gray-400">m</span>
-                                                    <input type="number" min={0} max={59} value={timerSubSec} onChange={(e)=>setTimerSubSec(e.target.value)} placeholder="0" className="w-[56px] h-7 bg-black/40 border border-white/10 rounded-full px-2 text-center text-[12px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                                                    <span className="text-[10px] font-black text-gray-400">s</span>
-                                                    <button onClick={()=>{ const c=(parseInt(timerSubMin)||0)*60+(parseInt(timerSubSec)||0); if(c>0) handleTimerSub(c); else { handleTimerSub(300);} }} className="ml-auto h-7 px-4 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Square className="w-3 h-3" />- {timerSubMin||5}:{String(timerSubSec||0).padStart(2,'0')}</button>
+                                                <div className="flex items-center gap-1 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
+                                                    <span className="text-[9px] font-black uppercase text-red-400 w-6 shrink-0">Sub</span>
+                                                    <input type="number" min={0} max={365} value={timerSubDays} onChange={(e)=>setTimerSubDays(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">h</span>
+                                                    <input type="number" min={0} max={23} value={timerSubHours} onChange={(e)=>setTimerSubHours(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">j</span>
+                                                    <input type="number" min={0} max={59} value={timerSubMin} onChange={(e)=>setTimerSubMin(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">m</span>
+                                                    <input type="number" min={0} max={59} value={timerSubSec} onChange={(e)=>setTimerSubSec(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                                    <span className="text-[9px] font-black text-gray-400">d</span>
+                                                    <button onClick={()=>{ const c=(parseInt(timerSubDays)||0)*86400+(parseInt(timerSubHours)||0)*3600+(parseInt(timerSubMin)||0)*60+(parseInt(timerSubSec)||0); if(c>0) handleTimerSub(c); else { handleTimerSub(300);} }} className="ml-auto h-7 px-3 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Square className="w-3 h-3" />- {timerSubDays && parseInt(timerSubDays) ? `${timerSubDays}h ` : ''}{timerSubHours && parseInt(timerSubHours) ? `${timerSubHours}j ` : ''}{timerSubMin||5}:{String(timerSubSec||0).padStart(2,'0')}</button>
                                                 </div>
                                             </div>
                                             <div className="flex gap-1.5">

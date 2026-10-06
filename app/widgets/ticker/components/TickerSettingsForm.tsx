@@ -3,6 +3,7 @@
 import { Palette, Monitor, Copy, Megaphone } from 'lucide-react';
 import { TICKER_THEMES, TICKER_FONTS, TICKER_DIRECTIONS, type TickerSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 
 export function TickerSettingsForm({
   state,
@@ -56,6 +57,10 @@ export function TickerSettingsForm({
           )}
         </div>
       </div>
+
+      {state.theme === 'brutalist' && (
+        <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />
+      )}
 
       {/* Warna */}
       <div className="space-y-3">

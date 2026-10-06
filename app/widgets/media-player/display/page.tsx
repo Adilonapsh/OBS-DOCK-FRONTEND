@@ -17,6 +17,7 @@ import AlbumArtTheme from '../themes/AlbumArt';
 import VinylTheme from '../themes/Vinyl';
 import ColorPaletteTheme from '../themes/ColorPalette';
 import PlainTheme from '../themes/Plain';
+import BrutalistTheme from '../themes/Brutalist';
 import type { AccentPalette } from '../themes/types';
 import LargeAlbumArtTheme from '../themes/LargeAlbumArt';
 
@@ -374,6 +375,7 @@ function MediaPlayerInner() {
                 case 'vinyl': return <VinylTheme {...themeProps} />;
                 case 'color-palette': return <ColorPaletteTheme {...themeProps} />;
                 case 'plain': return <PlainTheme {...themeProps} />;
+                case 'brutalist': return <BrutalistTheme {...themeProps} />;
                 case 'large-album-art': return <LargeAlbumArtTheme {...themeProps} />;
                 case 'standard':
                 default: return <StandardTheme {...themeProps} />;

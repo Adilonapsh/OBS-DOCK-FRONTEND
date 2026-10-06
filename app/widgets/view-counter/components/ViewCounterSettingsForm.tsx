@@ -2,6 +2,7 @@
 
 import { VIEW_COUNTER_THEMES, VIEW_COUNTER_FONTS, type ViewCounterSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 import { Palette, Type, Monitor, Eye } from 'lucide-react';
 
 type Props = {
@@ -29,6 +30,8 @@ export function ViewCounterSettingsForm({ state, update }: Props) {
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Ukuran Angka</span><input type="number" min={12} max={96} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 28)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
         </div>
       </div>
+
+      {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
 
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Type className="w-4 h-4 text-violet-400" /> Warna</h2>

@@ -58,7 +58,7 @@ export default function MinimalTheme({ tasks, font, onToggleTask, anim, hideAnim
             {isCollapsed && !isHidden && <span className="text-[8px] font-black uppercase text-white/30 shrink-0">collapsed</span>}
           </div>
         )})}
-        {shouldCollapseView && nextTask && <div className="text-[9px] text-white/30 text-center uppercase tracking-widest">hanya task selanjutnya yang muncul • fade</div>}
+        {shouldCollapseView && nextTask && <div className="text-[9px] text-white/30 text-center uppercase tracking-widest"></div>}
       </div>
     </div>
   );

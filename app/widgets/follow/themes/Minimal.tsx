@@ -14,9 +14,7 @@ export default function MinimalTheme({ follows, font, accent, bg, showAvatar, an
   const containerClass = horizontal ? 'w-full max-w-none flex flex-row flex-wrap gap-2 items-center' : 'w-full max-w-[360px] flex flex-col gap-1.5';
   return (
     <div className={`follow-minimal-theme ${containerClass}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
-      {follows.length === 0 ? (
-        <div className="px-3 py-2 rounded-full bg-black text-white/60 text-[11px] border border-white/10">Menunggu follow…</div>
-      ) : follows.map((f) => (
+      {follows.length === 0 ? null : follows.map((f) => (
         <div key={f.id} className="flex items-center gap-2 px-3 py-1.5 rounded-full border shrink-0 max-w-[300px]" style={{ background: bgColor, borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)', opacity: bgOpacity/100, animation: getAnim(f.id) }}>
           {showAvatar && <img src={f.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.nickname)}`} alt={f.nickname} className="w-5 h-5 rounded-full object-cover shrink-0" />}
           <Heart className="w-3 h-3 text-pink-500 fill-pink-500 shrink-0" />

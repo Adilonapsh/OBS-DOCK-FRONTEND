@@ -13,6 +13,7 @@ import GlassTheme from '../themes/Glass';
 import BoxedTheme from '../themes/Boxed';
 import BadgeTheme from '../themes/Badge';
 import PlainTheme from '../themes/Plain';
+import BrutalistTheme from '../themes/Brutalist';
 import { parseSocials } from '../config';
 
 function SocialRotatorInner() {
@@ -89,7 +90,7 @@ function SocialRotatorInner() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@400;700;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; }`}</style>
       <div className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen flex p-6`}`} style={{ ...posStyle, background: obsMode ? 'transparent' : theme === 'badge' ? '#98a5ff' : '#0a0a0a', fontFamily: `'${font}', sans-serif`, ...(theme === 'badge' && !obsMode ? { backgroundImage: 'radial-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}) } as any}>
         <AutoScale defaultBase={300} baseWidth={theme === 'boxed' ? 260 : 300}>
-          {theme === 'clean' ? <CleanTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'badge' ? <BadgeTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : <PillTheme {...themeProps} />}
+          {theme === 'clean' ? <CleanTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'badge' ? <BadgeTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : theme === 'brutalist' ? <BrutalistTheme {...themeProps} /> : <PillTheme {...themeProps} />}
         </AutoScale>
       </div>
       {!obsMode && (

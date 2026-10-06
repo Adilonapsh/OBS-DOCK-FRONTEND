@@ -5,6 +5,7 @@ import { Palette, Heart, Volume2, Image as ImageIcon, Monitor, Copy } from 'luci
 import { FOLLOW_THEMES, FOLLOW_ANIMS, FOLLOW_HORIZONTAL_ANIMS, FOLLOW_HIDE_ANIMS, type FollowSettings } from '../config';
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 
 export function FollowSettingsForm({ state, update, reset, privateKey, onCopy }: {
   state: FollowSettings; update: (k: keyof FollowSettings, v: unknown) => void; reset: () => void; privateKey: string; onCopy: () => void;
@@ -39,6 +40,8 @@ export function FollowSettingsForm({ state, update, reset, privateKey, onCopy }:
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof FollowSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{FOLLOW_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade</span></label>
         </div>
       </div>
+
+      {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
 
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-pink-400" /> Warna</h2>
