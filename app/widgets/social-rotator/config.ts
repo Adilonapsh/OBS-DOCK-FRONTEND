@@ -1,4 +1,5 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 
 export const SOCIAL_ROTATOR_THEMES = [
   { value: 'pill', label: 'Pill - Rounded Badge (Recommended)' },
@@ -62,6 +63,7 @@ export const SOCIAL_ROTATOR_DEFAULTS = {
   showLabel: true,
   anim: 'elegant',
   pos: 'center' as string,
+  ...BRUTALIST_DEFAULTS,
   socialsJson: JSON.stringify(DEFAULT_SOCIALS),
 } as const;
 
@@ -98,6 +100,7 @@ export function buildSocialRotatorUrl(base: string, s: SocialRotatorSettings): s
   p.set('showLabel', (s as any).showLabel ? '1' : '0');
   p.set('anim', s.anim);
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   try {
     const socials = parseSocials(s.socialsJson);
     p.set('socials', encodeURIComponent(JSON.stringify(socials)));

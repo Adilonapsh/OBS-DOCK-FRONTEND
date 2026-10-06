@@ -6,6 +6,7 @@ import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/u
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, KEYFRAMES_CSS } from '../../_shared/constants/animations';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import PillTheme from '../themes/Pill';
 import CleanTheme from '../themes/Clean';
@@ -35,6 +36,7 @@ function SocialRotatorInner() {
   const anim = getStringParam(params, 'anim', 'elegant');
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const socialsParam = params.get('socials');
   let socials = parseSocials('[]');
@@ -82,6 +84,7 @@ function SocialRotatorInner() {
     duration,
     onPrev: prev,
     onNext: next,
+    ...brutalist,
   };
 
   return (

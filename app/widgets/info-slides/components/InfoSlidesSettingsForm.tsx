@@ -6,6 +6,7 @@ import type { InfoSlidesSettings, InfoSlide } from '../config';
 import { INFO_SLIDES_THEMES, INFO_SLIDES_ANIMS, INFO_SLIDES_FONTS, parseSlides } from '../config';
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 
 export function InfoSlidesSettingsForm({ state, update, reset }: { state: InfoSlidesSettings; update: (k: keyof InfoSlidesSettings, v: unknown) => void; reset: () => void; privateKey?: string; onCopy?: () => void }) {
   const slides = parseSlides(state.slidesJson);
@@ -84,6 +85,8 @@ export function InfoSlidesSettingsForm({ state, update, reset }: { state: InfoSl
         <label className="space-y-1"><span className="text-[10px] font-bold uppercase text-gray-400">Teks</span><input type="color" value={state.textColor} onChange={e => update('textColor', e.target.value)} className="w-full h-9 bg-white/5 border border-white/10 rounded-xl p-1" /></label>
         <label className="space-y-1"><span className="text-[10px] font-bold uppercase text-gray-400">BG Opacity</span><input type="range" min={10} max={100} value={state.bgOpacity} onChange={e => update('bgOpacity', parseInt(e.target.value))} className="w-full" /></label>
       </div>
+
+      {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
 
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>

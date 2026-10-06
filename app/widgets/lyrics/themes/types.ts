@@ -42,4 +42,13 @@ export type LyricsThemeProps = {
   lyricsFontSize: number;
   showLyrics: boolean;
   maxLyricsLines: number;
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
 };

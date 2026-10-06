@@ -7,6 +7,8 @@ import { useWidgetPageShell } from '../_shared/hooks/useWidgetPage';
 import { WidgetPageModals, toggleShowKey } from '../_shared/components/WidgetPageModals';
 import { Copy, Check, ExternalLink, Monitor, Palette, Music, Image as ImageIcon, Sparkles, ArrowLeft, RefreshCw, Settings2, Menu, Mic2, GripVertical, Eye, EyeOff } from 'lucide-react';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
+import { BrutalistSettingsSection } from '../_shared/components/BrutalistSettingsSection';
 import { getPositionStyle } from '../_shared/constants/positions';
 import { PositionPicker } from '../_shared/components/PositionPicker';
 
@@ -61,6 +63,7 @@ function buildUrl(base: string, state: any): string {
   p.set('maxLyricsLines', String(state.maxLyricsLines));
   p.set('lrclibEnabled', String(state.lrclibEnabled));
   p.set('pos', state.pos || 'center');
+  appendBrutalistParams(p, state as unknown as Record<string, unknown>);
   return `${base}?${p.toString()}`;
 }
 
@@ -96,6 +99,7 @@ const defaults = {
   maxLyricsLines: 3,
   lrclibEnabled: true,
   pos: 'center',
+  ...BRUTALIST_DEFAULTS,
 };
 
 function LyricsSettingsInner() {
@@ -154,6 +158,17 @@ function LyricsSettingsInner() {
     Object.entries(state).forEach(([k,v]) => p.set(k, String(v)));
     return `/widgets/lyrics/display?${p.toString()}`;
   }, [state]);
+
+  // Preview iframe di-debounce + mode simulate. Tanpa ini, tiap ganti setting
+  // (mis. tema) iframe langsung di-remount total (key change) = boot ulang
+  // display (fetch SMTC tiap 1 dtk + font + demo loop 200ms) dalam satu main
+  // thread dengan halaman ini, sehingga UI sempat macet sesaat.
+  const [previewSrc, setPreviewSrc] = useState(iframeSrc);
+  useEffect(() => {
+    const t = setTimeout(() => setPreviewSrc(iframeSrc), 500);
+    return () => clearTimeout(t);
+  }, [iframeSrc]);
+  const previewSimulate = `${previewSrc}${previewSrc.includes('?') ? '&' : '?'}simulate=1`;
 
   const update = (k: string, v: any) => setState((prev: any) => ({ ...prev, [k]: v }));
 
@@ -250,6 +265,8 @@ function LyricsSettingsInner() {
                 </div>
               </div>
 
+              {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
+
               {/* Lyrics */}
               <div className="space-y-3">
                 <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Mic2 className="w-4 h-4 text-white" /> Lyrics</h2>
@@ -301,7 +318,7 @@ function LyricsSettingsInner() {
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.theme} • {state.font} • {state.showLyrics ? `${state.maxLyricsLines} lines` : 'no lyrics'}</span>
             </div>
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[380px] flex p-4" style={getPositionStyle((state as any).pos || state.verticalAlignment || 'center') as any}>
-              <iframe key={iframeSrc} src={iframeSrc} className="w-full h-full border-0 bg-black" allow="autoplay" />
+              <iframe key={previewSimulate} src={previewSimulate} className="w-full h-full border-0 bg-black" allow="autoplay" />
               <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">LRCLIB {state.lrclibEnabled ? 'ON' : 'OFF'} • {state.lyricsFontSize}px • {state.lyricsAlign} • {(state as any).pos || state.verticalAlignment || 'center'}</div>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">

@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { getStringParam as getStringParamShared } from '../../_shared/utils/url';
 import StandardTheme from '../themes/Standard';
 import MatteTheme from '../themes/Matte';
@@ -155,6 +156,7 @@ function LyricsDisplayInner() {
   const lyricsFontSize = getIntParam(params, 'lyricsFontSize', 16);
   const maxLyricsLines = getIntParam(params, 'maxLyricsLines', 3);
   const lrclibEnabled = getBoolParam(params, 'lrclibEnabled', true);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const PLACEHOLDER = 'https://via.placeholder.com/300/1d1d1d/ffffff?text=%E2%99%AA';
   const [track, setTrack] = useState('');
@@ -438,6 +440,7 @@ function LyricsDisplayInner() {
                 progressPercent, currentPos, timeline, showAlbumArt, showProgressBar, showPrimary, showSecondary,
                 isPausedOverlay, playbackStatus, textAlignCls, msToTime, error, smtcBridgeAddress, smtcBridgePort, obsMode,
                 lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, showLyrics, maxLyricsLines,
+                ...brutalist,
               };
               switch (theme) {
                 case 'matte': return <MatteTheme {...themeProps} />;

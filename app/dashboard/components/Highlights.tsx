@@ -21,11 +21,11 @@ type Highlight = {
   created_at?: string;
 };
 
-const PLATFORM_META: Record<string, { label: string; color: string; dot: string }> = {
-  tiktok: { label: "TikTok", color: "bg-[#ff0050] text-white", dot: "bg-[#ff0050]" },
-  youtube: { label: "YouTube", color: "bg-red-600 text-white", dot: "bg-red-600" },
-  twitch: { label: "Twitch", color: "bg-[#9146ff] text-white", dot: "bg-[#9146ff]" },
-  kick: { label: "Kick", color: "bg-[#53fc18] text-black", dot: "bg-[#53fc18]" },
+const PLATFORM_META: Record<string, { label: string; color: string; dot: string; icon?: string }> = {
+  tiktok: { label: "TikTok", color: "bg-[#ff0050] text-white", dot: "bg-[#ff0050]", icon: "/assets/logo/tik-tok.png" },
+  youtube: { label: "YouTube", color: "bg-red-600 text-white", dot: "bg-red-600", icon: "/assets/logo/youtube.png" },
+  twitch: { label: "Twitch", color: "bg-[#9146ff] text-white", dot: "bg-[#9146ff]", icon: "/assets/logo/twitch.png" },
+  kick: { label: "Kick", color: "bg-[#53fc18] text-black", dot: "bg-[#53fc18]", icon: "/assets/logo/kick.png" },
   facebook: { label: "Facebook", color: "bg-blue-600 text-white", dot: "bg-blue-600" },
   instagram: { label: "Instagram", color: "bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white", dot: "bg-pink-500" },
   other: { label: "Lainnya", color: "bg-zinc-700 text-white", dot: "bg-zinc-600" },
@@ -199,14 +199,19 @@ export default function Highlights() {
         {FILTERS.map((f) => {
           const isActive = filter === f;
           const label = f === "all" ? "Semua" : PLATFORM_META[f]?.label || f;
+          const icon = f === "all" ? undefined : PLATFORM_META[f]?.icon;
           return (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide border shrink-0 transition-colors ${
+              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide border shrink-0 transition-colors flex items-center gap-1.5 ${
                 isActive ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"
               }`}
             >
+              {icon && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={icon} alt={label} className="w-3.5 h-3.5 object-contain" />
+              )}
               {label}
             </button>
           );
@@ -245,10 +250,14 @@ export default function Highlights() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={h.thumbnail_url || `https://picsum.photos/seed/${h.id}/640/360`} alt={h.title} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10 ${meta.color}`}>{meta.label}</span>
-                    <span className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/70 backdrop-blur border border-white/10 rounded text-[9px] font-bold text-white flex items-center gap-1">
-                      <span className={`w-1.5 h-1.5 rounded-full ${meta.dot} animate-pulse`} /> {h.source === "tiktok_live" ? "TikTok Live" : "StreamerBot"}
-                    </span>
+                    {meta.icon ? (
+                      <span className="absolute top-2 left-2 w-7 h-7 grid place-items-center rounded-full" title={meta.label}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={meta.icon} alt={meta.label} className="w-5 h-5 object-contain brightness-0 invert" />
+                      </span>
+                    ) : (
+                      <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10 ${meta.color}`}>{meta.label}</span>
+                    )}
                     {h.duration_seconds && (
                       <span className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 rounded text-[10px] font-mono font-bold text-white">{formatDuration(h.duration_seconds)}</span>
                     )}

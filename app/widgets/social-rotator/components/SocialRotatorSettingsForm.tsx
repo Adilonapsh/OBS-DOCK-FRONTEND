@@ -3,6 +3,7 @@ import { Palette, Share2, Clock, Type, Eye } from 'lucide-react';
 import { SOCIAL_ROTATOR_THEMES, SOCIAL_ROTATOR_ANIMS, SOCIAL_PLATFORMS, type SocialRotatorSettings, type SocialItem, parseSocials } from '../config';
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 
 export function SocialRotatorSettingsForm({ state, update }: { state: SocialRotatorSettings; update: (k: keyof SocialRotatorSettings, v: unknown) => void }) {
   const socials = parseSocials(state.socialsJson);
@@ -45,6 +46,8 @@ export function SocialRotatorSettingsForm({ state, update }: { state: SocialRota
           </div>
         </div>
       </div>
+
+      {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
 
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Share2 className="w-4 h-4 text-sky-400" /> Socials</h2>
