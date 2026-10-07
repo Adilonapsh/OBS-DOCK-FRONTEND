@@ -124,7 +124,7 @@ function Display() {
   }
 
   // Preview fullscreen: canvas fit-contain di tengah layar hitam, tanpa chrome.
-  // Mode OBS (?obs=1) di atas sudah viewport-filling transparan — tidak diubah.
+  // Mode OBS (?obs=1) di atas sudah viewport-filling transparan - tidak diubah.
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
       <div

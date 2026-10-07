@@ -91,7 +91,7 @@ function MusicSettingsInner() {
         user={shell.user}
         headerIcon={<Music className="w-4 h-4 text-white" />}
         title={<>Music / Song Request</>}
-        subtitle="Now playing + queue lagu — audio diputar di OBS via widget display"
+        subtitle="Now playing + queue lagu - audio diputar di OBS via widget display"
         headerActions={
           <>
             <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Defaults</button>
@@ -104,7 +104,7 @@ function MusicSettingsInner() {
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview — {state.theme} • pos:{normalizePosition((state as unknown as { pos: string }).pos || 'bl')}</div>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • pos:{normalizePosition((state as unknown as { pos: string }).pos || 'bl')}</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • !song &lt;url&gt;</span>
             </div>
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px]">

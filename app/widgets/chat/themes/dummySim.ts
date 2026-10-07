@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { DEMO_CHATS } from '../config';
 import type { ChatItem } from './types';
 
-// Pool data dummy untuk simulasi preview — mengalir seperti chat real
+// Pool data dummy untuk simulasi preview - mengalir seperti chat real
 // (satu per satu masuk dengan animasi, lalu keluar dengan animasi).
 // TikTok chat real tetap dari event `tiktok-chat`; ini hanya untuk ?simulate=1.
 type DummyBase = Omit<ChatItem, 'id' | 'timestamp'>;

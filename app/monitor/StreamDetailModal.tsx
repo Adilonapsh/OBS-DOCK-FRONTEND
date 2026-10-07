@@ -256,7 +256,7 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
               )}
             </div>
 
-            {/* URL OBS (Browser Source) — sudah termasuk private key */}
+            {/* URL OBS (Browser Source) - sudah termasuk private key */}
             <div className="border border-white/10 rounded-xl p-3 bg-black/30 space-y-2">
               <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest block">URL OBS (Browser Source)</span>
               <div className="flex gap-2 items-center">
@@ -276,7 +276,7 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
                 </button>
               </div>
               {!getPrivateKey() && (
-                <p className="text-[10px] text-amber-300/70">Belum ada private key di sesi ini — URL tanpa key hanya jalan di browser yang login.</p>
+                <p className="text-[10px] text-amber-300/70">Belum ada private key di sesi ini - URL tanpa key hanya jalan di browser yang login.</p>
               )}
             </div>
 

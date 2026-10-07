@@ -8,7 +8,7 @@ export default function PlainTheme({ counts, total, font, fontSize, accent, show
 
   if (inline) {
     return (
-      <div className="vc-font flex items-baseline gap-2" style={{ fontFamily: family, animation: 'fadeIn 0.4s ease both' }}>
+      <div className="vc-font flex items-center justify-center gap-2 text-center mx-auto" style={{ fontFamily: family, animation: 'fadeIn 0.4s ease both' }}>
         <span className="text-white font-black tabular-nums leading-none" style={{ fontSize }}>{fmtCount(total)}</span>
         {showLabel && <span className="font-black uppercase tracking-widest shrink-0" style={{ color: accent, fontSize: labelSize }}>Watching</span>}
         {showBreakdown && rows.map(([p, n]) => {
@@ -21,18 +21,18 @@ export default function PlainTheme({ counts, total, font, fontSize, accent, show
   }
 
   return (
-    <div className="vc-font flex flex-col" style={{ fontFamily: family, animation: 'fadeIn 0.4s ease both' }}>
-      <span className="text-white font-black tabular-nums leading-none" style={{ fontSize }}>{fmtCount(total)}</span>
-      {showLabel && <span className="font-black uppercase tracking-widest" style={{ color: accent, fontSize: labelSize }}>Watching</span>}
+    <div className="vc-font flex flex-col items-center text-center mx-auto" style={{ fontFamily: family, animation: 'fadeIn 0.4s ease both' }}>
+      <span className="text-white font-black tabular-nums leading-none text-center" style={{ fontSize }}>{fmtCount(total)}</span>
+      {showLabel && <span className="font-black uppercase tracking-widest text-center" style={{ color: accent, fontSize: labelSize }}>Watching</span>}
       {showBreakdown && rows.length > 0 && (
-        <div className="flex flex-col mt-1">
+        <div className="flex flex-col items-center mt-1 text-center">
           {rows.map(([p, n]) => {
             const meta = PLATFORM_META[p] || PLATFORM_META.tiktok;
-            return <span key={p} className="text-white/70 font-bold tabular-nums" style={{ fontSize: labelSize }}>{meta.label} {fmtCount(n)}</span>;
+            return <span key={p} className="text-white/70 font-bold tabular-nums text-center" style={{ fontSize: labelSize }}>{meta.label} {fmtCount(n)}</span>;
           })}
         </div>
       )}
-      {showBreakdown && rows.length === 0 && <span className="text-white/40 font-bold" style={{ fontSize: labelSize }}>{emptyLabel}</span>}
+      {showBreakdown && rows.length === 0 && <span className="text-white/40 font-bold text-center" style={{ fontSize: labelSize }}>{emptyLabel}</span>}
     </div>
   );
 }

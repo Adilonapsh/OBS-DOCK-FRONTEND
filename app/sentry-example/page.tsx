@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 import { notFound } from "next/navigation";
 
 export default function SentryExamplePage() {
-  // Halaman ini hanya untuk testing di dev — jangan ekspos di production.
+  // Halaman ini hanya untuk testing di dev - jangan ekspos di production.
   // (NODE_ENV di-inline saat build, jadi di prod selalu 404.)
   if (process.env.NODE_ENV === "production") {
     notFound();
@@ -20,7 +20,7 @@ export default function SentryExamplePage() {
         <button
           type="button"
           onClick={() => {
-            throw new Error("Sentry Test Error — abaikan, ini tes integrasi.");
+            throw new Error("Sentry Test Error - abaikan, ini tes integrasi.");
           }}
           className="px-4 py-2 rounded-lg border text-sm font-medium"
         >

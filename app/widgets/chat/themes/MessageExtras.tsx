@@ -54,7 +54,7 @@ export function MessageExtras({
             className="text-[10px] font-bold truncate pr-2"
             style={{ color: dark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.7)' }}
           >
-            ▶ YouTube — tonton
+            ▶ YouTube - tonton
           </span>
         </a>
       )}

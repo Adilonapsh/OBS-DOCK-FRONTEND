@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
-// Route OBS Browser Source — jangan dikirim ke Sentry biar tidak membakar kuota.
+// Route OBS Browser Source - jangan dikirim ke Sentry biar tidak membakar kuota.
 // Contoh: /overlay/*, /widgets/*/display, /designer/display, */display
 function isExcludedPath(pathname: string) {
   if (pathname.includes("/display")) return true;

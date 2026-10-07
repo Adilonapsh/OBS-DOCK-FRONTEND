@@ -1,6 +1,6 @@
 import type { LyricsThemeProps } from './types';
 
-export const themeMeta = { value: 'brutalist', label: 'Brutalist - Neo Brutalist' } as const;
+export const themeMeta = { value: 'brutalist', label: 'Brutalist' } as const;
 
 function LyricsLines({
   lyrics,
@@ -156,7 +156,7 @@ export default function BrutalistTheme(props: LyricsThemeProps) {
           }}
         />
       )}
-      {/* top accent bar — controlled by brutalistTail */}
+      {/* top accent bar - controlled by brutalistTail */}
       {hasTail && <div className="absolute top-0 left-0 right-0 h-[10px] border-b-[4px]" style={{ background: safeAccent, borderColor }} />}
 
       {/* header */}
@@ -166,7 +166,7 @@ export default function BrutalistTheme(props: LyricsThemeProps) {
           {title}
         </span>
         <span className="hidden sm:inline-flex text-[10px] font-bold tracking-widest truncate max-w-[150px]" style={{ color: txtColor, opacity: 0.5, fontStyle, textTransform }}>
-          — {subtitle}
+          - {subtitle}
         </span>
         <span className="w-2.5 h-2.5 border-[2px] shrink-0" style={{ background: safeAccent, borderColor }} />
       </div>
@@ -195,7 +195,7 @@ export default function BrutalistTheme(props: LyricsThemeProps) {
           <span className="w-1.5 h-1.5 border" style={{ background: safeAccent, borderColor: bubbleBg }} /> BRUTAL LYRICS • WHITE / BLACK / HALFTONE
         </span>
         <span className="font-black text-[8px] tracking-[0.14em] px-1.5 py-0.5 border" style={{ background: badgeBg, color: bubbleBg, borderColor: bubbleBg, fontStyle, textTransform }}>
-          {lyrics.length ? `${Math.max(0, activeIndex + 1)}/${lyrics.length}` : plainLyrics ? 'PLAIN' : '—'}
+          {lyrics.length ? `${Math.max(0, activeIndex + 1)}/${lyrics.length}` : plainLyrics ? 'PLAIN' : '-'}
         </span>
       </div>
     </div>

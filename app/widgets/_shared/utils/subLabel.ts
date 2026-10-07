@@ -9,7 +9,7 @@
 // - Kick: Follow, Subscription, Resubscription
 
 // Tipe display yang dianggap follow/subscribe (muncul di widget follow,
-// dan di widget event sebagai join berlabel — bukan join biasa).
+// dan di widget event sebagai join berlabel - bukan join biasa).
 const FOLLOW_TYPES = new Set([
   'follow',
   'sub',

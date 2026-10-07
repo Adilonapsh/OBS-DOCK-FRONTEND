@@ -104,7 +104,7 @@ function PinnedInner() {
   // mirror agar callback socket (didaftarkan sekali) tidak baca state basi
   const liveRef = useRef({ pinned: null as PinnedItem | null, exiting: false });
 
-  // Efek mengetik untuk tema typing/monkey — reset tiap pin baru
+  // Efek mengetik untuk tema typing/monkey - reset tiap pin baru
   useEffect(() => {
     if ((theme !== 'typing' && theme !== 'monkey') || !pinned) return;
     setTypedCount(0);
@@ -137,7 +137,7 @@ function PinnedInner() {
         profilePictureUrl: 'https://ui-avatars.com/api/?name=Rizky&background=8b5cf6&color=fff',
         platform: 'tiktok',
       });
-      return; // mode simulate — 1 file untuk OBS + preview, tidak perlu socket
+      return; // mode simulate - 1 file untuk OBS + preview, tidak perlu socket
     }
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';

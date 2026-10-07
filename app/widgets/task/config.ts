@@ -2,17 +2,17 @@ import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import type { TaskItem } from './themes/types';
 
 export const TASK_THEMES = [
-  { value: 'focus', label: 'Focus - Moka & Dark Slate ✨' },
-  { value: 'glass', label: 'Glass - Blur Premium (seperti Timer Glass)' },
-  { value: 'minimal', label: 'Minimal - Clean' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
-  { value: 'brutalist', label: 'Brutalist - Hard Border + Halftone' },
+  { value: 'focus', label: 'Focus' },
+  { value: 'glass', label: 'Glass' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'plain', label: 'Plain' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const TASK_FONTS = WIDGET_FONTS;
 
 export const TASK_ANIMS = [
-  { value: 'elegant', label: 'Elegant ✨ (Recommended)' },
+  { value: 'elegant', label: 'Elegant (Recommended)' },
   { value: 'softPop', label: 'Soft Pop - Halus' },
   { value: 'blur', label: 'Blur In - Minimal' },
   { value: 'luxe', label: 'Luxe - Editorial' },
@@ -25,7 +25,7 @@ export const TASK_ANIMS = [
 ] as const;
 
 export const TASK_HORIZONTAL_ANIMS = [
-  { value: 'elegant', label: 'Elegant ✨' },
+  { value: 'elegant', label: 'Elegant' },
   { value: 'slideLeft', label: 'Slide Left' },
   { value: 'slideRight', label: 'Slide Right' },
   { value: 'softPop', label: 'Soft Pop' },

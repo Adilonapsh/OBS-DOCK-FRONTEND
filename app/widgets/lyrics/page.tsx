@@ -25,7 +25,7 @@ const themes = [
   { value: 'vinyl', label: 'Vinyl' },
   { value: 'color-palette', label: 'Color Palette' },
   { value: 'plain', label: 'Plain' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'brutalist', label: 'Brutalist' },
 ];
 const fontsList = [...WIDGET_FONTS];
 const showAnimations = ['fade-in','slide-in-from-top','slide-in-from-bottom','slide-in-from-left','slide-in-from-right'];
@@ -234,7 +234,7 @@ function LyricsSettingsInner() {
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Theme</span>
                     <select value={state.theme} onChange={e => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                      {themes.map(t => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+                      {themes.map(t => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
                     </select>
                   </label>
                   <label className="block">
@@ -247,7 +247,7 @@ function LyricsSettingsInner() {
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Max Width <span className="font-normal opacity-60">0=full</span></span><input type="number" value={state.maxWidth} onChange={e => update('maxWidth', parseInt(e.target.value)||0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Lyrics Align</span><select value={state.lyricsAlign} onChange={e => update('lyricsAlign', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-zinc-900">Left</option><option value="center" className="bg-zinc-900">Center</option><option value="right" className="bg-zinc-900">Right</option></select></label>
+                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Lyrics Align</span><select value={state.lyricsAlign} onChange={e => update('lyricsAlign', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Left</option><option value="center" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Center</option><option value="right" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Right</option></select></label>
                   </div>
                   <div className="bg-black/30 border border-white/5 rounded-xl p-2">
                     <PositionPicker value={(state as any).pos || 'center'} onChange={(v) => update('pos', v)} />
@@ -275,7 +275,7 @@ function LyricsSettingsInner() {
                     <div><div className="text-white font-bold text-[11px]">Enable LRCLIB</div><div className="text-gray-500 text-[10px]">Fetch synced lyrics dari https://lrclib.net</div></div>
                     <input type="checkbox" checked={state.lrclibEnabled} onChange={e => update('lrclibEnabled', e.target.checked)} className="w-4 h-4 accent-white shrink-0" />
                   </label>
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Visible Lines</span><select value={state.maxLyricsLines} onChange={e => update('maxLyricsLines', parseInt(e.target.value))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value={1} className="bg-zinc-900">1 - current only</option><option value={2} className="bg-zinc-900">2</option><option value={3} className="bg-zinc-900">3 (default)</option><option value={5} className="bg-zinc-900">5</option><option value={7} className="bg-zinc-900">7</option></select></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Visible Lines</span><select value={state.maxLyricsLines} onChange={e => update('maxLyricsLines', parseInt(e.target.value))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value={1} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">1 - current only</option><option value={2} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">2</option><option value={3} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">3 (default)</option><option value={5} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">5</option><option value={7} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">7</option></select></label>
                   <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Hanya lirik yang tampil (cover & progress dihilangkan). Active line highlight pakai accent. Jika synced tidak ada → plain lyrics. Instrumental → ♪</div>
                 </div>
               </div>
@@ -289,8 +289,8 @@ function LyricsSettingsInner() {
                   {state.autoHide && <label className="block ml-4"><span className="text-[11px] font-bold text-gray-300">Display Duration (seconds)</span><input type="number" min={1} max={60} value={state.displayDuration} onChange={e => update('displayDuration', parseInt(e.target.value)||5)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>}
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Included Apps <span className="font-normal opacity-60">priority order, empty = focused app</span></span><span className="text-[10px] text-gray-500"> <a href="http://127.0.0.1:5000/sessions" target="_blank" className="text-white underline">View active sources</a></span><input value={state.includedApplications} onChange={e => update('includedApplications', e.target.value)} placeholder="Spotify.exe, vlc.exe" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Excluded Apps</span><input value={state.excludedApplications} onChange={e => update('excludedApplications', e.target.value)} placeholder="Chrome, vlc.exe" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Show Animation</span><select value={state.showAnimation} onChange={e => update('showAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{showAnimations.map(a => <option key={a} value={a} className="bg-zinc-900">{a}</option>)}</select></label>
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Hide Animation</span><select value={state.hideAnimation} onChange={e => update('hideAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{hideAnimations.map(a => <option key={a} value={a} className="bg-zinc-900">{a}</option>)}</select></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Show Animation</span><select value={state.showAnimation} onChange={e => update('showAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{showAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Hide Animation</span><select value={state.hideAnimation} onChange={e => update('hideAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{hideAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
                 </div>
               </div>
 

@@ -256,7 +256,7 @@ export function mapPsdLayers(psd: Psd): PsdImportResult {
   }
   if (bytes > 8 * 1024 * 1024) {
     warnings.push(
-      `Image hasil import ±${(bytes / 1048576).toFixed(1)}MB — melebihi kapasitas aman localStorage browser. Pertimbangkan kompres/downscale image di Photoshop lalu import ulang.`
+      `Image hasil import ±${(bytes / 1048576).toFixed(1)}MB - melebihi kapasitas aman localStorage browser. Pertimbangkan kompres/downscale image di Photoshop lalu import ulang.`
     );
   }
   return { layers: ctx.layers, canvasW, canvasH, skipped: ctx.skipped, warnings };

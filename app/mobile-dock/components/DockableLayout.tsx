@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * DockableLayout — Resizable & Dockable layout ala OBS/ VS Code untuk mobile-dock.
+ * DockableLayout - Resizable & Dockable layout ala OBS/ VS Code untuk mobile-dock.
  *
  * - Semua panel bisa di-drag ke zona atas / bawah / kiri / kanan / tengah (tab stacking).
  * - Split bisa di-resize (mouse + touch via Pointer Events).
@@ -289,7 +289,7 @@ export default function DockableLayout(props: DockableLayoutProps) {
   const [dragPanel, setDragPanel] = useState<string | null>(null);
   const [hoverZone, setHoverZone] = useState<{ tabsId: string; pos: DockDropPos } | null>(null);
   const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null);
-  // Konfirmasi sembunyikan panel — anti kepencet di tablet/mobile (tap ✕ tidak langsung hapus)
+  // Konfirmasi sembunyikan panel - anti kepencet di tablet/mobile (tap ✕ tidak langsung hapus)
   const [confirmHide, setConfirmHide] = useState<string | null>(null);
 
   const visible = useMemo(() => dockVisiblePanels(layout.root), [layout.root]);
@@ -358,7 +358,7 @@ export default function DockableLayout(props: DockableLayoutProps) {
     const containerSize = dir === 'row' ? rect?.width ?? 1 : rect?.height ?? 1;
     const start = dir === 'row' ? e.clientX : e.clientY;
     // Ukuran awal di-capture sekali; tiap move dihitung dari TOTAL delta sejak start.
-    // (Jangan akumulasi ke baseSizes — itu bikin resize lebih cepat dari mouse.)
+    // (Jangan akumulasi ke baseSizes - itu bikin resize lebih cepat dari mouse.)
     const startSizes = [...sizes];
     onResizeActive?.(true);
     const onMove = (ev: PointerEvent) => {
@@ -409,7 +409,7 @@ export default function DockableLayout(props: DockableLayoutProps) {
           <div className="flex items-stretch gap-0.5 p-1 bg-[var(--bg-color)] border-b border-[var(--border-color)] overflow-x-auto shrink-0">
             {node.panels.map((p) => {
               const active = node.active === p;
-              // Tab-bar juga target drop (tengah = gabung jadi tab) — seperti browser/VS Code.
+              // Tab-bar juga target drop (tengah = gabung jadi tab) - seperti browser/VS Code.
               const tabDropHot = !!dragPanel && hoverZone?.tabsId === node.id && hoverZone?.pos === 'center';
               return (
                 <div

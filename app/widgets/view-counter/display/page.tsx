@@ -50,7 +50,7 @@ function ViewCounterInner() {
   const inline = getBoolParam(params, 'inline', false);
   const idleFx = getStringParam(params, 'idleFx', 'none');
   const pos = getStringParam(params, 'pos', 'center');
-  const posStyle = getPositionStyle(pos);
+  const posStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center' };
   const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const [counts, setCounts] = useState<Record<string, number>>((): Record<string, number> =>
@@ -90,7 +90,7 @@ function ViewCounterInner() {
   }, [simulate]);
 
   useEffect(() => {
-    if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
+    if (simulate) return; // mode simulate - demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
@@ -132,7 +132,7 @@ function ViewCounterInner() {
         .vc-idle > .vc-idle-inner { position: relative; border-radius: 999px; }
         @keyframes vcSpin { to { transform: rotate(360deg); } }`}</style>
       <div className="w-full h-full flex" style={posStyle as React.CSSProperties}>
-        <AutoScale defaultBase={300} baseWidth={theme === 'music' ? 320 : 300}>
+        <AutoScale defaultBase={300} baseWidth={theme === 'music' ? 320 : theme === 'brutalist' ? 380 : 300}>
           <VcIdle active={idleFx === 'gradient'} accent={accent}>
             {theme === 'minimal' ? (
               <MinimalTheme {...themeProps} />

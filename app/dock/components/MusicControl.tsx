@@ -97,9 +97,9 @@ export default function MusicControl({
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lyrics, setLyrics] = useState<{ synced: LyricLine[]; plain: string }>({ synced: [], plain: '' });
   const [lyricsFor, setLyricsFor] = useState('');
-  // Posisi drag slider (seek) — dikirim ke server saat dilepas agar tidak spam.
+  // Posisi drag slider (seek) - dikirim ke server saat dilepas agar tidak spam.
   const [seekDrag, setSeekDrag] = useState<number | null>(null);
-  // Sort queue via drag handle / tombol up-down — dikirim ke server (song-control move).
+  // Sort queue via drag handle / tombol up-down - dikirim ke server (song-control move).
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   // Posisi lokal: server hanya update bila display player terbuka,
@@ -120,7 +120,7 @@ export default function MusicControl({
   const effPos = song?.isPlaying ? Math.max(song.position || 0, localPos) : song?.position || 0;
   const socketRef = useRef<Socket | null>(null);
 
-  // Koneksi socket sendiri (jangan nebeng socket dock) — dijamin ada
+  // Koneksi socket sendiri (jangan nebeng socket dock) - dijamin ada
   // sehingga refresh dock tidak pernah kehilangan queue.
   // Filter by room: backend broadcast global, jadi abaikan update milik room lain.
   const room = getRoom();
@@ -143,7 +143,7 @@ export default function MusicControl({
       s.emit('join-room', room);
       s.emit('song-get', { privateKey: room });
     });
-    // room bisa berubah setelah privateKey terverifikasi — sinkron ulang
+    // room bisa berubah setelah privateKey terverifikasi - sinkron ulang
     if (s.connected) {
       s.emit('join-room', room);
       s.emit('song-get', { privateKey: room });
@@ -287,7 +287,7 @@ export default function MusicControl({
             <SkipForward className="w-3.5 h-3.5" />
           </button>
           <div className="flex-1 min-w-0 mt-3">
-            {/* Slider seek — kontrol progress hanya dari dock (desktop/mobile).
+            {/* Slider seek - kontrol progress hanya dari dock (desktop/mobile).
                 Widget display murni penampil, tidak bisa seek. */}
             <input
               type="range"

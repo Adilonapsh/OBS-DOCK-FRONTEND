@@ -3,7 +3,7 @@ import { DEMO_FOLLOWS } from '../config';
 import type { FollowItem } from './types';
 import type { DummyBase } from '../../_shared/hooks/useDummySimulation';
 
-// Pool dummy follow — mengalir satu per satu seperti real.
+// Pool dummy follow - mengalir satu per satu seperti real.
 const EXTRA_DUMMIES: DummyBase<FollowItem>[] = [
   { nickname: 'DewiYT', platform: 'youtube', label: 'new subscriber', profilePictureUrl: 'https://ui-avatars.com/api/?name=Dewi&background=ff0000&color=fff' },
   { nickname: 'KickRider', platform: 'kick', profilePictureUrl: 'https://ui-avatars.com/api/?name=Kick&background=53fc18&color=000' },

@@ -6,8 +6,8 @@ export const PINNED_THEMES = [
   { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
   { value: 'monkey', label: 'Monkey - Teks + Keyboard Mengetik' },
   { value: 'island', label: 'Island - Dynamic Island' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'plain', label: 'Plain' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const PINNED_FONTS = WIDGET_FONTS;

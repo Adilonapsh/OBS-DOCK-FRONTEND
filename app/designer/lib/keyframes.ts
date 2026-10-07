@@ -366,7 +366,7 @@ export function updateKeyframe(
   return next;
 }
 export function moveKeyframe(kf: LayerKeyframes | undefined, prop: KeyProp, keyId: string, t: number): LayerKeyframes {
-  // Murni pindah TANPA menghapus key lain — aman dipanggil tiap mousemove saat drag.
+  // Murni pindah TANPA menghapus key lain - aman dipanggil tiap mousemove saat drag.
   // Penggabungan hanya terjadi eksplisit via mergeKeysAt() saat drop.
   const next: LayerKeyframes = { ...(kf ?? {}) };
   const arr = [...(next[prop] ?? [])];

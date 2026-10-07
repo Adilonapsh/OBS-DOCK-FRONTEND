@@ -1,4 +1,5 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 
 export const GOAL_TYPES = [
   { value: 'follow', label: 'Followers' },
@@ -9,9 +10,9 @@ export const GOAL_TYPES = [
 export const GOALS_THEMES = [
   { value: 'standard', label: 'Standard - Card' },
   { value: 'minimal', label: 'Minimal - Bar' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
+  { value: 'plain', label: 'Plain' },
   { value: 'passion', label: 'Passion - Like Goal Studio' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const GOALS_FONTS = WIDGET_FONTS;
@@ -46,15 +47,7 @@ export const GOALS_DEFAULTS = {
   showBar: true,
   anim: 'elegant' as string,
   hideAnim: 'fade' as string,
-  brutalistBg: '#FFFFFF' as string,
-  brutalistTextColor: '#000000' as string,
-  brutalistBadgeBg: '#FFFFFF' as string,
-  brutalistBorderColor: '#000000' as string,
-  brutalistShadow: 6 as number,
-  brutalistHalftone: true as boolean,
-  brutalistTail: true as boolean,
-  brutalistItalic: true as boolean,
-  brutalistUppercase: true as boolean,
+  ...BRUTALIST_DEFAULTS,
 } as const;
 
 export type GoalsSettings = typeof GOALS_DEFAULTS;
@@ -76,15 +69,7 @@ export function buildGoalsUrl(base: string, s: GoalsSettings): string {
   p.set('showBar', s.showBar ? '1' : '0');
   p.set('anim', s.anim);
   p.set('hideAnim', s.hideAnim);
-  p.set('brutalistBg', (s as unknown as { brutalistBg?: string }).brutalistBg || '#FFFFFF');
-  p.set('brutalistTextColor', (s as unknown as { brutalistTextColor?: string }).brutalistTextColor || '#000000');
-  p.set('brutalistBadgeBg', (s as unknown as { brutalistBadgeBg?: string }).brutalistBadgeBg || '#FFFFFF');
-  p.set('brutalistBorderColor', (s as unknown as { brutalistBorderColor?: string }).brutalistBorderColor || '#000000');
-  p.set('brutalistShadow', String((s as unknown as { brutalistShadow?: number }).brutalistShadow ?? 6));
-  p.set('brutalistHalftone', (s as unknown as { brutalistHalftone?: boolean }).brutalistHalftone ? '1' : '0');
-  p.set('brutalistTail', (s as unknown as { brutalistTail?: boolean }).brutalistTail ? '1' : '0');
-  p.set('brutalistItalic', (s as unknown as { brutalistItalic?: boolean }).brutalistItalic ? '1' : '0');
-  p.set('brutalistUppercase', (s as unknown as { brutalistUppercase?: boolean }).brutalistUppercase ? '1' : '0');
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   const q = p.toString();
   return q ? `${base}?${q}` : base;

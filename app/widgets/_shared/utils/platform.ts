@@ -1,4 +1,4 @@
-// Logo platform dari public/assets/logo — single source of truth.
+// Logo platform dari public/assets/logo - single source of truth.
 // Kembalikan path logo bila ada, null bila tidak (pakai glyph fallback).
 
 const LOGOS: Record<string, string> = {

@@ -11,7 +11,7 @@ export const MUSIC_THEMES = [
   { value: 'simple', label: 'Simple' },
   { value: 'card', label: 'Card' },
   { value: 'vinyl', label: 'Vinyl' },
-  { value: 'brutalist', label: 'Brutalist - White Hard Shadow + Halftone' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const MUSIC_FONTS = WIDGET_FONTS;

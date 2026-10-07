@@ -22,7 +22,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr";
+  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate";
   recommended?: boolean;
   w: number;
   h: number;
@@ -176,7 +176,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "pinned",
     title: "Pinned Chat",
-    desc: "Chat yang di-pin dari dock — sinkron realtime, lepas via unpin. 2 tema Standard/Minimal.",
+    desc: "Chat yang di-pin dari dock - sinkron realtime, lepas via unpin. 2 tema Standard/Minimal.",
     category: "chat",
     tags: ["Pin", "Chat", "Sync"],
     layout: "pinned",
@@ -200,7 +200,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "goals",
     title: "Goals",
-    desc: "Goal progress untuk Follow / Subs / Like — pilih jenis goal, atur target, live update dari TikTok & Streamer.bot.",
+    desc: "Goal progress untuk Follow / Subs / Like - pilih jenis goal, atur target, live update dari TikTok & Streamer.bot.",
     category: "progress",
     tags: ["Goals", "Follow", "Subs", "Like", "TikTok", "Streamer.bot"],
     layout: "goals",
@@ -232,6 +232,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "qr",
     recommended: true,
     w: 300, h: 340,
+  },
+  {
+    id: "heartrate",
+    title: "Heartrate",
+    desc: "Heart rate overlay via Hyperate - 5 tema (Standard/Pill/Bar/Minimal/Brutalist), warna adaptif low/mid/high, icon heart pulse, threshold alert, source dari app Hyperate (WS Phoenix) atau koneksi Hyperate ID di Connection.",
+    category: "info",
+    tags: ["Heartrate", "Heart Rate", "BPM", "Hyperate", "Pulse"],
+    layout: "heartrate",
+    params: "theme=standard&font=Outfit&fontSize=32",
+    preview: "heartrate",
+    recommended: true,
+    w: 420, h: 180,
   },
   {
     id: "custom",
@@ -486,6 +498,22 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "heartrate") {
+    return (
+      <div className="w-full h-full bg-black flex items-center justify-center p-3">
+        <div className="flex items-center gap-2 px-3 py-2 bg-white/[0.06] border border-white/10 rounded-2xl">
+          <div className="w-8 h-8 rounded-xl bg-red-500 flex items-center justify-center"><Heart className="w-4 h-4 text-white fill-white" /></div>
+          <div className="flex flex-col leading-none">
+            <span className="text-white/50 font-black text-[6px] uppercase tracking-widest">Heart Rate</span>
+            <span className="text-white font-black text-[14px] leading-none">98 <span className="text-red-400 text-[7px]">BPM</span></span>
+          </div>
+          <div className="flex items-end gap-[2px] h-6 ml-1">
+            <span className="w-[2px] h-2 bg-red-500 rounded-full opacity-30" /><span className="w-[2px] h-3 bg-red-500 rounded-full opacity-50" /><span className="w-[2px] h-4 bg-red-500 rounded-full" /><span className="w-[2px] h-2 bg-red-500 rounded-full opacity-40" />
+          </div>
+        </div>
+      </div>
+    );
+  }
   // full
   return (    <div className="w-full h-full bg-black relative p-2 overflow-hidden">
       <div className="absolute top-2 left-2 flex gap-1">
@@ -629,6 +657,10 @@ function WidgetsListing() {
     }
     if (item.id === 'social-rotator') {
       const base = `${window.location.origin}/widgets/social-rotator/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'heartrate') {
+      const base = `${window.location.origin}/widgets/heartrate/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     if (item.id === 'custom') {
@@ -834,6 +866,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/social-rotator${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'heartrate' ? (
+                        <Link href={`/widgets/heartrate${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'custom' ? (
                         <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Layers className="w-3 h-3" /> Open Editor
@@ -848,7 +884,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

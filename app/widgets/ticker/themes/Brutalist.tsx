@@ -1,7 +1,7 @@
 import type { TickerThemeProps } from './types';
 import { TickerTrack } from './TickerTrack';
 
-export const themeMeta = { value: 'brutalist', label: 'Brutalist - Neo Brutalist' } as const;
+export const themeMeta = { value: 'brutalist', label: 'Brutalist' } as const;
 
 export default function BrutalistTheme({
   items,

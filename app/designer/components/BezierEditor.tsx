@@ -97,7 +97,7 @@ export default function BezierEditor({
           style={{ cursor: editable ? 'grab' : 'default' }}
           onMouseDown={dragHandle('p1')}
         >
-          <title>P1 — arah keluar</title>
+          <title>P1 - arah keluar</title>
         </circle>
         <circle
           cx={X(value.x2)}
@@ -109,12 +109,12 @@ export default function BezierEditor({
           style={{ cursor: editable ? 'grab' : 'default' }}
           onMouseDown={dragHandle('p2')}
         >
-          <title>P2 — arah masuk</title>
+          <title>P2 - arah masuk</title>
         </circle>
       </svg>
       <div className="text-[10px] text-gray-500 mt-1">
         {editable
-          ? `cubic-bezier(${value.x1}, ${value.y1}, ${value.x2}, ${value.y2}) — drag handle kuning`
+          ? `cubic-bezier(${value.x1}, ${value.y1}, ${value.x2}, ${value.y2}) - drag handle kuning`
           : 'Pilih ease Custom untuk mengedit handle.'}
       </div>
     </div>

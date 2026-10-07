@@ -49,7 +49,7 @@ const vibrantDefaults: AccentPalette = {
 // Berlapis agar tidak pernah gagal diam-diam:
 // 1) node-vibrant (kualitas terbaik) → 2) canvas manual (tanpa dependensi,
 //    aman bila chunk/worker Vibrant gagal dimuat) → 3) hue dari judul lagu
-//    (untuk MP3 tanpa cover art — tiap lagu tetap dapat warna sendiri).
+//    (untuk MP3 tanpa cover art - tiap lagu tetap dapat warna sendiri).
 function hashHue(s: string): number {
   let h = 0;
   const str = String(s || 'music');
@@ -337,7 +337,7 @@ function loadYouTubeAPI(): Promise<void> {
       prev?.();
       resolve();
     };
-    // Fallback kalau callback tidak terpanggil — polling YT.Player
+    // Fallback kalau callback tidak terpanggil - polling YT.Player
     const poll = setInterval(() => {
       if (window.YT?.Player) {
         clearInterval(poll);
@@ -427,7 +427,7 @@ function MusicInner() {
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Identitas tab ini — server hanya menerima laporan progres dari SATU reporter
+  // Identitas tab ini - server hanya menerima laporan progres dari SATU reporter
   // agar banyak tab/OBS source tidak saling menimpa posisi. Semua tab tetap
   // memutar audio masing-masing (biar kedengaran di tiap tempat), dan semua
   // tab mengikuti seek dari dock.
@@ -439,7 +439,7 @@ function MusicInner() {
   const leaderRef = useRef(true);
   useEffect(() => { leaderRef.current = isLeader; }, [isLeader]);
 
-  // Deteksi audio diblokir browser (autoplay policy) — tampilkan tombol suara.
+  // Deteksi audio diblokir browser (autoplay policy) - tampilkan tombol suara.
   const [audioBlocked, setAudioBlocked] = useState(false);
   const blockedRef = useRef(false);
   const lastAdvanceRef = useRef({ pos: -1, at: 0 });
@@ -462,7 +462,7 @@ function MusicInner() {
   // Perintah seek terakhir dari server yang sudah diikuti.
   // Laporan progres rutin tanpa seekSeq baru WAJIB diabaikan.
   const lastSeekSeqRef = useRef<number | null>(null);
-  // URL audio yang sudah dimuat — bandingkan via ref, bukan a.src
+  // URL audio yang sudah dimuat - bandingkan via ref, bukan a.src
   // (a.src ternormalisasi browser sehingga perbandingan string gagal).
   // Disimpan per lagu (id+url) agar request URL yang sama 2x tetap restart.
   const lastAudioUrlRef = useRef('');
@@ -502,7 +502,7 @@ function MusicInner() {
   useEffect(() => {
     if (!simulate) return;
     const demo: Song[] = [
-      { id: 'demo1', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', videoId: 'dQw4w9WgXcQ', kind: 'youtube', title: 'Demo Song — Never Gonna Give You Up', requestedBy: 'Penonton_A', platform: 'tiktok', addedAt: Date.now() },
+      { id: 'demo1', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', videoId: 'dQw4w9WgXcQ', kind: 'youtube', title: 'Demo Song - Never Gonna Give You Up', requestedBy: 'Penonton_A', platform: 'tiktok', addedAt: Date.now() },
       { id: 'demo2', url: 'https://example.com/demo.mp3', kind: 'audio', title: 'Demo Track Berikutnya (MP3)', requestedBy: 'Penonton_B', platform: 'youtube', addedAt: Date.now() },
     ];
     setQueue(demo);
@@ -536,7 +536,7 @@ function MusicInner() {
     });
     socket.on('disconnect', () => setConnected(false));
     socket.on('song-update', (data: SongUpdate & { room?: string }) => {
-      // Backend broadcast global — hanya terima update milik room sendiri
+      // Backend broadcast global - hanya terima update milik room sendiri
       // agar queue tidak tertukar antar streamer / tidak kosong karena room lain.
       if (data && data.room && data.room !== room) return;
       if (typeof data.reporterId === 'string' || data.reporterId === null || data.reporterId === undefined) {
@@ -553,13 +553,13 @@ function MusicInner() {
       if (cur && cur.id !== prevId) {
         liveRef.current.currentId = cur.id;
         setPosition(typeof data.position === 'number' ? data.position : 0);
-        // Ingat posisi server — player yang baru dimuat langsung kejar ke sini
+        // Ingat posisi server - player yang baru dimuat langsung kejar ke sini
         // (penting saat pindah scene / tab dibuka belakangan).
         pendingSeekRef.current = typeof data.position === 'number' && data.position > 2 ? data.position : 0;
         if (incomingSeq !== null) lastSeekSeqRef.current = incomingSeq;
         setVisibility(true);
       } else if (incomingSeq !== null && lastSeekSeqRef.current !== null && incomingSeq !== lastSeekSeqRef.current) {
-        // PERINTAH SEEK eksplisit dari dock (seek/choose/next/prev) — semua tab wajib ikut.
+        // PERINTAH SEEK eksplisit dari dock (seek/choose/next/prev) - semua tab wajib ikut.
         lastSeekSeqRef.current = incomingSeq;
         const target = typeof data.position === 'number' ? data.position : 0;
         const a = audioRef.current;
@@ -651,7 +651,7 @@ function MusicInner() {
       return;
     }
     if (current) {
-      // Pause/stop, queue masih utuh — fade visual saja, tahan lagu untuk fade-in.
+      // Pause/stop, queue masih utuh - fade visual saja, tahan lagu untuk fade-in.
       setDisplaySong(current);
       setFadingOut(true);
       return;
@@ -733,7 +733,7 @@ function MusicInner() {
             onError: () => { markBlocked(); },
           },
         });
-      } catch { /* player gagal dibuat — audio tetap jalan */ }
+      } catch { /* player gagal dibuat - audio tetap jalan */ }
     });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -773,7 +773,7 @@ function MusicInner() {
             // Sebelum itu putar bisu (diizinkan policy) agar progres tetap jalan & sync.
             // ?muted=1 selalu bisu (preview pendamping OBS).
             const allowSound = !forceMuted && (obsMode || unblockedRef.current);
-            // Muat ulang HANYA bila lagu berganti (id beda, bukan videoId —
+            // Muat ulang HANYA bila lagu berganti (id beda, bukan videoId -
             // request URL/video yang sama 2x tetap reload dari awal).
             // Resume / play-pause cukup play/pause tanpa reload.
             if (lastVideoRef.current !== curId) {
@@ -802,7 +802,7 @@ function MusicInner() {
       const a = audioRef.current;
       if (!a) return;
       // Reload bila GANTI LAGU (id beda) walaupun URL-nya sama (request duplikat),
-      // atau URL-nya memang beda. Bandingkan via ref — a.src ternormalisasi
+      // atau URL-nya memang beda. Bandingkan via ref - a.src ternormalisasi
       // browser (absolute URL) sehingga `a.src !== curUrl` selalu true dan
       // lagu restart dari 0 setiap render.
       if (lastAudioIdRef.current !== curId || lastAudioUrlRef.current !== curUrl) {
@@ -814,7 +814,7 @@ function MusicInner() {
       a.muted = forceMuted ? true : !(obsMode || unblockedRef.current);
       if (liveRef.current.isPlaying) {
         a.play().catch((err) => {
-          // Browser memblokir autoplay tanpa gesture — putar bisu dulu
+          // Browser memblokir autoplay tanpa gesture - putar bisu dulu
           // agar progres tetap sync, suara dibuka saat ada klik.
           if (err?.name === 'NotAllowedError') {
             markBlocked();
@@ -842,7 +842,7 @@ function MusicInner() {
           }
         } else if (Date.now() - lastAdvanceRef.current.at > 6000) {
           markBlocked();
-          // Kemungkinan autoplay diblokir — putar bisu dulu agar progres
+          // Kemungkinan autoplay diblokir - putar bisu dulu agar progres
           // tetap jalan & sync antar scene, suara dibuka saat ada klik.
           if (!unblockedRef.current) {
             try {
@@ -996,7 +996,7 @@ function MusicInner() {
   // Klik/sentuhan pengguna = gesture yang membuka blokir autoplay browser.
   // Dipanggil dari tombol suara maupun listener global (klik di mana saja).
   const unblockAudio = () => {
-    if (forceMuted) return; // preview muted permanen — jangan pernah buka suara
+    if (forceMuted) return; // preview muted permanen - jangan pernah buka suara
     unblockedRef.current = true;
     setUnblocked(true);
     blockedRef.current = false;
@@ -1015,7 +1015,7 @@ function MusicInner() {
           }
           a.muted = false;
           a.volume = 1;
-          a.play().catch(() => { /* tetap diblokir — tombol muncul lagi */ });
+          a.play().catch(() => { /* tetap diblokir - tombol muncul lagi */ });
         }
       } catch { /* abaikan */ }
       try {
@@ -1032,7 +1032,7 @@ function MusicInner() {
       } catch { /* abaikan */ }
     };
     tryPlay();
-    // Player YouTube kadang belum siap saat diklik — coba lagi sampai siap (maks 10 detik).
+    // Player YouTube kadang belum siap saat diklik - coba lagi sampai siap (maks 10 detik).
     if (current?.kind === 'youtube' && !ytDone) {
       const t = setInterval(() => {
         tryPlay();
@@ -1046,7 +1046,7 @@ function MusicInner() {
   const unblockRef = useRef(unblockAudio);
   useEffect(() => { unblockRef.current = unblockAudio; });
 
-  // Gesture pertama di mana saja langsung buka suara — ala widget donasi.
+  // Gesture pertama di mana saja langsung buka suara - ala widget donasi.
   useEffect(() => {
     if (simulate) return;
     const h = () => {
@@ -1070,7 +1070,7 @@ function MusicInner() {
     return () => { document.documentElement.style.background = ''; document.body.style.background = ''; };
   }, [obsMode]);
 
-  // Penanda build di console — untuk memastikan tab/OBS menjalankan kode terbaru
+  // Penanda build di console - untuk memastikan tab/OBS menjalankan kode terbaru
   // (cache basi adalah penyebab umum "fitur baru tidak jalan").
   useEffect(() => {
     console.info(
@@ -1135,7 +1135,7 @@ function MusicInner() {
           }
         }}
       />
-      {/* Browser memblokir suara autoplay — klik untuk membuka.
+      {/* Browser memblokir suara autoplay - klik untuk membuka.
           Disembunyikan di mode OBS agar tidak bocor ke stream. */}
       {!simulate && !obsMode && current && (audioBlocked || (isPlaying && !unblocked)) && (
         <button
@@ -1146,10 +1146,10 @@ function MusicInner() {
         </button>
       )}
       {/* Indikator pause di preview (non-OBS): widget di-fade sesuai aturan main,
-          jadi kasih tahu user lagunya pause — play lagi dari dock. */}
+          jadi kasih tahu user lagunya pause - play lagi dari dock. */}
       {!simulate && !obsMode && current && !isPlaying && (
         <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 bg-white/10 border border-white/15 rounded-full text-white/70 text-[10px] font-black uppercase tracking-widest backdrop-blur">
-          ⏸ Paused — play dari dock untuk fade-in
+          ⏸ Paused - play dari dock untuk fade-in
         </div>
       )}
       <div id="music-player-root" className={`w-full h-full flex p-4 ${alignmentCls} ${themeWrapper}`} style={{ ...posStyle, background: obsMode ? 'transparent' : undefined } as React.CSSProperties}>

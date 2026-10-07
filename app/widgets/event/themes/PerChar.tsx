@@ -55,7 +55,7 @@ export default function PerCharTheme({
   inline,
 }: PerCharEventProps) {
   const hide = hideAnim || 'fadeOut';
-  // horizontal & inline pakai bubble penuh yang sama — cuma arah alir beda
+  // horizontal & inline pakai bubble penuh yang sama - cuma arah alir beda
   const flowCls = horizontal ? 'flex-row flex-wrap items-start' : 'flex-col';
   return (
     <div className={`event-perchar-theme w-full ${horizontal ? 'max-w-none' : 'max-w-[480px]'} flex ${flowCls}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>

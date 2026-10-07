@@ -5,7 +5,7 @@ import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { GA_MEASUREMENT_ID, pageview } from "@/lib/gtag";
 
-// Route OBS Browser Source — jangan dihitung di GA biar tidak mengotori pageview.
+// Route OBS Browser Source - jangan dihitung di GA biar tidak mengotori pageview.
 // Contoh: /overlay/*, /widgets/*/display, /designer/display, */display
 function isExcludedPath(pathname: string | null) {
   if (!pathname) return false;

@@ -18,4 +18,5 @@ export type ViewCounterThemeProps = {
   brutalistTail?: boolean;
   brutalistItalic?: boolean;
   brutalistUppercase?: boolean;
+  brutalistInline?: boolean;
 };

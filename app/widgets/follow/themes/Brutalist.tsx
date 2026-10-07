@@ -2,7 +2,7 @@ import type { FollowThemeProps } from './types';
 import './Brutalist.css';
 import { Heart, UserPlus } from 'lucide-react';
 
-export const themeMeta = { value: 'brutalist', label: 'Brutalist - Neo Brutalist' } as const;
+export const themeMeta = { value: 'brutalist', label: 'Brutalist' } as const;
 
 export default function BrutalistTheme({
   follows,
@@ -57,7 +57,7 @@ export default function BrutalistTheme({
     ? 'w-full max-w-none flex flex-row flex-wrap gap-4 items-end'
     : 'w-full max-w-[420px] flex flex-col gap-6';
 
-  // empty state — overlay transparan, jangan tampilkan menunggu follow
+  // empty state - overlay transparan, jangan tampilkan menunggu follow
   if (visible.length === 0) return null;
 
   if (isRow) {

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Mobile Dock — halaman kontrol streamer (Deck / Control / Chat+BGM).
+ * Mobile Dock - halaman kontrol streamer (Deck / Control / Chat+BGM).
  *
  * - Realtime BGM pakai Socket.IO backend (event `song-*`), BUKAN Pusher.
  * - TIDAK ada kredensial hardcoded. Semua kredensial + URL tiap panel
@@ -174,7 +174,7 @@ function loadDockLayout(knownPanels?: string[]): DockLayoutState {
 }
 
 // ID video publik untuk fallback saat offline & belum ada video manual.
-// Bukan kredensial — hanya placeholder tampilan.
+// Bukan kredensial - hanya placeholder tampilan.
 const FALLBACK_VIDEO_ID = 'jfKfPfyJRdk';
 
 const EMPTY_URLS: PanelUrls = { deckUrl: '', controlUrl: '', alertUrl: '', monitorUrl: '', chatUrl: '' };
@@ -423,7 +423,7 @@ export default function MobileDockPage() {
   const [keyLoading, setKeyLoading] = useState(true);
   const [configLoading, setConfigLoading] = useState(true);
 
-  // ---- config (dari Supabase; LS hanya cache — dipakai sebagai nilai awal instan)
+  // ---- config (dari Supabase; LS hanya cache - dipakai sebagai nilai awal instan)
   const [initialCache] = useState<DockConfig>(() => loadCachedConfig());
   const [discordUserId, setDiscordUserId] = useState(initialCache.discordUserId);
   const [deckId, setDeckId] = useState(initialCache.deckId);
@@ -466,7 +466,7 @@ export default function MobileDockPage() {
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
   const [isDockResizing, setIsDockResizing] = useState(false);
 
-  // Daftar panel dikenal (bawaan + kustom) & judulnya — dipakai sanitize, tab, nav.
+  // Daftar panel dikenal (bawaan + kustom) & judulnya - dipakai sanitize, tab, nav.
   const knownPanels = useMemo(
     () => [...KNOWN_DOCK_PANELS.map(String), ...customPanels.map((c) => c.id)],
     [customPanels]
@@ -570,7 +570,7 @@ export default function MobileDockPage() {
           sessionStorage.removeItem('bypass_private_key');
           sessionStorage.removeItem('dock_private_verified');
         } catch {
-          // offline / RPC gagal — pakai cache apa adanya
+          // offline / RPC gagal - pakai cache apa adanya
           setPrivateKey(bypass);
           setKeyVerified(true);
           setKeyLoading(false);
@@ -945,7 +945,7 @@ export default function MobileDockPage() {
     return () => { cancelled = true; clearInterval(t); };
   }, [manualVideoId, discordUserId, keyVerified]);
 
-  // Socket.IO BGM — ganti total Pusher private-room
+  // Socket.IO BGM - ganti total Pusher private-room
   useEffect(() => {
     if (!keyVerified) return;
     if (!bgmEnabled) {
@@ -969,7 +969,7 @@ export default function MobileDockPage() {
       setBgmSearchSource(String(res?.source || ''));
       setBgmSearchWarning(typeof res?.warning === 'string' ? res.warning : null);
       if (!res?.results || res.results.length === 0) {
-        setBgmSearchError('Tidak ketemu — coba kata kunci lain atau paste link langsung.');
+        setBgmSearchError('Tidak ketemu - coba kata kunci lain atau paste link langsung.');
       } else {
         setBgmSearchError(null);
       }
@@ -1087,19 +1087,19 @@ export default function MobileDockPage() {
 
   const handleAddManual = () => {
     if (!newBgmUrl.trim()) return;
-    // judul di-resolve server via oEmbed — sama seperti widget request queue
+    // judul di-resolve server via oEmbed - sama seperti widget request queue
     addBgmUrl(newBgmUrl);
     setNewBgmUrl('');
   };
 
-  // Cari lagu via backend (sama seperti dock desktop — pakai YOUTUBE_API_KEY server,
+  // Cari lagu via backend (sama seperti dock desktop - pakai YOUTUBE_API_KEY server,
   // bukan key frontend. Hasil + warning sumber (API/cadangan) datang via song-search-result).
   const searchBgm = () => {
     const q = bgmSearchQuery.trim();
     if (!q) return;
     const s = socketRef.current;
     if (!s) {
-      setBgmSearchError('Belum terhubung — aktifkan BGM / cek koneksi dulu.');
+      setBgmSearchError('Belum terhubung - aktifkan BGM / cek koneksi dulu.');
       return;
     }
     setBgmIsSearching(true);
@@ -1137,11 +1137,11 @@ export default function MobileDockPage() {
   };
 
   const urlFields: Array<{ key: keyof PanelUrls; label: string; hint: string }> = [
-    { key: 'deckUrl', label: 'Panel Deck — URL', hint: 'Streamer.bot deck atau URL embed apapun.' },
-    { key: 'controlUrl', label: 'Panel Control — URL', hint: 'Konsol kontrol (bawaan: TipTap control).' },
-    { key: 'alertUrl', label: 'Panel Alert — URL', hint: 'Widget alert (bawaan: TipTap alert).' },
-    { key: 'monitorUrl', label: 'Panel Monitor — URL (opsional)', hint: 'Kosong = otomatis embed YouTube live. Bisa pakai {videoId}.' },
-    { key: 'chatUrl', label: 'Panel Chat — URL (opsional)', hint: 'Kosong = otomatis YouTube live_chat. Bisa pakai {videoId}.' },
+    { key: 'deckUrl', label: 'Panel Deck - URL', hint: 'Streamer.bot deck atau URL embed apapun.' },
+    { key: 'controlUrl', label: 'Panel Control - URL', hint: 'Konsol kontrol (bawaan: TipTap control).' },
+    { key: 'alertUrl', label: 'Panel Alert - URL', hint: 'Widget alert (bawaan: TipTap alert).' },
+    { key: 'monitorUrl', label: 'Panel Monitor - URL (opsional)', hint: 'Kosong = otomatis embed YouTube live. Bisa pakai {videoId}.' },
+    { key: 'chatUrl', label: 'Panel Chat - URL (opsional)', hint: 'Kosong = otomatis YouTube live_chat. Bisa pakai {videoId}.' },
   ];
 
   const emptyPanel = (label: string) => (
@@ -1381,7 +1381,7 @@ export default function MobileDockPage() {
             </div>
           )}
 
-          {/* Now playing + kontrol — sama seperti widget request queue */}
+          {/* Now playing + kontrol - sama seperti widget request queue */}
           <div className="rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-4 space-y-3">
             <div className="flex items-center gap-2 min-w-0">
               <Music className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -1455,7 +1455,7 @@ export default function MobileDockPage() {
             )}
           </div>
 
-          {/* Choose song — sama seperti widget request queue */}
+          {/* Choose song - sama seperti widget request queue */}
           <div className="rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-3 space-y-2">
             <h4 className="text-[var(--text-label)] text-[9px] font-bold uppercase flex items-center justify-between">
               Choose Song ({queue.length})
@@ -1591,7 +1591,7 @@ export default function MobileDockPage() {
         </div>
       );
     }
-    // Panel kustom (tambah via Settings — URL bebas, mendukung {videoId})
+    // Panel kustom (tambah via Settings - URL bebas, mendukung {videoId})
     const custom = customPanels.find((c) => c.id === id);
     if (custom) {
       const rawSrc = custom.url.trim();
@@ -1629,7 +1629,7 @@ export default function MobileDockPage() {
         </div>
         <div className="flex items-center gap-1">
           <div className="relative">
-            <button onClick={() => setShowLayoutMenu((p) => !p)} className="p-1.5 hover:bg-[var(--bg-color)] rounded transition-colors cursor-pointer" title="Layout — atur & kembalikan panel">
+            <button onClick={() => setShowLayoutMenu((p) => !p)} className="p-1.5 hover:bg-[var(--bg-color)] rounded transition-colors cursor-pointer" title="Layout - atur & kembalikan panel">
               <LayoutGrid className="w-4 h-4" />
             </button>
             {showLayoutMenu && (
@@ -1661,7 +1661,7 @@ export default function MobileDockPage() {
               </>
             )}
           </div>
-          <button onClick={openSettings} className="p-1.5 hover:bg-[var(--bg-color)] rounded transition-colors cursor-pointer" title="Settings — kredensial & URL tiap panel">
+          <button onClick={openSettings} className="p-1.5 hover:bg-[var(--bg-color)] rounded transition-colors cursor-pointer" title="Settings - kredensial & URL tiap panel">
             <Settings className="w-4 h-4" />
           </button>
           <button onClick={toggleFullscreen} className="p-1.5 hover:bg-[var(--bg-color)] rounded transition-colors cursor-pointer" title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}>
@@ -1673,7 +1673,7 @@ export default function MobileDockPage() {
         </div>
       </header>
 
-      {/* DOCKABLE LAYOUT — drag tab panel ke atas/bawah/kiri/kanan/tengah (tab stacking), resize via handle */}
+      {/* DOCKABLE LAYOUT - drag tab panel ke atas/bawah/kiri/kanan/tengah (tab stacking), resize via handle */}
       <div ref={containerRef} className="flex-grow pt-12 pb-16 md:pb-0 flex h-screen select-none relative gap-0.5 px-0.5">
         <DockableLayout
           layout={dockLayout}
@@ -1688,7 +1688,7 @@ export default function MobileDockPage() {
         />
       </div>
 
-      {/* MOBILE DOCK — nav mengikuti panel yang terlihat di layout */}
+      {/* MOBILE DOCK - nav mengikuti panel yang terlihat di layout */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t-2 border-[var(--border-color)] bg-[var(--dock-bg)] backdrop-blur-md flex items-center justify-around px-2 z-50 overflow-x-auto">
         {dockVisiblePanels(dockLayout.root).map((id) => {
           const customTitle = dockTitles[id] ?? id;
@@ -1834,7 +1834,7 @@ export default function MobileDockPage() {
               ))}
             </div>
 
-            {/* Panel kustom — tambah dock baru dengan URL sendiri */}
+            {/* Panel kustom - tambah dock baru dengan URL sendiri */}
             <div className="space-y-3 pt-2 border-t-2 border-[var(--border-color)]">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-label)]">Panel kustom ({tmpCustom.length}/20)</p>

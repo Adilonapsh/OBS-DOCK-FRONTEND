@@ -1,4 +1,4 @@
-// GT-style Designer — tipe inti. Terpisah dari widgets.
+// GT-style Designer - tipe inti. Terpisah dari widgets.
 // Koordinat selalu px dalam canvas 1920x1080 (ala vMix GT Designer).
 
 export const DESIGN_W = 1920;

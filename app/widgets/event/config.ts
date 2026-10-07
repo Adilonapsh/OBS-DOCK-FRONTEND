@@ -7,8 +7,8 @@ export const EVENT_THEMES = [
   { value: 'minimal', label: 'Minimal - Pill' },
   { value: 'cute', label: 'Cute - Lavender Pastel' },
   { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalism' },
+  { value: 'plain', label: 'Plain' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const EVENT_FONTS = WIDGET_FONTS;

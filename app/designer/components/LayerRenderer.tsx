@@ -6,7 +6,7 @@
 // - INNER: animasi masuk preset (elegant/slide/...) via CSS.
 //   `entranceOffset` fix per mount; hanya berubah saat remount (Play/scrub/edit timing).
 // Keduanya compose (outer × inner), jadi timeline keyframe + animasi preset
-// tidak saling menimpa — preview selalu cocok dengan timeline.
+// tidak saling menimpa - preview selalu cocok dengan timeline.
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { DesignerLayer } from '../lib/types';
@@ -227,7 +227,7 @@ export function LayerView({
   };
 
   const innerBase = entranceStyle(layer, entranceOffset);
-  // Crop tepi L/R/T/B (visual saja, % terhadap box) — kompos dengan mask di outer.
+  // Crop tepi L/R/T/B (visual saja, % terhadap box) - kompos dengan mask di outer.
   const cropL = Math.max(0, layer.props.cropL ?? 0);
   const cropR = Math.max(0, layer.props.cropR ?? 0);
   const cropT = Math.max(0, layer.props.cropT ?? 0);
@@ -275,7 +275,7 @@ export function LayerView({
       return (
         <div style={outer}>
           <div style={{ ...inner, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px dashed rgba(255,255,255,0.25)', borderRadius: 12, color: '#888', fontSize: 22 }}>
-            No image — upload di panel kanan
+            No image - upload di panel kanan
           </div>
         </div>
       );

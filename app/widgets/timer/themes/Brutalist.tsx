@@ -56,13 +56,34 @@ export default function BrutalistTimerTheme({
   isRunning,
   currentSession,
   totalSessions,
+  focusMinutes,
+  showProgress,
   onToggleTimer,
   onResetTimer,
   anim,
   accent,
   subathonMode,
   addedSeconds,
-}: TimerThemeProps) {
+  brutalistBg,
+  brutalistTextColor,
+  brutalistBadgeBg,
+  brutalistBorderColor,
+  brutalistShadow,
+  brutalistHalftone,
+  brutalistTail,
+  brutalistItalic,
+  brutalistUppercase,
+}: TimerThemeProps & {
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
+}) {
   const eff = anim || 'elegantIn';
   const isEleg = ['elegantIn', 'softPopIn', 'blurIn', 'luxeIn'].includes(eff);
   const dur = isEleg ? '0.62s' : '0.4s';
@@ -72,44 +93,57 @@ export default function BrutalistTimerTheme({
   const safeAccent = accent && accent !== 'transparent' ? accent : '#ff3b30';
   const { d, h, m, s, dStr } = getTimeParts(timerSeconds);
   const hasDays = d > 0;
-  const progress = totalSessions > 0 ? Math.min(1, Math.max(0, (currentSession - 1) / totalSessions + (isRunning ? 0.12 : 0))) : 0;
+  const totalSec = Math.max(1, (focusMinutes || 50) * 60);
+  const progress = Math.min(1, Math.max(0, timerSeconds / totalSec));
+  // Brutalist khusus Timer — background bisa diubah via settings (hanya tema brutalist)
+  const bubbleBg = brutalistBg || '#FFFFFF';
+  const txtColor = brutalistTextColor || '#000000';
+  const badgeBg = brutalistBadgeBg || '#FFFFFF';
+  const borderColor = brutalistBorderColor || '#000000';
+  const shadowOffset = brutalistShadow ?? 6;
+  const hasHalftone = brutalistHalftone ?? true;
 
   return (
     <div
       className="timer-brutalist w-full max-w-[560px] flex flex-col select-none relative"
       style={{ fontFamily: `'${font}', sans-serif`, animation: animStyle }}
     >
-      {/* MAIN CARD - neo-brutalist INLINE */}
+      {/* MAIN CARD - neo-brutalist INLINE — background khusus brutalist bisa diubah */}
       <div
-        className="relative overflow-hidden bg-white flex flex-row items-center gap-3 px-4 py-3"
+        className="relative overflow-hidden flex flex-row items-center gap-3 px-4 py-3"
         style={{
-          border: '4px solid #000',
-          boxShadow: '6px 6px 0px #000',
+          backgroundColor: bubbleBg,
+          border: `4px solid ${borderColor}`,
+          boxShadow: `${shadowOffset}px ${shadowOffset}px 0px ${borderColor}`,
           minHeight: '88px',
         }}
       >
         <style>{`@keyframes brutalistFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes brutalistFadeDown{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}`}</style>
         {/* halftone overlay */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: 'radial-gradient(#000 1.2px, transparent 1.2px)',
-            backgroundSize: '10px 10px',
-            opacity: 0.06,
-          }}
-        />
-        {/* progress bg behind - fills card */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0"
-          style={{ width: `${Math.round(progress * 100)}%`, background: safeAccent, opacity: 0.14, transition: 'width 0.5s ease' }}
-        />
+        {hasHalftone && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(${borderColor} 1.2px, transparent 1.2px)`,
+              backgroundSize: '10px 10px',
+              opacity: 0.06,
+            }}
+          />
+        )}
+        {/* progress bg behind - fills card, hilang saat 0 atau showProgress off */}
+        {showProgress !== false && progress > 0 && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0"
+            style={{ width: `${Math.round(progress * 100)}%`, background: safeAccent, opacity: 0.14, transition: 'width 0.5s ease' }}
+          />
+        )}
         {/* left accent bar vertical */}
-        <div className="absolute left-0 top-0 bottom-0 w-[10px] border-r-[4px] border-black z-10" style={{ background: safeAccent }} />
+        <div className="absolute left-0 top-0 bottom-0 w-[10px] z-10" style={{ background: safeAccent, borderRight: `4px solid ${borderColor}` }} />
 
         {/* left badge */}
-        <span className="shrink-0 inline-flex items-center justify-center px-2.5 py-1 bg-black text-white text-[10px] font-black tracking-widest uppercase leading-none ml-2 relative z-10">
+        <span className="shrink-0 inline-flex items-center justify-center px-2.5 py-1 text-[10px] font-black tracking-widest uppercase leading-none ml-2 relative z-10" style={{ backgroundColor: borderColor, color: badgeBg, border: `2px solid ${borderColor}` }}>
           TIMER
         </span>
 
@@ -119,27 +153,29 @@ export default function BrutalistTimerTheme({
             <>
               <div className={`flex items-baseline gap-1.5 leading-none ${isPaused ? 'opacity-70' : ''}`}>
                 <span
-                  className="font-black tabular-nums tracking-tighter text-black"
+                  className="font-black tabular-nums tracking-tighter"
                   style={{
                     fontFamily: `'Space Grotesk','Instrument Sans','${font}', monospace`,
                     fontSize: `${Math.round(22 * scale)}px`,
                     letterSpacing: '-0.04em',
+                    color: txtColor,
                   }}
                 >
                   {dStr}
                 </span>
                 <span
-                  className="font-black tracking-[0.18em] uppercase text-black"
-                  style={{ fontSize: `${Math.round(10 * scale)}px` }}
+                  className="font-black tracking-[0.18em] uppercase"
+                  style={{ fontSize: `${Math.round(10 * scale)}px`, color: txtColor }}
                 >
                 </span>
               </div>
               <div
-                className={`font-black tabular-nums tracking-tighter text-black leading-none ${isPaused ? 'opacity-70' : ''}`}
+                className={`font-black tabular-nums tracking-tighter leading-none ${isPaused ? 'opacity-70' : ''}`}
                 style={{
                   fontFamily: `'Space Grotesk','Instrument Sans','${font}', monospace`,
                   fontSize: `${Math.round(34 * scale)}px`,
                   letterSpacing: '-0.04em',
+                  color: txtColor,
                 }}
               >
                 {`${h}:${m}:${s}`}
@@ -147,11 +183,12 @@ export default function BrutalistTimerTheme({
             </>
           ) : (
             <div
-              className={`font-black tabular-nums tracking-tighter text-black leading-none ${isPaused ? 'opacity-70' : ''}`}
+              className={`font-black tabular-nums tracking-tighter leading-none ${isPaused ? 'opacity-70' : ''}`}
               style={{
                 fontFamily: `'Space Grotesk','Instrument Sans','${font}', monospace`,
                 fontSize: `${Math.round(44 * scale)}px`,
                 letterSpacing: '-0.04em',
+                color: txtColor,
               }}
             >
               {`${h}:${m}:${s}`}
@@ -167,7 +204,7 @@ export default function BrutalistTimerTheme({
             className={`w-3 h-3 border-[2px] border-black ${isRunning && !isPaused ? 'animate-pulse' : ''}`}
             style={{ background: isRunning && !isPaused ? safeAccent : '#fff' }}
           /> */}
-          <span className="text-[10px] font-black tracking-[0.18em] uppercase text-black">
+          <span className="text-[10px] font-black tracking-[0.18em] uppercase" style={{ color: txtColor }}>
             {isPaused ? 'PAUSED' : isRunning ? 'RUNNING' : 'IDLE'}
           </span>
         </div>

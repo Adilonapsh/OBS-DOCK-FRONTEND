@@ -1,5 +1,5 @@
 'use client';
-// Clipping mask geometris ala AE/Photoshop — LIVE, tanpa rasterisasi.
+// Clipping mask geometris ala AE/Photoshop - LIVE, tanpa rasterisasi.
 // Target dipotong mengikuti geometri layer sumber dalam koordinat canvas yang sama,
 // sehingga ikut animasi/keyframe (cukup evaluasi ulang tiap frame).
 //

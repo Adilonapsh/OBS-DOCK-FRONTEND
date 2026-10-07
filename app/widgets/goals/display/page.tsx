@@ -38,6 +38,7 @@ function GoalsInner() {
   const brutalistTail = getBoolParam(params, 'brutalistTail', true);
   const brutalistItalic = getBoolParam(params, 'brutalistItalic', true);
   const brutalistUppercase = getBoolParam(params, 'brutalistUppercase', true);
+  const brutalistInline = getBoolParam(params, 'brutalistInline', false);
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
 
@@ -152,6 +153,7 @@ function GoalsInner() {
             brutalistTail={brutalistTail}
             brutalistItalic={brutalistItalic}
             brutalistUppercase={brutalistUppercase}
+            brutalistInline={brutalistInline}
           />
         </AutoScale>
       </div>

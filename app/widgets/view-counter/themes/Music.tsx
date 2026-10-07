@@ -24,7 +24,7 @@ export default function MusicTheme({
   const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   if (inline) {
     return (
-      <div className="vc-font flex items-center gap-2 px-3 py-2 bg-black rounded-full border border-white/10 max-w-full" style={{ fontFamily: `'${font}', sans-serif` }}>
+      <div className="vc-font flex items-center justify-center gap-2 px-3 py-2 bg-black rounded-xl border border-white/10 max-w-full mx-auto" style={{ fontFamily: `'${font}', sans-serif` }}>
         <Music className="w-4 h-4 shrink-0" style={{ color: accent }} />
         <span className="text-white font-black tabular-nums" style={{ fontSize: Math.max(14, fontSize - 8) }}>{fmtCount(total)}</span>
         {showLabel && <span className="text-white/50 text-[10px] font-black uppercase tracking-widest hidden sm:inline">Watching</span>}
@@ -33,20 +33,20 @@ export default function MusicTheme({
     );
   }
   return (
-    <div className="vc-font w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-xl" style={{ fontFamily: `'${font}', sans-serif` }}>
-      <div className="flex items-center gap-2 px-3 py-2">
+    <div className="vc-font w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-xl mx-auto text-center" style={{ fontFamily: `'${font}', sans-serif` }}>
+      <div className="flex items-center justify-center gap-2 px-3 py-2">
         <Music className="w-4 h-4 shrink-0" style={{ color: accent }} />
         {showLabel && <span className="text-white/50 text-[9px] font-black uppercase tracking-widest">Watching</span>}
-        <span className="ml-auto text-white font-black tabular-nums leading-none" style={{ fontSize: Math.max(14, fontSize - 6) }}>{fmtCount(total)}</span>
+        <span className="text-white font-black tabular-nums leading-none" style={{ fontSize: Math.max(14, fontSize - 6) }}>{fmtCount(total)}</span>
       </div>
       {showBreakdown && (
-        <div className="px-3 pb-1 flex items-center gap-2 flex-wrap">
+        <div className="px-3 pb-1 flex items-center justify-center gap-2 flex-wrap text-center">
           {rows.length === 0 && <span className="text-white/40 text-[9px] font-bold">{emptyLabel}</span>}
           {rows.map(([p, n]) => {
             const meta = PLATFORM_META[p] || PLATFORM_META.tiktok;
             return (
               <span key={p} className="flex items-center gap-1 shrink-0" title={meta.label}>
-                <img src={meta.logo} alt={meta.label} className="w-4 h-4 rounded-full bg-white p-px object-contain shrink-0" />
+                <img src={meta.logo} alt={meta.label} className="w-4 h-4 bg-white p-px object-contain shrink-0" />
                 <span className="text-white text-[10px] font-black tabular-nums">{fmtCount(n)}</span>
               </span>
             );

@@ -20,4 +20,5 @@ export type GoalThemeProps = {
   brutalistTail?: boolean;
   brutalistItalic?: boolean;
   brutalistUppercase?: boolean;
+  brutalistInline?: boolean;
 };

@@ -9,7 +9,7 @@ export type LiveTemplateOptions = {
   privateKey?: string;
   /** kalau true: tidak connect socket, hanya demo + jam berjalan */
   simulate?: boolean;
-  /** SMTC bridge (media-player/lyrics) — kalau diisi, {{title}}/{{artist}}/{{cover}} ikut Now Playing asli */
+  /** SMTC bridge (media-player/lyrics) - kalau diisi, {{title}}/{{artist}}/{{cover}} ikut Now Playing asli */
   smtcAddress?: string;
   smtcPort?: string;
 };
@@ -46,7 +46,7 @@ function str(v: unknown, fb = ''): string {
 }
 
 /**
- * Satu koneksi socket untuk Custom Overlay — sync SEMUA fungsi widget
+ * Satu koneksi socket untuk Custom Overlay - sync SEMUA fungsi widget
  * ke {{variable}} template, sesuai perilaku widget aslinya:
  * - chat (tiktok-chat) → {{username}} {{message}} {{avatar}} {{platform}}
  * - event/gift/like/member/follow → {{giftName}} {{giftCount}} {{diamonds}} {{likeCount}} {{joinUsername}} {{followUsername}} ...
@@ -215,7 +215,7 @@ export function useLiveTemplateData(opts: LiveTemplateOptions = {}): { data: Tem
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, simulate]);
 
-  // SMTC Now Playing asli (media-player/lyrics) — opsional via addr/port
+  // SMTC Now Playing asli (media-player/lyrics) - opsional via addr/port
   useEffect(() => {
     if (simulate || !smtcAddress) return;
     let cancelled = false;
@@ -236,7 +236,7 @@ export function useLiveTemplateData(opts: LiveTemplateOptions = {}): { data: Tem
           position: typeof j.position === 'number' ? j.position : (typeof j.progressMs === 'number' ? j.progressMs / 1000 : 0),
           durationSec: typeof j.duration === 'number' ? j.duration : (typeof j.durationMs === 'number' ? j.durationMs / 1000 : 0),
         });
-      } catch { /* bridge offline — tetap pakai song-update */ }
+      } catch { /* bridge offline - tetap pakai song-update */ }
     };
     fetchOnce();
     const id = setInterval(fetchOnce, 2000);
@@ -298,7 +298,7 @@ export function useLiveTemplateData(opts: LiveTemplateOptions = {}): { data: Tem
       likeCount: like?.likeCount ?? '',
       handle: str(follow?.followUsername ? `@${follow.followUsername}` : chat?.username ? `@${chat.username}` : ''),
       platform: str(chat?.platform || follow?.followPlatform || join?.joinPlatform || 'tiktok'),
-      // music real (fungsi music widget) — cover = thumbnail YT asli / SMTC art
+      // music real (fungsi music widget) - cover = thumbnail YT asli / SMTC art
       title: songTitle,
       artist: str(smtc?.artist || song?.requestedBy),
       requestedBy: str(song?.requestedBy),
@@ -365,7 +365,7 @@ export function getLiveDemoData(): TemplateData {
     giftPicture: 'https://cdn.../rose.png',
     likeUsername: 'Andi',
     likeCount: 12,
-    title: 'Demo Song — Never Gonna Give You Up',
+    title: 'Demo Song - Never Gonna Give You Up',
     artist: 'Penonton_A',
     requestedBy: 'Penonton_A',
     cover: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',

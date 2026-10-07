@@ -9,6 +9,7 @@ import { loadGoogleFont } from '../../_shared/utils/font';
 import { ANIM_MAP, KEYFRAMES_CSS } from '../../_shared/constants/animations';
 import { getTimerTheme } from '../themes/registry';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { AutoScale } from '../../_shared/components/AutoScale';
 
 function TimerInner() {
@@ -29,6 +30,8 @@ function TimerInner() {
   const subathonModeParam = getStringParam(params, 'subathonMode', 'powerup');
   const textColor = getStringParam(params, 'textColor', '#ffffff');
   const pos = getStringParam(params, 'pos', 'center');
+  const showProgress = getBoolParam(params, 'showProgress', true);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const [focusMinutes, setFocusMinutes] = useState(focusMinutesParam);
   const [totalSessions, setTotalSessions] = useState(totalSessionsParam);
@@ -164,7 +167,7 @@ function TimerInner() {
       (timerSocketRef.current as any).emit('timer-control', { privateKey: room, action: sec >= 0 ? 'add' : 'sub', seconds: Math.abs(sec) });
     }
   };
-  const themeProps = { font, fontSize, accent, bg, bgOpacity, textColor, pos, timerSeconds: totalSeconds, isRunning: isRunning && !pausedByMode, currentSession, totalSessions, onToggleTimer: () => setIsRunning((v) => !v), onResetTimer: () => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); }, onNextSession: () => { setCurrentSession((c) => (c < totalSessions ? c + 1 : 1)); setTotalSeconds(focusMinutes * 60); setIsRunning(false); }, onAddTime: handleAddTime, anim: animName, subathonMode, addedSeconds } as const;
+  const themeProps = { font, fontSize, accent, bg, bgOpacity, textColor, pos, timerSeconds: totalSeconds, isRunning: isRunning && !pausedByMode, currentSession, totalSessions, focusMinutes, showProgress, ...brutalist, onToggleTimer: () => setIsRunning((v) => !v), onResetTimer: () => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); }, onNextSession: () => { setCurrentSession((c) => (c < totalSessions ? c + 1 : 1)); setTotalSeconds(focusMinutes * 60); setIsRunning(false); }, onAddTime: handleAddTime, anim: animName, subathonMode, addedSeconds } as const;
   const Theme = getTimerTheme(theme);
   // subathonMode sengaja tidak dimasukkan ke displayKey - mode diubah dari dock tidak boleh
   // menyebabkan Theme remount (yang akan memicu ulang animasi entry dan membuat timer tampak reset)

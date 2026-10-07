@@ -32,7 +32,7 @@ export const TIMELINE_MIN_SECS = 4;
 export const TIMELINE_MAX_SECS = 60;
 export const TIMELINE_MAX_OUT = 300;
 
-// Ikon tipe layer (gantikan badge tulisan) — selaras dengan toolbar editor.
+// Ikon tipe layer (gantikan badge tulisan) - selaras dengan toolbar editor.
 const TYPE_ICONS: Record<string, React.ElementType> = {
   text: FaFont,
   image: FaImage,
@@ -65,7 +65,7 @@ function propValueText(layer: DesignerLayer, prop: KeyProp, t: number): string {
       const txt = s.text.length > 18 ? s.text.slice(0, 18) + '…' : s.text;
       return txt || '(kosong)';
     }
-    case 'src': return s.src ? '✓' : '—';
+    case 'src': return s.src ? '✓' : '-';
     default: return meta?.unit ? `${meta.unit}` : '';
   }
 }
@@ -272,13 +272,13 @@ export default function KeyframeTimeline({
       <div className="flex items-center gap-2 mb-1 flex-wrap shrink-0">
         <button
           onClick={onPlay}
-          title="Play — jalankan dari detik 0 (spasi juga bisa)"
+          title="Play - jalankan dari detik 0 (spasi juga bisa)"
           className="flex items-center gap-1.5 bg-white text-black text-[11px] font-black px-3 py-1.5 rounded-none"
         >
           <FaPlay className="w-3 h-3" /> Play
         </button>
         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Timeline</span>
-        {/* Zoom canvas — dipindah ke sini biar area canvas lega */}
+        {/* Zoom canvas - dipindah ke sini biar area canvas lega */}
         <span className="flex items-center gap-1 text-gray-400" onClick={(e) => e.stopPropagation()}>
           <span className="text-[10px] font-black uppercase tracking-widest">Zoom</span>
           <button onClick={() => onZoomStep(-1)} title="Perkecil canvas" className="p-1 bg-white/5 hover:bg-white/10 rounded-none text-gray-300">
@@ -319,7 +319,7 @@ export default function KeyframeTimeline({
               if (isNaN(n)) return;
               onDuration(Math.max(TIMELINE_MIN_SECS, Math.min(TIMELINE_MAX_SECS, n)));
             }}
-            title="Panjang timeline (detik) — bisa diketik langsung"
+            title="Panjang timeline (detik) - bisa diketik langsung"
             className="w-16 bg-black/40 border border-white/10 rounded-none px-2 py-1 text-[11px] text-white"
           />
           <button
@@ -333,7 +333,7 @@ export default function KeyframeTimeline({
         </label>
       </div>
 
-      {/* Penggaris detik — area scrub seeker */}
+      {/* Penggaris detik - area scrub seeker */}
       <div className="flex gap-2 shrink-0">
         <div className="w-56 shrink-0" />
         <div
@@ -361,7 +361,7 @@ export default function KeyframeTimeline({
         </div>
       </div>
 
-      {/* Track per layer — mengisi sisa tinggi panel, scroll mandiri */}
+      {/* Track per layer - mengisi sisa tinggi panel, scroll mandiri */}
       <div className="space-y-1 mt-1 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         {ordered.map((l, li) => {
           const delay = l.delay ?? 0;
@@ -445,12 +445,12 @@ export default function KeyframeTimeline({
                       <div
                         onMouseDown={(e) => startBlockDrag(e, l)}
                         onClick={(e) => ((e.ctrlKey || e.metaKey || e.shiftKey) ? onToggleSelect(l.id) : onSelect(l.id))}
-                        title={`${l.name} — tampil ${delay.toFixed(1)}s → ${l.out != null ? l.out.toFixed(1) + 's' : 'akhir'} (drag geser, handle kanan atur panjang)`}
+                        title={`${l.name} - tampil ${delay.toFixed(1)}s → ${l.out != null ? l.out.toFixed(1) + 's' : 'akhir'} (drag geser, handle kanan atur panjang)`}
                         className="absolute top-1 bottom-1 rounded-none cursor-ew-resize"
                         style={{ left: barLeft, width: barWidth, background: barBg }}
                       />
                       {/* Porsi animasi masuk digambar sebagai kepala terang via gradient bar */}
-                      {/* Handle kanan — panjangkan / pendekkan durasi tampil */}
+                      {/* Handle kanan - panjangkan / pendekkan durasi tampil */}
                       <div
                         onMouseDown={(e) => startOutDrag(e, l)}
                         title="Drag untuk memanjangkan / memendekkan durasi tampil"
@@ -462,7 +462,7 @@ export default function KeyframeTimeline({
                 </div>
               </div>
 
-              {/* Baris properti (twirl terbuka) — hanya prop yang relevan untuk tipe layer */}
+              {/* Baris properti (twirl terbuka) - hanya prop yang relevan untuk tipe layer */}
               {open && (
                 <div className="mt-0.5 space-y-0.5">
                   {propsForLayer(l.type)
@@ -503,7 +503,7 @@ export default function KeyframeTimeline({
                                 key={k.id}
                                 onMouseDown={(e) => startDiamondDrag(e, l, p.id, k)}
                                 onDoubleClick={(e) => { e.stopPropagation(); onDiamondDelete(l.id, p.id, k.id); }}
-                                title={`Keyframe ${k.t.toFixed(2)}s • ${EASE_OPTIONS.find((o) => o.id === (k.ease ?? 'linear'))?.label ?? ''} — drag = pindahkan, klik = lompat, double-click = hapus`}
+                                title={`Keyframe ${k.t.toFixed(2)}s • ${EASE_OPTIONS.find((o) => o.id === (k.ease ?? 'linear'))?.label ?? ''} - drag = pindahkan, klik = lompat, double-click = hapus`}
                                 className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 cursor-ew-resize"
                                 style={{ left: `${(k.t / windowSecs) * 100}%` }}
                               >

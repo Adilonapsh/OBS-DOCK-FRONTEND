@@ -6,7 +6,7 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 
-export const themeMeta = { value: 'plain', label: 'Plain - Teks Polos' } as const;
+export const themeMeta = { value: 'plain', label: 'Plain' } as const;
 
 export default function PlainTheme({ chats, font, accent, bg, maxMessages, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, fontSize, bgOpacity, textColor, exitingIds, horizontal, anim, horizontalAnim, hideAnim, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false, plainTextBorder = false, plainBorderColor = '#000000', plainBorderWidth = 1 }: ChatThemeProps & { plainTextBorder?: boolean; plainBorderColor?: string; plainBorderWidth?: number }) {
   const visible = chats.slice(-maxMessages);

@@ -7,7 +7,7 @@ export default function CuteTheme({ counts, total, font, fontSize, showLabel, sh
   const family = `'Nunito','Quicksand','${font}', sans-serif`;
   if (inline) {
     return (
-      <div className="vc-font flex items-center gap-2 px-3 py-2 rounded-full max-w-full" style={{ fontFamily: family, background: 'linear-gradient(90deg, #c4a2f8 0%, #fca4d4 100%)' }}>
+      <div className="vc-font flex items-center justify-center gap-2 px-3 py-2 rounded-full max-w-full mx-auto" style={{ fontFamily: family, background: 'linear-gradient(90deg, #c4a2f8 0%, #fca4d4 100%)' }}>
         <Eye className="w-4 h-4 shrink-0 text-white" />
         <span className="text-white font-black tabular-nums" style={{ fontSize: Math.max(14, fontSize - 8) }}>{fmtCount(total)}</span>
         {showBreakdown && rows.map(([p, n]) => {
@@ -24,12 +24,12 @@ export default function CuteTheme({ counts, total, font, fontSize, showLabel, sh
     );
   }
   return (
-    <div className="vc-font w-full rounded-3xl overflow-hidden border border-[#fca4d4]/30 shadow-xl" style={{ fontFamily: family, background: 'linear-gradient(160deg, #2a2440 0%, #1e1d2b 100%)' }}>
-      <div className="flex items-center gap-1.5 px-3 py-2">
+    <div className="vc-font w-full rounded-3xl overflow-hidden border border-[#fca4d4]/30 shadow-xl mx-auto text-center" style={{ fontFamily: family, background: 'linear-gradient(160deg, #2a2440 0%, #1e1d2b 100%)' }}>
+      <div className="flex items-center justify-center gap-1.5 px-3 py-2">
         <Eye className="w-3.5 h-3.5 shrink-0 text-[#f5a8d0]" />
         {showLabel && <span className="font-black uppercase text-[9px] tracking-widest" style={{ color: '#a8a3ce' }}>Watching</span>}
       </div>
-      <div className="px-3 text-white font-black tabular-nums leading-none" style={{ fontSize }}>{fmtCount(total)}</div>
+      <div className="px-3 text-white font-black tabular-nums leading-none text-center" style={{ fontSize }}>{fmtCount(total)}</div>
       {showBreakdown && (
         <div className="px-3 py-2 space-y-1.5">
           {rows.length === 0 && <div className="text-[10px] font-bold" style={{ color: '#a8a3ce' }}>{emptyLabel}</div>}

@@ -32,7 +32,7 @@ const datePresets = [
 
 const clockThemes = [
   { value: 'standard', label: 'Standard - Clean' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalism' },
+  { value: 'brutalist', label: 'Brutalist' },
 ];
 
 const defaults = {
@@ -190,7 +190,7 @@ function ClockEditorInner() {
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Theme</span>
                     <select value={state.theme} onChange={e=>update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                      {clockThemes.map(t=> <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+                      {clockThemes.map(t=> <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
                     </select>
                   </label>
                   <label className="block">
@@ -285,21 +285,21 @@ function LineEditor({ title, icon, presets, value, onFormat, state, prefix, upda
           <span className="text-[11px] font-bold text-gray-300">Format</span>
           <input value={value} onChange={e=>onFormat(e.target.value)} placeholder="hh:mm:ss A" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
           <select value="" onChange={e=>{ if(e.target.value) onFormat(e.target.value); e.target.value=''; }} className="mt-1 w-full h-8 bg-black/30 border border-white/10 rounded-xl px-2 text-[11px] text-gray-300">
-            <option value="" className="bg-zinc-900">- Preset cepat -</option>
-            {presets.map((p:any)=> <option key={p.value+p.label} value={p.value} className="bg-zinc-900">{p.label}</option>)}
+            <option value="" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">- Preset cepat -</option>
+            {presets.map((p:any)=> <option key={p.value+p.label} value={p.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{p.label}</option>)}
           </select>
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Size</span><input type="number" value={s('s')} onChange={e=>set('s', parseInt(e.target.value)||0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Weight</span><select value={s('w')} onChange={e=>set('w', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="300" className="bg-zinc-900">300 Light</option><option value="400" className="bg-zinc-900">400 Regular</option><option value="600" className="bg-zinc-900">600 Semibold</option><option value="700" className="bg-zinc-900">700 Bold</option><option value="800" className="bg-zinc-900">800 Extrabold</option><option value="900" className="bg-zinc-900">900 Black</option></select></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Weight</span><select value={s('w')} onChange={e=>set('w', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="300" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">300 Light</option><option value="400" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">400 Regular</option><option value="600" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">600 Semibold</option><option value="700" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">700 Bold</option><option value="800" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">800 Extrabold</option><option value="900" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">900 Black</option></select></label>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Color</span><input type="color" value={s('c')} onChange={e=>set('c', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Opacity {s('o')}</span><input type="range" min={0} max={1} step={0.1} value={s('o')} onChange={e=>set('o', parseFloat(e.target.value))} className="mt-1 w-full accent-white" /></label>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Transform</span><select value={s('t')} onChange={e=>set('t', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="none" className="bg-zinc-900">None</option><option value="uppercase" className="bg-zinc-900">UPPERCASE</option><option value="lowercase" className="bg-zinc-900">lowercase</option><option value="capitalize" className="bg-zinc-900">Capitalize</option></select></label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Align</span><select value={s('a')} onChange={e=>set('a', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-zinc-900">Left</option><option value="center" className="bg-zinc-900">Center</option><option value="right" className="bg-zinc-900">Right</option></select></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Transform</span><select value={s('t')} onChange={e=>set('t', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="none" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">None</option><option value="uppercase" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">UPPERCASE</option><option value="lowercase" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">lowercase</option><option value="capitalize" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Capitalize</option></select></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Align</span><select value={s('a')} onChange={e=>set('a', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Left</option><option value="center" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Center</option><option value="right" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Right</option></select></label>
         </div>
       </div>
     </div>

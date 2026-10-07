@@ -7,7 +7,7 @@ export default function StandardTheme({ counts, total, font, fontSize, accent, b
   const pillBg = bg === 'transparent' ? 'transparent' : bg;
   if (inline) {
     return (
-      <div className="vc-font flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 max-w-full" style={{ fontFamily: `'${font}', sans-serif`, background: pillBg }}>
+      <div className="vc-font flex items-center justify-center gap-2 px-3 py-2 rounded-full border border-white/10 max-w-full mx-auto" style={{ fontFamily: `'${font}', sans-serif`, background: pillBg }}>
         <Eye className="w-4 h-4 shrink-0" style={{ color: accent }} />
         <span className="text-white font-black tabular-nums" style={{ fontSize: Math.max(14, fontSize - 8) }}>{fmtCount(total)}</span>
         {showLabel && <span className="text-white/50 text-[10px] font-black uppercase tracking-widest hidden sm:inline">Watching</span>}
@@ -25,7 +25,7 @@ export default function StandardTheme({ counts, total, font, fontSize, accent, b
     );
   }
   return (
-    <div className="vc-font flex items-center gap-2 px-3 py-2 border border-white/10 rounded-full shadow-xl max-w-full" style={{ fontFamily: `'${font}', sans-serif`, background: pillBg }}>
+    <div className="vc-font flex items-center justify-center gap-2 px-3 py-2 border border-white/10 rounded-full shadow-xl max-w-full mx-auto" style={{ fontFamily: `'${font}', sans-serif`, background: pillBg }}>
       <Eye className="w-4 h-4 shrink-0" style={{ color: accent }} />
       <span className="text-white font-black tabular-nums leading-none" style={{ fontSize: Math.max(14, fontSize - 6) }}>{fmtCount(total)}</span>
       {showLabel && <span className="text-white/50 text-[9px] font-black uppercase tracking-widest hidden sm:inline">Watching</span>}

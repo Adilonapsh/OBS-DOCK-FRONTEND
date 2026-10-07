@@ -105,7 +105,7 @@ function FollowInner() {
   };
 
   useEffect(() => {
-    if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
+    if (simulate) return; // mode simulate - demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });

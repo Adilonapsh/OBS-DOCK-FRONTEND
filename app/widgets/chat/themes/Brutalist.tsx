@@ -6,7 +6,7 @@ import { formatChatTime, isGroupedWithPrev, isMentionMessage } from './chatFilte
 import { MessageExtras } from './MessageExtras';
 import './Brutalist.css';
 
-export const themeMeta = { value: 'brutalist', label: 'Brutalist - Neo Brutalist' } as const;
+export const themeMeta = { value: 'brutalist', label: 'Brutalist' } as const;
 
 function escapeHTML(str: string) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 
-// Simulasi live generik dari data dummy — pola yang sama seperti chat.
+// Simulasi live generik dari data dummy - pola yang sama seperti chat.
 // - Item masuk satu per satu tiap `intervalMs` (animasi masuk = anim tema).
 // - Tiap item bertahan `holdMs` lalu keluar pakai animasi (`hideDur`), persis jalur real.
 // - `filter` dipakai agar preview akurat saat filter widget aktif.

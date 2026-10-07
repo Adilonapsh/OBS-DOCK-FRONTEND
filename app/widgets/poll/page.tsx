@@ -20,8 +20,8 @@ const pollThemes = [
   { value:'anime', label:'Anime' },
   { value:'flower', label:'Flower Timer' },
   { value:'editorial', label:'Editorial' },
-  { value:'plain', label:'Plain - Teks Polos' },
-  { value:'brutalist', label:'Brutalist' },
+  { value:'plain', label:'Plain' },
+  { value:'brutalist', label: 'Brutalist' },
 ];
 
 const defaults = {
@@ -150,7 +150,7 @@ function PollSettingsInner(){
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Tema</span>
                     <select value={state.theme} onChange={e=>update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                      {pollThemes.map(t=> <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+                      {pollThemes.map(t=> <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
                     </select>
                     <span className="text-[10px] text-gray-500 mt-1 block">Pilih layout poll di OBS - bisa ganti kapan saja tanpa buat ulang poll.</span>
                   </label>

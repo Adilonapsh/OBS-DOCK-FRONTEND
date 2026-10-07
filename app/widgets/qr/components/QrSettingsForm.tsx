@@ -89,7 +89,7 @@ export function QrSettingsForm({ state, update }: Props) {
           <label className="block">
             <span className="text-[11px] font-bold text-gray-300">Tema</span>
             <select value={state.theme} onChange={(e) => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {QR_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+              {QR_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
             </select>
           </label>
           <label className="block">
@@ -103,7 +103,7 @@ export function QrSettingsForm({ state, update }: Props) {
           </div>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Error Correction</span>
             <select value={state.level} onChange={(e) => update('level', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {QR_LEVELS.map((l) => <option key={l.value} value={l.value} className="bg-zinc-900">{l.label}</option>)}
+              {QR_LEVELS.map((l) => <option key={l.value} value={l.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{l.label}</option>)}
             </select>
           </label>
         </div>

@@ -27,7 +27,7 @@ export function GoalPreview({ state }: { state: GoalsSettings }) {
         showBar={state.showBar}
       />
       <p className="text-[10px] text-gray-500 mt-2 text-center">
-        Preview {state.goalType} • {state.current}/{state.target} ({pct}%) — live akan bertambah otomatis
+        Preview {state.goalType} • {state.current}/{state.target} ({pct}%) - live akan bertambah otomatis
       </p>
     </div>
   );

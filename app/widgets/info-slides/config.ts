@@ -6,8 +6,8 @@ export const INFO_SLIDES_THEMES = [
   { value: 'boxed', label: 'Boxed - Card Sponsor' },
   { value: 'glass', label: 'Glass - Blur Premium' },
   { value: 'timer-glass', label: 'Timer Glass - Ala Timer (Recommended)' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'plain', label: 'Plain' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const INFO_SLIDES_ANIMS = [

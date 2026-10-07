@@ -19,7 +19,7 @@ export function PinnedSettingsForm({ state, update }: Props) {
           <label className="block">
             <span className="text-[11px] font-bold text-gray-300">Tema</span>
             <select value={state.theme} onChange={(e) => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {PINNED_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+              {PINNED_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
             </select>
           </label>
           <label className="block">
@@ -29,7 +29,7 @@ export function PinnedSettingsForm({ state, update }: Props) {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" min={10} max={32} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 15)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{PINNED_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{PINNED_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select></label>
           </div>
       {state.theme === 'perchar' && (
         <>
@@ -56,7 +56,7 @@ export function PinnedSettingsForm({ state, update }: Props) {
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Style Keyboard</span>
             <select value={state.kbTheme} onChange={(e) => update('kbTheme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
               {PINNED_KB_THEMES.map((k) => (
-                <option key={k.value} value={k.value} className="bg-zinc-900">{k.label}</option>
+                <option key={k.value} value={k.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{k.label}</option>
               ))}
             </select>
           </label>
@@ -65,7 +65,7 @@ export function PinnedSettingsForm({ state, update }: Props) {
         <label className="block"><span className="text-[11px] font-bold text-gray-300">Style Keycaps</span>
           <select value={state.kbCaps} onChange={(e) => update('kbCaps', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
             {PINNED_KB_CAPS.map((k) => (
-              <option key={k.value} value={k.value} className="bg-zinc-900">{k.label}</option>
+              <option key={k.value} value={k.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{k.label}</option>
             ))}
           </select>
         </label>
@@ -95,7 +95,7 @@ export function PinnedSettingsForm({ state, update }: Props) {
             </label>
           </div>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Opacity BG ({state.bgOpacity}%)</span><input type="range" min={10} max={100} step={5} value={state.bgOpacity} onChange={(e) => update('bgOpacity', parseInt(e.target.value) || 100)} className="mt-1 w-full accent-white cursor-pointer" /></label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Micro Animation (Border)</span><select value={state.borderFx} onChange={(e) => update('borderFx', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{PINNED_BORDER_FX.map((b) => <option key={b.value} value={b.value} className="bg-zinc-900">{b.label}</option>)}</select></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Micro Animation (Border)</span><select value={state.borderFx} onChange={(e) => update('borderFx', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{PINNED_BORDER_FX.map((b) => <option key={b.value} value={b.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{b.label}</option>)}</select></label>
           {state.borderFx !== 'none' && (
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Warna Efek (kosong = ikut aksen)</span>
               <span className="mt-1 flex gap-2">
@@ -123,17 +123,9 @@ export function PinnedSettingsForm({ state, update }: Props) {
         </div>
       </div>
 
-      {/* Brutalist - Neo Brutalist */}
-      {state.theme === 'brutalist' && (
+      {/* Brutalist'brutalist' && (
         <div className="space-y-3">
-          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-yellow-400" /> Brutalist — Neo Brutalist</h2>
-          <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
-            <div>
-              <span className="text-[11px] font-bold text-gray-300">Preset Cepat</span>
-              <div className="mt-1 grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => {
-                    update('brutalistBg' as any, '#FFFFFF');
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-yellow-400" /> Brutalist'brutalistBg' as any, '#FFFFFF');
                     update('brutalistTextColor' as any, '#000000');
                     update('brutalistBadgeBg' as any, '#FFFFFF');
                     update('brutalistBorderColor' as any, '#000000');
@@ -232,7 +224,7 @@ export function PinnedSettingsForm({ state, update }: Props) {
               </label>
             </div>
             <label className="block">
-              <span className="text-[11px] font-bold text-gray-300">Shadow — {(state as any).brutalistShadow ?? 6}px</span>
+              <span className="text-[11px] font-bold text-gray-300">Shadow - {(state as any).brutalistShadow ?? 6}px</span>
               <input type="range" min={0} max={14} value={(state as any).brutalistShadow ?? 6} onChange={(e) => update('brutalistShadow' as any, parseInt(e.target.value) || 6)} className="mt-1 w-full accent-white cursor-pointer" />
             </label>
             <div className="grid grid-cols-2 gap-2">

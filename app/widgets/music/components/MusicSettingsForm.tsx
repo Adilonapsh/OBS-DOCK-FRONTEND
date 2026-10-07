@@ -19,7 +19,7 @@ export function MusicSettingsForm({ state, update }: Props) {
           <label className="block">
             <span className="text-[11px] font-bold text-gray-300">Tema</span>
             <select value={state.theme} onChange={(e) => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {MUSIC_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+              {MUSIC_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
             </select>
           </label>
           <label className="block">
@@ -61,7 +61,7 @@ export function MusicSettingsForm({ state, update }: Props) {
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Max Queue ({state.maxQueue})</span><input type="range" min={1} max={10} step={1} value={state.maxQueue} onChange={(e) => update('maxQueue', parseInt(e.target.value) || 5)} className="mt-1 w-full accent-white cursor-pointer" /></label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Posisi Queue</span>
             <select value={(state as unknown as { queuePos: string }).queuePos || 'bottom'} onChange={(e) => update('queuePos' as keyof MusicSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {MUSIC_QUEUE_POS.map((q) => <option key={q.value} value={q.value} className="bg-zinc-900">{q.label}</option>)}
+              {MUSIC_QUEUE_POS.map((q) => <option key={q.value} value={q.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{q.label}</option>)}
             </select>
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -72,12 +72,12 @@ export function MusicSettingsForm({ state, update }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span>
               <select value={(state as unknown as { showAnimation: string }).showAnimation || 'slide-in-from-bottom'} onChange={(e) => update('showAnimation' as keyof MusicSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                {['slide-in-from-bottom', 'slide-in-from-top', 'slide-in-from-left', 'slide-in-from-right', 'fade-in'].map((a) => <option key={a} value={a} className="bg-zinc-900">{a}</option>)}
+                {['slide-in-from-bottom', 'slide-in-from-top', 'slide-in-from-left', 'slide-in-from-right', 'fade-in'].map((a) => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}
               </select>
             </label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar</span>
               <select value={(state as unknown as { hideAnimation: string }).hideAnimation || 'slide-out-bottom'} onChange={(e) => update('hideAnimation' as keyof MusicSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                {['slide-out-bottom', 'slide-out-top', 'slide-out-left', 'slide-out-right', 'fade-out'].map((a) => <option key={a} value={a} className="bg-zinc-900">{a}</option>)}
+                {['slide-out-bottom', 'slide-out-top', 'slide-out-left', 'slide-out-right', 'fade-out'].map((a) => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}
               </select>
             </label>
           </div>
@@ -114,13 +114,13 @@ export function MusicSettingsForm({ state, update }: Props) {
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Lebar Maks (px, 0 = penuh)</span><input type="number" min={0} max={1200} step={10} value={(state as unknown as { maxWidth: number }).maxWidth ?? 500} onChange={(e) => update('maxWidth' as keyof MusicSettings, parseInt(e.target.value) || 0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Rata Teks</span>
               <select value={(state as unknown as { textAlignment: string }).textAlignment || 'left'} onChange={(e) => update('textAlignment' as keyof MusicSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                {['left', 'center', 'right'].map((a) => <option key={a} value={a} className="bg-zinc-900">{a}</option>)}
+                {['left', 'center', 'right'].map((a) => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}
               </select>
             </label>
           </div>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Rata Vertikal</span>
             <select value={(state as unknown as { verticalAlignment: string }).verticalAlignment || 'align-to-center'} onChange={(e) => update('verticalAlignment' as keyof MusicSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {['align-to-top', 'align-to-center', 'align-to-bottom'].map((a) => <option key={a} value={a} className="bg-zinc-900">{a}</option>)}
+              {['align-to-top', 'align-to-center', 'align-to-bottom'].map((a) => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}
             </select>
           </label>
         </div>

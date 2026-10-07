@@ -7,7 +7,7 @@ import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2,
     RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus, GripVertical,
-    Share2, ListPlus, ListChecks, Check, Clock, Search, Pause, Play, Square, Trash2, EyeOff, Minimize2, Maximize2
+    Share2, ListPlus, ListChecks, Check, Clock, Search, Pause, Play, Square, Trash2, EyeOff, Minimize2, Maximize2, Power
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -91,7 +91,7 @@ function storedTiktokUsername(): string {
     } catch { return ""; }
 }
 
-// Warna stabil per akun — fallback kalau Streamer.bot tidak mengirim color (mis. YouTube tidak punya warna user).
+// Warna stabil per akun - fallback kalau Streamer.bot tidak mengirim color (mis. YouTube tidak punya warna user).
 function chatColorFor(name: string): string {
     let h = 0;
     const s = String(name || "?");
@@ -246,7 +246,7 @@ export default function Home() {
     const [chatSearch, setChatSearch] = useState("");
     const [activityLogs, setActivityLogs] = useState<Array<{ id: number; text: string; platform?: string; time?: string }>>([]);
     const [giftLogs, setGiftLogs] = useState<Array<{ id: number; user: string; text: string; platform: string; amount?: string; giftName?: string; count?: number; avatar?: string; time?: string }>>([]);
-    // Ringkasan sesi (tidak kepotong limit 50 seperti logs) — tahan refresh, reset saat sesi/live baru.
+    // Ringkasan sesi (tidak kepotong limit 50 seperti logs) - tahan refresh, reset saat sesi/live baru.
     const [sessionStats, setSessionStats] = useState(() => {
         if (typeof window === "undefined") return { ...EMPTY_STATS };
         try {
@@ -297,7 +297,7 @@ export default function Home() {
         try { const v=localStorage.getItem('dock-taskMinimized'); return v===null ? true : v==='true'; } catch { return true; }
     });
     const [newTaskText,setNewTaskText]=useState("");
-    // Sort task via drag handle / tombol up-down — dikirim ke server (task-move).
+    // Sort task via drag handle / tombol up-down - dikirim ke server (task-move).
     const [taskDragFrom,setTaskDragFrom]=useState<number|null>(null);
     const [taskDragOver,setTaskDragOver]=useState<number|null>(null);
     const [activeTimer,setActiveTimer]=useState<any>(null);
@@ -825,7 +825,7 @@ export default function Home() {
     const hasInitialTkConnectRef = useRef(false);
     const tkManualDisconnectRef = useRef(false);
     const tkRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // Username + privateKey terakhir yang diminta — dipakai handler socket agar tidak
+    // Username + privateKey terakhir yang diminta - dipakai handler socket agar tidak
     // pakai payload basi (stale closure) saat ganti akun / reconnect otomatis.
     const tkWantedRef = useRef<{ username: string; privateKey: string | null }>({ username: "", privateKey: null });
     const pollSocketRef = useRef<Socket | null>(null);
@@ -1505,7 +1505,7 @@ export default function Home() {
 
         const effectivePrivateKey = privateKey || (typeof window !== "undefined" ? (readStoredDockKey(true)) : null) || privateKey;
         const payload = { username, privateKey: effectivePrivateKey };
-        // Ingat akun yang diminta — handler socket (connect/connected/connecting) pakai ini,
+        // Ingat akun yang diminta - handler socket (connect/connected/connecting) pakai ini,
         // bukan payload closure, agar ganti username tidak pakai akun lama yang basi.
         tkWantedRef.current = { username, privateKey: effectivePrivateKey };
         // Langsung tunjukkan status CONNECTING + putus sesi lama kalau ganti akun
@@ -1587,7 +1587,7 @@ export default function Home() {
                 setTiktokRoomViewerCount(null);
                 setTiktokTotalUser(null);
                 addSystemLog("Live TikTok berakhir.", "warn");
-                // Tandai sesi berakhir — chat dibersihkan saat live berikutnya connect.
+                // Tandai sesi berakhir - chat dibersihkan saat live berikutnya connect.
                 const sess = readChatSession();
                 if (sess) writeChatSession({ ...sess, ended: true });
                 scheduleTikTokRetry("live berakhir, cek apakah live lagi", 5000);
@@ -2503,7 +2503,7 @@ export default function Home() {
                     const hasYt = connected.includes("youtube") || !!payload.platforms?.youtube;
                     setSbYoutubeConnected(hasYt);
                     if (!hasYt) addSystemLog("⚠️ [SB] Akun YouTube belum terhubung di Streamer.bot (Settings → Platforms → YouTube)", "error");
-                    else addSystemLog("✅ [SB] YouTube terhubung — chart menunggu event StatisticsUpdated", "success");
+                    else addSystemLog("✅ [SB] YouTube terhubung - chart menunggu event StatisticsUpdated", "success");
                     return;
                 }
 
@@ -3330,23 +3330,23 @@ export default function Home() {
                                     </div>
                                     <div className="grid grid-cols-3 gap-2">
                                         <div className="bg-white/5 rounded-lg p-2 text-center">
-                                            <div className="text-lg font-black font-mono-custom leading-none text-pink-400">{sessionStats.follows.toLocaleString("id-ID")}</div>
+                                            <div className="text-lg font-black font-mono-custom leading-none text-white">{sessionStats.follows.toLocaleString("id-ID")}</div>
                                             <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Follow</div>
                                         </div>
                                         <div className="bg-white/5 rounded-lg p-2 text-center">
-                                            <div className="text-lg font-black font-mono-custom leading-none text-purple-400">{sessionStats.subs.toLocaleString("id-ID")}</div>
+                                            <div className="text-lg font-black font-mono-custom leading-none text-white">{sessionStats.subs.toLocaleString("id-ID")}</div>
                                             <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Sub / Member</div>
                                         </div>
                                         <div className="bg-white/5 rounded-lg p-2 text-center">
-                                            <div className="text-lg font-black font-mono-custom leading-none text-amber-400">{sessionStats.gifts.toLocaleString("id-ID")}</div>
+                                            <div className="text-lg font-black font-mono-custom leading-none text-white">{sessionStats.gifts.toLocaleString("id-ID")}</div>
                                             <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Gift</div>
                                         </div>
                                         <div className="bg-white/5 rounded-lg p-2 text-center">
-                                            <div className="text-lg font-black font-mono-custom leading-none text-red-400">{sessionStats.likes.toLocaleString("id-ID")}</div>
+                                            <div className="text-lg font-black font-mono-custom leading-none text-white">{sessionStats.likes.toLocaleString("id-ID")}</div>
                                             <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Like TT</div>
                                         </div>
                                         <div className="bg-white/5 rounded-lg p-2 text-center col-span-2">
-                                            <div className="text-lg font-black font-mono-custom leading-none text-cyan-400">{sessionStats.chats.toLocaleString("id-ID")}</div>
+                                            <div className="text-lg font-black font-mono-custom leading-none text-white">{sessionStats.chats.toLocaleString("id-ID")}</div>
                                             <div className="text-[7px] font-bold uppercase text-gray-500 mt-1">Chat Masuk</div>
                                         </div>
                                     </div>
@@ -3482,7 +3482,7 @@ export default function Home() {
                                 <div className="stat-card flex items-center justify-between py-3">
                                     <div>
                                         <span className="text-white font-black uppercase text-[11px]">Tema</span>
-                                        <p className="text-gray-500 text-[10px] mt-0.5">Light / Dark — tersimpan otomatis</p>
+                                        <p className="text-gray-500 text-[10px] mt-0.5">Light / Dark - tersimpan otomatis</p>
                                     </div>
                                     <ThemeToggle />
                                 </div>
@@ -3608,7 +3608,7 @@ export default function Home() {
 
                                 <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">OBS Outputs</h4>
                                 <div className="stat-card space-y-3">
-                                    <div className="flex items-center justify-between py-1">
+                                    <div className="flex items-center justify-between py-1.5">
                                         <div className="flex items-center gap-2">
                                             <Video className="w-3 h-3 text-blue-400" />
                                             <span className="text-white font-black uppercase text-[10px]">Virtual Camera</span>
@@ -3616,12 +3616,16 @@ export default function Home() {
                                         </div>
                                         <button
                                             onClick={toggleVirtualCam}
-                                            className={systemUniformBtn}
+                                            aria-label={status.virtualCamStatus === "STARTED" ? "Matikan Virtual Camera" : "Aktifkan Virtual Camera"}
+                                            title={status.virtualCamStatus === "STARTED" ? "Matikan" : "Aktifkan"}
+                                            className={`relative inline-flex h-5 w-9 items-center rounded-full p-0.5 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${status.virtualCamStatus === "STARTED" ? "bg-[#005ea6]" : "bg-white/10 border border-white/10"}`}
                                         >
-                                            {status.virtualCamStatus === "STARTED" ? "Stop" : "Activate"}
+                                            <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 ${status.virtualCamStatus === "STARTED" ? "translate-x-4" : "translate-x-0"}`}>
+                                                <Power className={`w-2.5 h-2.5 ${status.virtualCamStatus === "STARTED" ? "text-[#005ea6]" : "text-gray-500"}`} />
+                                            </span>
                                         </button>
                                     </div>
-                                    <div className="flex items-center justify-between py-1 border-t border-white/5">
+                                    <div className="flex items-center justify-between py-1.5 border-t border-white/5">
                                         <div className="flex items-center gap-2">
                                             <Radio className="w-3 h-3 text-cyan-400" />
                                             <span className="text-white font-black uppercase text-[10px]">Replay Buffer</span>
@@ -3629,9 +3633,13 @@ export default function Home() {
                                         </div>
                                         <button
                                             onClick={toggleReplayBuffer}
-                                            className={systemUniformBtn}
+                                            aria-label={status.replayBufferStatus === "STARTED" ? "Matikan Replay Buffer" : "Aktifkan Replay Buffer"}
+                                            title={status.replayBufferStatus === "STARTED" ? "Matikan" : "Aktifkan"}
+                                            className={`relative inline-flex h-5 w-9 items-center rounded-full p-0.5 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${status.replayBufferStatus === "STARTED" ? "bg-[#005ea6]" : "bg-white/10 border border-white/10"}`}
                                         >
-                                            {status.replayBufferStatus === "STARTED" ? "Stop" : "Activate"}
+                                            <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 ${status.replayBufferStatus === "STARTED" ? "translate-x-4" : "translate-x-0"}`}>
+                                                <Power className={`w-2.5 h-2.5 ${status.replayBufferStatus === "STARTED" ? "text-[#005ea6]" : "text-gray-500"}`} />
+                                            </span>
                                         </button>
                                     </div>
                                     <p className="text-[9px] text-gray-600 leading-relaxed">Virtual Camera & Replay Buffer butuh diaktifkan di OBS Settings → Output. Tombol di header juga bisa.</p>
@@ -3962,7 +3970,7 @@ export default function Home() {
                                                     <button onClick={() => setLayout({ ...layout, createTask: true })} className="w-6 h-6 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400" title="Buka modal"><Plus className="w-3 h-3" /></button>
                                                 </div>
                                             </div>
-                                            {/* list — full card, scroll */}
+                                            {/* list - full card, scroll */}
                                             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-0.5">
                                             {((activeTasks as { items?: any[] })?.items?.length || 0) > 0 ? (
                                                 <div className="space-y-1.5">
@@ -4031,7 +4039,7 @@ export default function Home() {
                                                 </div>
                                             )}
                                             </div>
-                                            {/* input — nempel di bawah list */}
+                                            {/* input - nempel di bawah list */}
                                             <div className="flex gap-2 pt-2 shrink-0 border-t border-white/5">
                                                 <input value={newTaskText} onChange={(e)=>setNewTaskText(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter') handleAddTask(); }} placeholder="Tambah task..." className="flex-1 h-8 bg-white/5 border border-white/10 rounded-full px-3 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50" />
                                                 <button onClick={handleAddTask} className="h-8 px-4 bg-cyan-600 hover:bg-cyan-500 rounded-full text-white text-[11px] font-black uppercase flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>

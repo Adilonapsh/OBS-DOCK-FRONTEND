@@ -81,7 +81,7 @@ export default function PsdImportDialog({
                 {res.layers.length} layer • {res.canvasW}×{res.canvasH}px
               </div>
               <div className="text-[11px] text-gray-400 mt-1">
-                {counts.map((c) => `${c.n} ${c.t}`).join(' • ') || '—'}
+                {counts.map((c) => `${c.n} ${c.t}`).join(' • ') || '-'}
               </div>
             </div>
 
@@ -104,7 +104,7 @@ export default function PsdImportDialog({
                 <ul className="mt-1 space-y-0.5 max-h-32 overflow-y-auto custom-scrollbar">
                   {res.skipped.map((s, i) => (
                     <li key={i} className="truncate">
-                      <span className="text-gray-200">{s.name}</span> — {s.reason}
+                      <span className="text-gray-200">{s.name}</span> - {s.reason}
                     </li>
                   ))}
                 </ul>

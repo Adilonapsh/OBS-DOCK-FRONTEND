@@ -136,7 +136,7 @@ export default function BrutalistTaskTheme({
               className="px-3 py-4 bg-white border-[3px] border-black text-black text-[12px] font-black uppercase tracking-wide text-center"
               style={{ boxShadow: '4px 4px 0 #000' }}
             >
-              Belum ada task — tambah dulu!
+              Belum ada task - tambah dulu!
             </div>
           ) : shouldCollapseView && !nextTask ? (
             <div
@@ -149,7 +149,7 @@ export default function BrutalistTaskTheme({
             <>
               <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
                 {tasks.map((task) => {
-                  // saat collapse hanya nextTask yang muncul; checklist tidak hilang — dicoret, hanya hilang saat collapse
+                  // saat collapse hanya nextTask yang muncul; checklist tidak hilang - dicoret, hanya hilang saat collapse
                   const isCollapsed = !!collapsedIds?.has(task.id) && !task.completed;
                   const isHidden = !!(shouldCollapseView && nextTask && task.id !== nextTask.id);
                   const animStyle = isHidden || isCollapsed ? `${hide} 0.4s ease both` : getAnim(task.id);

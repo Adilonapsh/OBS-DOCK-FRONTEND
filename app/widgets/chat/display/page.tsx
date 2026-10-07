@@ -82,7 +82,7 @@ function ChatInner() {
   const bubbleOpacity = Math.max(0, Math.min(1, getFloatParam(params, 'bubbleOpacity', 0.9)));
   // General
   const excludeCommands = getBoolParam(params, 'excludeCommands', false);
-  // Custom command music (disamakan dengan setting music widget) — default !song.
+  // Custom command music (disamakan dengan setting music widget) - default !song.
   // !skip selalu disembunyikan juga.
   const songCommand = getStringParam(params, 'songCommand', getStringParam(params, 'command', '!song')) || '!song';
   const ignoreChatters = getStringParam(params, 'ignoreChatters', '');
@@ -156,7 +156,7 @@ function ChatInner() {
   }, [bttv]);
 
   useEffect(() => {
-    if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
+    if (simulate) return; // mode simulate - demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });

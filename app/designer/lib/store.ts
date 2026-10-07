@@ -1,7 +1,7 @@
 'use client';
 // Store lokal untuk Designer. Sengaja terpisah dari widget settings.
 // MVP: localStorage. Display OBS di mesin yang sama langsung jalan.
-// Untuk lintas mesin / share: pakai ?layers= (desain kecil) — lihat buildDisplayUrl.
+// Untuk lintas mesin / share: pakai ?layers= (desain kecil) - lihat buildDisplayUrl.
 
 import type { DesignerDoc, DesignerLayer } from './types';
 import { uid } from './types';

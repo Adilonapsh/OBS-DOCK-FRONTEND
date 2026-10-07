@@ -44,7 +44,7 @@ export default function BrutalistTheme({ poll, font, accent, showPercent, showCo
             <div className="inline-flex items-center gap-2 bg-black text-white px-2 py-1 border-[2px] border-black shadow-[3px_3px_0_#000]">
               <span className={`w-2 h-2 border border-black ${poll.ended ? 'bg-zinc-400' : poll.paused ? 'bg-yellow-400' : 'bg-red-500 animate-pulse'}`} />
               <span className="font-black uppercase tracking-[0.14em] text-[10px] leading-none">
-                POLLING {poll.ended ? '— SELESAI' : poll.paused ? '— PAUSED' : showTimer ? `— ${mm}:${ss}` : '— LIVE'}
+                POLLING {poll.ended ? '- SELESAI' : poll.paused ? '- PAUSED' : showTimer ? `- ${mm}:${ss}` : '- LIVE'}
               </span>
             </div>
             <h2 id="poll-question" className="mt-3 font-black uppercase tracking-tight text-black text-[20px] md:text-[22px] leading-[0.95]">

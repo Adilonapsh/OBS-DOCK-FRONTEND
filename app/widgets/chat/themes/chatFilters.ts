@@ -1,4 +1,4 @@
-// Helper filter & format chat — kompatibel nutty.gg multichat-overlay.
+// Helper filter & format chat - kompatibel nutty.gg multichat-overlay.
 // TikTok chat tetap dari event `tiktok-chat` seperti sekarang; helper ini murni
 // filtering/tampilan di sisi overlay agar URL nutty bisa di-load langsung.
 
@@ -70,7 +70,7 @@ export function passCommandFilter(c: ChatItem, excludeCommands: boolean): boolea
   return !String(c.comment || '').trimStart().startsWith('!');
 }
 
-// Command music widget (!song / !skip / custom) — selalu disembunyikan dari widget chat
+// Command music widget (!song / !skip / custom) - selalu disembunyikan dari widget chat
 // agar request lagu tidak mengotori overlay chat. Dipakai terpisah dari excludeCommands.
 export function isSongCommand(comment: string, customCmd = '!song'): boolean {
   const t = String(comment || '').trim().toLowerCase();

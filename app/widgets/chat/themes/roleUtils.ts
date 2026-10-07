@@ -1,7 +1,7 @@
 // Helper role + warna akun shared untuk semua tema chat.
 // Data asli dari Streamer.bot (diteruskan dock → backend bridge):
 // - Twitch: broadcaster/mod/vip/sub (+ color hex akun)
-// - YouTube: owner/mod/member(+verified) — color fallback stabil per akun dari dock
+// - YouTube: owner/mod/member(+verified) - color fallback stabil per akun dari dock
 import type { ChatItem, ChatRole } from './types';
 
 const KNOWN: ChatRole[] = ['broadcaster', 'mod', 'vip', 'sub', 'owner', 'member', 'verified'];
@@ -28,7 +28,7 @@ export function chatRoleLabel(r: ChatRole): string {
   return '✔';
 }
 
-/** Class warna pill badge — mengikuti warna khas tiap platform/akun. */
+/** Class warna pill badge - mengikuti warna khas tiap platform/akun. */
 export function chatRolePill(platform: string | undefined, r: ChatRole): string {
   const p = (platform || '').toLowerCase();
   if (r === 'broadcaster' || r === 'owner') return 'bg-red-500/20 text-red-300';

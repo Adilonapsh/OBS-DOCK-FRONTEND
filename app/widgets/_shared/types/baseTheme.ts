@@ -36,6 +36,8 @@ export type TimerBaseProps = BaseThemeProps & {
   isRunning: boolean;
   currentSession: number;
   totalSessions: number;
+  focusMinutes?: number;
+  showProgress?: boolean;
   onToggleTimer?: () => void;
   onResetTimer?: () => void;
   onNextSession?: () => void;

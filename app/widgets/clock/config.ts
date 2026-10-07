@@ -2,7 +2,7 @@ import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/
 
 export const CLOCK_THEMES = [
   { value: 'standard', label: 'Standard - Clean' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalism' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const CLOCK_DEFAULTS = {

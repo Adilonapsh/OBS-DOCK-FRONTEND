@@ -8,7 +8,7 @@ function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFont
     return <div className={`lyrics-plain opacity-80 leading-relaxed ${alignCls}`} style={{ fontSize: `${lyricsFontSize}px` }}>{plainLyrics.split('\n').slice(0, maxLyricsLines).join('  •  ')}</div>;
   }
   // Halaman penuh per maxLyricsLines (bukan geser tiap baris) agar jendela stabil & tidak lompat.
-  // Semua baris font-size SAMA — status aktif hanya beda warna/opacity/scale (transform),
+  // Semua baris font-size SAMA - status aktif hanya beda warna/opacity/scale (transform),
   // jadi tidak ada layout-shift saat highlight pindah (sumber glitch sebelumnya).
   const safeActive = Math.max(0, activeIndex);
   const start = Math.floor(safeActive / maxLyricsLines) * maxLyricsLines;

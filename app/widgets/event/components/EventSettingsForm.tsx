@@ -35,7 +35,7 @@ export function EventSettingsForm({
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Tema</span>
             <select value={state.theme} onChange={(e) => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {EVENT_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+              {EVENT_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
             </select>
           </label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Family</span>
@@ -44,9 +44,9 @@ export function EventSettingsForm({
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" min={10} max={26} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 14)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof EventSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade halus</span></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof EventSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade halus</span></label>
           {state.theme === 'perchar' && (
             <>
               <div className="grid grid-cols-2 gap-3 items-center">
@@ -116,7 +116,7 @@ export function EventSettingsForm({
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Inline <span className="text-[9px] font-normal text-gray-400 block">nickname: info sebaris</span></span><input type="checkbox" checked={(state as unknown as { inline: boolean }).inline} onChange={(e) => update('inline' as keyof EventSettings, e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer bg-cyan-500/5"><span className="text-[11px] font-bold text-white">Horizontal layout <span className="text-[9px] font-normal text-gray-400 block">Sampingan (row)</span></span><input type="checkbox" checked={state.horizontal} onChange={(e) => update('horizontal', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           {state.horizontal && (
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Horizontal</span><select value={(state as unknown as { horizontalAnim: string }).horizontalAnim} onChange={(e) => update('horizontalAnim' as keyof EventSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_HORIZONTAL_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Horizontal</span><select value={(state as unknown as { horizontalAnim: string }).horizontalAnim} onChange={(e) => update('horizontalAnim' as keyof EventSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{EVENT_HORIZONTAL_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select></label>
           )}
         </div>
       </div>

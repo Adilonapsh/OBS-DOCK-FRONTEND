@@ -2,7 +2,7 @@ import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 
 // AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
-// Tambah theme baru cukup buat file themes/NamaTema.tsx + themeMeta —
+// Tambah theme baru cukup buat file themes/NamaTema.tsx + themeMeta -
 // otomatis muncul di dropdown settings, preview, dan display (?theme=...).
 export { TICKER_THEME_OPTIONS as TICKER_THEMES, TICKER_THEME_DEFAULT } from './themes/registry';
 

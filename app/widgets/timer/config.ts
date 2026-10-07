@@ -1,19 +1,20 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
 import { buildWidgetUrl } from '../_shared/utils/url';
 
 export const TIMER_THEMES = [
-  { value: 'focus', label: 'Focus - Moka #594d4a ✨' },
-  { value: 'subathon', label: 'Subathon - Capsule #2b2b42' },
-  { value: 'glass', label: 'Glass - Minimalist Overlay ✨' },
-  { value: 'minimal', label: 'Minimal - Clean' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutal White + Hard 6px Shadow' },
+  { value: 'focus', label: 'Focus' },
+  { value: 'subathon', label: 'Subathon' },
+  { value: 'glass', label: 'Glass' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'plain', label: 'Plain' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const TIMER_FONTS = WIDGET_FONTS;
 
 export const TIMER_ANIMS = [
-  { value: 'elegant', label: 'Elegant ✨ (Recommended)' },
+  { value: 'elegant', label: 'Elegant (Recommended)' },
   { value: 'softPop', label: 'Soft Pop - Halus' },
   { value: 'blur', label: 'Blur In - Minimal' },
   { value: 'luxe', label: 'Luxe - Editorial' },
@@ -34,20 +35,25 @@ export const TIMER_DEFAULTS = {
   totalSessions: 3,
   anim: 'elegant',
   subathonMode: 'powerup' as string,
+  showProgress: true as boolean,
+  ...BRUTALIST_DEFAULTS,
 } as const;
 
 export type TimerSettings = typeof TIMER_DEFAULTS;
 
 export function buildTimerUrl(base: string, s: TimerSettings): string {
-  // Generalisasi via shared buildWidgetUrl - grouping keys biar mudah extend untuk widget lain
-  return buildWidgetUrl(
+  const url = buildWidgetUrl(
     base,
     s as unknown as Record<string, unknown>,
     ['theme', 'font', 'accent', 'textColor', 'pos', 'anim', 'subathonMode'],
-    [],
+    ['showProgress'],
     ['fontSize', 'bgOpacity', 'focusMinutes', 'totalSessions'],
     ['bg']
   );
+  const p = new URLSearchParams(url.split('?')[1] || '');
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
+  const baseUrl = url.split('?')[0];
+  return `${baseUrl}?${p.toString()}`;
 }
 
 // Cara tambah tema baru (untuk dev lain):

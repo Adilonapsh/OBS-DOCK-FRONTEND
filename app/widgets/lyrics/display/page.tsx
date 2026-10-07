@@ -178,7 +178,7 @@ function LyricsDisplayInner() {
 
   const currentSongKeyRef = useRef<string>('');
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Demo/simulate punya loop progres sendiri — tick effect di bawah wajib skip saat demo aktif,
+  // Demo/simulate punya loop progres sendiri - tick effect di bawah wajib skip saat demo aktif,
   // kalau tidak currentPos ditulis 2 interval bergantian (monotonik vs sawtooth) = glitch highlight.
 
   const setVisibility = (v: boolean) => {
@@ -205,7 +205,7 @@ function LyricsDisplayInner() {
   // pastikan loop demo bersih saat unmount
   useEffect(() => () => { if (demoTimerRef.current) clearInterval(demoTimerRef.current); }, []);
 
-  // tick progress (khusus data real — demo/simulate punya loop sendiri, lihat stopDemoLoop)
+  // tick progress (khusus data real - demo/simulate punya loop sendiri, lihat stopDemoLoop)
   useEffect(() => {
     if (demoActiveRef.current || !timeline) return;
     const interval = setInterval(() => {
@@ -229,7 +229,7 @@ function LyricsDisplayInner() {
     setActiveIndex(idx);
   }, [currentPos, lyrics]);
 
-  // fetch loop (dilewati saat simulate — pakai demo di bawah)
+  // fetch loop (dilewati saat simulate - pakai demo di bawah)
   useEffect(() => {
     if (simulate) return;
     let cancelled = false;
@@ -283,7 +283,7 @@ function LyricsDisplayInner() {
           if (pInfo.PlaybackStatus === PlaybackStatus.PLAYING || (showWhilePaused && pInfo.PlaybackStatus === PlaybackStatus.PAUSED)) {
             const newKey = `${mProps.Title}-${mProps.Artist}-${mProps.Thumbnail}`;
             if (newKey !== currentSongKeyRef.current) {
-              // data real masuk — hentikan loop demo agar tidak rebutan currentPos (glitch)
+              // data real masuk - hentikan loop demo agar tidak rebutan currentPos (glitch)
               stopDemoLoop();
               const newArt = mProps.Thumbnail || PLACEHOLDER;
               const pal = await getVibrantPalette(newArt);
@@ -360,7 +360,7 @@ function LyricsDisplayInner() {
       setLyrics(parsed);
       setPlainLyrics('');
       setLyricsStatus('demo');
-      // simulate timeline progression for demo — SATU-SATUNYA penulis currentPos saat demo
+      // simulate timeline progression for demo - SATU-SATUNYA penulis currentPos saat demo
       setTimeline({ Position: 0, EndTime: 20000, LastUpdatedTime: new Date().toISOString().replace('T',' ').slice(0,19) } as any);
       demoActiveRef.current = true;
       demoPosRef.current = 0;

@@ -17,5 +17,5 @@ export const GOAL_THEME_OPTIONS = [
   { value: 'standard', label: 'Standard - Card' },
   { value: 'minimal', label: 'Minimal - Bar' },
   { value: 'plain', label: 'Plain - Teks Polos' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;

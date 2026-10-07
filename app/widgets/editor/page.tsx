@@ -301,7 +301,7 @@ function EditorContent() {
   }, [modalOpen]);
 
   const layersQuery = encodeURIComponent(JSON.stringify(layers));
-  // Live data TIDAK dikirim lewat URL — display mengambilnya via socket (room = key).
+  // Live data TIDAK dikirim lewat URL - display mengambilnya via socket (room = key).
   // URL hanya membawa layers + key. Tanpa key → room=global → song/poll/timer tidak masuk.
   const obsUrl = typeof window !== 'undefined' ? `${window.location.origin}/widgets/custom/display?layers=${layersQuery}${privateKey ? `&key=${privateKey}` : ''}&obs=1` : '';
   const previewUrl = `${obsUrl.replace('&obs=1', '')}${obsUrl.includes('?') ? '&' : '?'}simulate=1`;
@@ -349,8 +349,8 @@ function EditorContent() {
           </div>
           <div className={`text-[10px] leading-relaxed ${privateKey ? 'text-green-400/80' : 'text-yellow-300/90'}`}>
             {privateKey
-              ? `● Live via socket room=${privateKey.slice(0, 6)}… — buka URL OBS ini, {{cover}}/{{timer}}/{{polls}} terisi otomatis saat ada lagu/timer/poll. Preview = demo (simulate=1, tanpa socket).`
-              : '○ Key kosong — Copy OBS akan jatuh ke room=global: chat masih masuk, tapi music/timer/poll tidak. Isi key (otomatis dari dashboard) agar live sync jalan.'}
+              ? `● Live via socket room=${privateKey.slice(0, 6)}… - buka URL OBS ini, {{cover}}/{{timer}}/{{polls}} terisi otomatis saat ada lagu/timer/poll. Preview = demo (simulate=1, tanpa socket).`
+              : '○ Key kosong - Copy OBS akan jatuh ke room=global: chat masih masuk, tapi music/timer/poll tidak. Isi key (otomatis dari dashboard) agar live sync jalan.'}
           </div>
         </div>
 
@@ -358,7 +358,7 @@ function EditorContent() {
           {/* Left: Layers + Add (via modal) */}
           <div className="w-full lg:w-[260px] shrink-0 bg-[#121212] border-b lg:border-b-0 lg:border-r border-white/5 flex flex-col max-h-[30vh] lg:max-h-none lg:h-[calc(100vh-112px)] overflow-hidden">
             <div className="p-3 border-b border-white/5">
-              <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Plus className="w-3 h-3" /> Add Layer — via modal</div>
+              <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Plus className="w-3 h-3" /> Add Layer - via modal</div>
               <div className="grid grid-cols-3 gap-1.5 mt-2">
                 {(['chat','timer','clock','poll','social','custom'] as LayerType[]).map(t => {
                   const Icon = LAYER_ICON[t];
@@ -445,7 +445,7 @@ function EditorContent() {
 
                   {/* Konten: ringkasan + edit via modal */}
                   <div className="space-y-2 p-2.5 bg-violet-500/10 border border-violet-500/20 rounded-xl">
-                    <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Code2 className="w-3 h-3 text-violet-300" /> Konten Layer — edit di modal</div>
+                    <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Code2 className="w-3 h-3 text-violet-300" /> Konten Layer - edit di modal</div>
                     <div className="grid grid-cols-3 gap-1.5 text-[10px] font-mono">
                       <div className="bg-black/40 border border-white/10 rounded-lg p-2"><div className="text-gray-500 text-[9px] font-sans font-bold uppercase">HTML</div><div className="text-white truncate">{selLayer.template.length} char</div></div>
                       <div className="bg-black/40 border border-white/10 rounded-lg p-2"><div className="text-gray-500 text-[9px] font-sans font-bold uppercase">CSS</div><div className="text-white truncate">{selLayer.css.length} char</div></div>
@@ -469,7 +469,7 @@ function EditorContent() {
         </div>
       </div>
 
-      {/* ===== Modal tambah / edit layer — diperbesar, VSCode, preview atas, panel kiri + kode kanan ===== */}
+      {/* ===== Modal tambah / edit layer - diperbesar, VSCode, preview atas, panel kiri + kode kanan ===== */}
       {modalOpen && draft && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={closeModal} />
@@ -479,7 +479,7 @@ function EditorContent() {
               <div className="w-8 h-8 rounded-lg bg-white grid place-items-center shrink-0"><Layers className="w-4 h-4 text-black" /></div>
               <div className="flex-1 min-w-0">
                 <div className="text-white font-black text-[12px] uppercase tracking-widest">{modalMode === 'create' ? 'Tambah Layer' : `Edit Layer • ${draft.id}`}</div>
-                <div className="text-gray-400 text-[10px]">Template / HTML + CSS + JS — Simpan untuk menambahkan ke canvas</div>
+                <div className="text-gray-400 text-[10px]">Template / HTML + CSS + JS - Simpan untuk menambahkan ke canvas</div>
               </div>
               <div className="hidden md:flex items-center gap-1.5">
                 {(['template','css','js'] as ModalTab[]).map(t => (
@@ -490,7 +490,7 @@ function EditorContent() {
               </div>
               {modalMode === 'create' && (
                 <select value={draft.type} onChange={e=>{ const t = e.target.value as LayerType; setDraft({ ...makeDraft(t, layers.length + 1), id: draft.id, x: draft.x, y: draft.y, w: draft.w, h: draft.h }); }} className="h-8 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white">
-                  {(['chat','timer','clock','poll','social','custom'] as LayerType[]).map(t => <option key={t} value={t} className="bg-zinc-900">{t}</option>)}
+                  {(['chat','timer','clock','poll','social','custom'] as LayerType[]).map(t => <option key={t} value={t} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t}</option>)}
                 </select>
               )}
               <span className="hidden lg:inline text-[10px] font-mono text-gray-500">{draft.type} • {draft.id}</span>
@@ -505,9 +505,9 @@ function EditorContent() {
               ))}
             </div>
 
-            {/* Live preview — di atas (data asli fungsi widget, bukan contoh statis) */}
+            {/* Live preview - di atas (data asli fungsi widget, bukan contoh statis) */}
             <div className="px-4 py-2 border-b border-white/10 bg-[#1e1e1e] shrink-0">
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5 flex items-center gap-2"><Eye className="w-3 h-3" /> Live preview — {modalTab === 'template' ? 'HTML' : modalTab.toUpperCase()}
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5 flex items-center gap-2"><Eye className="w-3 h-3" /> Live preview - {modalTab === 'template' ? 'HTML' : modalTab.toUpperCase()}
                 <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${liveConnected ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-white/5 text-gray-400 border border-white/10'}`}>{liveConnected ? '● LIVE SYNC' : '○ DEMO'}</span>
                 {liveConnected ? null : <span className="normal-case font-bold text-gray-600">isi key untuk sync real • {'{{cover}}'} = thumb YT asli saat ada lagu</span>}
               </div>
@@ -530,7 +530,7 @@ function EditorContent() {
                       <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">{g} ({list.length})</div>
                       <div className="flex flex-wrap gap-1.5">
                         {(list as typeof TEMPLATE_VARS).map(v => (
-                          <button key={v.key} onClick={()=>insertVarModal(v.key)} title={`${v.desc} — ex: ${v.example}`} className="px-2 py-1 bg-white/10 hover:bg-violet-600 hover:border-violet-500 border border-white/10 rounded-md text-[10px] font-mono text-gray-200 transition-colors">{`{{${v.key}}}`}</button>
+                          <button key={v.key} onClick={()=>insertVarModal(v.key)} title={`${v.desc} - ex: ${v.example}`} className="px-2 py-1 bg-white/10 hover:bg-violet-600 hover:border-violet-500 border border-white/10 rounded-md text-[10px] font-mono text-gray-200 transition-colors">{`{{${v.key}}}`}</button>
                         ))}
                       </div>
                     </div>
@@ -552,11 +552,11 @@ function EditorContent() {
                   )}
                   {modalTab === 'js' && (
                     <div className="space-y-1.5">
-                      <div className="text-[9px] font-black uppercase tracking-widest text-gray-500">Preset JS — klik untuk pakai</div>
+                      <div className="text-[9px] font-black uppercase tracking-widest text-gray-500">Preset JS - klik untuk pakai</div>
                       {JS_PRESETS.map(p => (
                         <button key={p.label} onClick={()=>updateDraft({ js: p.code, anim: '' })} className={`w-full text-left px-2.5 py-2 border rounded-lg text-[11px] font-bold ${draft.js===p.code ? 'bg-violet-600 text-white border-violet-500' : 'bg-white/5 text-gray-200 border-white/10 hover:bg-white/10'}`}>{p.label}<span className="block text-[10px] font-mono font-normal opacity-70 truncate">{p.code.slice(0, 60)}…</span></button>
                       ))}
-                      <div className="text-[10px] text-gray-500 leading-relaxed pt-1">Pakai <code className="bg-white/10 px-1 rounded">el</code> — <code className="bg-white/10 px-1 rounded">el.animate([...], {"{duration:400}"})</code>. Ketik <code className="bg-white/10 px-1 rounded">el</code> di kanan untuk autocomplete.</div>
+                      <div className="text-[10px] text-gray-500 leading-relaxed pt-1">Pakai <code className="bg-white/10 px-1 rounded">el</code> - <code className="bg-white/10 px-1 rounded">el.animate([...], {"{duration:400}"})</code>. Ketik <code className="bg-white/10 px-1 rounded">el</code> di kanan untuk autocomplete.</div>
                       {draft.js ? <button onClick={()=>updateDraft({ js:'' })} className="text-[10px] text-red-400 underline">Hapus JS, pakai CSS</button> : null}
                     </div>
                   )}
@@ -570,10 +570,10 @@ function EditorContent() {
                   <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 shrink-0 overflow-x-auto">
                     <span className="text-[10px] font-black uppercase text-gray-400 shrink-0">CSS anim:</span>
                     <select value={draft.anim || 'elegantIn'} onChange={e=>updateDraft({ anim: e.target.value, js: '' })} className="h-7 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white shrink-0">
-                      <option value="elegantIn" className="bg-zinc-900">Elegant In</option>
-                      <option value="softPopIn" className="bg-zinc-900">Soft Pop</option>
-                      <option value="slideUp" className="bg-zinc-900">Slide Up</option>
-                      <option value="fadeIn" className="bg-zinc-900">Fade</option>
+                      <option value="elegantIn" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Elegant In</option>
+                      <option value="softPopIn" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Soft Pop</option>
+                      <option value="slideUp" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Slide Up</option>
+                      <option value="fadeIn" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Fade</option>
                     </select>
                     <span className="text-[10px] text-gray-600 shrink-0">atau tulis JS di bawah ({draft.js ? 'JS aktif' : 'CSS aktif'})</span>
                   </div>

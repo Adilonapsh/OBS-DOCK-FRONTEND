@@ -6,7 +6,7 @@ export const VIEW_COUNTER_THEMES = [
   { value: 'minimal', label: 'Minimal - Angka Saja' },
   { value: 'cute', label: 'Cute - Lavender Pastel' },
   { value: 'music', label: 'Music - Viewers + Queue' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const VIEW_COUNTER_FONTS = WIDGET_FONTS;

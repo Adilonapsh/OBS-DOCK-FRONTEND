@@ -2,7 +2,7 @@ import type { ChatItem } from './themes/types';
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 
 // AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
-// Tambah theme baru cukup buat file themes/NamaTema.tsx + themeMeta —
+// Tambah theme baru cukup buat file themes/NamaTema.tsx + themeMeta -
 // otomatis muncul di dropdown settings, preview, dan display (?theme=...).
 export { CHAT_THEME_OPTIONS as CHAT_THEMES } from './themes/registry';
 
@@ -81,7 +81,7 @@ export const CHAT_DEFAULTS = {
   // TikTok chat tetap sama seperti sekarang (sumber tiktok-chat), ini murni setting tampilan.
   showUsername: true,
   showMessage: true,
-  showPronouns: false, // belum ada data pronouns — disimpan untuk kompatibilitas URL nutty
+  showPronouns: false, // belum ada data pronouns - disimpan untuk kompatibilitas URL nutty
   timeFormat: '24-hour' as string, // '12-hour' | '24-hour'
   lineSpacing: 1.4,
   useChatBubbles: false, // false = tema pakai bg bawaan (perilaku sekarang); true = override bubbleColor

@@ -131,11 +131,11 @@ function EventInner() {
   };
 
   useEffect(() => {
-    if (simulate) return; // mode simulate — demo data lokal, tidak perlu socket
+    if (simulate) return; // mode simulate - demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
     // Anti dobel: backend mengirim follow/subscribe sebagai tiktok-follow DAN
-    // tiktok-member (TikTok native follow juga dobel) — tampilkan sekali saja.
+    // tiktok-member (TikTok native follow juga dobel) - tampilkan sekali saja.
     const seenJoin = new Map<string, number>();
     const pushJoin = (nickname: string, profilePictureUrl: string | undefined, platform: string | undefined, label: string | undefined) => {
       const key = `${nickname}•${label || 'joined'}`;
@@ -147,7 +147,7 @@ function EventInner() {
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
     socket.on('disconnect', () => setConnected(false));
     socket.on('tiktok-follow', (data: Record<string, unknown>) => {
-      // Follow TikTok native (tanpa displayType) sudah tampil via tiktok-member —
+      // Follow TikTok native (tanpa displayType) sudah tampil via tiktok-member -
       // lewati agar tidak dobel. Follow/subscribe Streamer.bot selalu bawa displayType.
       const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; platform?: string; displayType?: string; count?: number; months?: number };
       if (!d.displayType && !(d.platform && !String(d.platform).toLowerCase().includes('tiktok'))) return;
@@ -156,7 +156,7 @@ function EventInner() {
     });
     socket.on('tiktok-member', (data: Record<string, unknown>) => {
       const d = data as { nickname?: string; uniqueId?: string; profilePictureUrl?: string; platform?: string; displayType?: string; count?: number; months?: number };
-      // Duplikat follow/subscribe (sudah ditangani handler tiktok-follow berlabel) — lewati.
+      // Duplikat follow/subscribe (sudah ditangani handler tiktok-follow berlabel) - lewati.
       if (isFollowDisplayType(d.displayType)) return;
       pushJoin(d.nickname || d.uniqueId || 'Someone', d.profilePictureUrl, d.platform, undefined);
     });

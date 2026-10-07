@@ -310,8 +310,8 @@ export default function SpeedGraph({
       </svg>
       <div className="text-[10px] text-gray-500">
         {view === 'value'
-          ? `Value — ${dim.label}. Drag titik: geser = waktu, vertikal = nilai.`
-          : `Speed — ${dim.label}. Curam = cepat, landai = lambat (ikuti ease tiap keyframe).`}
+          ? `Value - ${dim.label}. Drag titik: geser = waktu, vertikal = nilai.`
+          : `Speed - ${dim.label}. Curam = cepat, landai = lambat (ikuti ease tiap keyframe).`}
       </div>
     </div>
   );

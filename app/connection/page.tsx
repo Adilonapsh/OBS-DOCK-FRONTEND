@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Monitor, Radio, Settings, Save, TestTube, Eye, EyeOff, Menu, LayoutDashboard, Server, Plus, Trash2, Video, ExternalLink } from "lucide-react";
+import { Monitor, Radio, Settings, Save, TestTube, Eye, EyeOff, Menu, LayoutDashboard, Server, Plus, Trash2, Video, ExternalLink, Heart } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
@@ -22,6 +22,9 @@ export default function ConfigPage() {
     const [obsConfig, setObsConfig] = useState({ address: "127.0.0.1", port: "4455", password: "", autoConnect: true });
     const [sbConfig, setSbConfig] = useState({ address: "127.0.0.1", port: "8080", endpoint: "streamerbot", password: "", autoConnect: true });
     const [tiktokConfig, setTiktokConfig] = useState({ username: "", autoConnect: false });
+    const [hyperateConfig, setHyperateConfig] = useState({ channelId: "", tokenUrl: "", autoConnect: true });
+    const [showHyperateId, setShowHyperateId] = useState(false);
+    const [showHyperateToken, setShowHyperateToken] = useState(false);
     const [mtxServers, setMtxServers] = useState<Array<{ id: string; serverName: string; apiUrl: string; playerUrlBase: string; basicUser: string; basicPass: string; showPass?: boolean }>>([]);
     const [mtxShowPass, setMtxShowPass] = useState<Record<string, boolean>>({});
     const [editingMtxId, setEditingMtxId] = useState<string | null>(null);
@@ -59,6 +62,28 @@ export default function ConfigPage() {
                             setSbConfig({ address: all.streamerbot_config.address, port: all.streamerbot_config.port, endpoint: all.streamerbot_config.endpoint, password: decPass || all.streamerbot_config.password || "", autoConnect: all.streamerbot_config.auto_connect });
                         }
                         if (all.tiktok_config) setTiktokConfig({ username: all.tiktok_config.username || "", autoConnect: all.tiktok_config.auto_connect });
+                        if ((all as any).hyperate_config) {
+                            const hc = (all as any).hyperate_config;
+                            setHyperateConfig({
+                                channelId: (hc.channel_id || hc.hyperate_id || hc.id || '').replace(/^hr:/, ''),
+                                tokenUrl: hc.token_url || hc.token || hc.ws_url || '',
+                                autoConnect: hc.auto_connect ?? true,
+                            });
+                        }
+                        // hyperate local fallback
+                        try {
+                            const raw = localStorage.getItem("hyperate-config");
+                            if (raw) {
+                                const j = JSON.parse(raw);
+                                if ((j?.channelId || j?.id) && !((all as any).hyperate_config)) {
+                                    setHyperateConfig({
+                                        channelId: (j.channelId || j.id || '').replace(/^hr:/, ''),
+                                        tokenUrl: j.tokenUrl || j.wsUrl || j.token || '',
+                                        autoConnect: j.autoConnect ?? true,
+                                    });
+                                }
+                            }
+                        } catch {}
                         return;
                     }
                 } catch {}
@@ -78,8 +103,49 @@ export default function ConfigPage() {
                 }
                 const { data: tt } = await supabase.from("tiktok_configs").select("*").eq("user_id", session.user.id).single();
                 if (tt) setTiktokConfig({ username: (tt as any).username || "", autoConnect: (tt as any).auto_connect });
+                // hyperate: coba supabase, fallback localStorage
+                try {
+                    const { data: hr } = await supabase.from("hyperate_configs").select("*").eq("user_id", session.user.id).single();
+                    if (hr) setHyperateConfig({
+                        channelId: ((hr as any).channel_id || (hr as any).hyperate_id || (hr as any).id || '').replace(/^hr:/, ''),
+                        tokenUrl: (hr as any).token_url || (hr as any).token || (hr as any).ws_url || '',
+                        autoConnect: (hr as any).auto_connect ?? true,
+                    });
+                    else {
+                        const raw = localStorage.getItem("hyperate-config");
+                        if (raw) {
+                            const j = JSON.parse(raw);
+                            if (j?.channelId || j?.id) setHyperateConfig({
+                                channelId: (j.channelId || j.id || '').replace(/^hr:/, ''),
+                                tokenUrl: j.tokenUrl || j.wsUrl || j.token || '',
+                                autoConnect: j.autoConnect ?? true,
+                            });
+                        }
+                    }
+                } catch {
+                    const raw = localStorage.getItem("hyperate-config");
+                    if (raw) try {
+                        const j = JSON.parse(raw);
+                        if (j?.channelId || j?.id) setHyperateConfig({
+                            channelId: (j.channelId || j.id || '').replace(/^hr:/, ''),
+                            tokenUrl: j.tokenUrl || j.wsUrl || j.token || '',
+                            autoConnect: j.autoConnect ?? true,
+                        });
+                    } catch {}
+                }
             } else if (!bypassKey) {
-                gooeyToast.error("Butuh login atau private_key");
+                // guest: load hyperate dari localStorage
+                try {
+                    const raw = localStorage.getItem("hyperate-config");
+                    if (raw) {
+                        const j = JSON.parse(raw);
+                        if (j?.channelId || j?.id) setHyperateConfig({
+                            channelId: (j.channelId || j.id || '').replace(/^hr:/, ''),
+                            tokenUrl: j.tokenUrl || j.wsUrl || j.token || '',
+                            autoConnect: j.autoConnect ?? true,
+                        });
+                    }
+                } catch {}
             }
         };
         load();
@@ -197,8 +263,89 @@ export default function ConfigPage() {
                 setSaving(null); return;
             }
         }
-        if (error) gooeyToast.error(error.message); else { localStorage.setItem("tiktok-config", JSON.stringify(tiktokConfig)); gooeyToast.success("TikTok config disimpan ke database"); }
+        if (error) gooeyToast.error(error.message); else { localStorage.setItem("tiktok-config", JSON.stringify(tiktokConfig)); localStorage.setItem("hyperate-config", JSON.stringify(hyperateConfig)); gooeyToast.success("TikTok config disimpan ke database"); }
         setSaving(null);
+    };
+
+    const saveHyperate = async () => {
+        if (!hyperateConfig.channelId.trim()) { gooeyToast.error("Hyperate ID wajib diisi (contoh: 99c877)"); return; }
+        if (!hyperateConfig.tokenUrl.trim()) { gooeyToast.error("WebSocket URL / Token wajib diisi (wss://...?token=...)"); return; }
+        setSaving("hr");
+        // selalu simpan lokal dulu - widget heartrate langsung pakai ini
+        localStorage.setItem("hyperate-config", JSON.stringify(hyperateConfig));
+        try {
+            sessionStorage.setItem("hyperate-id", hyperateConfig.channelId.trim());
+            sessionStorage.setItem("hyperate-token", hyperateConfig.tokenUrl.trim());
+        } catch {}
+        const { data: { session } } = await supabase.auth.getSession();
+        let error: any = null;
+        if (session) {
+            const res = await supabase.from("hyperate_configs").upsert({
+                user_id: session.user.id,
+                channel_id: hyperateConfig.channelId.trim().replace(/^hr:/, ''),
+                token_url: hyperateConfig.tokenUrl.trim(),
+                hyperate_id: hyperateConfig.channelId.trim(),
+                auto_connect: hyperateConfig.autoConnect,
+            } as any, { onConflict: "user_id" });
+            error = res.error;
+            if (error && String(error.message).includes("does not exist")) error = null;
+        } else {
+            const bypassKey = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("key") || sessionStorage.getItem("bypass_private_key") || sessionStorage.getItem("dock_private_verified")) : null;
+            if (bypassKey) {
+                const res: any = await (supabase as any).rpc("upsert_hyperate_config_by_private_key", {
+                    p_key: bypassKey,
+                    p_channel: hyperateConfig.channelId.trim().replace(/^hr:/, ''),
+                    p_token: hyperateConfig.tokenUrl.trim(),
+                    p_auto: hyperateConfig.autoConnect,
+                });
+                error = res.error;
+                if (error && String(error.message).includes("does not exist")) error = null;
+            }
+        }
+        if (error) gooeyToast.error(error.message);
+        else gooeyToast.success("Hyperate config disimpan - widget heartrate akan otomatis pakai ID ini");
+        setSaving(null);
+    };
+
+    const testHyperate = async () => {
+        if (!hyperateConfig.channelId.trim() || !hyperateConfig.tokenUrl.trim()) { gooeyToast.error("Isi Channel ID dan WebSocket URL dulu"); return; }
+        setTesting("hr");
+        const channelId = hyperateConfig.channelId.trim().replace(/^hr:/, '');
+        const wsUrl = hyperateConfig.tokenUrl.trim();
+        if (!wsUrl.startsWith('wss://') && !wsUrl.startsWith('ws://')) {
+            gooeyToast.error('WebSocket URL harus wss://app.hyperate.io/socket/websocket?token=...');
+            setTesting(null); return;
+        }
+        // WS test via Phoenix - sesuai capture: wss://app.hyperate.io/socket/websocket?token=...
+        let ws: WebSocket | null = null;
+        let done = false;
+        const timeout = setTimeout(() => { if (!done) { done = true; try { ws?.close(); } catch {}; gooeyToast.error("Hyperate timeout - cek ID / token"); setTesting(null); } }, 8000);
+        try {
+            ws = new WebSocket(wsUrl);
+            ws.onopen = () => {
+                const payload = JSON.stringify(["1", "1", `hr:${channelId}`, "phx_join", {}]);
+                try { ws!.send(payload); } catch {}
+            };
+            ws.onmessage = (ev) => {
+                try {
+                    const arr = JSON.parse(ev.data as string);
+                    if (!Array.isArray(arr) || arr.length < 4) return;
+                    const evName = arr[3] as string;
+                    if (evName === "phx_reply") {
+                        const p = arr[4] as { status?: string };
+                        if (p?.status === "ok" && !done) { done = true; clearTimeout(timeout); gooeyToast.success(`Hyperate terhubung! channel hr:${channelId} joined`); try { ws?.close(); } catch {}; setTesting(null); }
+                        else if (p?.status === "error" && !done) { done = true; clearTimeout(timeout); gooeyToast.error(`Hyperate join error - cek ID hr:${channelId}`); try { ws?.close(); } catch {}; setTesting(null); }
+                    } else if (evName === "hr_update" || evName === "hr") {
+                        const hr = (arr[4] as { hr?: number })?.hr;
+                        if (!done) { done = true; clearTimeout(timeout); gooeyToast.success(`Hyperate LIVE ${hr ?? ""} BPM!`); try { ws?.close(); } catch {}; setTesting(null); return; }
+                        // jika sudah ok, tetap update (untuk test live)
+                        if (typeof hr === 'number') gooeyToast.success(`HR ${hr} BPM`);
+                    }
+                } catch {}
+            };
+            ws.onerror = () => { if (!done) { done = true; clearTimeout(timeout); gooeyToast.error("Hyperate WS error - cek token / CORS"); setTesting(null); try { ws?.close(); } catch {} } };
+            ws.onclose = () => { if (!done) { /* will timeout */ } };
+        } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); clearTimeout(timeout); gooeyToast.error(msg); setTesting(null); }
     };
 
     const addMtxServer = () => {
@@ -335,7 +482,7 @@ export default function ConfigPage() {
                     <div className="flex items-center gap-3">
                         <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
                         <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-white">CONNECTION</span>
-                        <span className="hidden md:inline text-[11px] text-gray-500 font-bold">OBS • Streamer.bot • TikTok</span>
+                        <span className="hidden md:inline text-[11px] text-gray-500 font-bold">OBS • Streamer.bot • TikTok • Hyperate</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <ThemeToggle />
@@ -353,7 +500,7 @@ export default function ConfigPage() {
                     <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
                         <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-blue-600/10">
                             <h3 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2">
-                                <Image src="/assets/logo/obs.png" alt="OBS Studio" width={16} height={16} className="invert" />
+                                <Image src="/assets/logo/obs.png" alt="OBS Studio" width={16} height={16} className="dark:invert" />
                                 OBS Studio
                             </h3>
                             <span className="text-[9px] font-bold text-gray-500"></span>
@@ -434,7 +581,7 @@ export default function ConfigPage() {
                     <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
                         <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-blue-600/10">
                             <h3 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2">
-                                <Image src="/assets/logo/tik-tok.png" alt="TikTok" width={16} height={16} className="invert" /> TikTok</h3>
+                                <Image src="/assets/logo/tik-tok.png" alt="TikTok" width={16} height={16} className="dark:invert" /> TikTok</h3>
                             <span className="text-[9px] font-bold text-gray-500"></span>
                         </div>
                         <div className="p-5 space-y-4">
@@ -450,6 +597,39 @@ export default function ConfigPage() {
                                 <span className="text-[11px] font-bold text-gray-400">Auto Connect</span>
                             </label>
                             <button onClick={saveTiktok} disabled={saving === "tt"} className={`w-full ${uniformBtn}`}><Save className="w-3.5 h-3.5" /> {saving === "tt" ? "Menyimpan..." : "Simpan TikTok"}</button>
+                        </div>
+                    </div>
+
+                    {/* Hyperate - Heart Rate */}
+                    <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
+                        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-blue-600/10">
+                            <h3 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2">
+                                <Image src="/assets/logo/hyperate.png" alt="Hyperate" width={16} height={16} className="" />
+                                Hyperate - Heart Rate
+                            </h3>
+                            <span className="text-[9px] font-bold text-gray-500">app.hyperate.io</span>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div>
+                                <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1.5">Channel ID (xxxxx)</label>
+                                <input value={hyperateConfig.channelId} onChange={e => setHyperateConfig({ ...hyperateConfig, channelId: e.target.value })} placeholder="99c877  atau  hr:99c877" className="w-full h-10 px-3 bg-white/5 border border-white/10 rounded-xl text-[13px] font-mono font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
+                            </div>
+                            <div>
+                                <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1.5">WebSocket URL (dengan token)</label>
+                                <div className="relative">
+                                    <input type={showHyperateToken ? "text" : "password"} value={hyperateConfig.tokenUrl} onChange={e => setHyperateConfig({ ...hyperateConfig, tokenUrl: e.target.value })} placeholder="wss://app.hyperate.io/socket/websocket?token=bnQ1FoJm..." className="w-full h-10 pl-3 pr-9 bg-white/5 border border-white/10 rounded-xl text-[13px] font-mono font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
+                                    <button type="button" onClick={() => setShowHyperateToken(!showHyperateToken)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">{showHyperateToken ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}</button>
+                                </div>
+                                <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed">Copy dari <span className="text-white font-bold">app.hyperate.io → Integrations → WebSocket URL</span>. Jangan share token ini.</p>
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" checked={hyperateConfig.autoConnect} onChange={e => setHyperateConfig({ ...hyperateConfig, autoConnect: e.target.checked })} className="w-3 h-3 accent-blue-600" />
+                                <span className="text-[11px] font-bold text-gray-400">Auto Connect</span>
+                            </label>
+                            <div className="flex gap-2">
+                                <button onClick={saveHyperate} disabled={saving === "hr"} className={uniformPrimary}><Save className="w-3.5 h-3.5" /> {saving === "hr" ? "Menyimpan..." : "Simpan Hyperate"}</button>
+                                <button onClick={testHyperate} disabled={testing === "hr"} className={`px-4 ${uniformBtn}`}><TestTube className="w-3.5 h-3.5" /> {testing === "hr" ? "..." : "Test"}</button>
+                            </div>
                         </div>
                     </div>
 

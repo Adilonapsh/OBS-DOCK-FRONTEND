@@ -19,7 +19,7 @@ export function ViewCounterSettingsForm({ state, update }: Props) {
           <label className="block">
             <span className="text-[11px] font-bold text-gray-300">Tema</span>
             <select value={state.theme} onChange={(e) => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {VIEW_COUNTER_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+              {VIEW_COUNTER_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
             </select>
           </label>
           <label className="block">
@@ -61,8 +61,8 @@ export function ViewCounterSettingsForm({ state, update }: Props) {
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Inline (satu baris)</span><input type="checkbox" checked={state.inline} onChange={(e) => update('inline', e.target.checked)} className="w-4 h-4 accent-white" /></label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Idle</span>
             <select value={state.idleFx} onChange={(e) => update('idleFx', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              <option value="none" className="bg-zinc-900">Mati</option>
-              <option value="gradient" className="bg-zinc-900">Border Gradient Muter</option>
+              <option value="none" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Mati</option>
+              <option value="gradient" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Border Gradient Muter</option>
             </select>
           </label>
         </div>

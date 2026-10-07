@@ -9,7 +9,7 @@ export const QR_THEMES = [
   { value: 'minimal', label: 'Minimal - QR Saja' },
   { value: 'cute', label: 'Cute - Pastel' },
   { value: 'plain', label: 'Plain - Transparan' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const QR_LEVELS = [

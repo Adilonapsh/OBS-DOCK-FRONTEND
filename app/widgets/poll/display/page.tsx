@@ -83,7 +83,7 @@ function PollInner(){
   },[font]);
 
   useEffect(()=>{
-    if (simulate) { setConnected(true); return; } // mode simulate — demo data lokal, tidak perlu socket
+    if (simulate) { setConnected(true); return; } // mode simulate - demo data lokal, tidak perlu socket
     const socket: Socket = io(getSocketUrl(), { transports:['websocket','polling'] });
     const room = privateKey || 'global';
     socket.on('connect',()=>{ setConnected(true); socket.emit('join-room', room); socket.emit('poll-get', { privateKey: room }); });

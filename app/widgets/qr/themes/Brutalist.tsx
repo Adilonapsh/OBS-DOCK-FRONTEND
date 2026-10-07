@@ -1,7 +1,7 @@
 import { QrCodeImg } from './QrCode';
 import type { QrThemeProps } from './types';
 
-export const themeMeta = { value: 'brutalist', label: 'Brutalist - Neo Brutalist' } as const;
+export const themeMeta = { value: 'brutalist', label: 'Brutalist' } as const;
 
 export default function BrutalistTheme({
   value,
@@ -66,7 +66,7 @@ export default function BrutalistTheme({
             }}
           />
         )}
-        {/* top accent bar — treated as tail */}
+        {/* top accent bar - treated as tail */}
         {hasTail && (
           <div
             className="absolute top-0 left-0 right-0 h-[10px] border-b-[4px]"

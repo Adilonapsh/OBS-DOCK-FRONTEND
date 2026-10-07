@@ -27,7 +27,7 @@ export function ChatSettingsForm({
           <label className="block">
             <span className="text-[11px] font-bold text-gray-300">Tema</span>
             <select value={state.theme} onChange={(e) => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {CHAT_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+              {CHAT_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
             </select>
           </label>
           <label className="block">
@@ -37,9 +37,9 @@ export function ChatSettingsForm({
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" min={10} max={26} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 14)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Masuk</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof ChatSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade halus</span></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Keluar (hide)</span><select value={(state as unknown as { hideAnim: string }).hideAnim} onChange={(e) => update('hideAnim' as keyof ChatSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_HIDE_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select><span className="text-[10px] text-gray-500">Dipakai saat hideAfter - default fade halus</span></label>
           {state.theme === 'perchar' && (
             <>
               <div className="grid grid-cols-2 gap-3 items-center">
@@ -58,7 +58,7 @@ export function ChatSettingsForm({
       {/* Plain Border Opsi */}
       {state.theme === 'plain' && (
         <div className="space-y-3">
-          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-white" /> Border Teks — Plain</h2>
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-white" /> Border Teks - Plain</h2>
           <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
             <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
               <span className="text-[11px] font-bold text-white flex items-center gap-2">
@@ -93,7 +93,7 @@ export function ChatSettingsForm({
                     </span>
                   </label>
                   <label className="block">
-                    <span className="text-[11px] font-bold text-gray-300">Ketebalan — {(state as unknown as { plainBorderWidth?: number }).plainBorderWidth ?? 1}px</span>
+                    <span className="text-[11px] font-bold text-gray-300">Ketebalan - {(state as unknown as { plainBorderWidth?: number }).plainBorderWidth ?? 1}px</span>
                     <input
                       type="range"
                       min={0}
@@ -112,17 +112,9 @@ export function ChatSettingsForm({
         </div>
       )}
 
-      {/* Brutalist - Neo Brutalist */}
-      {state.theme === 'brutalist' && (
+      {/* Brutalist'brutalist' && (
         <div className="space-y-3">
-          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-yellow-400" /> Brutalist — Neo Brutalist</h2>
-          <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
-            <div>
-              <span className="text-[11px] font-bold text-gray-300">Preset Cepat</span>
-              <div className="mt-1 grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => {
-                    update('brutalistBg' as any, '#FFFFFF');
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-yellow-400" /> Brutalist'brutalistBg' as any, '#FFFFFF');
                     update('brutalistTextColor' as any, '#000000');
                     update('brutalistBadgeBg' as any, '#FFFFFF');
                     update('brutalistBorderColor' as any, '#000000');
@@ -221,7 +213,7 @@ export function ChatSettingsForm({
               </label>
             </div>
             <label className="block">
-              <span className="text-[11px] font-bold text-gray-300">Shadow Offset — {(state as any).brutalistShadow ?? 6}px</span>
+              <span className="text-[11px] font-bold text-gray-300">Shadow Offset - {(state as any).brutalistShadow ?? 6}px</span>
               <input type="range" min={0} max={14} value={(state as any).brutalistShadow ?? 6} onChange={(e) => update('brutalistShadow' as any, parseInt(e.target.value) || 6)} className="mt-1 w-full accent-white cursor-pointer" />
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -304,9 +296,9 @@ export function ChatSettingsForm({
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Badge Role <span className="text-[9px] font-normal text-gray-400 block">Mod / Sub / VIP / Member (Twitch & YouTube)</span></span><input type="checkbox" checked={state.showBadges} onChange={(e) => update('showBadges', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Emote BetterTTV <span className="text-[9px] font-normal text-gray-400 block">Global BTTV + emote channel dari Streamer.bot</span></span><input type="checkbox" checked={state.bttv} onChange={(e) => update('bttv', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Inline chat <span className="text-[9px] font-normal text-gray-400 block">nickname: pesan sebaris</span></span><input type="checkbox" checked={state.inline} onChange={(e) => update('inline', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
-          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer bg-cyan-500/5"><span className="text-[11px] font-bold text-white">Horizontal layout <span className="text-[9px] font-normal text-gray-400 block">Pills sebaris (inline) untuk bottom bar — set Posisi ke Bottom</span></span><input type="checkbox" checked={state.horizontal} onChange={(e) => update('horizontal', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
+          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer bg-cyan-500/5"><span className="text-[11px] font-bold text-white">Horizontal layout <span className="text-[9px] font-normal text-gray-400 block">Pills sebaris (inline) untuk bottom bar - set Posisi ke Bottom</span></span><input type="checkbox" checked={state.horizontal} onChange={(e) => update('horizontal', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           {state.horizontal && (
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Horizontal</span><select value={state.horizontalAnim} onChange={(e) => update('horizontalAnim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_HORIZONTAL_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Horizontal</span><select value={state.horizontalAnim} onChange={(e) => update('horizontalAnim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_HORIZONTAL_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select></label>
           )}
         </div>
       </div>
@@ -319,7 +311,7 @@ export function ChatSettingsForm({
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pesan <span className="text-[9px] font-normal text-gray-400 block">Matikan = hanya nama yang tampil</span></span><input type="checkbox" checked={state.showMessage} onChange={(e) => update('showMessage', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pronouns <span className="text-[9px] font-normal text-gray-400 block">Kompatibilitas URL nutty (belum ada data)</span></span><input type="checkbox" checked={state.showPronouns} onChange={(e) => update('showPronouns', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           {state.showTimestamp && (
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Format Jam</span><select value={state.timeFormat} onChange={(e) => update('timeFormat', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="24-hour" className="bg-zinc-900">24 Jam (14:30)</option><option value="12-hour" className="bg-zinc-900">12 Jam (2:30 PM)</option></select></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Format Jam</span><select value={state.timeFormat} onChange={(e) => update('timeFormat', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="24-hour" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">24 Jam (14:30)</option><option value="12-hour" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">12 Jam (2:30 PM)</option></select></label>
           )}
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Jarak Baris Pesan - {Number(state.lineSpacing).toFixed(1)}</span><input type="range" min={0.8} max={3} step={0.1} value={Number(state.lineSpacing)} onChange={(e) => update('lineSpacing', parseFloat(e.target.value))} className="mt-1 w-full accent-white" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Chat Bubbles (override) <span className="text-[9px] font-normal text-gray-400 block">Timpa background tema dengan warna custom</span></span><input type="checkbox" checked={state.useChatBubbles} onChange={(e) => update('useChatBubbles', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
@@ -337,11 +329,11 @@ export function ChatSettingsForm({
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><MessageSquare className="w-4 h-4 text-lime-300" /> General</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Exclude Commands <span className="text-[9px] font-normal text-gray-400 block">Sembunyikan pesan diawali &quot;!&quot;</span></span><input type="checkbox" checked={state.excludeCommands} onChange={(e) => update('excludeCommands', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Ignore Chatters <span className="text-[9px] font-normal text-gray-400"> — pisahkan koma (cth: StreamElements,Streamlabs)</span></span><input type="text" value={state.ignoreChatters} onChange={(e) => update('ignoreChatters', e.target.value)} placeholder="StreamElements,Streamlabs" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Scroll Direction</span><select value={state.scrollDirection} onChange={(e) => update('scrollDirection', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="1" className="bg-zinc-900">Normal (baru di bawah)</option><option value="2" className="bg-zinc-900">Reversed (baru di atas)</option></select></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Ignore Chatters <span className="text-[9px] font-normal text-gray-400"> - pisahkan koma (cth: StreamElements,Streamlabs)</span></span><input type="text" value={state.ignoreChatters} onChange={(e) => update('ignoreChatters', e.target.value)} placeholder="StreamElements,Streamlabs" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Scroll Direction</span><select value={state.scrollDirection} onChange={(e) => update('scrollDirection', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="1" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Normal (baru di bawah)</option><option value="2" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Reversed (baru di atas)</option></select></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Group Consecutive <span className="text-[9px] font-normal text-gray-400 block">Sembunyikan username bila user sama beruntun (diabaikan saat Reversed)</span></span><input type="checkbox" checked={state.groupConsecutiveMessages} onChange={(e) => update('groupConsecutiveMessages', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Highlight Mentions <span className="text-[9px] font-normal text-gray-400 block">Tandai pesan berisi @mention</span></span><input type="checkbox" checked={state.highlightMentions} onChange={(e) => update('highlightMentions', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Embed Images (izin)</span><select value={state.imageEmbedPermissionLevel} onChange={(e) => update('imageEmbedPermissionLevel', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="40" className="bg-zinc-900">Broadcaster</option><option value="30" className="bg-zinc-900">Mods &amp; Broadcaster</option><option value="20" className="bg-zinc-900">VIPs, Mods &amp; Broadcaster</option><option value="15" className="bg-zinc-900">Subs, VIPs, Mods &amp; Broadcaster</option><option value="10" className="bg-zinc-900">Everyone</option><option value="69420" className="bg-zinc-900">Nobody (mati)</option></select></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Embed Images (izin)</span><select value={state.imageEmbedPermissionLevel} onChange={(e) => update('imageEmbedPermissionLevel', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="40" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Broadcaster</option><option value="30" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Mods &amp; Broadcaster</option><option value="20" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">VIPs, Mods &amp; Broadcaster</option><option value="15" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Subs, VIPs, Mods &amp; Broadcaster</option><option value="10" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Everyone</option><option value="69420" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Nobody (mati)</option></select></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">YouTube Link Previews</span><input type="checkbox" checked={state.showYouTubeLinkPreviews} onChange={(e) => update('showYouTubeLinkPreviews', e.target.checked)} className="w-4 h-4 accent-white" /></label>
         </div>
       </div>
@@ -360,7 +352,7 @@ export function ChatSettingsForm({
           <ToggleRow label="Raids" checked={state.showTwitchRaids} onChange={(v) => update('showTwitchRaids', v)} />
           <ToggleRow label="Watch Streaks" checked={state.showTwitchWatchStreaks} onChange={(v) => update('showTwitchWatchStreaks', v)} />
           <ToggleRow label="GIFs (Tier 2/3)" checked={state.showTwitchGIFs} onChange={(v) => update('showTwitchGIFs', v)} />
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Shared Chat</span><select value={state.showTwitchSharedChat} onChange={(e) => update('showTwitchSharedChat', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="2" className="bg-zinc-900">Show &amp; Highlight</option><option value="1" className="bg-zinc-900">Show but do not highlight</option><option value="0" className="bg-zinc-900">Do not show</option></select></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Shared Chat</span><select value={state.showTwitchSharedChat} onChange={(e) => update('showTwitchSharedChat', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="2" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Show &amp; Highlight</option><option value="1" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Show but do not highlight</option><option value="0" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Do not show</option></select></label>
           <p className="text-[10px] text-gray-500">Catatan: widget chat hanya menerima <code className="bg-white/10 px-1 rounded text-white">tiktok-chat</code> (pesan chat). Event cheer/sub/raid masuk ke widget gift/event bila ada.</p>
         </div>
       </div>
@@ -391,7 +383,7 @@ export function ChatSettingsForm({
         </div>
       </div>
 
-      {/* Filter TikTok — sumber tetap sama */}
+      {/* Filter TikTok - sumber tetap sama */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-pink-400" /> TikTok</h2>
         <div className="space-y-2 bg-white/5 border border-white/10 rounded-2xl p-3">

@@ -3,17 +3,17 @@ import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/
 import type { FollowItem } from './themes/types';
 
 export const FOLLOW_THEMES = [
-  { value: 'standard', label: 'Standard - Card' },
-  { value: 'minimal', label: 'Minimal - Pill' },
-  { value: 'cute', label: 'Cute - Lavender Pastel ✨' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'cute', label: 'Cute' },
+  { value: 'plain', label: 'Plain' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const FOLLOW_FONTS = WIDGET_FONTS;
 
 export const FOLLOW_ANIMS = [
-  { value: 'elegant', label: 'Elegant ✨ (Recommended)' },
+  { value: 'elegant', label: 'Elegant (Recommended)' },
   { value: 'softPop', label: 'Soft Pop - Halus' },
   { value: 'blur', label: 'Blur In - Minimal' },
   { value: 'luxe', label: 'Luxe - Editorial' },
@@ -26,7 +26,7 @@ export const FOLLOW_ANIMS = [
 ] as const;
 
 export const FOLLOW_HORIZONTAL_ANIMS = [
-  { value: 'elegant', label: 'Elegant ✨' },
+  { value: 'elegant', label: 'Elegant' },
   { value: 'slideLeft', label: 'Slide Left' },
   { value: 'slideRight', label: 'Slide Right' },
   { value: 'softPop', label: 'Soft Pop' },

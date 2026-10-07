@@ -137,7 +137,7 @@ function ParamsEditor({ vars, params, onChange, preview }: {
       {open && (
         <div className="border-t border-white/10 p-3 space-y-2.5 bg-black/20">
           <p className="text-[10px] text-gray-500 leading-relaxed">
-            Args bawaan selalu dikirim. Tambahkan parameter custom — nilai boleh pakai template <code className="bg-white/10 px-1 rounded text-gray-300 font-sans">{"{variabel}"}</code> yang diisi otomatis saat event terjadi.
+            Args bawaan selalu dikirim. Tambahkan parameter custom - nilai boleh pakai template <code className="bg-white/10 px-1 rounded text-gray-300 font-sans">{"{variabel}"}</code> yang diisi otomatis saat event terjadi.
           </p>
           {vars.length > 0 && (
             <div>
@@ -256,7 +256,7 @@ function EventCard({ icon: Icon, title, desc, vars, enabled, action, params, pre
             value={action}
             onChange={(e) => onAction(e.target.value)}
             className={`w-full h-10 appearance-none bg-black/40 border border-white/10 rounded-xl pl-3 pr-8 text-[12px] font-sans focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 cursor-pointer ${mapped ? "text-white" : "text-gray-500"}`}
-            title={connected ? "Pilih action Streamer.bot" : "Streamer.bot tidak terhubung — daftar mungkin tidak terbaru"}
+            title={connected ? "Pilih action Streamer.bot" : "Streamer.bot tidak terhubung - daftar mungkin tidak terbaru"}
           >
             <option value="" className="bg-[#161616] text-gray-400">
               {sbActions.length === 0 ? (connected ? "Memuat actions…" : "Pilih action Streamer.bot…") : `Pilih action… (${sbActions.length})`}
@@ -511,7 +511,7 @@ export default function IntegrationsPage() {
                 <p className="text-gray-400 text-[11px] md:text-xs mt-1.5 leading-relaxed max-w-[560px]">
                   Setiap event TikTok & widget memicu <span className="text-white font-bold">DoAction</span> di Streamer.bot.
                   Nyalakan event, pilih action, atur parameter, lalu tekan <span className="text-white font-bold">Tes</span>.
-                  Eksekusi live berjalan di <span className="text-white font-bold">dock</span> — tersinkron otomatis.
+                  Eksekusi live berjalan di <span className="text-white font-bold">dock</span> - tersinkron otomatis.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 rounded-full text-[10px] font-black">{totalActive}/{allItems.length} aktif siap</span>
@@ -530,7 +530,7 @@ export default function IntegrationsPage() {
             </div>
             {!connected && (
               <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl text-[11px] text-amber-200 leading-relaxed relative">
-                ⚠️ Streamer.bot belum terhubung — mapping tetap bisa diatur (tersimpan), tapi tombol <b>Tes</b> butuh koneksi. Cek address/port di Config atau buka dock dengan Streamer.bot menyala.
+                ⚠️ Streamer.bot belum terhubung - mapping tetap bisa diatur (tersimpan), tapi tombol <b>Tes</b> butuh koneksi. Cek address/port di Config atau buka dock dengan Streamer.bot menyala.
               </div>
             )}
           </div>
@@ -635,7 +635,7 @@ export default function IntegrationsPage() {
                     <Icon className="w-4.5 h-4.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-black uppercase text-[12px] tracking-widest">{group.title} <span className="text-gray-600 normal-case font-bold">— {group.desc}</span></h3>
+                    <h3 className="text-white font-black uppercase text-[12px] tracking-widest">{group.title} <span className="text-gray-600 normal-case font-bold">- {group.desc}</span></h3>
                     <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[280px]">
                       <div
                         className="h-full bg-gradient-to-r from-violet-500 to-emerald-400 rounded-full transition-all"

@@ -7,8 +7,8 @@ export const SOCIAL_ROTATOR_THEMES = [
   { value: 'glass', label: 'Glass - Blur Premium' },
   { value: 'boxed', label: 'Boxed - Card' },
   { value: 'badge', label: 'Badge - Space Mono + Speech Bubble' },
-  { value: 'plain', label: 'Plain - Teks Polos' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'plain', label: 'Plain' },
+  { value: 'brutalist', label: 'Brutalist' },
 ] as const;
 
 export const SOCIAL_ROTATOR_ANIMS = [

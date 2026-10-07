@@ -1,631 +1,415 @@
 'use client';
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import './landing.css';
 import { createClient } from '@/utils/supabase/client';
+import {
+  User,
+  ChevronDown,
+  MessageCircle,
+  Tv,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  X as XIcon,
+  Menu,
+  Camera,
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock,
+  Music2,
+  Monitor,
+  Layers,
+  Headphones,
+  MessageSquare,
+  BarChart3,
+  Smartphone,
+  Puzzle,
+  Gift,
+  Sliders,
+  Volume2,
+  Mic,
+  Radio
+} from 'lucide-react';
 
-const SIM_STATES = ['chat', 'event', 'poll', 'timer', 'dock'] as const;
-type SimName = typeof SIM_STATES[number];
-
-const CHAT_SEED: Array<[string, string, string]> = [
-  ['TIKTOK', 'LHM', 'pakai lensa apa kak?'],
-  ['TWITCH', 'NeonPilot', 'Delay DoAction rendah banget (<40ms)'],
-  ['YOUTUBE', 'SilverPioneer94', 'Vote [2] di poll! Valorant!'],
-  ['KICK', 'RumbleWorks', 'Dock MediaMTX sinkron sama OBS'],
-  ['TIKTOK', 'IKYY', 'pake mic ga ini bang?'],
+/* FAQ Data */
+interface FaqItem { q: string; a: string; }
+const FAQ_ITEMS: FaqItem[] = [
+  { q: 'Apa itu OBS Dock?', a: 'OBS Dock adalah platform kontrol dan widget all-in-one untuk streamer. Kamu bisa mengontrol OBS Studio Mode / Scene Switcher langsung dari browser atau HP, serta menambahkan 14+ widget interaktif dan overlay real-time.' },
+  { q: 'Bagaimana cara menghubungkan widget ke OBS?', a: 'Cukup salin URL Browser Source dari dashboard OBS Dock kamu, lalu tambahkan sumber "Browser" baru di scene OBS Studio. Widget langsung terhubung dan sinkron secara real-time via WebSocket.' },
+  { q: 'Apa itu Private Key dan seberapa amannya?', a: 'Setiap streamer mendapatkan Private Key unik untuk isolasi room WebSocket privat. Ini menjamin data kontrol dock, chat, dan overlay kamu terisolasi penuh dan tidak bisa diakses atau diintervensi oleh streamer lain.' },
+  { q: 'Apakah OBS Dock gratis untuk digunakan?', a: 'Ya! Fitur inti OBS Dock gratis untuk memulai tanpa memerlukan kartu kredit. Kamu bisa langsung mengontrol scene, memakai widget chat, timer, poll, dan overlay bawaan.' },
+  { q: 'Platform streaming apa saja yang didukung?', a: 'OBS Dock mendukung integrasi multi-platform termasuk Twitch, YouTube Live, dan TikTok LIVE untuk interaksi chat, event gift/like/follow, serta animasi penonton.' },
+  { q: 'Bagaimana cara menggunakan Mobile Dock di smartphone?', a: 'Cukup buka dashboard OBS Dock di browser smartphone kamu dan login ke akun yang sama. Antarmuka Mobile Dock responsif dan memungkinkanmu mengganti scene, trigger transisi, atau mute audio tanpa menyentuh PC.' },
+  { q: 'Apakah Media Player mendukung sinkronisasi lirik otomatis?', a: 'Ya! Widget Media Player terintegrasi dengan LRCLIB dan SMTC Bridge di Windows. Lagu yang sedang diputar di Spotify atau Windows Media Player akan menampilkan synced lyrics baris demi baris di layar stream.' },
+  { q: 'Bagaimana cara kustomisasi tema overlay dan widget?', a: 'Setiap widget memiliki konfigurasi visual lengkap di dashboard: warna solid, ukuran font, tata letak, border, sound alert, hingga posisi tanpa perlu menulis CSS manual.' },
+  { q: 'Apakah OBS Dock membutuhkan instalasi plugin khusus di OBS?', a: 'Untuk overlay dan widget, hanya butuh Browser Source standar di OBS (tanpa plugin apapun). Untuk Dock Control penuh, OBS Studio versi 28 ke atas sudah memiliki OBS WebSocket bawaan yang langsung kompatibel.' },
+  { q: 'Bagaimana jika saya mengalami kendala teknis?', a: 'Tersedia dokumentasi lengkap di dashboard serta live chat support di pojok kanan bawah. Kamu juga bisa bergabung ke komunitas streamer kami untuk bertanya dan berdiskusi.' },
 ];
-const EV_SEED: Array<[string, string, string]> = [
-  ['TIKTOK', 'LHM', '50x Rose Gift'],
-  ['YOUTUBE', 'SilverPioneer94', '$20 Superchat'],
-  ['TWITCH', 'CosmicEcho77', 'Resub 18 bln'],
-  ['KICK', 'ApexGod', '5 Sub Gift'],
+const PLATFORMS = [
+  { id: 'twitch', name: 'Twitch', icon: '/assets/logo/twitch.png' },
+  { id: 'youtube', name: 'YouTube', icon: '/assets/logo/youtube.png' },
+  { id: 'kick', name: 'Kick', icon: '/assets/logo/kick.png' },
+  { id: 'streamlabs', name: 'Streamlabs', icon: '/assets/logo/streamlabs.png' },
+  { id: 'obs', name: 'OBS Studio', icon: '/assets/logo/obs.png' },
+  { id: 'tiktok', name: 'TikTok LIVE', icon: '/assets/logo/tik-tok.png' },
 ];
-const CHAT_SAMPLES: Array<[string, string]> = [
-  ['TIKTOK', 'LHM: pakai lensa apa kak?'],
-  ['TWITCH', 'NeonPilot: delay-nya kecil banget'],
-  ['YOUTUBE', 'Silver: vote yang nomor 2!'],
-  ['KICK', 'Raka: audio-nya sinkron 🔥'],
+interface ReviewNote { id: string; stars: number; quote: string; author: string; product: string; tint: string; }
+const STICKY_REVIEWS: ReviewNote[] = [
+  { id: '1', stars: 5, quote: 'Media Player widget-nya keren banget, sync lirik otomatis dari LRCLIB. Chat langsung nyambung ke OBS.', author: 'Rian_FPS', product: 'Media Player Widget', tint: 'bg-[#f3e8ff] text-[#581c87] border-[#e9d5ff]' },
+  { id: '2', stars: 5, quote: 'Private key system-nya bikin tiap streamer punya room sendiri. Nggak ada drama bocor event dari streamer lain.', author: 'SarahLive', product: 'Dock Control', tint: 'bg-[#e0f2fe] text-[#075985] border-[#bae6fd]' },
+  { id: '3', stars: 5, quote: 'Overlay chat-nya customizable banget, bisa ganti theme langsung dari editor tanpa restart OBS.', author: 'DimasKuroba', product: 'Chat Overlay', tint: 'bg-[#dcfce7] text-[#14532d] border-[#bbf7d0]' },
+  { id: '4', stars: 5, quote: 'Scene switcher di dock control smooth banget. Studio mode OBS jadi jauh lebih enak dipake live.', author: 'ArfanStream', product: 'Dock Control', tint: 'bg-[#e0f2fe] text-[#075985] border-[#bae6fd]' },
+  { id: '5', stars: 5, quote: 'Poll widget-nya interaktif, viewer bisa vote langsung dari chat TikTok Live. Seru banget!', author: 'NitaChannel', product: 'Poll Widget', tint: 'bg-[#f3e8ff] text-[#581c87] border-[#e9d5ff]' },
+  { id: '6', stars: 5, quote: 'Gift overlay langsung muncul real-time waktu ada yang kasih gift di TikTok. Setup-nya gampang banget.', author: 'BoyStream', product: 'Gift Overlay', tint: 'bg-[#fce7f3] text-[#831843] border-[#fbcfe8]' },
+  { id: '7', stars: 5, quote: 'Ticker widget buat running text pengumuman di stream. Simple tapi berguna banget buat info schedule.', author: 'FranjohnGaming', product: 'Ticker Widget', tint: 'bg-[#f3e8ff] text-[#581c87] border-[#e9d5ff]' },
+  { id: '8', stars: 5, quote: 'Timer countdown buat giveaway segment. Viewer jadi lebih hype nungguin hasilnya!', author: 'Hayley_IRL', product: 'Timer Widget', tint: 'bg-[#cffafe] text-[#164e63] border-[#a5f3fc]' },
+  { id: '9', stars: 5, quote: 'Semua widget-nya bisa di-embed sebagai Browser Source. Clean, ringan, nggak ngaruh ke performa.', author: 'DenimGaming', product: 'Widgets', tint: 'bg-[#ffedd5] text-[#7c2d12] border-[#fed7aa]' },
+  { id: '10', stars: 5, quote: 'QR widget buat nampilin link donasi / media sosial di stream. Praktis banget buat mobile streaming.', author: 'KiraVT', product: 'QR Widget', tint: 'bg-[#ffedd5] text-[#7c2d12] border-[#fed7aa]' },
+  { id: '11', stars: 5, quote: 'Goals widget buat target subscriber bulanan. Viewer jadi ikut semangat bantu capai target.', author: 'DanielFPS', product: 'Goals Widget', tint: 'bg-[#fef9c3] text-[#713f12] border-[#fde68a]' },
+  { id: '12', stars: 5, quote: 'Social rotator otomatis ganti-ganti sosmed di layar. Profesional banget tampilannya.', author: 'DirkOne', product: 'Social Rotator Widget', tint: 'bg-[#ffedd5] text-[#7c2d12] border-[#fed7aa]' },
+  { id: '13', stars: 5, quote: 'Info slides buat nampilin sponsor atau aturan channel secara bergantian. Love it!', author: 'OliviaStream', product: 'Info Slides Widget', tint: 'bg-[#dcfce7] text-[#14532d] border-[#bbf7d0]' },
+  { id: '14', stars: 5, quote: 'Dock-nya bisa dibuka dari HP waktu lagi live! Mobile dock feature-nya unexpected banget tapi super useful.', author: 'JoelPlay', product: 'Mobile Dock', tint: 'bg-[#f3e8ff] text-[#581c87] border-[#e9d5ff]' },
+  { id: '15', stars: 5, quote: 'View counter real-time langsung keliatan di overlay. Viewer nggak perlu tanya terus berapa yang nonton.', author: 'AnonStreamer', product: 'View Counter Widget', tint: 'bg-[#dcfce7] text-[#14532d] border-[#bbf7d0]' },
 ];
-const LOGOS = [
-  { n: 'Streamer.bot', s: '/assets/logo/sbot.png' },
-  { n: 'OBS Studio', s: '/assets/logo/obs.png' },
-  { n: 'TikTok LIVE', s: '/assets/logo/tik-tok.png' },
-  { n: 'MediaMTX', s: '/assets/logo/mediamtx.svg' },
-  { n: 'XSplit', s: '/assets/logo/xsplit.png' },
-  { n: 'Streamlabs', s: '/assets/logo/streamlabs.png' },
-  { n: 'vMix', s: '/assets/logo/vmix.png' },
-  { n: 'YouTube', s: '/assets/logo/youtube.png' },
-  { n: 'Twitch', s: '/assets/logo/twitch.png' },
-  { n: 'Kick', s: '/assets/logo/kick.png' },
+const AESTHETIC_CATEGORIES = [
+  { id: 'dock', title: 'Dock Control', desc: 'OBS Studio Mode, scene switcher, dan stream tools - semua dalam satu panel yang bisa dibuka dari browser.', icon: <Monitor size={22} color="#0369a1" strokeWidth={2.2} />, bg: '#e0f2fe', border: '#bae6fd' },
+  { id: 'overlay', title: 'Overlays', desc: 'Chat, gift, like, dan full overlay - langsung connect via Browser Source ke OBS atau Streamlabs.', icon: <Layers size={22} color="#ea580c" strokeWidth={2.2} />, bg: '#ffedd5', border: '#fed7aa' },
+  { id: 'mediaplayer', title: 'Media Player', desc: '11 tema visual, sync lirik otomatis via LRCLIB, dan integrasi SMTC Bridge untuk Windows.', icon: <Headphones size={22} color="#7c3aed" strokeWidth={2.2} />, bg: '#ede9fe', border: '#ddd6fe' },
+  { id: 'chat', title: 'Chat Widget', desc: 'Tampilkan live chat dari Twitch, YouTube, TikTok di stream - dengan berbagai tema dan animasi.', icon: <MessageSquare size={22} color="#0369a1" strokeWidth={2.2} />, bg: '#e0f2fe', border: '#bae6fd' },
+  { id: 'poll', title: 'Poll & Goals', desc: 'Buat polling interaktif untuk viewer dan tampilkan goals subscriber/donasi secara real-time.', icon: <BarChart3 size={22} color="#059669" strokeWidth={2.2} />, bg: '#d1fae5', border: '#a7f3d0' },
+  { id: 'mobiledock', title: 'Mobile Dock', desc: 'Kontrol OBS dari smartphone saat lagi live. Scene switch dan widget control di genggaman tangan.', icon: <Smartphone size={22} color="#4f46e5" strokeWidth={2.2} />, bg: '#e0e7ff', border: '#c7d2fe' },
+  { id: 'utils', title: 'Utility Widgets', desc: 'Timer, ticker, QR code, view counter, social rotator, info slides - lengkap untuk setup profesional.', icon: <Puzzle size={22} color="#16a34a" strokeWidth={2.2} />, bg: '#dcfce7', border: '#bbf7d0' },
 ];
-/* Daftar widget — sama dengan page /widgets (id, params, ukuran thumbnail) */
-type LPWidget = { id: string; title: string; desc: string; category: string; tags: string[]; params: string; w: number; h: number };
-/* Daftar widget — sama dengan page /widgets (id, params, ukuran thumbnail).
-   URUTAN PENTING: disusun agar bento 6 kolom (dense flow) terisi penuh tanpa lubang:
-   chat(s4×2brs)+event(s2) | +follow(s2) | poll(s3)+timer(s3) | ticker(s6) |
-   clock+media+counter(s2×3) | lyrics+music(s3×2) | task+qr+pinned(s2×3) | slides+social(s3×2) */
-const LP_WIDGETS: LPWidget[] = [
-  { id: 'chat', title: 'Chat Overlay', desc: 'Overlay chat TikTok + Streamer.bot (Twitch/YouTube/Kick) - 5 tema (Cute lavender), avatar & platform logo, animasi elegant & horizontal/inline.', category: 'chat', tags: ['Chat', 'TikTok', 'Streamer.bot', 'Overlay'], params: 'theme=perchar&font=Outfit&accent=%238b5cf6', w: 420, h: 520 },
-  { id: 'event', title: 'Event Overlay', desc: 'Overlay event Join • Gift • Like - TikTok member/gift/like + Streamer.bot, 3 tema (Standard/Minimal/Cute), filter per event, animasi elegant.', category: 'alert', tags: ['Event', 'Join', 'Gift', 'Like', 'TikTok'], params: 'theme=perchar&font=Outfit&accent=%238b5cf6', w: 420, h: 400 },
-  { id: 'follow', title: 'Follow Overlay', desc: 'Follow alert + suara - TikTok follow/member + Twitch/YouTube follow via Streamer.bot, 3 tema, suara MP3 kustom.', category: 'alert', tags: ['Follow', 'Alert', 'Sound', 'TikTok'], params: 'theme=cute&font=Outfit&accent=%23ec4899', w: 420, h: 300 },
-  { id: 'poll', title: 'Poll Widget', desc: 'Polling interaktif 2-6 opsi - vote via chat 1-6 dari TikTok & Streamer.bot (YT/Twitch/Kick), progress % + voter count, 4 tema.', category: 'progress', tags: ['Poll', 'Vote', 'TikTok', 'Streamer.bot'], params: 'theme=editorial&font=Outfit', w: 640, h: 550 },
-  { id: 'timer', title: 'Timer', desc: 'Pomodoro 50:00 × 3 sesi - 4 tema (Focus/Minimal/Subathon/Glass), Glass sync dock ±5m & COUNTDOWN live + badge +5m.', category: 'progress', tags: ['Timer', 'Focus', 'Glass', 'Sync'], params: 'theme=glass&font=Nunito&focusMinutes=50&totalSessions=3', w: 360, h: 340 },
-  { id: 'ticker', title: 'Ticker', desc: 'Running text pengumuman / sponsor loop - 3 tema (Standard/Clean/Neon), kecepatan & arah atur, badge INFO.', category: 'info', tags: ['Ticker', 'Running Text', 'Pengumuman', 'Sponsor', 'OBS'], params: 'theme=standard&font=Outfit', w: 640, h: 120 },
-  { id: 'clock', title: 'Clock Widget', desc: 'Jam digital 3 baris - format bebas, timezone, warna/size/opacity per baris. Transparent untuk OBS.', category: 'info', tags: ['Clock', 'Time', 'Timezone'], params: 'font=Outfit&tz=Asia/Jakarta&l1=hh:mm:ss%20A&l2=ddd%20D%20MMM%20YY', w: 600, h: 500 },
-  { id: 'media-player', title: 'Media Player Widget', desc: 'Now Playing SMTC - Spotify/YouTube/VLC + Vibrant palette, 11 themes, progress & marquee.', category: 'info', tags: ['SMTC', 'Spotify', 'Vibrant', 'Now Playing'], params: 'theme=classic&font=Outfit&showProgressBar=true&showAlbumArt=true', w: 500, h: 500 },
-  { id: 'view-counter', title: 'View Counter', desc: 'Total penonton gabungan TikTok + Twitch + YouTube + Kick. TikTok via backend, sisanya via Streamer.bot.', category: 'info', tags: ['Viewers', 'TikTok', 'Streamer.bot'], params: 'theme=standard&font=Outfit', w: 260, h: 200 },
-  { id: 'lyrics', title: 'Lyrics Widget', desc: 'Synced Lyrics SMTC - hanya lirik (tanpa cover/progress), karaoke highlight via LRCLIB, 11 themes.', category: 'info', tags: ['Lyrics', 'LRCLIB', 'SMTC', 'Karaoke'], params: 'theme=simple&font=Outfit&lyricsFontSize=20&maxLyricsLines=3&lyricsAlign=center', w: 560, h: 180 },
-  { id: 'music', title: 'Music Request', desc: 'Song request via chat !song + queue + player. Kontrol play/pause/next dari dock.', category: 'info', tags: ['Music', 'Song Request', 'Queue'], params: 'theme=card&font=Outfit', w: 420, h: 220 },
-  { id: 'task', title: 'Task List', desc: 'Task list - 2 tema, inline/horizontal, animasi masuk/keluar. Pisah dari Timer.', category: 'progress', tags: ['Task', 'List', 'Todo'], params: 'theme=focus&font=Nunito', w: 360, h: 400 },
-  { id: 'qr', title: 'QR Code', desc: 'QR statis untuk donasi / link / sosial - 7 tema, logo custom di tengah, warna & error correction bisa diatur.', category: 'info', tags: ['QR', 'Donasi', 'Link', 'Saweria'], params: 'theme=standard&font=Outfit&value=https%3A%2F%2Fsaweria.co%2Fusername&label=SCAN+UNTUK+DONASI', w: 300, h: 340 },
-  { id: 'pinned', title: 'Pinned Chat', desc: 'Chat yang di-pin dari dock — sinkron realtime, lepas via unpin. 2 tema Standard/Minimal.', category: 'chat', tags: ['Pin', 'Chat', 'Sync'], params: 'theme=monkey&font=Outfit', w: 400, h: 500 },
-  { id: 'info-slides', title: 'Info Slides', desc: 'Sponsor / Rules Loop - 5-10 slide auto-rotate 5-10s, 3 tema Clean/Boxed/Glass, badge + progress dots.', category: 'info', tags: ['Info', 'Slides', 'Sponsor', 'Rules'], params: 'theme=timer-glass&font=Outfit&fontSize=14&accent=%238b5cf6&bgOpacity=100&textColor=%23ffffff&duration=6&autoRotate=1&showProgress=1&showBadge=1&showArrows=0&anim=elegant&pos=center&slides=%255B%257B%2522id%2522%253A%2522s1%2522%252C%2522badge%2522%253A%2522SPONSOR%2522%252C%2522title%2522%253A%2522Truenapsh%2522%252C%2522desc%2522%253A%2522Powered%2520by%2520Truenapsh%2522%252C%2522accent%2522%253A%2522%25238b5cf6%2522%252C%2522image%2522%253A%2522https%253A%252F%252Fui-avatars.com%252Fapi%252F%253Fname%253DTrueNAP%2526background%253D8b5cf6%2526color%253Dfff%2526size%253D128%2526font-size%253D0.35%2526bold%253Dtrue%2522%257D%252C%257B%2522id%2522%253A%2522s2%2522%252C%2522badge%2522%253A%2522RULES%2522%252C%2522title%2522%253A%2522No%2520Toxic%2520%25E2%2580%25A2%2520No%2520SARA%2522%252C%2522desc%2522%253A%2522Jaga%2520chat%2520tetap%2520asik%2520%2526%2520respect%2520semua%2520viewer%2522%252C%2522accent%2522%253A%2522%252306b6d4%2522%257D%252C%257B%2522id%2522%253A%2522s3%2522%252C%2522badge%2522%253A%2522FOLLOW%2522%252C%2522title%2522%253A%2522Follow%2520%2526%2520Nyalakan%2520Lonceng%2522%252C%2522desc%2522%253A%2522%2540adilonapsh%2520di%2520TikTok%2520%25E2%2580%25A2%2520Twitch%2520%25E2%2580%25A2%2520YouTube%2522%252C%2522accent%2522%253A%2522%2523ec4899%2522%257D%252C%257B%2522id%2522%253A%2522s4%2522%252C%2522badge%2522%253A%2522SAWERIA%2522%252C%2522title%2522%253A%2522Dukung%2520via%2520Saweria%2522%252C%2522desc%2522%253A%2522Scan%2520QR%2520di%2520layar%2520%25E2%2580%25A2%2520Setiap%2520dukungan%2520berarti%21%2522%252C%2522accent%2522%253A%2522%2523f59e0b%2522%257D%252C%257B%2522id%2522%253A%2522s5%2522%252C%2522badge%2522%253A%2522DISCORD%2522%252C%2522title%2522%253A%2522Join%2520Discord%2520Community%2522%252C%2522desc%2522%253A%2522discord.gg%252Fadilonapsh%2520%25E2%2580%25A2%2520Info%2520turnamen%2520%2526%2520event%2522%252C%2522accent%2522%253A%2522%25235865F2%2522%257D%255D', w: 640, h: 500 },
-  { id: 'social-rotator', title: 'Social Rotator', desc: 'Rotasi handle sosial - Instagram/TikTok/YouTube/Twitch/Discord, 5 tema, interval 2-20s, posisi global 9-titik.', category: 'info', tags: ['Social', 'Rotator', 'Instagram', 'TikTok', 'OBS'], params: 'theme=badge&font=Outfit&fontSize=14&accent=%238b5cf6&bgOpacity=100&textColor=%23ffffff&duration=4&autoRotate=1&showIcon=1&showHandle=1&showLabel=1&anim=slideRight&pos=tl&socials=%255B%257B%2522id%2522%253A%2522s1%2522%252C%2522platform%2522%253A%2522tiktok%2522%252C%2522handle%2522%253A%2522%2540adilonapsh%2522%252C%2522label%2522%253A%2522TikTok%2522%252C%2522accent%2522%253A%2522%2523FE2C55%2522%257D%252C%257B%2522id%2522%253A%2522s2%2522%252C%2522platform%2522%253A%2522instagram%2522%252C%2522handle%2522%253A%2522%2540adilonapsh%2522%252C%2522label%2522%253A%2522Instagram%2522%252C%2522accent%2522%253A%2522%2523E4405F%2522%257D%252C%257B%2522id%2522%253A%2522s3%2522%252C%2522platform%2522%253A%2522facebook%2522%252C%2522handle%2522%253A%2522Adil%2520On%2520Stream%2522%252C%2522label%2522%253A%2522Facebook%2522%252C%2522accent%2522%253A%2522%2523FF0000%2522%257D%252C%257B%2522id%2522%253A%2522s4%2522%252C%2522platform%2522%253A%2522twitch%2522%252C%2522handle%2522%253A%2522adilonapsh%2522%252C%2522label%2522%253A%2522Twitch%2522%252C%2522accent%2522%253A%2522%25239146FF%2522%257D%255D', w: 420, h: 350 },
+const CREATORS = [
+  { name: 'Rian Kurniawan (@rian_fps)', role: 'Twitch Streamer · Pakai Dock Control + Overlay', img: '/assets/packs/itachi.jpg' },
+  { name: 'Sarah Aliyah (@sarah_live)', role: 'TikTok Live · Pakai Gift Overlay + Poll Widget', img: '/assets/packs/vtuber.jpg' },
+  { name: 'Dimas Kuroba (@kuroba_vt)', role: 'YouTube Gaming · Pakai Media Player + Lyrics Widget', img: '/assets/packs/data.jpg' },
 ];
-const LP_CAT_LABEL: Record<string, string> = { chat: 'Chat', alert: 'Alert', progress: 'Progress', info: 'Info', minimal: 'Minimal' };
-/* bento spans: s2/s3/s4/s6 = lebar kolom, tall = kartu hero 2 baris */
-const LP_SPAN: Record<string, string> = {
-  chat: 's4 tall',
-  event: 's2', follow: 's2',
-  poll: 's3', timer: 's3',
-  ticker: 's6',
-  clock: 's2', 'media-player': 's2', 'view-counter': 's2',
-  lyrics: 's3', music: 's3',
-  task: 's2', qr: 's2', pinned: 's2',
-  'info-slides': 's3', 'social-rotator': 's3',
-};
-const LP_CATS: string[] = ['all', ...Array.from(new Set(LP_WIDGETS.map((w) => w.category)))];
-const lpCatCount = (c: string) => (c === 'all' ? LP_WIDGETS.length : LP_WIDGETS.filter((w) => w.category === c).length);
-// Jumlah item per kategori (untuk span adaptif view filter — computed sekali)
-const LP_COUNT: Record<string, number> = {};
-for (const w of LP_WIDGETS) LP_COUNT[w.category] = (LP_COUNT[w.category] || 0) + 1;
-
-const fm = (s: number) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
-
-/* Navbar — disesuaikan dengan section yang ada di halaman (urut sesuai alur scroll) */
-const NAV_ITEMS = [
-  { id: 'hero', label: 'Home' },
-  { id: 'cara', label: 'Cara Kerja' },
-  { id: 'widgets', label: 'Widget' },
-  { id: 'studio', label: 'Studio' },
-] as const;
 
 export default function LandingPage() {
-  /* theme */
-  const [th, setTh] = useState<'dark' | 'light'>('dark');
-  useEffect(() => {
-    try {
-      const s = localStorage.getItem('6k_theme');
-      if (s === 'light' || s === 'dark') setTh(s);
-    } catch {}
-  }, []);
-  const toggleTh = () => {
-    setTh((t) => {
-      const n = t === 'dark' ? 'light' : 'dark';
-      try { localStorage.setItem('6k_theme', n); } catch {}
-      showToast(n === 'dark' ? 'Mode gelap' : 'Mode terang');
-      return n;
-    });
-  };
-
-  /* auth-aware nav */
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => setLoggedIn(!!user));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setLoggedIn(!!s));
+    supabase.auth.getUser().then(({ data: { user } }) => setIsLoggedIn(!!user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setIsLoggedIn(!!s));
     return () => subscription.unsubscribe();
   }, []);
-
-  /* toast */
-  const [toastMsg, setToastMsg] = useState('');
-  const toastTimer = useRef<number | null>(null);
-  const showToast = (m: string) => {
-    setToastMsg(m);
-    if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToastMsg(''), 2400);
-  };
-  useEffect(() => () => { if (toastTimer.current) window.clearTimeout(toastTimer.current); }, []);
-  const copy = (u: string) => {
-    try { navigator.clipboard.writeText(u); } catch {}
-    showToast('URL OBS disalin ke clipboard');
-  };
-
-  /* scroll: nav shrink + progress + sembunyikan scrollbar root saat landing aktif */
-  const navwRef = useRef<HTMLDivElement>(null);
-  const progRef = useRef<HTMLDivElement>(null);
+  const [openDropdown, setOpenDropdown] = useState<'fitur' | 'widget' | null>(null);
+  const fiturRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    document.documentElement.classList.add('lp-noscroll');
-    return () => { document.documentElement.classList.remove('lp-noscroll'); };
-  }, []);
-  useEffect(() => {
-    const on = () => {
-      navwRef.current?.classList.toggle('s', window.scrollY > 24);
-      const h = document.documentElement;
-      if (progRef.current) progRef.current.style.width = (window.scrollY / (h.scrollHeight - window.innerHeight) * 100) + '%';
+    const handleClickOutside = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!fiturRef.current?.contains(t) && !widgetRef.current?.contains(t)) setOpenDropdown(null);
     };
-    on();
-    window.addEventListener('scroll', on, { passive: true });
-    return () => window.removeEventListener('scroll', on);
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpenDropdown(null); };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => { document.removeEventListener('mousedown', handleClickOutside); document.removeEventListener('keydown', handleEsc); };
   }, []);
-
-  /* scroll-spy: tandai nav sesuai section yang sedang terlihat */
-  const [activeNav, setActiveNav] = useState<string>('hero');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileDropdown, setMobileDropdown] = useState<'fitur' | 'widget' | null>(null);
   useEffect(() => {
-    const ids = NAV_ITEMS.map((n) => n.id);
-    const secs = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
-    if (!secs.length) return;
-    const io = new IntersectionObserver((es) => {
-      es.forEach((e) => {
-        if (e.isIntersecting) setActiveNav(e.target.id);
-      });
-    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
-    secs.forEach((s) => io.observe(s));
-    return () => io.disconnect();
-  }, []);
-
-  /* widget filter (also re-triggers reveal) */
-  const [cat, setCat] = useState('all');
-
-  /* reveal on scroll */
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    if (!mobileOpen) setMobileDropdown(null);
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
   useEffect(() => {
-    const els = [...document.querySelectorAll('.lp .rv:not(.in)')];
-    const io = new IntersectionObserver((es) => es.forEach((e) => {
-      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-    }), { threshold: 0.12 });
-    els.forEach((e) => io.observe(e));
-    return () => io.disconnect();
-  }, [cat]);
-
-  /* spotlight */
-  useEffect(() => {
-    const mv = (e: PointerEvent) => {
-      const c = (e.target as HTMLElement).closest?.('.lp .card') as HTMLElement | null;
-      if (c) {
-        const r = c.getBoundingClientRect();
-        c.style.setProperty('--x', e.clientX - r.left + 'px');
-        c.style.setProperty('--y', e.clientY - r.top + 'px');
-      }
-    };
-    document.addEventListener('pointermove', mv);
-    return () => document.removeEventListener('pointermove', mv);
-  }, []);
-
-  /* dock tilt */
-  const winRef = useRef<HTMLDivElement>(null);
-  const tilt = (e: React.PointerEvent<HTMLDivElement>) => {
-    const win = winRef.current;
-    if (!win) return;
-    const r = win.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    win.style.transform = `rotateY(${x * 5}deg) rotateX(${-y * 5}deg)`;
+    const onResize = () => { if (window.innerWidth > 1024 && mobileOpen) setMobileOpen(false); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [mobileOpen]);
+  const [toastText, setToastText] = useState('');
+  const toastTimeoutRef = useRef<number | null>(null);
+  const showToast = (msg: string) => {
+    setToastText(msg);
+    if (toastTimeoutRef.current) window.clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = window.setTimeout(() => setToastText(''), 2600);
   };
-  const untilt = () => { if (winRef.current) winRef.current.style.transform = ''; };
-
-  /* VU + fps */
-  const [vu, setVu] = useState<number[]>(() => Array(10).fill(12));
-  const [fps, setFps] = useState('60 FPS · 38ms');
+  const [activeAestheticTab, setActiveAestheticTab] = useState<'product' | 'game' | 'aesthetic'>('product');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const toggleFaq = (i: number) => setOpenFaq(prev => prev === i ? null : i);
+  /* Private Key mock random code show/hide - interaktif scramble */
+  const [showPrivateMock, setShowPrivateMock] = useState(false);
+  const [mockCode, setMockCode] = useState('sk_live_9f3a7b2c1d8e4f6a');
   useEffect(() => {
-    const t = window.setInterval(() => {
-      setVu(Array.from({ length: 10 }, () => 6 + Math.random() * 28));
-      setFps('60 FPS · ' + (34 + Math.floor(Math.random() * 8)) + 'ms');
-    }, 180);
-    return () => window.clearInterval(t);
-  }, []);
-
-  /* dock tabs + cam source */
-  const [pane, setPane] = useState(0);
-  const [src, setSrc] = useState('rtsp://localhost:8554/live/cam_main');
-
-  /* chat demo */
-  const [msgs, setMsgs] = useState(() => CHAT_SEED.map((m) => ({ p: m[0], u: m[1], t: m[2] })));
-  const [ci, setCi] = useState('');
-  const chatBoxRef = useRef<HTMLDivElement>(null);
-  const siRef = useRef(0);
-  useEffect(() => {
-    const t = window.setInterval(() => {
-      const m = CHAT_SEED[siRef.current++ % CHAT_SEED.length];
-      setMsgs((prev) => [...prev, { p: m[0], u: m[1], t: m[2] }].slice(-30));
-    }, 3500);
-    return () => window.clearInterval(t);
-  }, []);
-  useEffect(() => {
-    const c = chatBoxRef.current;
-    if (c) c.scrollTop = c.scrollHeight;
-  }, [msgs, pane]);
-  const sendChat = (e: React.FormEvent) => {
-    e.preventDefault();
-    const v = ci.trim();
-    if (!v) return;
-    setMsgs((prev) => [...prev, { p: 'OBS', u: 'Kamu', t: v }].slice(-30));
-    setCi('');
-    showToast('Pesan terkirim ke semua kanal');
-  };
-
-  /* events feed */
-  const [evs, setEvs] = useState(() => EV_SEED.map((d) => ({ p: d[0], u: d[1], t: d[2] })));
-  const eiRef = useRef(0);
-  useEffect(() => {
-    const t = window.setInterval(() => {
-      const d = EV_SEED[eiRef.current++ % EV_SEED.length];
-      setEvs((prev) => [{ p: d[0], u: d[1], t: d[2] }, ...prev].slice(0, 4));
-    }, 2800);
-    return () => window.clearInterval(t);
-  }, []);
-
-  /* dock timer + goal */
-  const [sec, setSec] = useState(1500);
-  const [run, setRun] = useState(false);
-  const [goal, setGoal] = useState(42);
-  useEffect(() => {
-    if (!run) return;
-    const t = window.setInterval(() => setSec((s) => (s > 0 ? s - 1 : s)), 1000);
-    return () => window.clearInterval(t);
-  }, [run]);
-  const stepGoal = (d: number) => setGoal((g) => Math.max(0, Math.min(100, g + d)));
-
-  /* widgets grid demos */
-
-  /* modal */
-  const [modal, setModal] = useState<ReactNode>(null);
-  const closeModal = () => setModal(null);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModal(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-  const openWidgetModal = (w: LPWidget) => {
-    setModal(<>
-      <h3>{w.title}</h3>
-      <p className="mut" style={{ fontSize: 13 }}>{w.desc}</p>
-      <div className="acts" style={{ margin: '10px 0' }}>
-        <div className="card" style={{ padding: 10 }}><small className="mut">Lebar</small><br /><b>{w.w}px</b></div>
-        <div className="card" style={{ padding: 10 }}><small className="mut">Tinggi</small><br /><b>{w.h}px</b></div>
-      </div>
-      <p className="mut" style={{ fontSize: 12 }}>Atur tema & salin URL Browser Source dari halaman widget.</p>
-      <div className="mrow">
-        <button className="btn g" onClick={closeModal}>Selesai</button>
-        <Link className="btn p" href={`/widgets/${w.id}`}>Buka Widget →</Link>
-      </div>
-    </>);
-  };
-  const openLegal = (t: string) => setModal(<>
-    <h3>{t}</h3>
-    <p className="mut" style={{ fontSize: 13 }}>OBSDOCK adalah platform independen untuk kreator live video. Chat dan alert dikirim langsung ke browser source OBS tanpa disimpan permanen. Token dan kredensial WebSocket bersifat pribadi dan tidak boleh dibagikan. OBS, YouTube, Twitch, TikTok, Kick, XSplit, dan vMix adalah merek dagang pemiliknya masing-masing.</p>
-    <div className="mrow"><button className="btn p" onClick={closeModal}>Tutup</button></div>
-  </>);
-
-  /* OBS output simulation */
-  const [simIdx, setSimIdx] = useState(0);
-  const [chatIdx, setChatIdx] = useState(0);
-  const [simSec, setSimSec] = useState(1500);
-  useEffect(() => {
-    const t = window.setInterval(() => {
-      setSimIdx((i) => {
-        const n = (i + 1) % SIM_STATES.length;
-        if (SIM_STATES[n] === 'chat') setChatIdx((c) => (c + 1) % CHAT_SAMPLES.length);
-        return n;
-      });
-    }, 3600);
-    return () => window.clearInterval(t);
-  }, []);
-  useEffect(() => {
-    const t = window.setInterval(() => setSimSec((s) => (s > 0 ? s - 1 : s)), 1000);
-    return () => window.clearInterval(t);
-  }, []);
-  const simName: SimName = SIM_STATES[simIdx];
-  const simMini = (n: SimName) => n === 'chat' ? 'LIVE' : n === 'event' ? 'TRIGGERED' : n === 'poll' ? '62%' : n === 'timer' ? fm(simSec) : 'CONNECTED';
-
-  /* pipeline cables */
-  const pipeRef = useRef<HTMLDivElement>(null);
-  const cabRef = useRef<SVGSVGElement>(null);
-  useEffect(() => {
-    const draw = () => {
-      const pipe = pipeRef.current, cab = cabRef.current;
-      if (!pipe || !cab) return;
-      const cs = [...pipe.querySelectorAll(':scope > .card')];
-      if (cs.length < 3) return;
-      const [L, H, R] = cs as HTMLElement[];
-      let h = '', n = 0;
-      const cable = (d: string, dl: number) => {
-        const id = 'c' + n++;
-        h += `<path id="${id}" class="base" d="${d}"/><path class="flow" d="${d}"/><circle r="3.5" class="pk"><animateMotion dur="2.4s" begin="${dl}s" repeatCount="indefinite"><mpath href="#${id}"/></animateMotion></circle>`;
-      };
-      const port = (x: number, y: number) => { h += `<circle class="port" cx="${x}" cy="${y}" r="5"/>`; };
-      if (window.innerWidth > 820) {
-        const hy = H.offsetTop + H.offsetHeight / 2, lx = L.offsetLeft + L.offsetWidth, hl = H.offsetLeft, hr = hl + H.offsetWidth, rl = R.offsetLeft;
-        const m1 = (lx + hl) / 2, m2 = (hr + rl) / 2;
-        L.querySelectorAll('.row').forEach((r, i) => {
-          const el = r as HTMLElement;
-          const y = L.offsetTop + el.offsetTop + el.offsetHeight / 2, y2 = hy + (i - 2) * 12;
-          cable(`M${lx} ${y} C${m1} ${y} ${m1} ${y2} ${hl} ${y2}`, i * 0.4); port(lx, y); port(hl, y2);
-        });
-        R.querySelectorAll('.row').forEach((r, i) => {
-          const el = r as HTMLElement;
-          const y = R.offsetTop + el.offsetTop + el.offsetHeight / 2, y2 = hy + (i - 2) * 12;
-          cable(`M${hr} ${y2} C${m2} ${y2} ${m2} ${y} ${rl} ${y}`, i * 0.4 + 0.2); port(hr, y2); port(rl, y);
-        });
-      } else {
-        const x = pipe.offsetWidth / 2;
-        [0, 1].forEach((i) => {
-          const y1 = (cs[i] as HTMLElement).offsetTop + (cs[i] as HTMLElement).offsetHeight;
-          const y2 = (cs[i + 1] as HTMLElement).offsetTop;
-          cable(`M${x} ${y1} L${x} ${y2}`, i * 0.5); port(x, y1); port(x, y2);
-        });
-      }
-      cab.innerHTML = h;
-    };
-    const ro = new ResizeObserver(draw);
-    if (pipeRef.current) ro.observe(pipeRef.current);
-    draw();
-    try { (document as Document).fonts?.ready.then(() => draw()); } catch {}
-    return () => ro.disconnect();
-  }, []);
-  const burst = () => {
-    cabRef.current?.classList.add('burst');
-    window.setTimeout(() => cabRef.current?.classList.remove('burst'), 1400);
-  };
-
-  /* profile + event filter */
-  const [prof, setProf] = useState(0);
-  const [flt, setFlt] = useState(0);
-  const PROFS = ['Profil IRL + MediaMTX aktif', 'Profil Speedrun aktif', 'Profil Subathon aktif'];
-  const FLTS = ['Semua event', 'Sub & cheer di atas $5', 'Sinyal kamera putus'];
-
-  const words1 = ['Bikin', 'Live', 'Kamu'];
-  const words2 = ['Lebih', 'Hidup.'];
+    const chars = '0123456789abcdef';
+    const gen = () => 'sk_live_' + Array.from({length: 12}, () => chars[Math.floor(Math.random()*chars.length)]).join('') + '_' + Array.from({length: 4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+    const interval = showPrivateMock ? 1800 : 90;
+    const id = window.setInterval(() => setMockCode(gen()), interval);
+    return () => window.clearInterval(id);
+  }, [showPrivateMock]);
 
   return (
-    <div className="lp" data-theme={th}>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet" />
-      <div className="prog" ref={progRef}></div>
-      <div className="aurora"><i></i><i></i></div>
+    <div className="min-h-dvh bg-[#f8fafc] text-[#475569] font-sans text-[15px] leading-[1.6] overflow-x-hidden relative pt-[72px] max-[640px]:pt-[64px] box-border">
+      <style>{`html{scroll-behavior:smooth;scroll-padding-top:90px} @media(max-width:640px){html{scroll-padding-top:72px}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes pulse-skeleton{0%,100%{opacity:1}50%{opacity:0.7}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUpHold{0%{opacity:0;transform:translateY(14px)}12%{opacity:1;transform:translateY(0)}38%{opacity:1;transform:translateY(0)}50%{opacity:0;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-8px)}}
+@keyframes lyricGantiA{0%,42%{opacity:1;transform:translateY(0)}50%,92%{opacity:0;transform:translateY(-18px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes lyricGantiB{0%,42%{opacity:0;transform:translateY(18px)}50%,92%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(18px)}}
+.skeleton-shimmer{position:relative;overflow:hidden}
+.skeleton-shimmer::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent);transform:translateX(-100%);animation:shimmer 1.8s infinite}
+@media(prefers-reduced-motion:reduce){.skeleton-shimmer::after,.animate-pulse,[style*="animation"]{animation:none!important}}`}</style>
 
-      <div className="navw" ref={navwRef}><header className="nav">
-        <a href="#hero" className="logo" style={{ fontSize: 22 }}>OBSDOCK</a>
-        <nav>
-          {NAV_ITEMS.map((n) => (
-            <a key={n.id} href={`#${n.id}`} className={activeNav === n.id ? 'on' : ''}>{n.label}</a>
-          ))}
+      {/* NAVBAR */}
+      <header className="fixed top-0 left-0 right-0 w-full z-[90] bg-[rgba(248,250,252,0.95)] backdrop-blur-[12px] border-b border-[rgba(226,232,240,0.8)] h-[72px] max-[640px]:h-[64px]">
+        <div className="max-w-[1280px] mx-auto h-full px-8 max-[1024px]:px-5 max-[640px]:px-[14px] flex items-center justify-between gap-2">
+          <Link href="/" className="font-extrabold text-[28px] tracking-[-0.05em] text-[#0a0e1a] max-[640px]:text-[22px]">OBS Dock</Link>
+          <nav className="hidden lg:flex items-center gap-2">
+            <Link href="/" className="px-4 py-2 rounded-full text-[14px] font-bold bg-[#e0f2fe] text-[#0369a1] inline-flex items-center gap-1">Home</Link>
+            <div className="relative" ref={fiturRef} onMouseEnter={() => setOpenDropdown('fitur')} onMouseLeave={() => setOpenDropdown(null)}>
+              <button onClick={() => setOpenDropdown(p => p === 'fitur' ? null : 'fitur')} aria-expanded={openDropdown === 'fitur'} className={`px-4 py-2 rounded-full text-[14px] font-semibold inline-flex items-center gap-1 transition-all ${openDropdown === 'fitur' ? 'bg-[#e0f2fe] text-[#0369a1]' : 'text-[#334155] hover:text-[#0f172a]'}`}>Fitur <ChevronDown size={14} className="opacity-60" style={{ transform: openDropdown === 'fitur' ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s ease' }} /></button>
+              <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 w-[560px] max-w-[calc(100vw-24px)] z-[95] transition-all duration-200 ${openDropdown === 'fitur' ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible pointer-events-none translate-y-[6px]'} max-[1024px]:hidden`}>
+                <div className="bg-white border border-[#e2e8f0] rounded-[16px] shadow-[0_12px_32px_rgba(15,23,42,0.12),0_0_0_1px_rgba(0,0,0,0.04)] p-3 relative">
+                  <div className="absolute -top-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-[#e2e8f0] rotate-45" />
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <a href="#inside" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left min-w-0"><span className="w-9 h-9 rounded-[10px] border border-[#e2e8f0] bg-[#f8fafc] inline-flex items-center justify-center shrink-0" style={{ background: '#e0f2fe', borderColor: '#bae6fd' }}><Monitor size={16} color="#0369a1" /></span><span className="flex flex-col gap-px min-w-0"><strong className="text-[13.5px] font-bold text-[#0a0e1a] leading-[1.3] break-words">Dock Control</strong><span className="text-xs font-medium text-[#64748b] leading-[1.4] break-words">Studio Mode & Scene Switcher</span></span></a>
+                    <a href="#inside" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left min-w-0"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#ffedd5', borderColor: '#fed7aa' }}><Layers size={16} color="#ea580c" /></span><span className="flex flex-col gap-px min-w-0"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Event Overlay</strong><span className="text-xs font-medium text-[#64748b]">Gift, Follow & Donasi Real-time</span></span></a>
+                    <a href="#inside" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left min-w-0"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#ede9fe', borderColor: '#ddd6fe' }}><Headphones size={16} color="#7c3aed" /></span><span className="flex flex-col gap-px min-w-0"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Media Player</strong><span className="text-xs font-medium text-[#64748b]">11 Tema + Lirik LRCLIB</span></span></a>
+                    <a href="#inside" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left min-w-0"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#e0e7ff', borderColor: '#c7d2fe' }}><Smartphone size={16} color="#4f46e5" /></span><span className="flex flex-col gap-px min-w-0"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Mobile Dock</strong><span className="text-xs font-medium text-[#64748b]">Kontrol OBS dari HP</span></span></a>
+                    <a href="#inside" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left min-w-0"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#dcfce7', borderColor: '#bbf7d0' }}><Radio size={16} color="#16a34a" /></span><span className="flex flex-col gap-px min-w-0"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Private WebSocket</strong><span className="text-xs font-medium text-[#64748b]">Room isolasi per streamer</span></span></a>
+                    <a href="#inside" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left min-w-0"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#f1f5f9', borderColor: '#e2e8f0' }}><Sliders size={16} color="#334155" /></span><span className="flex flex-col gap-px min-w-0"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Widget Dashboard</strong><span className="text-xs font-medium text-[#64748b]">Kelola semua widget terpusat</span></span></a>
+                  </div>
+                  <a href="#inside" onClick={() => setOpenDropdown(null)} className="flex items-center justify-center gap-1.5 mt-2.5 -mx-3 -mb-3 px-4 py-3 border-t border-[#f1f5f9] rounded-b-[16px] bg-[#f8fafc] text-[13px] font-bold text-[#005ea6] hover:bg-[#f1f5f9] hover:text-[#004a8c] transition-colors">Lihat semua fitur <ArrowRight size={13} /></a>
+                </div>
+              </div>
+            </div>
+            <div className="relative" ref={widgetRef} onMouseEnter={() => setOpenDropdown('widget')} onMouseLeave={() => setOpenDropdown(null)}>
+              <button onClick={() => setOpenDropdown(p => p === 'widget' ? null : 'widget')} aria-expanded={openDropdown === 'widget'} className={`px-4 py-2 rounded-full text-[14px] font-semibold inline-flex items-center gap-1 transition-all ${openDropdown === 'widget' ? 'bg-[#e0f2fe] text-[#0369a1]' : 'text-[#334155] hover:text-[#0f172a]'}`}>Widget <ChevronDown size={14} className="opacity-60" style={{ transform: openDropdown === 'widget' ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s ease' }} /></button>
+              <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 w-[560px] max-w-[calc(100vw-24px)] z-[95] transition-all duration-200 ${openDropdown === 'widget' ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible pointer-events-none translate-y-[6px]'} max-[1024px]:hidden`}>
+                <div className="bg-white border border-[#e2e8f0] rounded-[16px] shadow-[0_12px_32px_rgba(15,23,42,0.12)] p-3 relative">
+                  <div className="absolute -top-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-[#e2e8f0] rotate-45" />
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#e0f2fe', borderColor: '#bae6fd' }}><MessageSquare size={16} color="#0369a1" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Chat Widget</strong><span className="text-xs font-medium text-[#64748b]">Twitch, YouTube, TikTok Live</span></span></a>
+                    <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#d1fae5', borderColor: '#a7f3d0' }}><BarChart3 size={16} color="#059669" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Poll & Goals</strong><span className="text-xs font-medium text-[#64748b]">Vote interaktif & target donasi</span></span></a>
+                    <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#ffedd5', borderColor: '#fed7aa' }}><Gift size={16} color="#ea580c" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Overlays</strong><span className="text-xs font-medium text-[#64748b]">Chat, Gift, Like, Full Overlay</span></span></a>
+                    <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#ede9fe', borderColor: '#ddd6fe' }}><Music2 size={16} color="#7c3aed" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Media & Lirik</strong><span className="text-xs font-medium text-[#64748b]">Sync lirik otomatis</span></span></a>
+                    <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#fef9c3', borderColor: '#fde68a' }}><Puzzle size={16} color="#a16207" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Utility Widgets</strong><span className="text-xs font-medium text-[#64748b]">Timer, Ticker, QR, Counter</span></span></a>
+                    <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc] text-left"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#cffafe', borderColor: '#a5f3fc' }}><Volume2 size={16} color="#0891b2" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Social Rotator</strong><span className="text-xs font-medium text-[#64748b]">Info Slides & sosmed</span></span></a>
+                  </div>
+                  <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="flex items-center justify-center gap-1.5 mt-2.5 -mx-3 -mb-3 px-4 py-3 border-t border-[#f1f5f9] rounded-b-[16px] bg-[#f8fafc] text-[13px] font-bold text-[#005ea6] hover:bg-[#f1f5f9] hover:text-[#004a8c]">Jelajahi semua widget <ArrowRight size={13} /></a>
+                </div>
+              </div>
+            </div>
+            <a href="#reviews" className="px-4 py-2 rounded-full text-[14px] font-semibold text-[#334155] hover:text-[#0f172a] transition-colors">Testimoni</a>
+            <a href="#faq" className="px-4 py-2 rounded-full text-[14px] font-semibold text-[#334155] hover:text-[#0f172a]">FAQ</a>
+            <a href="#spotlight" className="px-4 py-2 rounded-full text-[14px] font-semibold text-[#334155] hover:text-[#0f172a]">Komunitas</a>
+          </nav>
+          <div className="flex items-center gap-3.5 max-[640px]:gap-2">
+            <Link href={isLoggedIn ? '/dashboard' : '/login'} className="w-9 h-9 rounded-full inline-flex items-center justify-center text-[#334155] hover:bg-[#e2e8f0] hover:text-[#0f172a] transition-colors"><User size={19} /></Link>
+            <Link href={isLoggedIn ? '/dashboard' : '/register'} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] hover:-translate-y-px text-[#ffffff] px-5 py-[9px] rounded-full text-[14px] font-bold shadow-[0_4px_14px_rgba(0,94,166,0.28)] transition-all max-[640px]:px-[14px] max-[640px]:text-[13px] max-[640px]:gap-1.5"><Tv size={15} /><span>{isLoggedIn ? 'Dashboard' : 'Mulai Gratis'}</span></Link>
+            <button onClick={() => setMobileOpen(p => !p)} aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'} aria-expanded={mobileOpen} className="hidden max-[1024px]:inline-flex w-10 h-10 rounded-[10px] border border-[#e2e8f0] bg-white text-[#334155] items-center justify-center shrink-0 hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:text-[#0f172a] transition-all">{mobileOpen ? <XIcon size={20} /> : <Menu size={20} />}</button>
+          </div>
+        </div>
+        <div onClick={() => setMobileOpen(false)} className={`fixed inset-0 top-[72px] max-[640px]:top-[64px] bg-[rgba(15,23,42,0.32)] backdrop-blur-[2px] z-[88] transition-all ${mobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} aria-hidden="true" />
+        <nav className={`fixed left-0 right-0 top-[72px] max-[640px]:top-[64px] max-h-[calc(100dvh-72px)] max-[640px]:max-h-[calc(100dvh-64px)] overflow-y-auto bg-white border-b border-[#e2e8f0] px-3 py-2.5 pb-6 flex flex-col gap-0.5 z-[89] shadow-[0_16px_32px_rgba(15,23,42,0.1)] transition-all duration-200 ${mobileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible pointer-events-none -translate-y-2.5'} max-[1024px]:flex lg:hidden`}>
+          <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a]">Home</Link>
+          <div className={`rounded-xl border transition-colors ${mobileDropdown === 'fitur' ? 'border-[#e2e8f0] bg-[#f8fafc]' : 'border-transparent'}`}>
+            <button onClick={() => setMobileDropdown(p => p === 'fitur' ? null : 'fitur')} aria-expanded={mobileDropdown === 'fitur'} className={`flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-left ${mobileDropdown === 'fitur' ? 'bg-[#e0f2fe] text-[#0369a1]' : 'text-[#334155] hover:bg-[#f8fafc]'}`}>Fitur <ChevronDown size={16} className="opacity-70 shrink-0 transition-transform" style={{ transform: mobileDropdown === 'fitur' ? 'rotate(180deg)' : undefined }} /></button>
+            <div className={`grid grid-cols-1 gap-1 overflow-hidden transition-all duration-300 ${mobileDropdown === 'fitur' ? 'max-h-[720px] opacity-100 py-1.5 px-1' : 'max-h-0 opacity-0 px-1'}`}>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0] hover:bg-[#f1f5f9]"><span className="w-9 h-9 rounded-[10px] border bg-[#e0f2fe] border-[#bae6fd] inline-flex items-center justify-center shrink-0"><Monitor size={16} color="#0369a1" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Dock Control</strong><span className="text-xs font-medium text-[#64748b]">Studio Mode & Scene Switcher</span></span></a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#ffedd5', borderColor: '#fed7aa' }}><Layers size={16} color="#ea580c" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Event Overlay</strong><span className="text-xs font-medium text-[#64748b]">Gift, Follow & Donasi</span></span></a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#ede9fe', borderColor: '#ddd6fe' }}><Headphones size={16} color="#7c3aed" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Media Player</strong><span className="text-xs font-medium text-[#64748b]">11 Tema + Lirik LRCLIB</span></span></a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#e0e7ff', borderColor: '#c7d2fe' }}><Smartphone size={16} color="#4f46e5" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Mobile Dock</strong><span className="text-xs font-medium text-[#64748b]">Kontrol OBS dari HP</span></span></a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#dcfce7', borderColor: '#bbf7d0' }}><Radio size={16} color="#16a34a" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Private WebSocket</strong><span className="text-xs font-medium text-[#64748b]">Room isolasi per streamer</span></span></a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#f1f5f9', borderColor: '#e2e8f0' }}><Sliders size={16} color="#334155" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Widget Dashboard</strong><span className="text-xs font-medium text-[#64748b]">Kelola semua widget</span></span></a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-1.5 mt-1 px-3.5 py-2.5 rounded-[10px] bg-[#005ea6] hover:bg-[#004a8c] text-[#ffffff] text-[13px] font-bold">Lihat semua fitur <ArrowRight size={13} /></a>
+            </div>
+          </div>
+          <div className={`rounded-xl border transition-colors ${mobileDropdown === 'widget' ? 'border-[#e2e8f0] bg-[#f8fafc]' : 'border-transparent'}`}>
+            <button onClick={() => setMobileDropdown(p => p === 'widget' ? null : 'widget')} aria-expanded={mobileDropdown === 'widget'} className={`flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-left ${mobileDropdown === 'widget' ? 'bg-[#e0f2fe] text-[#0369a1]' : 'text-[#334155] hover:bg-[#f8fafc]'}`}>Widget <ChevronDown size={16} className="opacity-70 shrink-0 transition-transform" style={{ transform: mobileDropdown === 'widget' ? 'rotate(180deg)' : undefined }} /></button>
+            <div className={`grid grid-cols-1 gap-1 overflow-hidden transition-all duration-300 ${mobileDropdown === 'widget' ? 'max-h-[720px] opacity-100 py-1.5 px-1' : 'max-h-0 opacity-0 px-1'}`}>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#e0f2fe', borderColor: '#bae6fd' }}><MessageSquare size={16} color="#0369a1" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Chat Widget</strong><span className="text-xs font-medium text-[#64748b]">Twitch, YouTube, TikTok</span></span></a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#d1fae5', borderColor: '#a7f3d0' }}><BarChart3 size={16} color="#059669" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Poll & Goals</strong><span className="text-xs font-medium text-[#64748b]">Vote & target donasi</span></span></a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#ffedd5', borderColor: '#fed7aa' }}><Gift size={16} color="#ea580c" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Overlays</strong><span className="text-xs font-medium text-[#64748b]">Chat, Gift, Full Overlay</span></span></a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#ede9fe', borderColor: '#ddd6fe' }}><Music2 size={16} color="#7c3aed" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Media & Lirik</strong><span className="text-xs font-medium text-[#64748b]">Sync lirik otomatis</span></span></a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#fef9c3', borderColor: '#fde68a' }}><Puzzle size={16} color="#a16207" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Utility Widgets</strong><span className="text-xs font-medium text-[#64748b]">Timer, Ticker, QR</span></span></a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] bg-white border border-[#e2e8f0]"><span className="w-9 h-9 rounded-[10px] border inline-flex items-center justify-center shrink-0" style={{ background: '#cffafe', borderColor: '#a5f3fc' }}><Volume2 size={16} color="#0891b2" /></span><span className="flex flex-col"><strong className="text-[13.5px] font-bold text-[#0a0e1a]">Social Rotator</strong><span className="text-xs font-medium text-[#64748b]">Info Slides & sosmed</span></span></a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-1.5 mt-1 px-3.5 py-2.5 rounded-[10px] bg-[#005ea6] hover:bg-[#004a8c] text-[#ffffff] text-[13px] font-bold">Jelajahi semua widget <ArrowRight size={13} /></a>
+            </div>
+          </div>
+          <a href="#reviews" onClick={() => setMobileOpen(false)} className="flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-[#334155] hover:bg-[#f8fafc]">Testimoni</a>
+          <a href="#faq" onClick={() => setMobileOpen(false)} className="flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-[#334155] hover:bg-[#f8fafc]">FAQ</a>
+          <a href="#spotlight" onClick={() => setMobileOpen(false)} className="flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-[#334155] hover:bg-[#f8fafc]">Komunitas</a>
+          <div className="mt-2.5 pt-3.5 border-t border-[#e2e8f0]"><Link href={isLoggedIn ? '/dashboard' : '/register'} onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full bg-[#005ea6] hover:bg-[#004a8c] text-[#ffffff] px-5 py-3.5 rounded-full text-[14px] font-bold shadow-[0_4px_14px_rgba(0,94,166,0.28)]"><Tv size={16} />{isLoggedIn ? 'Buka Dashboard' : 'Mulai Gratis'}</Link></div>
         </nav>
-        <div className="r">
-          {loggedIn ? (
-            <Link className="abtn p" href="/dashboard">Dashboard →</Link>
-          ) : (
-            <>
-              <Link className="abtn hide-sm" href="/login">Masuk</Link>
-              <Link className="abtn p" href="/register">Daftar</Link>
-            </>
-          )}
-          <button className="ib" onClick={toggleTh} aria-label="Ganti tema">{th === 'dark' ? '☀' : '☾'}</button>
-          <button className={'ib burger' + (menuOpen ? ' open' : '')} onClick={() => setMenuOpen((o) => !o)} aria-label="Buka menu" aria-expanded={menuOpen}><span></span><span></span><span></span></button>
-        </div>
-        <div className={'mmenu' + (menuOpen ? ' on' : '')}>
-          {NAV_ITEMS.map((n) => (
-            <a key={n.id} href={`#${n.id}`} className={activeNav === n.id ? 'on' : ''} onClick={() => setMenuOpen(false)}>{n.label}</a>
-          ))}
-          {!loggedIn && <Link href="/login" onClick={() => setMenuOpen(false)}>Masuk</Link>}
-        </div>
-      </header></div>
+      </header>
 
       <main>
-        <section id="hero" className="hero"><div className="wrap">
-          <div className="pill"><span className="dot"></span>BUILT FOR STREAMERS · OBS + STREAMER.BOT</div>
-          <h1>
-            {words1.map((w, i) => <span key={w} className="w"><span style={{ '--i': i } as CSSProperties}>{w}</span></span>).reduce<ReactNode[]>((a, s, i) => (i ? [...a, ' ', s] : [s]), [])}
-            <br />
-            {words2.map((w, k) => <span key={w} className="w"><span style={{ '--i': k + 3, opacity: 0.72 } as CSSProperties}>{w}</span></span>).reduce<ReactNode[]>((a, s, i) => (i ? [...a, ' ', s] : [s]), [])}
-          </h1>
-          <p className="sub">Chat, gift, alert, poll, timer, goal, sampai kontrol OBS <b>semua dalam satu tempat.</b> Pasang, atur, lalu live. Tanpa dashboard yang ribet.</p>
-          <div className="cta">
-            {loggedIn ? (
-              <Link className="btn p" href="/dashboard">Buka Dashboard →</Link>
-            ) : (
-              <Link className="btn p" href="/register">Coba Widget Gratis →</Link>
-            )}
-            <a className="btn g" href="#cara">Lihat cara kerjanya</a>
+        {/* HERO - text tengah, image mengintip setengah (peeking) */}
+        <section className="relative min-h-[calc(100vh-72px)] max-[900px]:min-h-auto flex flex-col justify-center items-center pt-12 pb-[360px] max-[900px]:pb-[280px] max-[640px]:pb-[240px] bg-[#f8fafc] overflow-visible">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4 w-full">
+            <div className="flex flex-col items-center text-center max-w-[1120px] mx-auto w-full">
+              <div className="inline-flex items-center gap-2 bg-white border border-[#e2e8f0] px-3.5 py-1.5 rounded-full text-[12.5px] font-bold text-[#334155] shadow-[0_1px_4px_rgba(0,0,0,0.04)] mb-4"><span className="w-[7px] h-[7px] rounded-full bg-[#10b981] shadow-[0_0_0_3px_rgba(16,185,129,0.2)]" />OBS Studio v28+ & WebSocket Privat Siap Pakai</div>
+              <h1 className="font-extrabold text-[clamp(36px,5vw,68px)] max-[640px]:text-[clamp(30px,8vw,42px)] leading-[1.05] tracking-[-0.05em] text-[#0a0e1a] mb-4 max-w-[860px] text-balance">Kontrol OBS & 14+ Widget Stream<br /><span className="text-[#005ea6]">Langsung dari Browser</span></h1>
+              <p className="text-[clamp(14.5px,1.2vw,16.5px)] leading-[1.55] text-[#475569] max-w-[660px] mb-5 text-pretty">Ganti scene Studio Mode, kontrol audio, pasang overlay chat & event donasi real-time, serta jalankan widget interaktif tanpa software rumit. Terhubung otomatis via Browser Source dan WebSocket room privat.</p>
+              <div className="flex items-center justify-center gap-3 mb-3.5 flex-wrap">
+                <Link href={isLoggedIn ? '/dashboard' : '/register'} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] hover:-translate-y-px text-[#ffffff] px-6 py-[11px] rounded-full text-[14px] font-bold shadow-[0_4px_14px_rgba(0,94,166,0.28)] transition-all whitespace-nowrap"><span>{isLoggedIn ? 'Buka Dashboard' : 'Mulai Sekarang - Gratis'}</span> <ArrowRight size={16} /></Link>
+                <a href="#inside" className="inline-flex items-center gap-2 bg-white text-[#1e293b] border border-[#e2e8f0] px-5 py-[11px] rounded-full text-[14px] font-bold hover:border-[#94a3b8] hover:text-[#005ea6] transition-all whitespace-nowrap"><Sliders size={16} />Jelajahi Fitur</a>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-xs text-[#64748b] mb-2 flex-wrap"><span className="text-[#f59e0b] tracking-[2px] text-[13px]">★★★★★</span><span className="text-[#0f172a] font-bold">500+ streamer aktif</span><span>·</span><span>Tanpa kartu kredit</span><span>·</span><span>Setup instan 60 detik</span></div>
+            </div>
           </div>
-          <div className="stats"><div><b>10+</b><span>widget siap pakai</span></div><div><b>1 klik</b><span>untuk mulai</span></div><div><b>4</b><span>platform chat</span></div></div>
-
-          <div className="streamer-benefits rv" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, maxWidth: 900, margin: '42px auto 0', textAlign: 'left' }}>
-            <div className="card" style={{ padding: 16 }}><div style={{ fontSize: 22, marginBottom: 6 }}>⚡</div><b>Setup cepat</b><div className="mut" style={{ fontSize: 12, marginTop: 4 }}>Tambah Browser Source dan langsung tampil di OBS.</div></div>
-            <div className="card" style={{ padding: 16 }}><div style={{ fontSize: 22, marginBottom: 6 }}>🎁</div><b>Engagement naik</b><div className="mut" style={{ fontSize: 12, marginTop: 4 }}>Gift, vote, goal, wheel, dan alert bikin penonton ikut main.</div></div>
-            <div className="card" style={{ padding: 16 }}><div style={{ fontSize: 22, marginBottom: 6 }}>🎨</div><b>Brand kamu</b><div className="mut" style={{ fontSize: 12, marginTop: 4 }}>Atur widget supaya cocok dengan gaya stream kamu.</div></div>
+          {/* Image mengintip - diperbesar lagi */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full max-w-[1240px] px-6 max-[640px]:px-4 pointer-events-none">
+            <div className="w-full bg-[#0b0f19] rounded-[18px] border border-[#1e293b] shadow-[0_32px_70px_-12px_rgba(0,0,0,0.55)] overflow-hidden text-left hover:-translate-y-1 hover:shadow-[0_38px_80px_-12px_rgba(0,0,0,0.65)] transition-all pointer-events-auto">
+              <div className="w-full relative bg-black overflow-hidden block"><img src="/assets/dock-preview.png" alt="OBS Dock Controller Interface (/dock)" className="w-full h-auto block object-cover object-top max-h-[720px] max-[1000px]:max-h-[480px] max-[640px]:max-h-[360px] min-h-[320px]" /></div>
+            </div>
           </div>
+        </section>
 
-          <div className="pipe" ref={pipeRef}>
-            <svg id="cab" ref={cabRef} className="rv" style={{ '--d': '.5s' } as CSSProperties} aria-hidden="true"></svg>
-            <div className="card rv"><h4>Di balik layar <span>5 terhubung</span></h4>
-              <div className="row"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><img className="pl" src="/assets/logo/tik-tok.png" alt="TikTok" />TikTok Live</span> <small>@adilonapsh</small></div>
-              <div className="row"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><img className="pl" src="/assets/logo/youtube.png" alt="YouTube" />YouTube Live</span> <small>Chat &amp; Superchat</small></div>
-              <div className="row"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><img className="pl" src="/assets/logo/twitch.png" alt="Twitch" />Twitch</span> <small>Subs &amp; Bits</small></div>
-              <div className="row"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><img className="pl" src="/assets/logo/kick.png" alt="Kick" />Kick</span> <small>Chat &amp; Emote</small></div>
-              <div className="row"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><img className="pl" src="/assets/logo/mediamtx.svg" alt="MediaMTX" />MediaMTX</span> <small>RTSP &amp; WebRTC</small></div></div>
-            <div className="card hub rv" style={{ '--d': '.12s' } as CSSProperties}><div className="core">⚡</div><b>Streamer.bot Engine</b><span className="pill">ws://127.0.0.1:8080</span>
-              <div className="acts" style={{ width: '100%' }}>
-                <button onClick={() => { showToast('Streamer.bot: #GiftAlert dijalankan'); burst(); }}>#GiftAlert</button>
-                <button onClick={() => { showToast('Streamer.bot: #SubathonAdd +30d'); burst(); }}>#SubathonAdd</button>
-              </div></div>
-            <div className="card rv obs-live" style={{ '--d': '.24s' } as CSSProperties}><h4>OBS outputs <span>Browser source · <b id="obsStatus">{simName === 'event' ? 'EVENT' : 'LIVE'}</b></span></h4>
-              {(['chat', 'event', 'poll', 'timer', 'dock'] as SimName[]).map((n) => (
-                <div key={n}>
-                  <div className={'row' + (simName === n ? ' active' : '')}>
-                    {n === 'chat' && <>Chat Overlay <small>Multi-chat</small><span className="obs-mini">{simMini(n)}</span><span className="sim"></span></>}
-                    {n === 'event' && <>Event &amp; Gift Alert <small>SFX</small><span className="obs-mini">{simMini(n)}</span><span className="sim"></span></>}
-                    {n === 'poll' && <>Poll &amp; Wheel <small>Interaktif</small><span className="obs-mini">{simMini(n)}</span><span className="sim"></span></>}
-                    {n === 'timer' && <>Timer &amp; Goal <small>Subathon</small><span className="obs-mini">{simMini(n)}</span><span className="sim"></span></>}
-                    {n === 'dock' && <>OBS Dock <small>WS 5.0</small><span className="obs-mini">{simMini(n)}</span><span className="sim"></span></>}
-                  </div>
-                  {n === 'chat' && (
-                    <div className={'obs-preview' + (simName === 'chat' ? ' show' : '')}>
-                      <div className="obs-chatline" key={chatIdx}><i></i><b>{CHAT_SAMPLES[chatIdx][0]}</b> {CHAT_SAMPLES[chatIdx][1]}</div>
-                    </div>
-                  )}
-                  {n === 'event' && (
-                    <div className={'obs-preview' + (simName === 'event' ? ' show' : '')}><div className="obs-event"><span className="obs-gift">🎁</span><span><b>10× Rose</b> · Gift Alert dipicu via Streamer.bot</span></div></div>
-                  )}
-                  {n === 'poll' && (
-                    <div className={'obs-preview' + (simName === 'poll' ? ' show' : '')}><div><b>Poll:</b> Valorant vs Elden Ring</div><div className="obs-pollbar"><i></i><i></i></div></div>
-                  )}
-                  {n === 'timer' && (
-                    <div className={'obs-preview' + (simName === 'timer' ? ' show' : '')}><span className="obs-timer"><span className="blink">{fm(simSec)}</span></span> · +5 menit <span className="obs-goal"><i></i></span></div>
-                  )}
-                  {n === 'dock' && (
-                    <div className={'obs-preview' + (simName === 'dock' ? ' show' : '')}><div className="obs-dock"><span>MediaMTX</span><div className="dock-screen"></div><b>38ms</b></div></div>
-                  )}
+        {/* PLATFORMS - hover only, tidak perlu selectable - pt besar karena hero image mengintip diperbesar */}
+        <section id="platforms" className="pt-[420px] pb-[60px] max-[1000px]:pt-[320px] max-[640px]:pt-[260px] text-center border-t border-[#e2e8f0]">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
+            <h2 className="font-extrabold text-[clamp(32px,4vw,50px)] tracking-[-0.04em] text-[#0a0e1a] mb-[30px] flex items-center justify-center flex-wrap gap-3 select-none"><span>Stream Overlays</span><span>for</span><span className="bg-[#005ea6] text-[#ffffff] px-5 py-0.5 rounded-full inline-block shadow-[0_4px_14px_rgba(0,94,166,0.28)] select-none">Every Platform</span></h2>
+            <div className="flex justify-center items-center flex-wrap gap-4 max-w-[900px] mx-auto">
+              {PLATFORMS.map(p => (
+                <div key={p.id} className="group inline-flex items-center gap-2 border rounded-full px-5 py-2.5 text-[14.5px] font-bold shadow-[0_2px_6px_rgba(0,0,0,0.04)] transition-all cursor-default select-none bg-white border-[#e2e8f0] text-[#334155] hover:bg-[#0f172a] hover:border-[#0f172a] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)]">
+                  <img src={p.icon} alt={p.name} className="w-5 h-5 object-contain transition-all group-hover:brightness-0" />
+                  <span>{p.name}</span>
                 </div>
               ))}
             </div>
           </div>
+        </section>
 
-          <div className="dock rv">
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-              <div className="tabs">
-                {['MediaMTX Monitor', 'Multi-Chat', 'Timer & Goal'].map((t, i) => (
-                  <button key={t} className={'tab' + (pane === i ? ' on' : '')} onClick={() => setPane(i)}>{t}</button>
+        {/* INSIDE - BENTO GRID */}
+        <section id="inside" className="py-[70px] pb-20 border-t border-[#e2e8f0] bg-white">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
+            <h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-9">Semua yang ada di OBS Dock</h2>
+            <div className="grid grid-cols-12 gap-5 mb-6 auto-rows-[minmax(180px,auto)] max-[1024px]:grid-cols-1 max-[1024px]:auto-rows-auto">
+              {/* Bento 1 - Dock Control (besar, tall) */}
+              <div className="col-span-12 lg:col-span-5 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[340px] max-[1024px]:h-[260px] bg-[#eff6ff] border-b border-[#e2e8f0] flex items-center justify-center relative overflow-hidden p-4 shrink-0 skeleton-shimmer"><div style={{ width: '85%', height: '80%', background: '#fff', borderRadius: 16, border: '1.5px solid #93c5fd', boxShadow: '0 10px 25px rgba(59,130,246,0.12)', position: 'relative', padding: 16 }}><div style={{ position: 'absolute', top: 12, right: 12, width: 80, height: 18, background: '#e0f2fe', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 6px' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#0369a1' }} /><span style={{ width: 40, height: 4, background: '#93c5fd', borderRadius: 2 }} /></div><div style={{ position: 'absolute', bottom: 16, left: 16, width: '45%', height: '52%', background: '#f8fafc', border: '2px solid #005ea6', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 34, height: 34, borderRadius: '50%', background: '#cbd5e1' }} /></div><div style={{ position: 'absolute', bottom: 22, right: 16, width: '42%', height: 16, background: '#f1f5f9', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#005ea6' }} /><span style={{ width: 48, height: 5, background: '#005ea6', borderRadius: 2 }} /></div></div></div><div className="p-[22px] flex-1 flex flex-col justify-center"><h3 className="font-extrabold text-[19px] tracking-[-0.02em] text-[#0a0e1a] mb-2">Dock Control</h3><p className="text-[13.5px] text-[#475569] leading-[1.55]">Panel OBS langsung di browser - scene switcher, studio mode, dan stream tools tanpa buka aplikasi lain.</p></div></div>
+              {/* Bento 2 - Event Overlay (1 per 1 fade, hold 1 detik, delay per div) */}
+              <div className="col-span-12 lg:col-span-4 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[340px] max-[1024px]:h-[260px] bg-[#fff7ed] border-b border-[#e2e8f0] flex flex-col items-center justify-center gap-3.5 p-4 shrink-0 overflow-hidden"><div style={{animationDelay:'0ms'}} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 shadow-[0_6px_16px_rgba(249,115,22,0.08)] opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#f97316]" /><div className="flex-1 flex flex-col gap-1"><span className="w-[60%] h-1.5 bg-[#fdba74] rounded" /><span className="w-[40%] h-1 bg-[#fed7aa] rounded" /></div><span className="w-[22px] h-2.5 bg-[#ea580c] rounded" /></div><div style={{animationDelay:'1400ms'}} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 shadow-[0_6px_16px_rgba(249,115,22,0.08)] opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#ea580c]" /><div className="flex-1 flex flex-col gap-1"><span className="w-[70%] h-1.5 bg-[#fdba74] rounded" /><span className="w-[35%] h-1 bg-[#fed7aa] rounded" /></div></div><div style={{animationDelay:'2800ms'}} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#fb923c]" /><span className="w-1/2 h-1.5 bg-[#fdba74] rounded" /></div></div><div className="p-[22px] flex-1 flex flex-col justify-center"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Event Overlay</h3><p className="text-[13.5px] text-[#475569]">Gift, follow, sub, dan donasi muncul real-time - WebSocket privat memastikan event streamer lain tidak bocor.</p></div></div>
+              {/* Bento 3 - Media Player + Lirik (crossfade gantian, arah terus ke atas) */}
+              <div className="col-span-12 lg:col-span-3 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#faf5ff] border-b border-[#e2e8f0] flex items-center justify-center p-4 shrink-0 overflow-hidden"><div className="w-[80%] h-[85px] bg-white rounded-xl border border-[#e9d5ff] shadow-[0_8px_20px_rgba(168,85,247,0.1)] flex flex-col items-center justify-center overflow-hidden relative py-2"><div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 animate-[lyricGantiA_3.6s_ease-in-out_infinite]"><span className="h-1.5 w-[38%] bg-[#c084fc]/70 rounded block" /><span className="h-2.5 w-[68%] bg-[#a855f7] rounded block shadow-[0_2px_8px_rgba(168,85,247,0.18)]" /><span className="h-1.5 w-[42%] bg-[#e9d5ff] rounded block" /></div><div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 animate-[lyricGantiB_3.6s_ease-in-out_infinite]"><span className="h-1.5 w-[52%] bg-[#c084fc]/60 rounded block" /><span className="h-2.5 w-[64%] bg-[#a855f7] rounded block shadow-[0_2px_8px_rgba(168,85,247,0.18)]" /><span className="h-1.5 w-[48%] bg-[#e9d5ff]/80 rounded block" /></div></div></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Media Player + Lirik</h3><p className="text-[13.5px] text-[#475569]">11 tema visual, sinkronisasi lirik otomatis LRCLIB, dan SMTC Bridge - musik stream tampil profesional.</p></div></div>
+              {/* Bento 4 - Widget Dashboard (kecil kanan bawah) */}
+              <div className="col-span-12 lg:col-span-3 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-center p-4 shrink-0 skeleton-shimmer"><div className="w-[85%] h-[95px] bg-white rounded-xl border border-[#cbd5e1] p-2.5 flex flex-col gap-2"><div className="w-full h-[26px] bg-[#e2e8f0] rounded-md" /><div className="grid grid-cols-3 gap-1.5"><div className="h-[38px] bg-[#f8fafc] border border-[#e2e8f0] rounded-md" /><div className="h-[38px] bg-[#f8fafc] border border-[#e2e8f0] rounded-md" /><div className="h-[38px] bg-[#f8fafc] border border-[#e2e8f0] rounded-md" /></div></div></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Widget Dashboard</h3><p className="text-[13.5px] text-[#475569]">Kelola semua widget - chat, poll, timer, ticker - dari satu panel terpusat.</p></div></div>
+              {/* Bento 5 - Mobile Dock (lebar 5) */}
+              <div className="col-span-12 lg:col-span-5 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#f0fdf4] border-b border-[#e2e8f0] flex items-center justify-center p-4 shrink-0 skeleton-shimmer"><div className="w-[70%] h-[110px] bg-white rounded-[14px] border border-[#bbf7d0] flex items-center justify-center gap-3.5 p-4"><div className="w-[54px] h-[54px] rounded-full border-[3px] border-[#16a34a] flex items-center justify-center"><div className="w-[18px] h-[18px] rounded-full bg-[#86efac]" /></div><div className="flex flex-col gap-2 flex-1"><div className="h-2.5 bg-[#dcfce7] rounded-full" /><div className="h-2.5 bg-[#dcfce7] rounded-full w-[70%]" /></div></div></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Mobile Dock</h3><p className="text-[13.5px] text-[#475569]">Buka dock dari HP saat live - ganti scene, kontrol widget, tanpa sentuh laptop.</p></div></div>
+              {/* Bento 6 - Private Key (interaktif - scramble, klik card, hover) */}
+              <div onClick={() => setShowPrivateMock(v=>!v)} className="group col-span-12 lg:col-span-7 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] hover:border-[#bae6fd] transition-all min-h-0 cursor-pointer active:scale-[0.99]"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#ecfeff] border-b border-[#e2e8f0] flex flex-col items-center justify-center gap-3 p-4 shrink-0 group-hover:bg-[#e0f2fe]/60 transition-colors"><div onClick={e => e.stopPropagation()} className="flex items-center gap-2 bg-white rounded-xl border border-[#bae6fd] group-hover:border-[#0369a1]/30 group-hover:shadow-[0_4px_12px_rgba(0,94,166,0.12)] px-3 py-2 shadow-sm w-[88%] max-w-[360px] transition-all"><span className={`flex-1 font-mono text-[11px] font-bold tracking-wider truncate transition-all duration-300 ${showPrivateMock ? 'text-[#0a0e1a]' : 'text-transparent [text-shadow:_0_0_8px_rgba(15,23,42,0.5)] select-none blur-[3px] animate-[pulse-skeleton_0.6s_ease-in-out_infinite]'}`}>{mockCode}<span className={`inline-block w-[2px] h-3 bg-[#0369a1] ml-0.5 align-middle ${showPrivateMock ? 'animate-[pulse-skeleton_1s_ease-in-out_infinite]' : 'opacity-40'}`} /></span><button onClick={() => setShowPrivateMock(v=>!v)} aria-label={showPrivateMock?'Sembunyikan key':'Tampilkan key'} className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-all active:scale-90 ${showPrivateMock ? 'bg-[#005ea6] border-[#005ea6] text-[#ffffff] hover:bg-[#004a8c]' : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#334155] hover:bg-[#e2e8f0] hover:text-[#0f172a]'}`}>{showPrivateMock ? <EyeOff size={14}/> : <Eye size={14}/>}</button></div><div className="flex items-center gap-2 text-[10px] font-bold tracking-widest"><span className={`px-2 py-1 rounded-full border text-[10px] font-bold transition-all flex items-center gap-1 ${showPrivateMock ? 'bg-[#dcfce7] border-[#bbf7d0] text-[#14532d] animate-[pulse-skeleton_1.2s_ease-in-out_infinite]' : 'bg-[#fef9c3] border-[#fde68a] text-[#713f12]'}`}>{showPrivateMock ? <><Unlock size={11} />TERBUKA</> : <><Lock size={11} />TERKUNCI</>}</span><span className={`font-mono text-[10px] transition-colors ${showPrivateMock ? 'text-[#0369a1]' : 'text-[#64748b]'}`}>{showPrivateMock ? 'room: private' : 'room: ••••••'}</span></div><span className="text-[10px] text-[#94a3b8] font-medium mt-1 group-hover:text-[#64748b] transition-colors">{showPrivateMock ? '' : ''}</span></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2 group-hover:text-[#005ea6] transition-colors">Private Key & WebSocket</h3><p className="text-[13.5px] text-[#475569]">Tiap akun punya room WebSocket sendiri. Event stream kamu tidak akan bocor ke streamer lain.</p></div></div>
+            </div>
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[20px] px-7 py-4.5 flex items-center justify-between gap-5 flex-wrap shadow-[0_4px_12px_rgba(15,23,42,0.05)]">
+              <div className="flex items-center gap-5"><div className="flex items-center gap-2.5 bg-white px-4 py-2 rounded-full border border-[#e2e8f0]"><span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#0f172a] text-[#ffffff] text-xs font-bold">●</span><span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#0f172a] text-[#ffffff] text-xs font-bold">S</span><span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#0f172a] text-[#ffffff] text-xs font-bold">T</span></div><div className="text-sm font-semibold text-[#334155] max-w-[580px]">Semua widget dan overlay tersedia sebagai Browser Source - langsung paste URL ke OBS, Streamlabs, atau StreamElements.</div></div>
+              <a href="#aesthetic" className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] text-[#ffffff] px-6 py-3 rounded-full text-sm font-bold shadow-[0_4px_14px_rgba(0,94,166,0.28)] whitespace-nowrap transition-colors">Lihat semua fitur <ArrowUpRight size={16} /></a>
+            </div>
+          </div>
+        </section>
+
+        {/* REVIEWS */}
+        <section id="reviews" className="py-20 bg-[#f8fafc] border-t border-[#e2e8f0]">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
+            <div className="mb-8"><h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-1.5">Yang streamer bilang</h2><p className="text-[15px] text-[#475569]">Review nyata dari para streamer yang sudah pakai OBS Dock setiap hari.</p></div>
+            <div className="bg-white border border-[#e2e8f0] rounded-3xl p-8 shadow-[0_4px_12px_rgba(15,23,42,0.05)] relative" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23cbd5e1' fill-opacity='0.4'/%3E%3C/svg%3E\")" }}>
+              <div className="grid grid-cols-5 max-[1024px]:grid-cols-2 max-[480px]:grid-cols-1 gap-4">
+                {STICKY_REVIEWS.map(r => (
+                  <div key={r.id} className={`rounded-xl p-4 flex flex-col justify-between shadow-[0_4px_10px_rgba(0,0,0,0.04)] border border-black/5 min-h-[180px] hover:-translate-y-1 hover:scale-[1.02] transition-transform ${r.tint}`}>
+                    <div><div className="text-[#ff4d2e] text-[11px] tracking-[1px] mb-2">{"★".repeat(r.stars)}</div><div className="text-[13.5px] font-bold leading-[1.4] mb-3 flex-1">"{r.quote}"</div></div><div className="text-[11.5px] opacity-80 border-t border-black/5 pt-2"><span className="font-bold">{r.author}</span> · {r.product}</div>
+                  </div>
                 ))}
               </div>
-              <span className="pill"><span className="dot"></span>OBS 5.0 terhubung</span>
+              <div className="flex justify-end gap-2 mt-5"><button onClick={() => showToast('Halaman ulasan sebelumnya')} aria-label="Previous Reviews" className="w-9 h-9 rounded-full bg-white border border-[#e2e8f0] flex items-center justify-center text-[#334155] shadow-[0_2px_6px_rgba(0,0,0,0.05)] hover:bg-[#005ea6] hover:text-[#ffffff] hover:border-[#005ea6] transition-colors"><ChevronLeft size={16} /></button><button onClick={() => showToast('Halaman ulasan berikutnya')} aria-label="Next Reviews" className="w-9 h-9 rounded-full bg-white border border-[#e2e8f0] flex items-center justify-center text-[#334155] shadow-[0_2px_6px_rgba(0,0,0,0.05)] hover:bg-[#005ea6] hover:text-[#ffffff] hover:border-[#005ea6] transition-colors"><ChevronRight size={16} /></button></div>
             </div>
-            <div onPointerMove={tilt} onPointerLeave={untilt}>
-              <div className="win" ref={winRef}>
-                <div className="wh"><span className="dots"><i></i><i></i><i></i></span><span>OBS Custom Dock · adilonapsh</span><span className="mut">{fps}</span></div>
-                <div className="wb">
-                  <div className="view">
-                    <div className={'pane' + (pane === 0 ? ' on' : '')}>
-                      <div className="scan"></div>
-                      <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center' }}><div><div style={{ fontSize: 38 }}>📹</div><b style={{ fontSize: 13 }}>MediaMTX WebRTC Stream</b><div style={{ fontSize: 11, color: '#999' }}>{src}</div></div></div>
-                      <div className="vu">{vu.map((h, i) => <i key={i} style={{ height: h }} />)}</div>
-                      <div style={{ position: 'absolute', right: 12, bottom: 12, display: 'flex', gap: 6 }}>
-                        {[['cam_main', 'Cam 1'], ['irl_phone', 'IRL'], ['srt_screen', 'Screen']].map(([v, l]) => (
-                          <button key={v} className="mb o" onClick={() => { setSrc('rtsp://localhost:8554/live/' + v); showToast('Sumber aktif: ' + v); }}>{l}</button>
-                        ))}
-                      </div>
-                      <span className="mb" style={{ position: 'absolute', top: 12, left: 12 }}>● LIVE 1080p60</span>
-                    </div>
-                    <div className={'pane' + (pane === 1 ? ' on' : '')}>
-                      <div className="chat" ref={chatBoxRef}>
-                        {msgs.map((m, i) => <div key={i} className="msg"><em>{m.p}</em><b>{m.u}:</b> {m.t}</div>)}
-                      </div>
-                      <form className="cf" onSubmit={sendChat}><input value={ci} onChange={(e) => setCi(e.target.value)} placeholder="Kirim ke semua platform…" /><button className="sb" type="submit">Kirim</button></form>
-                    </div>
-                    <div className={'pane' + (pane === 2 ? ' on' : '')} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                      <div style={{ background: '#111', borderRadius: 14, padding: 12, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'center' }}><small>Subathon timer</small><div className="big">{fm(sec)}</div><div><button className="mb" onClick={() => setRun((r) => !r)}>{run ? 'Jeda' : 'Mulai'}</button> <button className="mb o" onClick={() => { setSec((s) => s + 300); showToast('+5 menit ditambahkan'); }}>+5m</button></div></div>
-                      <div style={{ background: '#111', borderRadius: 14, padding: 12, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'center' }}><small>Follower goal</small><div className="big">{goal}/100</div><div className="bar"><i style={{ width: goal + '%' }}></i></div><div><button className="mb o" onClick={() => stepGoal(-1)}>−</button> <button className="mb" onClick={() => stepGoal(1)}>+</button></div></div>
-                    </div>
+          </div>
+        </section>
+
+        {/* AESTHETIC - tab difungsikan */}
+        <section id="aesthetic" className="py-20 bg-white border-t border-[#e2e8f0]">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
+            <div className="mb-7"><h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-9">Temukan Fitur yang Tepat</h2><div className="flex gap-2 bg-[#f1f5f9] p-1 rounded-full w-fit mb-8"><button onClick={() => setActiveAestheticTab('product')} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${activeAestheticTab === 'product' ? 'bg-[#005ea6] text-[#ffffff] shadow-[0_4px_14px_rgba(0,94,166,0.28)]' : 'text-[#475569] hover:text-[#0f172a]'}`}>Fitur Utama</button><button onClick={() => setActiveAestheticTab('game')} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${activeAestheticTab === 'game' ? 'bg-[#005ea6] text-[#ffffff] shadow-[0_4px_14px_rgba(0,94,166,0.28)]' : 'text-[#475569] hover:text-[#0f172a]'}`}>Multi-Platform</button><button onClick={() => setActiveAestheticTab('aesthetic')} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${activeAestheticTab === 'aesthetic' ? 'bg-[#005ea6] text-[#ffffff] shadow-[0_4px_14px_rgba(0,94,166,0.28)]' : 'text-[#475569] hover:text-[#0f172a]'}`}>Semua Widget</button></div></div>
+            <div className="grid grid-cols-3 max-[1024px]:grid-cols-1 gap-5 mb-6">
+              {(activeAestheticTab === 'product' ? AESTHETIC_CATEGORIES.filter(c => ['dock','mediaplayer','poll','utils'].includes(c.id)) : activeAestheticTab === 'game' ? AESTHETIC_CATEGORIES.filter(c => ['overlay','chat','mobiledock'].includes(c.id)) : AESTHETIC_CATEGORIES).map(c => (
+                <div key={c.id} className="bg-white border border-[#e2e8f0] rounded-[20px] p-6 flex items-start gap-4 shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] hover:border-[#cbd5e1] transition-all">
+                  <div className="w-12 h-12 rounded-xl border flex items-center justify-center shrink-0" style={{ backgroundColor: c.bg, borderColor: c.border }}>{c.icon}</div><div className="flex-1"><h3 className="font-extrabold text-lg tracking-[-0.02em] text-[#0a0e1a] mb-1.5">{c.title}</h3><p className="text-[13.5px] text-[#475569] leading-[1.5]">{c.desc}</p></div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-[#fefce8] border border-[#fef08a] rounded-[20px] px-8 py-6 flex items-center justify-between gap-5 shadow-[0_4px_12px_rgba(15,23,42,0.05)] flex-wrap">
+              <div className="flex items-center gap-5"><div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-[#fef08a] flex items-center justify-center"><Gift size={24} color="#ca8a04" strokeWidth={2.2} /></div><div><h3 className="font-extrabold text-xl text-[#713f12] mb-1">Mulai Gratis Sekarang</h3><p className="text-sm text-[#854d0e]">Gunakan 14+ widget, dock control, dan overlay interaktif langsung tanpa perlu kartu kredit.</p></div></div>
+              <Link href={isLoggedIn ? "/dashboard" : "/login"} className="inline-flex items-center gap-2 bg-[#0f172a] hover:bg-[#005ea6] text-[#ffffff] px-6 py-3 rounded-full text-sm font-bold transition-colors whitespace-nowrap">Coba OBS Dock Gratis <ArrowRight size={15} /></Link>
+            </div>
+          </div>
+        </section>
+
+        {/* BUYONCE - diperbesar, pill tidak overlap border */}
+        <section id="buyonce" className="py-20 pb-28 bg-white">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
+            <div className="bg-[#005ea6] rounded-[28px] px-16 py-24 max-[1024px]:px-8 max-[1024px]:py-12 max-[640px]:px-6 max-[640px]:py-8 text-[#ffffff] grid grid-cols-[1.35fr_1.3fr] max-[1024px]:grid-cols-1 gap-12 max-[1024px]:gap-10 items-start shadow-[0_24px_50px_-15px_rgba(0,94,166,0.45)] overflow-visible">
+              <div className="flex flex-col items-start min-w-0 pr-2"><h2 className="font-extrabold text-[clamp(42px,5vw,68px)] max-[1280px]:text-[clamp(38px,4.5vw,60px)] max-[640px]:text-[clamp(30px,8vw,42px)] leading-[1.05] tracking-[-0.04em] mb-3 break-words max-w-full">Mulai <span className="relative inline-block px-1.5"><span className="absolute inset-0 bg-[#fef08a] -rotate-1 rounded-[6px] opacity-90 shadow-[0_1px_0_rgba(0,0,0,0.08)]" aria-hidden="true" /><span className="relative text-[#713f12]">gratis</span></span>.<br /><span className="bg-[#d9f99d] text-[#0f172a] px-7 py-2.5 max-[640px]:px-5 max-[640px]:py-1.5 rounded-full inline-block font-extrabold tracking-[-0.03em] shadow-[0_4px_12px_rgba(0,0,0,0.15)] text-[0.58em] leading-[1.15] whitespace-normal break-words max-w-full mt-3">Tanpa biaya langganan.</span></h2></div>
+              <div className="grid grid-cols-2 max-[640px]:grid-cols-1 gap-10 gap-x-10 min-w-0">
+                <div className="min-w-0"><h3 className="font-extrabold text-[20px] max-[640px]:text-[18px] mb-2.5 tracking-[-0.02em] leading-[1.25]">Langsung aktif tanpa kartu kredit</h3><p className="text-[15px] max-[640px]:text-sm leading-[1.6] text-[#ffffff]/90 break-words">Cukup daftar akun dan Private Key unik kamu langsung aktif otomatis. Siap digunakan detik itu juga tanpa masa trial yang mengunci fitur.</p></div>
+                <div className="min-w-0"><h3 className="font-extrabold text-[20px] max-[640px]:text-[18px] mb-2.5 leading-[1.25]">Atur tampilan sesuai gayamu</h3><p className="text-[15px] max-[640px]:text-sm leading-[1.6] text-[#ffffff]/90 break-words">Semua widget dan overlay dapat dikustomisasi: font, warna solid, tata letak, animasi kemunculan, hingga suara notifikasi event.</p></div>
+                <div className="min-w-0"><h3 className="font-extrabold text-[20px] max-[640px]:text-[18px] mb-2.5 leading-[1.25]">Ringan dan terisolasi privat</h3><p className="text-[15px] max-[640px]:text-sm leading-[1.6] text-[#ffffff]/90 break-words">Komunikasi WebSocket private room memastikan performa OBS tetap ringan tanpa lag CPU, dan aman dari campur tangan stream lain.</p></div>
+                <div className="min-w-0"><h3 className="font-extrabold text-[20px] max-[640px]:text-[18px] mb-2.5 leading-[1.25]">Bantuan dan panduan lengkap</h3><p className="text-[15px] max-[640px]:text-sm leading-[1.6] text-[#ffffff]/90 break-words">Tersedia panduan setup langkah demi langkah, dokumentasi browser source OBS, serta komunitas dan live chat yang siap membantu.</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* COMMUNITY */}
+        <section id="spotlight" className="py-20 border-t border-[#e2e8f0] bg-[#f8fafc]">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
+            <h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-2 flex items-center gap-3 flex-wrap"><span>Community</span><span className="bg-[#ff4400] text-[#ffffff] px-[18px] py-0.5 rounded-full inline-block">spotlight</span></h2>
+            <p className="text-[15px] text-[#475569] mb-9">Lihat para streamer dan konten kreator yang telah mempercayakan live stream mereka dengan OBS Dock.</p>
+            <div className="grid grid-cols-3 max-[1024px]:grid-cols-1 gap-6">
+              {CREATORS.map((c, i) => (
+                <div key={i} className="bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 transition-transform"><img src={c.img} alt={c.name} className="w-full h-[220px] object-cover block" /><div className="p-5"><h3 className="font-extrabold text-[17px] text-[#0a0e1a] mb-1">{c.name}</h3><p className="text-[13.5px] text-[#64748b]">{c.role}</p></div></div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="bg-[#f8fafc] py-[100px] max-[768px]:py-12">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
+            <div className="grid grid-cols-[340px_1fr] max-[768px]:grid-cols-1 gap-16 max-[768px]:gap-8 items-start">
+              <div className="sticky top-[110px] max-[768px]:static"><h2 className="font-extrabold text-[clamp(2rem,4vw,3rem)] text-[#0a0e1a] leading-[1.15] tracking-[-0.03em]">Pertanyaan yang<br />sering diajukan</h2></div>
+              <div className="flex flex-col rounded-2xl bg-white border border-[#e2e8f0] overflow-hidden">
+                {FAQ_ITEMS.map((item, i) => (
+                  <div key={i} className="border-b border-[#e2e8f0] last:border-0">
+                    <button onClick={() => toggleFaq(i)} aria-expanded={openFaq === i} className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left font-semibold text-[15px] text-[#0a0e1a] hover:bg-[#f1f5f9] transition-colors"><span>{item.q}</span><ChevronDown size={18} className={`shrink-0 text-[#64748b] transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`} /></button>
+                    <div className={`grid transition-all duration-300 ${openFaq === i ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}><p className={`overflow-hidden px-6 m-0 text-[#475569] text-sm leading-[1.7] transition-all ${openFaq === i ? 'pb-5' : 'pb-0'}`}>{item.a}</p></div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 12 }}>Aktivitas live</div>
-                    <div>{evs.map((d, i) => <div key={i} className="ev"><b>{d.p}</b>{d.u} · <span className="mut">{d.t}</span></div>)}</div>
-                    <div className="acts">
-                      <button onClick={(e) => { showToast('Alert TTS terkirim: Terima kasih giftnya!'); (e.currentTarget as HTMLButtonElement).classList.add('f'); window.setTimeout(() => (e.currentTarget as HTMLButtonElement).classList.remove('f'), 300); }}>Test TTS</button>
-                      <button onClick={() => { stepGoal(10); showToast('+10 goal tersinkron ke OBS'); }}>+10 Goal</button>
-                    </div>
-                    <button className="btn p" style={{ width: '100%', justifyContent: 'center', marginTop: 12, padding: 11 }} onClick={() => copy('http://127.0.0.1:3000/dock?key=adilonapsh_live')}>Salin URL Dock</button>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
-        </div></section>
+        </section>
 
-        <div className="mq" id="integrasi"><div className="mt">{[...LOGOS, ...LOGOS].map((l, i) => <span key={i} className="lg" title={l.n}><img src={l.s} alt={l.n} /></span>)}</div></div>
-
-        <section id="cara"><div className="wrap"><div className="hd rv"><h2>Mulai Live dalam 3 Langkah</h2><p>Nggak perlu jadi expert. Pilih widget, pasang ke OBS, lalu bikin penonton ikut berinteraksi.</p></div>
-          <div className="g3">
-            <div className="card step rv"><div className="sg"><span>🧩</span></div><small>Langkah 1</small><h3>Pilih widget</h3><p>Pilih widget yang dibutuhkan. Satu widget sama dengan satu Browser Source transparan.</p></div>
-            <div className="card step rv" style={{ '--d': '.12s' } as CSSProperties}><div className="sg"><span>🎯</span></div><small>Langkah 2</small><h3>Tambah Browser Source</h3><p>Di OBS, klik + pada Sources, pilih Browser, lalu tempel URL dengan <code>?key=private_key</code>.</p></div>
-            <div className="card step rv" style={{ '--d': '.24s' } as CSSProperties}><div className="sg"><span>⚡</span></div><small>Langkah 3</small><h3>Hubungkan &amp; live</h3><p>Chat, gift, dan vote dari semua platform otomatis tampil lewat Streamer.bot DoAction.</p></div>
-          </div></div></section>
-
-        <section id="widgets"><div className="wrap"><div className="hd rv"><h2>Semua yang Kamu Butuhkan untuk Live</h2><p>Thumbnail di bawah adalah widget asli yang berjalan live (mode simulasi). Pilih yang kamu suka, masukkan ke OBS, dan bikin stream kamu terasa lebih interaktif.</p>
-          <div className="fl">{LP_CATS.map((v) => <button key={v} className={'fb' + (cat === v ? ' on' : '')} onClick={() => setCat(v)}>{v === 'all' ? `Semua (${lpCatCount(v)})` : `${LP_CAT_LABEL[v]} (${lpCatCount(v)})`}</button>)}</div></div>
-          <div className="bento">
-            {LP_WIDGETS.filter((w) => cat === 'all' || w.category === cat).map((w, i) => {
-              // 'all' pakai bento curated (urutan LP_WIDGETS sudah pack penuh).
-              // View filter pakai span seragam + kartu terakhir melebar menutup sisa baris
-              // (baris 3 kartu s2×3; sisa 1 → terakhir s6; sisa 2 → terakhir s4) → tidak ada lubang.
-              let span: string;
-              if (cat === 'all') {
-                span = LP_SPAN[w.id] || '';
-              } else {
-                const n = LP_COUNT[cat] || 0;
-                const r = n % 3;
-                const last = i === n - 1;
-                span = last && r === 1 ? 's6' : last && r === 2 ? 's4' : 's2';
-              }
-              const tall = span.includes('tall');
-              return (
-              <div key={w.id} className={'card wg rv ' + span}><div className="wt"><span>{w.title}</span><span className="mut">{w.tags[0]}</span></div>
-                <div className="wv" style={tall ? { flex: 1, minHeight: 340 } : { aspectRatio: `${w.w} / ${w.h}` }}><iframe title={w.title} src={`/widgets/${w.id}/display?${w.params}&simulate=1`} loading="lazy" style={{ width: '100%', height: '100%', border: 0, background: 'transparent', pointerEvents: 'none' }} /></div>
-                <div className="wf"><span>{w.tags.slice(0, 3).join(' · ')}</span><button onClick={() => openWidgetModal(w)}>Pasang di OBS →</button></div></div>
-              );
-            })}
-          </div></div></section>
-
-        <section id="studio"><div className="wrap">
-          <div className="hd rv">
-            <h2>Make it yours</h2>
-            <p>Atur dashboard sesuai gaya streaming kamu. Pilih event, lihat semua chat, lalu jalankan aksi tanpa pindah-pindah aplikasi.</p>
-            <div className="sel">
-              {PROFS.map((p, i) => <button key={p} className={'tab' + (prof === i ? ' on' : '')} onClick={() => { setProf(i); showToast(p); }}>{['IRL + MediaMTX', 'Speedrun', 'Subathon'][i]}</button>)}
-            </div>
+        {/* CTA */}
+        <section id="cta" className="bg-[#f8fafc] py-[120px] pb-[140px] text-center border-t border-[#e2e8f0]">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4 flex flex-col items-center gap-4">
+            <h2 className="font-extrabold text-[clamp(2.5rem,6vw,4.5rem)] text-[#0a0e1a] leading-[1.1] tracking-[-0.04em]">Upgrade stream kamu<br />ke level berikutnya</h2>
+            <p className="text-[15px] text-[#64748b] max-w-[420px] leading-[1.65]">Kontrol OBS Studio Mode, pasang 14+ widget interaktif, dan berikan pengalaman visual terbaik untuk penontonmu hari ini.</p>
+            <div className="flex items-center gap-4 mt-3 flex-wrap justify-center"><Link href={isLoggedIn ? "/dashboard" : "/login"} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] hover:-translate-y-px text-[#ffffff] rounded-full px-7 py-3.5 text-[15px] font-bold transition-all">{isLoggedIn ? "Buka Dashboard" : "Mulai Gratis Sekarang"} <ArrowRight size={16} /></Link><a href="#inside" className="inline-flex items-center gap-2 text-[#0a0e1a] font-semibold text-[15px] px-5 py-3.5 rounded-full hover:bg-[#f1f5f9] transition-colors">Pelajari Fitur</a></div>
+            <p className="text-xs text-[#64748b] mt-1">Digunakan oleh 500+ streamer aktif di berbagai platform streaming.</p>
           </div>
-
-          <div className="card stu studio-shell rv">
-            <div className="studio-top">
-              <div className="studio-kicker"><span className="studio-live"></span> Stream workspace</div>
-              <span className="pill">OBS + Streamer.bot</span>
-            </div>
-            <div className="studio-grid">
-              <div className="studio-col">
-                <div className="studio-title"><span className="studio-icon">⌁</span>Filter event</div>
-                <div className="studio-desc">Pilih event yang ingin memicu tampilan atau automation di live kamu.</div>
-                <div>
-                  {FLTS.map((f, i) => <button key={f} className={'studio-option opt' + (flt === i ? ' on' : '')} onClick={() => { setFlt(i); showToast('Filter: ' + f); }}>{f} <span className="studio-check">✓</span></button>)}
-                </div>
-              </div>
-              <div className="studio-col">
-                <div className="studio-title"><span className="studio-icon">☷</span>Multi-chat</div>
-                <div className="studio-desc">Gabungkan percakapan dari berbagai platform dalam satu tampilan.</div>
-                <div className="studio-chat">
-                  <div className="studio-msg"><span className="platform tiktok">TIKTOK</span><span>pakai lensa apa kak?</span><span className="chat-dot"></span></div>
-                  <div className="studio-msg"><span className="platform twitch">TWITCH</span><span>DoAction delay rendah banget</span><span className="chat-dot"></span></div>
-                  <div className="studio-msg"><span className="platform kick">KICK</span><span>Audio VU sinkron sempurna</span><span className="chat-dot"></span></div>
-                </div>
-              </div>
-              <div className="studio-col">
-                <div className="studio-title"><span className="studio-icon">ϟ</span>Aksi Streamer.bot</div>
-                <div className="studio-desc">Jalankan automation dari satu panel saat live sedang berjalan.</div>
-                <div className="studio-actions">
-                  {[['◉', 'Cut ke Cam 1'], ['◌', 'Mulai Poll'], ['✦', 'Putar Wheel'], ['＋', '+10 Sub Goal']].map(([ic, lb]) => (
-                    <button key={lb} className="studio-action" onClick={(e) => { showToast('Aksi dijalankan: ' + lb); const b = e.currentTarget; b.classList.add('f'); window.setTimeout(() => b.classList.remove('f'), 300); }}><span>{ic}</span>{lb}</button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div></section>
-
-        <section><div className="wrap rv" style={{ textAlign: 'center' }}><div className="big2">Stream lebih <u>seru.</u><br />Penonton lebih <u>ikut.</u></div><p className="mut" style={{ maxWidth: 560, margin: '22px auto 30px' }}>Stop cuma live. Kasih penonton alasan untuk ikut klik, vote, gift, dan balik lagi.</p>
-          {loggedIn ? <Link className="btn p" href="/dashboard">Buka Dashboard →</Link> : <Link className="btn p" href="/register">Coba 10+ Widget Gratis →</Link>}
-        </div></section>
+        </section>
       </main>
 
-      <footer><div className="wrap" style={{ paddingBottom: 50 }}><div className="card rv"><div className="fg">
-        <div><div className="logo" style={{ fontSize: 28 }}>OBSDOCK</div><p className="mut" style={{ fontSize: 13, marginTop: 8 }}>Toolkit streaming yang ringan dan cepat.</p></div>
-        <div><h5>OBSDOCK</h5><ul><li><a href="#hero">Home</a></li><li><a href="#cara">Cara Kerja</a></li><li><button onClick={() => openLegal('Terms of Service')}>Terms of Service</button></li><li><button onClick={() => openLegal('Privacy Policy')}>Privacy Policy</button></li><li><button onClick={() => openLegal('Legal Notice')}>Legal Notice</button></li></ul></div>
-        <div><h5>Products</h5><ul><li><a href="#widgets">Widget</a></li><li><a href="#studio">Studio</a></li><li><a href="#integrasi">Integrasi</a></li></ul></div>
-        <div><h5>Komunitas</h5><ul><li><a href="https://discord.com" target="_blank" rel="noreferrer">Discord</a></li><li><a href="https://buymeacoffee.com" target="_blank" rel="noreferrer">BuyMeACoffee</a></li></ul></div>
-      </div><p className="mut" style={{ marginTop: 28, fontSize: 12 }}>© OBSDOCK 2026</p></div></div></footer>
-
-      <div id="toast" className={toastMsg ? 'on' : ''}>{toastMsg}</div>
-      <div className={'md' + (modal ? ' on' : '')} onClick={(e) => { if ((e.target as HTMLElement).id === 'md') closeModal(); }} id="md">
-        <div className="mc">{modal}</div>
-      </div>
+      <footer className="bg-[#0a0e1a] text-[#94a3b8] pt-16">
+        <div className="max-w-[1160px] mx-auto px-6 max-[640px]:px-4">
+          <div className="pb-10"><div className="flex items-center gap-6 max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-3"><span className="font-extrabold text-[22px] text-[#ffffff] tracking-[-0.03em]">OBS Dock</span><span className="text-[13px] font-medium text-[#64748b]">Ikuti Kami</span><div className="flex gap-2.5"><a href="#" aria-label="TikTok" className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#1e293b] text-[#cbd5e1] hover:bg-[#005ea6] hover:text-[#ffffff] transition-colors"><Music2 size={16} /></a><a href="#" aria-label="Twitter / X" className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#1e293b] text-[#cbd5e1] hover:bg-[#005ea6] hover:text-[#ffffff] transition-colors"><XIcon size={16} /></a><a href="#" aria-label="Instagram" className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#1e293b] text-[#cbd5e1] hover:bg-[#005ea6] hover:text-[#ffffff] transition-colors"><Camera size={16} /></a></div></div></div>
+          <hr className="border-0 border-t border-[#1e293b] m-0" />
+          <div className="grid grid-cols-4 max-[768px]:grid-cols-2 gap-10 py-12">
+            <div><h4 className="text-sm font-bold text-[#ffffff] mb-4 tracking-[-0.01em]">OBS Dock</h4><ul className="flex flex-col gap-2.5"><li><Link href="/" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0] transition-colors">Home</Link></li><li><Link href={isLoggedIn ? "/dashboard" : "/login"} className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Dashboard</Link></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Fitur & Tools</a></li><li><a href="#faq" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">FAQ</a></li><li><a href="#spotlight" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Komunitas</a></li></ul></div>
+            <div><h4 className="text-sm font-bold text-[#ffffff] mb-4">Fitur Unggulan</h4><ul className="flex flex-col gap-2.5"><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">OBS Dock Control</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">14+ Interactive Widgets</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Real-time Stream Overlays</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Media Player with Synced Lyrics</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Mobile Dock Controller</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Private Key Isolation</a></li></ul></div>
+            <div><h4 className="text-sm font-bold text-[#ffffff] mb-4">Widgets & Tools</h4><ul className="flex flex-col gap-2.5"><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Live Chat Widget</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Viewer Poll & Vote</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Sub & Follow Goals</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Stream Countdown Timer</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Social Media Rotator</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Real-time View Counter</a></li></ul></div>
+            <div><h4 className="text-sm font-bold text-[#ffffff] mb-4">Platform & Bantuan</h4><ul className="flex flex-col gap-2.5"><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">OBS Studio (v28+)</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Streamlabs Desktop</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Twitch & YouTube Live</a></li><li><a href="#inside" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">TikTok LIVE Studio</a></li><li><a href="#faq" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Panduan Browser Source</a></li><li><a href="#faq" className="text-[13.5px] text-[#64748b] hover:text-[#e2e8f0]">Bantuan & Dokumentasi</a></li></ul></div>
+          </div>
+          <hr className="border-0 border-t border-[#1e293b] m-0" />
+          <div className="flex items-center justify-between gap-6 flex-wrap py-5 pb-7 max-[768px]:flex-col max-[768px]:items-start"><p className="text-xs text-[#475569] leading-[1.6]">© 2026, OBS Dock. All rights reserved.  <a href="#" className="hover:text-[#94a3b8]">Syarat & Ketentuan</a>  <a href="#" className="hover:text-[#94a3b8]">Kebijakan Privasi</a>  <a href="#" className="hover:text-[#94a3b8]">Dokumentasi</a>  <a href="#" className="hover:text-[#94a3b8]">Hubungi Kami</a></p><div className="flex gap-1.5 flex-wrap items-center"><span className="inline-block px-2 py-1 rounded bg-[#1e293b] border border-[#334155] text-[10px] font-bold text-[#94a3b8] tracking-[0.02em]">OBS Studio</span><span className="inline-block px-2 py-1 rounded bg-[#1e293b] border border-[#334155] text-[10px] font-bold text-[#94a3b8]">Twitch</span><span className="inline-block px-2 py-1 rounded bg-[#1e293b] border border-[#334155] text-[10px] font-bold text-[#94a3b8]">YouTube</span><span className="inline-block px-2 py-1 rounded bg-[#1e293b] border border-[#334155] text-[10px] font-bold text-[#94a3b8]">TikTok Live</span><span className="inline-block px-2 py-1 rounded bg-[#1e293b] border border-[#334155] text-[10px] font-bold text-[#94a3b8]">Streamlabs</span><span className="inline-block px-2 py-1 rounded bg-[#1e293b] border border-[#334155] text-[10px] font-bold text-[#94a3b8]">WebSocket</span></div></div>
+        </div>
+      </footer>
+      <button onClick={() => showToast('Customer support chat live siap membantu!')} aria-label="Live Chat Support" title="Need help? Chat with us" className="fixed bottom-7 right-7 w-[54px] h-[54px] rounded-full bg-[#005ea6] hover:bg-[#004a8c] hover:scale-[1.08] text-[#ffffff] flex items-center justify-center shadow-[0_8px_24px_rgba(0,94,166,0.45)] z-[100] transition-all"><MessageCircle size={24} /></button>
+      <div className={`fixed bottom-7 left-1/2 -translate-x-1/2 bg-[#0f172a] text-[#ffffff] px-6 py-3 rounded-full text-[13.5px] font-bold shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-[200] pointer-events-none transition-all duration-200 ${toastText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>{toastText}</div>
     </div>
   );
 }

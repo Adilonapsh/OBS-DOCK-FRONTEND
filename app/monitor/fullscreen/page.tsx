@@ -422,7 +422,7 @@ function FullscreenContent() {
               <span className="text-[11px] font-black tracking-widest">LIVE</span>
             </div>
           )}
-          {/* tombol reconnect — putus & sambung ulang stream tanpa reload page */}
+          {/* tombol reconnect - putus & sambung ulang stream tanpa reload page */}
           <button
             onClick={handleReconnect}
             title="Reconnect stream"
@@ -435,7 +435,7 @@ function FullscreenContent() {
           </button>
         </div>
       ) : (
-        /* ---- OFFLINE SCREEN + LOGO — full screen, tanpa header/navbar ---- */
+        /* ---- OFFLINE SCREEN + LOGO - full screen, tanpa header/navbar ---- */
         <div className="relative h-screen max-h-screen w-screen flex flex-col items-center justify-center text-center bg-[#050505] overflow-hidden px-6">
           {/* subtle grid */}
           <div

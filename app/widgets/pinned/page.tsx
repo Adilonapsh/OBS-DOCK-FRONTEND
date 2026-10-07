@@ -35,7 +35,7 @@ function PinnedSettingsInner() {
         user={shell.user}
         headerIcon={<Pin className="w-4 h-4 text-white" />}
         title={<>Pinned Chat</>}
-        subtitle="Chat yang di-pin dari dock — sinkron realtime via socket"
+        subtitle="Chat yang di-pin dari dock - sinkron realtime via socket"
         headerActions={
           <>
             <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Defaults</button>
@@ -48,13 +48,13 @@ function PinnedSettingsInner() {
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview — {state.theme} • pos:{normalizePosition((state as unknown as { pos: string }).pos || 'center')}</div>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • pos:{normalizePosition((state as unknown as { pos: string }).pos || 'center')}</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • pin dari dock</span>
             </div>
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px]">
               <iframe key={previewUrl} src={previewUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="pinned-preview" />
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">Pin chat dari dock (klik pesan → Pin) — widget ini ikut realtime. Unpin dari dock untuk melepas.</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">Pin chat dari dock (klik pesan → Pin) - widget ini ikut realtime. Unpin dari dock untuk melepas.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
               <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>

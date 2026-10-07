@@ -71,7 +71,7 @@ export default function PerCharTheme({
     const d = isEleg ? '0.62s' : '0.4s';
     return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`;
   };
-  // horizontal & inline pakai bubble penuh yang sama — cuma arah alir beda
+  // horizontal & inline pakai bubble penuh yang sama - cuma arah alir beda
   const flowCls = horizontal ? 'flex-row flex-wrap items-end' : 'flex-col';
   return (
     <div className={`chat-perchar-theme w-full ${horizontal ? 'max-w-none' : 'max-w-[480px]'} flex ${flowCls}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>

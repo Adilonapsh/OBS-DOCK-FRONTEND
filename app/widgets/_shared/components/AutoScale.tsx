@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-// AutoScale — fixed design width yang otomatis di-zoom agar ngikutin viewport.
+// AutoScale - fixed design width yang otomatis di-zoom agar ngikutin viewport.
 // - Anak di-render di dalam kotak fix selebar `baseWidth` px (mis. 420, sesuai max-w asli tema).
 // - Default: zoom = availW / baseW → lebar SELALU ngikutin window (penuh selebar viewport).
 //   Tinggi di-cap max 100vh (overflow hidden, konten kepotong seperti di OBS).

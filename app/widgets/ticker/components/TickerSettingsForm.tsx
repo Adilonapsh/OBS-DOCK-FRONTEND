@@ -26,7 +26,7 @@ export function TickerSettingsForm({
           <label className="block">
             <span className="text-[11px] font-bold text-gray-300">Tema</span>
             <select value={state.theme} onChange={(e) => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {TICKER_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+              {TICKER_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
             </select>
           </label>
           <label className="block">
@@ -48,7 +48,7 @@ export function TickerSettingsForm({
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Separator</span><input value={state.separator} onChange={(e) => update('separator', e.target.value)} maxLength={4} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Arah</span><select value={state.direction} onChange={(e) => update('direction', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{TICKER_DIRECTIONS.map((d) => <option key={d.value} value={d.value} className="bg-zinc-900">{d.label}</option>)}</select></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Arah</span><select value={state.direction} onChange={(e) => update('direction', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{TICKER_DIRECTIONS.map((d) => <option key={d.value} value={d.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{d.label}</option>)}</select></label>
           </div>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Kecepatan - {state.speed}s/loop</span><input type="range" min={5} max={60} value={state.speed} onChange={(e) => update('speed', parseInt(e.target.value) || 20)} className="mt-1 w-full accent-white" /><span className="text-[10px] text-gray-500">Makin kecil makin cepat</span></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Badge (pill INFO)</span><input type="checkbox" checked={state.showBadge} onChange={(e) => update('showBadge', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>

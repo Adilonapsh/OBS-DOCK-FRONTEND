@@ -91,7 +91,7 @@ function MenuSep() {
 }
 
 // Input angka yang tahan ketikan intermediate ("-", "", "12.") dan tidak pernah
-// menulis NaN ke state — sumber bug "input tak bisa diubah" + layer hilang.
+// menulis NaN ke state - sumber bug "input tak bisa diubah" + layer hilang.
 // Commit live saat valid; revert tampilan saat blur bila tak valid.
 function NumInput({
   value,
@@ -180,10 +180,10 @@ function Editor() {
   const [playing, setPlaying] = useState(false);
   const [scrub, setScrub] = useState(0);
   const [selectedDiamond, setSelectedDiamond] = useState<DiamondSel>(null);
-  const [dataVars, setDataVars] = useState({ username: 'Rizky Pratama', message: 'Narasumber — Ahli Strategi', title: 'LIVE SPECIAL', teamA: 'TIM A', teamB: 'TIM B', scoreA: '2', scoreB: '1' });
+  const [dataVars, setDataVars] = useState({ username: 'Rizky Pratama', message: 'Narasumber - Ahli Strategi', title: 'LIVE SPECIAL', teamA: 'TIM A', teamB: 'TIM B', scoreA: '2', scoreB: '1' });
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: string; mode: 'move' | ResizeHandle | 'rotate'; startX: number; startY: number; orig: DesignerLayer; cw: number; ch: number; sx0?: number; sy0?: number; bw0?: number; bh0?: number } | null>(null);
-  // Ukuran teks terukur (auto-size ala OBS) per layer — untuk hit-box & overlay.
+  // Ukuran teks terukur (auto-size ala OBS) per layer - untuk hit-box & overlay.
   const [textSizes, setTextSizes] = useState<Record<string, { w: number; h: number }>>({});
   const handleLayerSize = useCallback((lid: string, w: number, h: number) => {
     setTextSizes((prev) => {
@@ -385,7 +385,7 @@ function Editor() {
   );
   const selected = useMemo(() => doc?.layers.find((l) => l.id === selectedId) ?? null, [doc, selectedId]);
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  // Tinggi panel timeline (px) — bisa di-resize via splitter, tersimpan lokal.
+  // Tinggi panel timeline (px) - bisa di-resize via splitter, tersimpan lokal.
   const [timelineH, setTimelineH] = useState(() => {
     if (typeof window === 'undefined') return 300;
     const v = parseInt(localStorage.getItem('designer-timeline-h') ?? '', 10);
@@ -396,7 +396,7 @@ function Editor() {
       localStorage.setItem('designer-timeline-h', String(timelineH));
     } catch {}
   }, [timelineH]);
-  // Opsi tampilan canvas (menu View) — tersimpan lokal.
+  // Opsi tampilan canvas (menu View) - tersimpan lokal.
   const [viewOpts, setViewOpts] = useState(() => {
     const d = { dots: true, grid: true, snap: true };
     try {
@@ -466,7 +466,7 @@ function Editor() {
   }, [canvasW, canvasH, zoom]);
   // Ukuran tampil + skala konten: isi SELALU di-render pada resolusi desain
   // (font/border presisi px), lalu sekotak-kotaknya di-scale via transform.
-  // Hasilnya konten ikut mengecil/membesar proporsional di semua level zoom —
+  // Hasilnya konten ikut mengecil/membesar proporsional di semua level zoom -
   // sama seperti output OBS yang me-render 1:1 lalu di-scale.
   const dispW = zoom === 'fit' ? fit.w : Math.max(50, Math.round(canvasW * (zoom / 100)));
   const contentScale = dispW > 0 ? dispW / canvasW : 0;
@@ -520,7 +520,7 @@ function Editor() {
     patchLayer(lid, (l) => ({ ...l, keyframes: toggleWatch(l.keyframes, prop) }));
   };
 
-  // Tulis nilai base — atau keyframe di detik seeker bila stopwatch prop-nya nyala.
+  // Tulis nilai base - atau keyframe di detik seeker bila stopwatch prop-nya nyala.
   // keyValue = nilai BARU (untuk pair, panggil dengan komponen lain dari nilai kini).
   const recordProp = (lid: string, prop: KeyProp, basePatch: Record<string, unknown>, keyValue: KeyframeValue) => {
     patchLayer(lid, (l) => {
@@ -1109,7 +1109,7 @@ function Editor() {
                   onMouseDown={(e2) => onLayerMouseDown(e2, l)}
                   className="absolute"
                   style={{ left: `${(hb.x / canvasW) * 100}%`, top: `${(hb.y / canvasH) * 100}%`, width: `${(hb.w / canvasW) * 100}%`, height: `${(hb.h / canvasH) * 100}%`, zIndex: l.zIndex + 1000, cursor: l.locked ? 'default' : 'move', transform: hb.rotation ? `rotate(${hb.rotation}deg)` : undefined }}
-                  title={`${l.name} — drag untuk pindah${l.keyframes?.position !== undefined ? ' (stopwatch nyala: tercatat sebagai keyframe)' : ''}`}
+                  title={`${l.name} - drag untuk pindah${l.keyframes?.position !== undefined ? ' (stopwatch nyala: tercatat sebagai keyframe)' : ''}`}
                 />
                 );
               })}
@@ -1139,7 +1139,7 @@ function Editor() {
                   <div
                     className="absolute inset-0 border-2 border-white cursor-move"
                     onMouseDown={(ev) => onLayerMouseDown(ev, selected)}
-                    title={`${selected.name} — drag untuk pindah`}
+                    title={`${selected.name} - drag untuk pindah`}
                   />
                   {!selected.locked && HANDLES.map((hh) => (
                     <div
@@ -1229,7 +1229,7 @@ function Editor() {
                 onToggleSelect={toggleSelect}
                 multiIds={extraIds}
                 onDelay={(lid, nd) => patchLayer(lid, (l) => {
-                  // Geser span [in → out] — durasi tampil dipertahankan.
+                  // Geser span [in → out] - durasi tampil dipertahankan.
                   const d = nd - (l.delay ?? 0);
                   return { ...l, delay: nd, out: l.out != null ? Math.max(nd + 0.2, Math.round((l.out + d) * 10) / 10) : l.out };
                 })}
@@ -1295,7 +1295,7 @@ function Editor() {
                 <input value={selected.name} onChange={(e) => patchLayer(selected.id, { name: e.target.value })} className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-sm font-bold" />
                 {extraIds.length > 0 && (
                   <div className="text-[11px] text-gray-200 bg-white/5 border border-white/15 rounded-lg px-2 py-1.5">
-                    {extraIds.length + 1} layer terpilih — panel ini edit primary “{selected.name}”. Drag di canvas menggerakkan semuanya.
+                    {extraIds.length + 1} layer terpilih - panel ini edit primary “{selected.name}”. Drag di canvas menggerakkan semuanya.
                   </div>
                 )}
                 {selected.type === 'text' && (
@@ -1305,7 +1305,7 @@ function Editor() {
                       checked={selected.props.autoSize ?? true}
                       onChange={(e) => patchProps(selected.id, { autoSize: e.target.checked })}
                     />
-                    Auto size — box ngepas ke teks (ala OBS)
+                    Auto size - box ngepas ke teks (ala OBS)
                   </label>
                 )}
                 <div className="grid grid-cols-4 gap-1.5">
@@ -1390,7 +1390,7 @@ function Editor() {
                       }}
                       className="w-full text-[11px] font-black bg-white text-black rounded-lg px-3 py-2 hover:bg-gray-200"
                     >
-                      Layer di luar canvas — Pusatkan
+                      Layer di luar canvas - Pusatkan
                     </button>
                   );
                 })()}
@@ -1500,7 +1500,7 @@ function Editor() {
                     Sampai akhir
                   </label>
                   {selected.out != null && (
-                    <label className="block flex-1"><span className="text-[10px] text-gray-500">Selesai (detik) — out-point</span>
+                    <label className="block flex-1"><span className="text-[10px] text-gray-500">Selesai (detik) - out-point</span>
                       <NumInput min={0.2} max={300} step={0.1} value={selected.out} onCommit={(n) => patchLayer(selected.id, { out: Math.max((selected.delay ?? 0) + 0.2, n) })} className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs" /></label>
                   )}
                 </div>
@@ -1508,7 +1508,7 @@ function Editor() {
                 {(selected.type === 'text' || selected.type === 'ticker' || selected.type === 'clock') && (
                   <div className="space-y-2 bg-white/5 rounded-xl p-2.5">
                       {selected.type !== 'clock' && (
-                      <label className="block"><span className="text-[10px] text-gray-500">Text{selected.keyframes?.text !== undefined ? ' ◆' : ''} — dukung {`{{username}} {{message}} {{title}}`}</span>
+                      <label className="block"><span className="text-[10px] text-gray-500">Text{selected.keyframes?.text !== undefined ? ' ◆' : ''} - dukung {`{{username}} {{message}} {{title}}`}</span>
                         <textarea value={selected.props.text ?? ''} onChange={(e) => recordProp(selected.id, 'text', { text: e.target.value }, e.target.value)} rows={2} className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs" /></label>
                     )}
                     <div className="grid grid-cols-2 gap-1.5">
@@ -1603,7 +1603,7 @@ function Editor() {
             const setKKVal = (v: KeyframeValue) => patchLayer(kl.id, (l) => ({ ...l, keyframes: updateKeyframe(l.keyframes, selectedDiamond.prop, kk.id, { v }) }));
             return (
               <section className="space-y-2 bg-white/5 border border-white/15 rounded-none p-2.5">
-                <div className="text-[10px] font-black uppercase tracking-widest text-gray-200">Keyframe — {kl.name} • {propLabel}</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-200">Keyframe - {kl.name} • {propLabel}</div>
                 <div className="grid grid-cols-2 gap-1.5">
                   <label className="block"><span className="text-[10px] text-gray-500">Detik</span>
                     <NumInput
@@ -1699,7 +1699,7 @@ function Editor() {
           {/* Graph editor ala AE untuk layer terpilih (value + speed, bisa di-drag) */}
           {selected && (
             <section className="space-y-2">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Graph — {selected.name}</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Graph - {selected.name}</div>
               <SpeedGraph
                 layer={selected}
                 windowSecs={windowSecs}

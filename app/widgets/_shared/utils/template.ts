@@ -34,7 +34,7 @@ export const TEMPLATE_VARS: TemplateVar[] = [
   { key: 'q', label: 'Q', example: 'Mana turnamen selanjutnya?', desc: 'Alias question', group: 'Poll' },
   { key: 'opts', label: 'Opts', example: 'ML BB, Valorant', desc: 'Opsi poll comma-separated (alias options)', group: 'Poll' },
   { key: 'options', label: 'Options', example: 'ML BB, Valorant', desc: 'Alias opts', group: 'Poll' },
-  { key: 'title', label: 'Title', example: 'Demo Song — Never Gonna Give You Up', desc: 'Sync music: judul lagu aktif', group: 'Live' },
+  { key: 'title', label: 'Title', example: 'Demo Song - Never Gonna Give You Up', desc: 'Sync music: judul lagu aktif', group: 'Live' },
   { key: 'artist', label: 'Artist', example: 'Penonton_A', desc: 'Sync music/SMTC: artis / requester', group: 'Media' },
   { key: 'album', label: 'Album', example: 'Zanmu', desc: 'Sync SMTC: album asli', group: 'Media' },
   { key: 'cover', label: 'Cover', example: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg', desc: 'Sync music: thumbnail YT asli / SMTC art', group: 'Media' },

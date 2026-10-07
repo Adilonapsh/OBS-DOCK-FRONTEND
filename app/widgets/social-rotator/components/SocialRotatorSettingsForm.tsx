@@ -19,7 +19,7 @@ export function SocialRotatorSettingsForm({ state, update }: { state: SocialRota
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Tema</span>
             <select value={state.theme} onChange={(e) => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-              {SOCIAL_ROTATOR_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+              {SOCIAL_ROTATOR_THEMES.map((t) => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
             </select>
           </label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Family</span>
@@ -28,7 +28,7 @@ export function SocialRotatorSettingsForm({ state, update }: { state: SocialRota
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Font Size</span><input type="number" min={10} max={28} value={state.fontSize} onChange={(e) => update('fontSize', parseInt(e.target.value) || 14)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{SOCIAL_ROTATOR_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{SOCIAL_ROTATOR_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select></label>
           </div>
         </div>
       </div>
@@ -56,7 +56,7 @@ export function SocialRotatorSettingsForm({ state, update }: { state: SocialRota
             <div key={s.id} className="bg-black/30 border border-white/10 rounded-xl p-2.5 space-y-2">
               <div className="flex items-center gap-2">
                 <select value={s.platform} onChange={(e) => updateSocial(s.id, { platform: e.target.value, label: SOCIAL_PLATFORMS.find((p) => p.value === e.target.value)?.label || e.target.value })} className="flex-1 h-8 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white">
-                  {SOCIAL_PLATFORMS.map((p) => <option key={p.value} value={p.value} className="bg-zinc-900">{p.label}</option>)}
+                  {SOCIAL_PLATFORMS.map((p) => <option key={p.value} value={p.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{p.label}</option>)}
                 </select>
                 <input type="color" value={s.accent || state.accent} onChange={(e) => updateSocial(s.id, { accent: e.target.value })} className="w-8 h-8 rounded-lg p-1 bg-black/40 border border-white/10" />
                 <button onClick={() => removeSocial(s.id)} className="h-8 px-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/20 rounded-lg text-[10px] font-black text-red-300">Hapus</button>

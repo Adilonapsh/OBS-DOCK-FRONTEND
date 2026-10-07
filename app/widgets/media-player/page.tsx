@@ -24,7 +24,7 @@ const themes = [
   { value: 'vinyl', label: 'Vinyl' },
   { value: 'color-palette', label: 'Color Palette' },
   { value: 'plain', label: 'Plain' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
+  { value: 'brutalist', label: 'Brutalist' },
 ];
 const fontsList = [...WIDGET_FONTS];
 const showAnimations = ['fade-in','slide-in-from-top','slide-in-from-bottom','slide-in-from-left','slide-in-from-right'];
@@ -215,7 +215,7 @@ function MediaPlayerSettingsInner() {
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Theme</span>
                     <select value={state.theme} onChange={e => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                      {themes.map(t => <option key={t.value} value={t.value} className="bg-zinc-900">{t.label}</option>)}
+                      {themes.map(t => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
                     </select>
                   </label>
                   <label className="block">
@@ -228,7 +228,7 @@ function MediaPlayerSettingsInner() {
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Max Width <span className="font-normal opacity-60">0=full</span></span><input type="number" value={state.maxWidth} onChange={e => update('maxWidth', parseInt(e.target.value)||0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                   </div>
                   <div className="grid grid-cols-1 gap-3">
-                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Text Align</span><select value={state.textAlignment} onChange={e => update('textAlignment', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-zinc-900">Left</option><option value="center" className="bg-zinc-900">Center</option><option value="right" className="bg-zinc-900">Right</option></select></label>
+                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Text Align</span><select value={state.textAlignment} onChange={e => update('textAlignment', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Left</option><option value="center" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Center</option><option value="right" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Right</option></select></label>
                   </div>
                   <div className="bg-black/30 border border-white/5 rounded-xl p-2">
                     <PositionPicker value={(state as any).pos || 'center'} onChange={(v) => update('pos', v)} />
@@ -260,8 +260,8 @@ function MediaPlayerSettingsInner() {
                   <Toggle label="Swap Artist and Track" desc="Artist above Track." checked={state.swapArtistTrack} onChange={v => update('swapArtistTrack', v)} />
                   <Toggle label="Show Primary Text" checked={state.showPrimary} onChange={v => update('showPrimary', v)} />
                   <Toggle label="Show Secondary Text" checked={state.showSecondary} onChange={v => update('showSecondary', v)} />
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Show Animation</span><select value={state.showAnimation} onChange={e => update('showAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{showAnimations.map(a => <option key={a} value={a} className="bg-zinc-900">{a}</option>)}</select></label>
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Hide Animation</span><select value={state.hideAnimation} onChange={e => update('hideAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{hideAnimations.map(a => <option key={a} value={a} className="bg-zinc-900">{a}</option>)}</select></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Show Animation</span><select value={state.showAnimation} onChange={e => update('showAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{showAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Hide Animation</span><select value={state.hideAnimation} onChange={e => update('hideAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{hideAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
                 </div>
               </div>
 

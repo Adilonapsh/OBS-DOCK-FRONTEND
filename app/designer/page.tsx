@@ -117,7 +117,7 @@ function DesignerList() {
           {docs.length === 0 && (
             <div className="bg-[#121212] border border-white/5 rounded-2xl p-8 text-center">
               <div className="text-lg font-black">Belum ada desain</div>
-              <p className="text-sm text-gray-400 mt-1">Klik New Title — pilih Lower Third / Title / Scorebug / Ticker, lalu edit di canvas 1920×1080.</p>
+              <p className="text-sm text-gray-400 mt-1">Klik New Title - pilih Lower Third / Title / Scorebug / Ticker, lalu edit di canvas 1920×1080.</p>
             </div>
           )}
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
