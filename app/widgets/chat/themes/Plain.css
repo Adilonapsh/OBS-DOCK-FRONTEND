@@ -1,0 +1,4 @@
+/* Plain - YouTube Live polosan, tanpa bubble */
+.chat-plain-theme .plain-row {
+  word-break: break-word;
+}

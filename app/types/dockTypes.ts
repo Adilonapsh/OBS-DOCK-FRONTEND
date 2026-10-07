@@ -12,8 +12,12 @@ export interface DockStatus {
     diskSpace?: string;
     recordStatus?: "STARTED" | "PAUSED" | "STOPPED" | "RECORDING";
     streamStatus?: "STARTED" | "STOPPED" | "LIVE";
+    virtualCamStatus?: "STARTED" | "STOPPED";
+    replayBufferStatus?: "STARTED" | "STOPPED";
 }
 
+
+export type ChatBadge = "broadcaster" | "mod" | "vip" | "sub" | "owner" | "member" | "verified";
 
 export interface ChatMessage {
     id: number;
@@ -22,4 +26,6 @@ export interface ChatMessage {
     platform: "twitch" | "youtube" | "tiktok" | "kick";
     avatar?: string;
     emotes?: Array<{ name: string; imageUrl: string }>;
+    badges?: ChatBadge[];
+    color?: string;
 }

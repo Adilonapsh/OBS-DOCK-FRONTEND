@@ -1,0 +1,7 @@
+.card-theme {
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  border: 1px solid #e5e7eb;
+}
+.card-theme .font-black {
+  letter-spacing: -0.02em;
+}
