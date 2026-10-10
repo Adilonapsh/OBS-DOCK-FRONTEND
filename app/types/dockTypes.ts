@@ -23,7 +23,7 @@ export interface ChatMessage {
     id: number;
     user: string;
     text: string;
-    platform: "twitch" | "youtube" | "tiktok" | "kick";
+    platform: "twitch" | "youtube" | "tiktok" | "kick" | "tiptap" | "saweria" | "trakteer" | "bagibagi" | "socialbuzz" | "tako" | "sibagi" | "donation";
     avatar?: string;
     emotes?: Array<{ name: string; imageUrl: string }>;
     badges?: ChatBadge[];

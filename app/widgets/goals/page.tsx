@@ -30,7 +30,7 @@ function GoalsSettingsInner() {
         user={shell.user}
         headerIcon={<Target className="w-4 h-4 text-white" />}
         title={<>Goals <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-emerald-500 text-white rounded-full">Live</span></>}
-        subtitle="Goal progress untuk Follow / Subs / Like - pilih jenis goal, atur target, live update dari livestream"
+        subtitle="Goal progress untuk Follow / Subs / Like / Donasi - pilih jenis goal, atur target, live update dari livestream"
         headerActions={
           <>
             <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>

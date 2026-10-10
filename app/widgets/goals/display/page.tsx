@@ -22,10 +22,10 @@ function GoalsInner() {
   const fontSize = getIntParam(params, 'fontSize', 16);
   const accent = getStringParam(params, 'accent', '#8b5cf6');
   const bg = getStringParam(params, 'bg', 'transparent');
-  const goalType = getStringParam(params, 'goalType', 'follow') as 'follow' | 'subs' | 'like';
+  const goalType = getStringParam(params, 'goalType', 'follow') as 'follow' | 'subs' | 'like' | 'donation';
   const target = Math.max(1, getIntParam(params, 'target', 100));
   const initialCurrent = Math.max(0, getIntParam(params, 'current', 0));
-  const title = getStringParam(params, 'title', goalType === 'follow' ? 'Follower Goal' : goalType === 'subs' ? 'Subscriber Goal' : 'Like Goal');
+  const title = getStringParam(params, 'title', goalType === 'follow' ? 'Follower Goal' : goalType === 'subs' ? 'Subscriber Goal' : goalType === 'donation' ? 'Donation Goal' : 'Like Goal');
   const showLabel = getBoolParam(params, 'showLabel', true);
   const showCounts = getBoolParam(params, 'showCounts', true);
   const showBar = getBoolParam(params, 'showBar', true);
@@ -115,6 +115,14 @@ function GoalsInner() {
     };
     socket.on('tiktok-follow', (data: Record<string, unknown>) => {
       if (goalType === 'subs') handleBridgedFollowForSubs(data);
+    });
+    // Donasi (Saweria/TipTap/Trakteer/dll) — nominal Rp langsung nambah goal donasi.
+    // Hidupkan goal donasi di halaman widget (goalType=donation) + pastikan
+    // platform diaktifkan di Connection → Donasi Webhook.
+    socket.on('donation', (data: Record<string, unknown>) => {
+      if (goalType !== 'donation') return;
+      const d = data as { amount?: number };
+      inc(Math.max(0, Math.floor(Number(d.amount) || 0)));
     });
 
     return () => { socket.disconnect(); };

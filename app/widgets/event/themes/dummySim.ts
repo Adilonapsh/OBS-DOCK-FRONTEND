@@ -9,6 +9,7 @@ const EXTRA_DUMMIES: DummyBase<EventItem>[] = [
   { type: 'gift', nickname: 'KickRider', platform: 'kick', giftName: 'GG', repeatCount: 2, diamondCount: 10, profilePictureUrl: 'https://ui-avatars.com/api/?name=Kick&background=53fc18&color=000' },
   { type: 'like', nickname: 'SariLive', platform: 'tiktok', likeCount: 28, profilePictureUrl: 'https://ui-avatars.com/api/?name=Sari&background=FE2C55&color=fff' },
   { type: 'join', nickname: 'NeonPilot', platform: 'twitch', label: 'subscribed', profilePictureUrl: 'https://ui-avatars.com/api/?name=Neon&background=9146ff&color=fff' },
+  { type: 'gift', nickname: 'HambaAllah', platform: 'saweria', giftName: 'Donasi Rp 25.000', repeatCount: 1, diamondCount: 25000, message: 'Semangat terus bang!', amount: 25000, currency: 'IDR', profilePictureUrl: 'https://ui-avatars.com/api/?name=Hamba&background=f59e0b&color=fff' },
 ];
 
 export const SIM_EVENT_POOL: DummyBase<EventItem>[] = [

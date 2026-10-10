@@ -20,12 +20,14 @@ import Polling, { PollingRef } from "../components/Polling";
 import MusicControl from "./components/MusicControl";
 import { useTtSbMap } from "../hooks/useTtSbMap";
 import { useWidgetSbMap } from "../hooks/useWidgetSbMap";
+import { useDonationSbMap, type DonationSbEventKey } from "../hooks/useDonationSbMap";
 import { resolveSbArgs } from "../hooks/sbArgs";
 import { ChatMessage, ChatBadge, DockStatus } from "../types/dockTypes";
 import { decrypt, isEncrypted } from "../utils/encryption";
 import { gooeyToast } from "goey-toast";
 import ThemeToggle from "../components/ThemeToggle";
 import ConfirmModal from "../components/ConfirmModal";
+import { useTheme } from "../components/ThemeProvider";
 
 // Fallback key persisten: sessionStorage (per-tab) → localStorage (antar-tab) → ?key= di URL.
 // Dipakai semua getRoom agar socket tetap di room yang benar walau state belum terisi.
@@ -143,6 +145,32 @@ function chatBadgeClass(platform: string, b: ChatBadge): string {
 }
 
 export default function Home() {
+    const { theme } = useTheme();
+    const resolveChatNameColor = (color: string | undefined) => {
+        const raw = color || (theme === "light" ? "#0f172a" : "#fff");
+        if (theme !== "light") return raw;
+        const lower = raw.toLowerCase().trim();
+        if (lower === "#fff" || lower === "#ffffff" || lower === "white" || lower === "#fffbeb" || lower === "#fef3c7") return "#0f172a";
+        if (lower.startsWith("hsl")) {
+            const m = lower.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/);
+            if (m) {
+                const h = m[1], s = m[2];
+                let l = parseInt(m[3], 10);
+                if (l > 55) l = 35;
+                return `hsl(${h}, ${s}%, ${l}%)`;
+            }
+        }
+        if (lower.startsWith("#")) {
+            const hex = lower.replace("#", "");
+            let r = 0, g = 0, b = 0;
+            if (hex.length === 3) { r = parseInt(hex[0]+hex[0], 16); g = parseInt(hex[1]+hex[1], 16); b = parseInt(hex[2]+hex[2], 16); }
+            else if (hex.length === 6) { r = parseInt(hex.slice(0,2), 16); g = parseInt(hex.slice(2,4), 16); b = parseInt(hex.slice(4,6), 16); }
+            else return raw;
+            const lum = 0.299*r + 0.587*g + 0.114*b;
+            if (lum > 180) return "#0f172a";
+        }
+        return raw;
+    };
 
     const [status, setStatus] = useState<DockStatus>({
         simulated: true,
@@ -755,6 +783,12 @@ export default function Home() {
     const { map: widgetSbMap } = useWidgetSbMap();
     const widgetSbMapRef = useRef(widgetSbMap);
     widgetSbMapRef.current = widgetSbMap;
+
+    // Pemetaan event Donasi → action Streamer.bot. Dikelola di halaman
+    // /integrations section "Donasi → Streamer.bot", dieksekusi di sini.
+    const { map: donationSbMap } = useDonationSbMap();
+    const donationSbMapRef = useRef(donationSbMap);
+    donationSbMapRef.current = donationSbMap;
     // ref transisi untuk deteksi edge (started/ended, bukan setiap update)
     const prevPollRef = useRef<{ id?: string; ended?: boolean } | null>(null);
     const prevTasksRef = useRef<{ len: number; done: number } | null>(null);
@@ -790,6 +824,15 @@ export default function Home() {
     const fireTtSb = (key: "chat" | "gift" | "like" | "follow" | "member", base: Record<string, unknown>) => {
         try {
             const entry = ttSbMapRef.current?.[key];
+            if (!entry?.enabled) return false;
+            return fireSbAction(entry.action, resolveSbArgs(base, (entry as { params?: Record<string, string> }).params));
+        } catch { return false; }
+    };
+
+    // Helper Donasi → SB: sama, resolve params custom dari base args aktual.
+    const fireDonationSb = (key: DonationSbEventKey, base: Record<string, unknown>) => {
+        try {
+            const entry = donationSbMapRef.current?.[key];
             if (!entry?.enabled) return false;
             return fireSbAction(entry.action, resolveSbArgs(base, (entry as { params?: Record<string, string> }).params));
         } catch { return false; }
@@ -1013,6 +1056,27 @@ export default function Home() {
                     fireWidgetSb('song_next', songInfo(cur));
                 }
                 prevSongRef.current = { len, index: idx };
+            } catch {}
+        });
+        // Donasi webhook -> tampil di dock (gift & chat & log), siap untuk timer/song/goal
+        s.on('donation', (d:any) => {
+            try {
+                const amount = Number(d?.amount) || 0;
+                const donor = String(d?.donorName || d?.nickname || 'Donatur');
+                const platform = String(d?.platform || 'donation');
+                const msg = String(d?.message || '');
+                const currency = String(d?.currency || 'IDR');
+                const formatted = String(d?.amountFormatted || `${currency === 'IDR' ? 'Rp' : currency} ${amount.toLocaleString('id-ID')}`);
+                const txId = String(d?.transactionId ?? d?.id ?? '');
+                addGiftLog(donor, msg || '', platform, { amount: formatted, giftName: `Donasi ${platform} ${formatted}`, avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor)}` });
+                bumpSessionStat('gifts', 1);
+                addSystemLog(`💰 [DONASI ${platform.toUpperCase()}] ${donor}: ${formatted} ${msg}`, 'success');
+                fireDonationSb('donation', { type: 'donation', donorName: donor, amount, amountFormatted: formatted, currency, message: msg, platform, transactionId: txId });
+                // PREPARED HOOKS (aktifkan nanti sesuai config donasi):
+                // - Timer: handleTimerAdd(Math.floor(amount/10000)*60)
+                // - Song priority: jika d.mediaShareUrl -> addSong dengan prioritas
+                // - Goal: bump goal current + amount / target
+                // Event 'donation' juga broadcast sebagai 'tiktok-gift' dari backend untuk widget gift/alert
             } catch {}
         });
         // also join when privateKey changes
@@ -1466,6 +1530,8 @@ export default function Home() {
         const payload = getTikTokRetryPayload();
         if (!payload) return;
         clearTikTokRetry();
+        // Sinkronkan wantedRef agar handler tiktok-connected tidak anggap ini sesi baru dan hapus chat
+        tkWantedRef.current = { username: payload.username, privateKey: payload.privateKey };
         addSystemLog(`TikTok ${why}. Mencoba reconnect...`, "warn");
         tkRetryTimerRef.current = setTimeout(() => {
             tkRetryTimerRef.current = null;
@@ -1548,21 +1614,33 @@ export default function Home() {
             tkSocketRef.current.on("tiktok-connected", () => {
                 setTiktokStatus("CONNECTED");
                 setTiktokError(null);
-                // Sesi baru (username beda / live sebelumnya sudah berakhir) → reset chat + statistik.
-                // Reconnect biasa (sesi sama) → chat tetap.
+                // Reconnect TikTok jangan hapus chat. Hanya ganti akun (@username beda) yang reset.
+                // Sebelumnya `sess.ended` juga memicu reset sehingga reconnect setelah live
+                // berakhir / auto-retry menghapus history — sekarang chat dipertahankan.
                 // Pakai akun terakhir yang diminta (bukan closure) agar ganti akun tercatat benar.
                 const wantUser = tkWantedRef.current.username || username;
                 const sess = readChatSession();
                 const uname = wantUser.trim().toLowerCase();
-                if (!sess || sess.username !== uname || sess.ended) {
+                if (!sess || sess.username !== uname) {
                     startNewChatSession(wantUser);
                 } else {
+                    // Reconnect akun sama → pertahankan chat + statistik, hanya update flag ended
                     writeChatSession({ username: uname, ended: false });
                 }
                 addSystemLog(`Berhasil terhubung ke TikTok Live: @${wantUser}`, "success");
                 // Auto-log highlight TikTok hari ini dari livestream (data asli via dock connect)
+                // Judul asli akan di-overwrite oleh tiktok-title jika ada (dari roomInfo)
                 // Thumbnail bisa diambil dari roomUser nanti, untuk sekarang pakai null (akan fallback)
                 logHighlightForToday("tiktok", `Live TikTok @${wantUser}`, null, `https://www.tiktok.com/@${wantUser}/live`, "tiktok_live", { username: wantUser, live: true });
+            });
+
+            tkSocketRef.current.on("tiktok-title", (data: any) => {
+                const title = String(data?.title ?? "").trim();
+                const uname = String(data?.username ?? tkWantedRef.current.username ?? "").trim();
+                if (!title) return;
+                addSystemLog(`📺 Judul live TikTok @${uname}: "${title}"`, "success");
+                // Update highlight hari ini dengan judul asli dari roomInfo
+                logHighlightForToday("tiktok", title, null, `https://www.tiktok.com/@${uname}/live`, "tiktok_live", { username: uname, live: true, titleFromRoomInfo: true });
             });
 
             tkSocketRef.current.on("tiktok-error", (err: string) => {
@@ -1600,6 +1678,8 @@ export default function Home() {
             });
 
             tkSocketRef.current.on("tiktok-gift", (data: { nickname: string; giftName: string; repeatCount: number; profilePictureUrl?: string; diamondCount?: number }) => {
+                // Donasi sudah ditangani via event 'donation' (biar tidak dobel "mengirim Donasi tiptap x1")
+                if (String(data.giftName || '').toLowerCase().startsWith('donasi ')) return;
                 addGiftLog(data.nickname, `mengirim ${data.giftName} x${data.repeatCount}`, "tiktok", { giftName: data.giftName, count: data.repeatCount, avatar: data.profilePictureUrl });
                 bumpSessionStat("gifts", Number(data.repeatCount) || 1);
                 addSystemLog(`🎁 [TIKTOK GIFT] ${data.nickname} mengirim ${data.giftName} x${data.repeatCount}`, "info");
@@ -2850,7 +2930,7 @@ export default function Home() {
                                     <div className="space-y-1">
                                         <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/5">
                                             <div className="flex items-center gap-2">
-                                                <Image src="/assets/logo/obs.png" alt="OBS" width={14} height={14} className="invert" />
+                                                <Image src="/assets/logo/obs.png" alt="OBS" width={14} height={14} className="dark:invert" />
                                                 <span className="text-[10px] font-bold text-white">OBS</span>
                                             </div>
                                             <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${isObsOk ? "bg-green-500/20 text-green-400" : status.obsStatus === "SIMULATED" ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>{status.obsStatus}</span>
@@ -2864,7 +2944,7 @@ export default function Home() {
                                         </div>
                                         <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/5">
                                             <div className="flex items-center gap-2">
-                                                <Image src="/assets/logo/tik-tok.png" alt="TIKTOK" width={14} height={14} className="invert" />
+                                                <Image src="/assets/logo/tik-tok.png" alt="TIKTOK" width={14} height={14} className="dark:invert" />
                                                 <span className="text-[10px] font-bold text-white">TIKTOK</span>
                                             </div>
                                             <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${isTiktokOk ? "bg-green-500/20 text-green-400" : tiktokStatus === "CONNECTING" ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>{tiktokStatus}</span>
@@ -3057,7 +3137,7 @@ export default function Home() {
                                         return (
                                             <div key={log.id} className="flex items-center gap-2 text-gray-300 bg-white/5 px-2 py-1.5 rounded border border-white/5 animate-in fade-in">
                                                 <span className="text-gray-500 text-[10px] font-mono-custom">{log.time}</span>
-                                                <Image src={logoSrc} alt={log.platform || ""} width={12} height={12} className="w-3 h-3 object-contain invert" />
+                                                <Image src={logoSrc} alt={log.platform || ""} width={12} height={12} className="w-3 h-3 object-contain dark:invert" />
                                                 {/* <span className={`text-[9px] font-black uppercase px-1 py-0.5 rounded ${log.platform === "tiktok" ? "bg-[#FE2C55]/20 text-[#FE2C55]" : log.platform === "youtube" ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`}>{log.platform}</span> */}
                                                 <span className="flex-1 truncate">{log.text}</span>
                                             </div>
@@ -3077,15 +3157,16 @@ export default function Home() {
                                     <div className="text-gray-500 italic">Belum ada gift / superchat...</div>
                                 ) : (
                                     giftLogs.map(log => {
-                                        const logoSrc = log.platform === "twitch" ? "/assets/logo/twitch.png" : log.platform === "tiktok" ? "/assets/logo/tik-tok.png" : "/assets/logo/youtube.png";
+                                        const _v = (log.platform||'').toLowerCase();
+                                        const logoSrc = _v==='twitch' ? "/assets/logo/twitch.png" : _v==='tiktok' ? "/assets/logo/tik-tok.png" : _v==='youtube' ? "/assets/logo/youtube.png" : _v==='tiptap' ? "/assets/logo/tiptap.ico" : _v==='saweria' ? "/assets/logo/saweria.png" : _v==='trakteer' ? "/assets/logo/trakteer.png" : _v==='bagibagi' ? "/assets/logo/bagibagi.png" : _v==='socialbuzz' ? "/assets/logo/sociabuzz.png" : _v==='tako' ? "/assets/logo/tako.png" : _v==='sibagi' ? "/assets/logo/sibagi.webp" : "/assets/logo/tik-tok.png";
                                         return (
-                                            <div key={log.id} className="flex items-center gap-2 text-gray-200 bg-gradient-to-r from-pink-500/10 to-purple-500/10 px-2 py-1.5 rounded border border-pink-500/20 animate-in fade-in">
-                                                <span className="text-gray-500 text-[10px] font-mono-custom">{log.time}</span>
-                                                <Image src={logoSrc} alt={log.platform} width={14} height={14} className="w-3.5 h-3.5 object-contain invert" />
-                                                <span className="font-black text-white text-[10px] truncate">{log.user}</span>
-                                                <span className="flex-1 truncate text-gray-300">{log.text}</span>
-                                                {log.count ? <span className="text-pink-400 font-black text-[10px]">x{log.count}</span> : null}
-                                                {log.amount ? <span className="text-yellow-400 font-bold text-[10px]">{log.amount}</span> : null}
+                                            <div key={log.id} className="flex items-start gap-2 text-gray-200 bg-gradient-to-r from-pink-500/10 to-purple-500/10 px-2 py-1.5 rounded border border-pink-500/20 animate-in fade-in">
+                                                <span className="text-gray-500 text-[10px] font-mono-custom shrink-0 mt-0.5">{log.time}</span>
+                                                <Image src={logoSrc} alt={log.platform} width={14} height={14} className="w-3.5 h-3.5 object-contain dark:invert shrink-0 mt-0.5" />
+                                                <span className="font-black text-white text-[10px] truncate shrink-0 max-w-[80px]">{log.user}</span>
+                                                <span className="flex-1 min-w-0 break-words whitespace-normal text-gray-300 leading-snug">{log.text}</span>
+                                                {log.count ? <span className="text-pink-400 font-black text-[10px] shrink-0 mt-0.5">x{log.count}</span> : null}
+                                                {log.amount ? <span className="text-yellow-400 font-bold text-[10px] shrink-0 mt-0.5 break-words">{log.amount}</span> : null}
                                             </div>
                                         );
                                     })
@@ -3148,22 +3229,36 @@ export default function Home() {
                                 {chatMessages.length === 0 ? null : null}
                                 {chatMessages.length > 0 && filteredChatMessages.length === 0 && <div className="text-gray-500 italic">Tidak ada hasil untuk &quot;{chatSearch}&quot;</div>}
                                 {filteredChatMessages.map(message => {
-                                    const getPlatformLogo = (p: string) => p === "twitch" ? "/assets/logo/twitch.png" : p === "tiktok" ? "/assets/logo/tik-tok.png" : "/assets/logo/youtube.png";
+                                    const getPlatformLogo = (p: string) => {
+                                        const v = (p||'').toLowerCase();
+                                        if (v==='twitch') return "/assets/logo/twitch.png";
+                                        if (v==='tiktok') return "/assets/logo/tik-tok.png";
+                                        if (v==='youtube' || v==='yt') return "/assets/logo/youtube.png";
+                                        if (v==='tiptap') return "/assets/logo/tiptap.ico";
+                                        if (v==='saweria') return "/assets/logo/saweria.png";
+                                        if (v==='trakteer') return "/assets/logo/trakteer.png";
+                                        if (v==='bagibagi') return "/assets/logo/bagibagi.png";
+                                        if (v==='socialbuzz' || v==='sociabuzz') return "/assets/logo/sociabuzz.png";
+                                        if (v==='tako') return "/assets/logo/tako.png";
+                                        if (v==='sibagi') return "/assets/logo/sibagi.webp";
+                                        if (v==='kick') return "/assets/logo/sbot.png";
+                                        return "/assets/logo/tik-tok.png";
+                                    };
                                     const logoSrc = getPlatformLogo(message.platform);
                                     const avatarInitials = message.user.substring(0, 2).toUpperCase();
 
                                     return (
                                         <div key={message.id} className="flex gap-3 animate-in fade-in slide-in-from-left-2 group relative">
-                                            <div className={`w-8 h-8 flex-none rounded-full flex items-center justify-center font-bold text-[10px] text-white shadow-lg ${message.platform === "twitch" ? "bg-purple-600" : message.platform === "tiktok" ? "bg-[#FE2C55]" : "bg-red-600"}`}>
+                                            <div className={`w-8 h-8 flex-none rounded-full flex items-center justify-center font-bold text-[10px] text-white shadow-lg ${message.platform === "twitch" ? "bg-purple-600" : message.platform === "tiktok" ? "bg-[#FE2C55]" : message.platform === "youtube" ? "bg-red-600" : ["tiptap","saweria","trakteer","bagibagi","socialbuzz","tako","sibagi","donation"].includes(message.platform) ? "bg-amber-500" : "bg-zinc-600"}`}>
                                                 {message.avatar ? <img src={message.avatar} alt={message.user} className="w-8 h-8 rounded-full object-cover" /> : avatarInitials}
                                             </div>
                                             <div className="flex-1 min-w-0 pr-6">
                                                 <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                                                    <Image src={logoSrc} alt={message.platform} width={10} height={10} className="w-2.5 h-2.5 object-contain invert" />
+                                                    <Image src={logoSrc} alt={message.platform} width={10} height={10} className="w-2.5 h-2.5 object-contain dark:invert" />
                                                     {(message.badges || []).map((b) => (
                                                         <span key={b} className={`px-1 py-px rounded text-[7px] font-black uppercase tracking-wider ${chatBadgeClass(message.platform, b)}`}>{chatBadgeLabel(b)}</span>
                                                     ))}
-                                                    <span className="font-black text-[10px] uppercase" style={{ color: message.color || "#fff" }}>{message.user}</span>
+                                                    <span className="font-black text-[10px] uppercase" style={{ color: resolveChatNameColor(message.color) }}>{message.user}</span>
                                                 </div>
                                                 <div className="text-gray-300 leading-relaxed">
                                                     {Array.isArray(parseEmotes(message.text, message.emotes))
@@ -3200,7 +3295,7 @@ export default function Home() {
                                         <div className="stat-card border border-red-500/20 group relative overflow-visible py-2 px-2.5">
                                             <div className="flex justify-between items-start mb-1 relative z-10">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Image src="/assets/logo/youtube.png" alt="YouTube Logo" width={14} height={14} className="w-3.5 h-3.5 invert" />
+                                                    <Image src="/assets/logo/youtube.png" alt="YouTube Logo" width={14} height={14} className="w-3.5 h-3.5 dark:invert" />
                                                     <span className="font-black text-[9px] uppercase">YouTube</span>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${status.sbotStatus === "CONNECTED" && sbYoutubeConnected ? "bg-green-500" : status.sbotStatus === "CONNECTED" ? "bg-yellow-500" : "bg-gray-600"}`} title={status.sbotStatus !== "CONNECTED" ? "Streamer.bot belum konek" : sbYoutubeConnected ? "Streamer.bot + YouTube tersambung" : "Streamer.bot konek, YouTube belum terdeteksi"} />
                                                 </div>
@@ -3247,7 +3342,7 @@ export default function Home() {
                                         <div className="stat-card border border-purple-500/30 py-2 px-2.5">
                                             <div className="flex justify-between items-start mb-1 relative z-10">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Image src="/assets/logo/twitch.png" alt="Twitch Logo" width={14} height={14} className="w-3.5 h-3.5 invert" />
+                                                    <Image src="/assets/logo/twitch.png" alt="Twitch Logo" width={14} height={14} className="w-3.5 h-3.5 dark:invert" />
                                                     <span className="font-black text-[9px] uppercase">Twitch</span>
                                                 </div>
                                                 <span className={`text-[7px] font-bold uppercase ${twitchLive ? "text-green-500 pulse-live" : "text-gray-500"}`}>{twitchLive ? "LIVE" : "Offline"}</span>
@@ -3281,7 +3376,7 @@ export default function Home() {
                                         <div className="stat-card border border-[#FE2C55]/30 py-2 px-2.5 group relative overflow-hidden">
                                             <div className="flex justify-between items-start mb-1 relative z-10">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Image src="/assets/logo/tik-tok.png" alt="TikTok Logo" width={14} height={14} className="w-3.5 h-3.5 invert" />
+                                                    <Image src="/assets/logo/tik-tok.png" alt="TikTok Logo" width={14} height={14} className="w-3.5 h-3.5 dark:invert" />
                                                     <span className="font-black text-[9px] uppercase text-[#FE2C55]">TikTok</span>
                                                 </div>
                                                 <span className={`text-[7px] font-bold uppercase ${tiktokStatus === "CONNECTED" ? "text-green-500 pulse-live" : "text-gray-500"}`}>{tiktokStatus === "CONNECTED" ? "LIVE" : "Offline"}</span>
@@ -3365,7 +3460,7 @@ export default function Home() {
                                             <div>
                                                 <div className="font-bold text-white text-[10px]">Rizky_JR</div>
                                                 <div className="flex items-center gap-1 text-[8px] text-gray-500 uppercase">
-                                                    <Image src="/assets/logo/twitch.png" alt="twitch" width={10} height={10} className="w-2.5 h-2.5 object-contain invert" /> twitch
+                                                    <Image src="/assets/logo/twitch.png" alt="twitch" width={10} height={10} className="w-2.5 h-2.5 object-contain dark:invert" /> twitch
                                                 </div>
                                             </div>
                                         </div> */}

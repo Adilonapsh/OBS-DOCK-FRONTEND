@@ -14,6 +14,11 @@ export type EventItem = {
   repeatCount?: number;
   diamondCount?: number;
   likeCount?: number;
+  // Donasi (di-map sebagai gift agar semua tema langsung render):
+  // giftName = "Donasi Rp 25.000", diamondCount = nominal, message = pesan donatur.
+  message?: string;
+  amount?: number;
+  currency?: string;
   timestamp: number;
 };
 

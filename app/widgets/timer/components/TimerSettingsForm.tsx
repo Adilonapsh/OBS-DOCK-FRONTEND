@@ -1,12 +1,23 @@
 'use client';
 
-import { Palette, Clock } from 'lucide-react';
+import Link from 'next/link';
+import { Palette, Clock, Gift } from 'lucide-react';
 import { TIMER_THEMES, TIMER_ANIMS, type TimerSettings } from '../config';
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
 import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
+import { useDonationMap, DONATION_PLATFORMS, DEFAULT_TIMER_TIERS, sanitizeTimerTiers, type TimerTier } from '../../../hooks/useDonationMap';
+import { DonationTimerTierEditor } from '../../../components/DonationTimerTierEditor';
 
 export function TimerSettingsForm({ state, update }: { state: TimerSettings; update: (k: keyof TimerSettings, v: unknown) => void; }) {
+  const { map: donationMap, updateEntry: updateDonationEntry } = useDonationMap();
+  const timerOnCount = DONATION_PLATFORMS.filter((p) => donationMap[p]?.timerEnabled).length;
+  const firstTiers = sanitizeTimerTiers(donationMap[DONATION_PLATFORMS[0]]?.timerTiers);
+  const baseTiers = firstTiers.length > 0 ? firstTiers : [...DEFAULT_TIMER_TIERS];
+  const tiersMixed = DONATION_PLATFORMS.some((p) => JSON.stringify(sanitizeTimerTiers(donationMap[p]?.timerTiers)) !== JSON.stringify(baseTiers));
+  const applyTimerToAll = (patch: { timerEnabled?: boolean; timerTiers?: TimerTier[] }) => {
+    DONATION_PLATFORMS.forEach((p) => updateDonationEntry(p, patch));
+  };
   return (
     <>
       <div className="space-y-3">
@@ -81,6 +92,24 @@ export function TimerSettingsForm({ state, update }: { state: TimerSettings; upd
             </label>
           )}
           <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Timer di OBS bisa di-play/pause/reset via preview. Default 50:00 × 3 sesi (subathon pakai HH:MM:SS 42:56:08).</div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Gift className="w-4 h-4 text-amber-400" /> Donasi → Timer</h2>
+        <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+            <span className="text-[11px] font-bold text-white">Donasi menambah waktu <span className="text-[9px] font-normal text-gray-400 block">Berlaku untuk semua platform donasi{timerOnCount > 0 && timerOnCount < DONATION_PLATFORMS.length ? ` (${timerOnCount}/${DONATION_PLATFORMS.length} aktif)` : ''}</span></span>
+            <input type="checkbox" checked={timerOnCount > 0} onChange={(e) => applyTimerToAll({ timerEnabled: e.target.checked })} className="w-4 h-4 accent-white shrink-0" />
+          </label>
+          <div>
+            <span className="text-[11px] font-bold text-gray-300 block mb-1">Aturan tambah waktu (bisa banyak) {tiersMixed && <span className="text-amber-400">(beda per platform — lihat Connection)</span>}</span>
+            <DonationTimerTierEditor
+              tiers={baseTiers}
+              onChange={(tiers) => applyTimerToAll({ timerTiers: tiers })}
+            />
+            <span className="text-[10px] text-gray-500 mt-1 block">Berlaku berapa pun nominalnya (proporsional). Atur per platform di <Link href="/connection" className="text-amber-300 underline">Connection → Donasi</Link>.</span>
+          </div>
         </div>
       </div>
     </>

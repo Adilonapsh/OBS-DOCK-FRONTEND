@@ -66,6 +66,7 @@ export const EVENT_DEFAULTS = {
   showJoin: true,
   showGift: true,
   showLike: true,
+  showDonations: true,
   anim: 'elegant',
   hideAnim: 'fade',
   horizontal: false,
@@ -117,6 +118,7 @@ export function buildEventUrl(base: string, s: EventSettings): string {
   p.set('showJoin', s.showJoin ? '1' : '0');
   p.set('showGift', s.showGift ? '1' : '0');
   p.set('showLike', s.showLike ? '1' : '0');
+  p.set('showDonations', (s as unknown as { showDonations: boolean }).showDonations !== false ? '1' : '0');
   p.set('anim', s.anim);
   p.set('hideAnim', (s as unknown as { hideAnim: string }).hideAnim || 'fade');
   p.set('horizontal', s.horizontal ? '1' : '0');

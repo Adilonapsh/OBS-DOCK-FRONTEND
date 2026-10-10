@@ -38,6 +38,7 @@ function EventInner() {
   const showJoin = getBoolParam(params, 'showJoin', true);
   const showGift = getBoolParam(params, 'showGift', true);
   const showLike = getBoolParam(params, 'showLike', true);
+  const showDonations = getBoolParam(params, 'showDonations', true);
   const anim = getStringParam(params, 'anim', 'elegant');
   const hideAnim = getStringParam(params, 'hideAnim', 'fade');
   const horizontalAnim = getStringParam(params, 'horizontalAnim', 'elegant');
@@ -75,7 +76,7 @@ function EventInner() {
 
   // Mode simulate: dummy mengalir satu per satu seperti real (masuk + keluar pakai animasi)
   const simFilter = (e: EventItem) =>
-    (e.type === 'join' && showJoin) || (e.type === 'gift' && showGift) || (e.type === 'like' && showLike);
+    (e.type === 'join' && showJoin) || (e.type === 'gift' && (e.amount ? showDonations : showGift)) || (e.type === 'like' && showLike);
   const sim = useDummySimulation<EventItem>({
     enabled: simulate,
     pool: SIM_EVENT_POOL,
@@ -168,8 +169,30 @@ function EventInner() {
       const d = data as { nickname?: string; uniqueId?: string; likeCount?: number; profilePictureUrl?: string };
       pushEvent({ id: `like_${Date.now()}_${Math.random().toString(36).slice(2,4)}`, type: 'like', nickname: d.nickname || d.uniqueId || 'Someone', likeCount: d.likeCount || 1, profilePictureUrl: d.profilePictureUrl, timestamp: Date.now() }, showLike);
     });
+    // Donasi (Saweria/TipTap/Trakteer/dll) — di-map sebagai gift agar semua tema langsung render.
+    // Hormati toggle showDonations dari URL widget.
+    socket.on('donation', (data: Record<string, unknown>) => {
+      const d = data as { donorName?: string; nickname?: string; amount?: number; amountFormatted?: string; message?: string; currency?: string; platform?: string; profilePictureUrl?: string };
+      const amount = Math.max(0, Math.floor(Number(d.amount) || 0));
+      const formatted = String(d.amountFormatted || `Rp ${amount.toLocaleString('id-ID')}`);
+      const platform = String(d.platform || 'donation');
+      pushEvent({
+        id: `donation_${Date.now()}_${Math.random().toString(36).slice(2,4)}`,
+        type: 'gift',
+        nickname: d.donorName || d.nickname || 'Donatur',
+        giftName: `Donasi ${formatted}`,
+        repeatCount: 1,
+        diamondCount: amount,
+        platform,
+        message: String(d.message || ''),
+        amount,
+        currency: String(d.currency || 'IDR'),
+        profilePictureUrl: (d as any).profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.donorName || d.nickname || 'D')}&background=f59e0b&color=fff`,
+        timestamp: Date.now(),
+      }, showDonations);
+    });
     return () => { socket.disconnect(); };
-  }, [privateKey, maxEvents, hideAfter, hideDur, showJoin, showGift, showLike, simulate]);
+  }, [privateKey, maxEvents, hideAfter, hideDur, showJoin, showGift, showLike, showDonations, simulate]);
 
   const themeProps = {
     events: liveEvents.slice(-maxEvents),

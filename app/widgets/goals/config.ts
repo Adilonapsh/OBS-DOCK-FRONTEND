@@ -5,6 +5,7 @@ export const GOAL_TYPES = [
   { value: 'follow', label: 'Followers' },
   { value: 'subs', label: 'Subscribers' },
   { value: 'like', label: 'Likes' },
+  { value: 'donation', label: 'Donasi (Rp)' },
 ] as const;
 
 export const GOALS_THEMES = [

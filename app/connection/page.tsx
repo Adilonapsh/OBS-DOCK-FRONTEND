@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Monitor, Radio, Settings, Save, TestTube, Eye, EyeOff, Menu, LayoutDashboard, Server, Plus, Trash2, Video, ExternalLink, Heart } from "lucide-react";
+import { Monitor, Radio, Settings, Save, TestTube, Eye, EyeOff, Menu, LayoutDashboard, Server, Plus, Trash2, Video, ExternalLink, Heart, Copy, Check, Play, DollarSign, Link2, ShieldCheck, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
@@ -9,6 +9,9 @@ import ConfirmModal from "../components/ConfirmModal";
 import { gooeyToast } from "goey-toast";
 import Image from "next/image";
 import { encrypt, decrypt } from "../utils/encryption";
+import { useDonationMap, DONATION_PLATFORMS, DONATION_LOGOS, donationWebhookUrl, type DonationPlatform } from "../hooks/useDonationMap";
+import { DonationTimerTierEditor } from "../components/DonationTimerTierEditor";
+import { io as ioClient } from "socket.io-client";
 
 export default function ConfigPage() {
     const supabase = createClient();
@@ -31,6 +34,14 @@ export default function ConfigPage() {
     const [deleteMtxId, setDeleteMtxId] = useState<string | null>(null);
     const uniformBtn = "h-9 bg-white text-black hover:bg-zinc-100 border border-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50";
     const uniformPrimary = "flex-1 h-9 bg-white text-black hover:bg-zinc-100 border border-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm disabled:opacity-50";
+    // Donasi webhook
+    const { map: donationMap, updateEntry: updateDonationEntry } = useDonationMap();
+    const [donationPrivateKey, setDonationPrivateKey] = useState<string>("");
+    const [showDonationToken, setShowDonationToken] = useState<Record<string, boolean>>({});
+    const [showDonationUrl, setShowDonationUrl] = useState<Record<string, boolean>>({});
+    const [donationCopied, setDonationCopied] = useState<Record<string, boolean>>({});
+    const [donationTesting, setDonationTesting] = useState<string | null>(null);
+    const [donationConfirm, setDonationConfirm] = useState<{ plat: DonationPlatform; field: 'url' | 'token'; action: 'show' | 'copy' } | null>(null);
 
     const getEncKey = () => {
         if (typeof window !== "undefined") {
@@ -199,6 +210,50 @@ export default function ConfigPage() {
         };
         loadMtx();
     }, []);
+
+    // Donasi: load privateKey + sync ke backend
+    useEffect(() => {
+        const loadDonationKey = async () => {
+            try {
+                const ls = (() => { try { return localStorage.getItem('dock_private_key') || sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || new URLSearchParams(window.location.search).get("key") || ''; } catch { return ''; } })();
+                if (ls) { setDonationPrivateKey(ls); return; }
+                const { data: { user: u } } = await supabase.auth.getUser();
+                if (!u) return;
+                const { data: prof } = await supabase.from('profiles').select('private_key').eq('id', u.id).single();
+                const pk = (prof as any)?.private_key || '';
+                if (pk) { setDonationPrivateKey(pk); try { localStorage.setItem('dock_private_key', pk); } catch {} }
+            } catch {}
+        };
+        loadDonationKey();
+    }, []);
+
+    useEffect(() => {
+        if (!donationPrivateKey) return;
+        const getBackendUrl = () => {
+            const env = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim().replace(/\/$/, '');
+            if (env) return env;
+            if (typeof window === 'undefined') return 'http://localhost:3000';
+            const h = window.location.hostname;
+            if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000';
+            return window.location.origin;
+        };
+        const backend = getBackendUrl();
+        try {
+            const s = ioClient(backend, { transports: ['websocket','polling'] as const });
+            s.on('connect', () => {
+                s.emit('donation-config-sync', { privateKey: donationPrivateKey, key: donationPrivateKey, configs: donationMap });
+                setTimeout(() => s.disconnect(), 1200);
+            });
+        } catch {}
+        for (const plat of Object.keys(donationMap) as DonationPlatform[]) {
+            const cfg = (donationMap as any)[plat];
+            fetch(`${backend}/api/donation/config`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ privateKey: donationPrivateKey, key: donationPrivateKey, platform: plat, token: cfg.token, enabled: cfg.enabled, eventEnabled: cfg.eventEnabled, timerEnabled: cfg.timerEnabled, timerRpPerMinute: cfg.timerRpPerMinute, timerTiers: cfg.timerTiers, songPriority: cfg.songPriority, goalEnabled: cfg.goalEnabled }),
+            }).catch(()=>{});
+        }
+    }, [donationMap, donationPrivateKey]);
 
     const saveObs = async () => {
         setSaving("obs");
@@ -474,6 +529,33 @@ export default function ConfigPage() {
         } catch (e: any) { gooeyToast.error(e.message); setTesting(null); }
     };
 
+    const handleDonationTest = async (platform: DonationPlatform) => {
+        const getBackendUrl = () => {
+            const env = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim().replace(/\/$/, '');
+            if (env) return env;
+            if (typeof window === 'undefined') return 'http://localhost:3000';
+            const h = window.location.hostname;
+            if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000';
+            return window.location.origin;
+        };
+        const backend = getBackendUrl();
+        setDonationTesting(platform);
+        try {
+            const res = await fetch(`${backend}/api/donation/test`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ privateKey: donationPrivateKey || 'global', key: donationPrivateKey || 'global', platform, amount: 15000, donorName: 'TestDonasi', message: `Test ${platform} - halo!` }),
+            });
+            const j = await res.json().catch(()=> ({}));
+            if (j?.ok) gooeyToast.success(`Test donasi ${platform} terkirim → cek widget / dock`);
+            else gooeyToast.error(`Test gagal: ${j?.error || res.statusText}`);
+        } catch (e: any) {
+            gooeyToast.error(`Test gagal: ${e?.message || String(e)}`);
+        } finally {
+            setTimeout(() => setDonationTesting(k => k === platform ? null : k), 1500);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex">
             <Sidebar active="connection" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
@@ -726,6 +808,142 @@ export default function ConfigPage() {
                             )}
                         </div>
                     </div>
+
+                    {/* Donasi Webhook */}
+                    <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
+                        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-amber-600/10">
+                            <h3 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2">
+                                <Image src="/assets/logo/saweria.png" alt="Donasi" width={16} height={16} className="rounded-sm" />
+                                Donasi Webhook
+                            </h3>
+                            <span className="text-[9px] font-bold text-gray-500">{Object.values(donationMap).filter(v=>v.enabled).length}/{DONATION_PLATFORMS.length} aktif</span>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div className="p-3 bg-amber-100 dark:bg-amber-500/10 border border-amber-400 dark:border-amber-500/30 rounded-xl shadow-sm dark:shadow-none text-[11px] leading-relaxed text-zinc-900 dark:text-amber-100">
+                                <div className="font-black flex items-center gap-1.5 text-amber-900 dark:text-amber-200"><ShieldCheck className="w-3.5 h-3.5 text-amber-700 dark:text-amber-300" /> Cara pakai:</div>
+                                <ol className="list-decimal list-inside mt-1.5 space-y-1 text-zinc-800 dark:text-amber-100/90">
+                                    <li>Copy <b className="text-zinc-900 dark:text-white">Webhook URL</b> per platform — paste ke dashboard Saweria/TipTap/Trakteer/BagiBagi (menu Webhook/Integrasi).</li>
+                                    <li>Masukkan <b className="text-zinc-900 dark:text-white">Webhook Verification Token</b> di dashboard platform & di sini — token di header (<code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded border border-amber-300 dark:border-transparent text-amber-800 dark:text-amber-200 font-mono">x-verification-token / Saweria-Callback-Signature / X-Bagibagi-Signature</code>).</li>
+                                    <li>Aktifkan toggle, lalu <b className="text-zinc-900 dark:text-white">Test</b> — donasi muncul di dock & widget.</li>
+                                </ol>
+                                <div className="mt-2 text-[10px] text-zinc-700 dark:text-amber-200/80">PrivateKey: <code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded font-mono border border-amber-300 dark:border-transparent text-zinc-900 dark:text-amber-100">{donationPrivateKey ? `${donationPrivateKey.slice(0,12)}…` : 'loading…'}</code> — tanpa key masuk ke <code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded border border-amber-300 dark:border-transparent text-amber-800 dark:text-amber-200 font-mono">global</code>.</div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3">
+                                {DONATION_PLATFORMS.map((plat) => {
+                                    const cfg = donationMap[plat];
+                                    const url = donationWebhookUrl(plat, donationPrivateKey);
+                                    const showTok = !!showDonationToken[plat];
+                                    const showUrl = !!showDonationUrl[plat];
+                                    const isActive = cfg.enabled && cfg.token.trim() !== '';
+                                    const meta: Record<string, { hint: string; docs: string }> = {
+                                        saweria: { hint: 'Header: Saweria-Callback-Signature (HMAC SHA256)', docs: 'https://saweria.co/docs/webhook' },
+                                        tiptap: { hint: 'Header: x-verification-token', docs: 'https://docs.tiptap.gg/en/webhook' },
+                                        trakteer: { hint: 'Header: X-Trakteer-Signature / token', docs: 'https://help.trakteer.id/help-center/articles/70/panduan-webhook' },
+                                        bagibagi: { hint: 'Header: X-Bagibagi-Signature (HMAC SHA256 JSON)', docs: 'https://bagidocs.bagibagitest.bagibagi.co/integrations/webhook-integration/' },
+                                        socialbuzz: { hint: 'Header: x-webhook-token / Authorization Bearer', docs: '-' },
+                                        tako: { hint: 'Header: x-webhook-token', docs: '-' },
+                                        sibagi: { hint: 'Header: x-webhook-token', docs: '-' },
+                                    };
+                                    const hint = meta[plat]?.hint || 'Header: x-webhook-token';
+                                    const docs = meta[plat]?.docs || '#';
+                                    const platLabel = plat.charAt(0).toUpperCase() + plat.slice(1);
+                                    return (
+                                        <div key={plat} className={`rounded-xl border p-4 space-y-3 transition-all ${isActive ? 'bg-white/[0.04] border-emerald-500/25' : cfg.enabled ? 'bg-white/[0.03] border-amber-500/30' : 'bg-black/20 border-white/10'}`}>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 overflow-hidden p-1 border ${isActive ? 'bg-white border-emerald-500/20' : 'bg-white border-white/10'}`}>
+                                                    <img src={DONATION_LOGOS[plat]} alt={plat} className="w-full h-full object-contain" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display='none'}} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-white font-black text-[11px] tracking-wide">{platLabel}</span>
+                                                        {isActive ? <span className="px-1.5 py-px bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 rounded-full text-[8px] font-black uppercase">Aktif</span> : cfg.enabled ? <span className="px-1.5 py-px bg-amber-500/15 border border-amber-500/30 text-amber-300 rounded-full text-[8px] font-black uppercase">Butuh token</span> : <span className="px-1.5 py-px bg-white/5 border border-white/10 text-gray-500 rounded-full text-[8px] font-black uppercase">Mati</span>}
+                                                        {docs !== '-' && docs !== '#' && <a href={docs} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-white"><ExternalLink className="w-3 h-3" /></a>}
+                                                    </div>
+                                                    <div className="text-gray-500 text-[10px] truncate mt-0.5">{hint}</div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    role="switch"
+                                                    aria-checked={cfg.enabled}
+                                                    onClick={() => updateDonationEntry(plat, { enabled: !cfg.enabled })}
+                                                    className={`group relative inline-flex h-7 w-[52px] items-center rounded-full p-1 transition-all duration-300 shrink-0 border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 active:scale-[0.97] ${cfg.enabled ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-500 shadow-[0_3px_12px_rgba(16,185,129,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]" : "bg-zinc-200 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 hover:bg-zinc-300 dark:hover:bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"}`}
+                                                    title={cfg.enabled ? "Nonaktifkan" : "Aktifkan"}
+                                                >
+                                                    <span className={`absolute left-2 text-[8px] font-black tracking-widest transition-all duration-300 select-none pointer-events-none ${cfg.enabled ? "text-white opacity-100 translate-x-0" : "opacity-0 -translate-x-1 text-zinc-500"}`}>ON</span>
+                                                    <span className={`relative inline-flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.18)] border border-black/[0.06] transition-all duration-300 ${cfg.enabled ? "translate-x-[24px]" : "translate-x-0"}`}>
+                                                        {cfg.enabled ? <Check className="w-3 h-3 text-emerald-600 stroke-[3]" /> : <X className="w-3 h-3 text-zinc-400 stroke-[2.5]" />}
+                                                    </span>
+                                                    <span className={`absolute right-2 text-[8px] font-black tracking-widest transition-all duration-300 select-none pointer-events-none ${cfg.enabled ? "opacity-0 translate-x-1" : "opacity-100 translate-x-0 text-zinc-500 dark:text-white/30"}`}>OFF</span>
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <div>
+                                                    <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1"><Link2 className="w-3 h-3" /> Webhook URL</label>
+                                                    <div className="bg-black/30 border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                                                        <code className={`flex-1 text-[11px] font-mono break-all ${showUrl ? "text-white" : "text-white blur-[4px] select-none"}`}>{showUrl ? url : "•".repeat(32)}</code>
+                                                        <button onClick={() => { if (showUrl) setShowDonationUrl(s => ({ ...s, [plat]: false })); else setDonationConfirm({ plat, field: 'url', action: 'show' }); }} className="shrink-0 w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 hover:text-white" title={showUrl ? "Sembunyikan" : "Tampilkan (konfirmasi)"}>
+                                                            {showUrl ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                        <button onClick={async () => { await navigator.clipboard.writeText(url); setDonationCopied(s => ({ ...s, [plat]: true })); gooeyToast.success(`URL ${platLabel} disalin`); setTimeout(() => setDonationCopied(s => ({ ...s, [plat]: false })), 1500); }} className="shrink-0 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1">
+                                                            <Copy className="w-3 h-3" /> {donationCopied[plat] ? "Copied" : "Copy"}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Webhook Verification Token (di header)</label>
+                                                    <div className="flex gap-1.5">
+                                                        <div className="flex-1 relative">
+                                                            <input
+                                                                type={showTok ? "text" : "password"}
+                                                                value={cfg.token}
+                                                                onChange={(e) => updateDonationEntry(plat, { token: e.target.value })}
+                                                                placeholder="paste token dari dashboard donasi…"
+                                                                className="w-full h-10 bg-white/5 border border-white/10 rounded-xl pl-3 pr-9 text-[11px] font-mono text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50"
+                                                            />
+                                                            <button type="button" onClick={() => { if (showTok) setShowDonationToken(s => ({ ...s, [plat]: false })); else setDonationConfirm({ plat, field: 'token', action: 'show' }); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-white">
+                                                                {showTok ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                            </button>
+                                                        </div>
+                                                        <button onClick={() => handleDonationTest(plat)} disabled={donationTesting === plat} className="shrink-0 h-10 px-4 bg-white text-black hover:bg-zinc-100 border border-white rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm disabled:opacity-50">
+                                                            <Play className={`w-3.5 h-3.5 ${donationTesting === plat ? 'animate-pulse' : ''}`} /> {donationTesting === plat ? '…' : 'Test'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Integrasi Widget</label>
+                                                    <div className="bg-black/30 border border-white/10 rounded-xl p-3 space-y-2">
+                                                        <label className="flex items-center justify-between gap-2 cursor-pointer">
+                                                            <span className="text-[11px] font-bold text-white">Tampil di Event & Goals <span className="text-[9px] font-normal text-gray-500 block">Kirim donasi ke Event overlay & Goals donasi</span></span>
+                                                            <input type="checkbox" checked={cfg.eventEnabled !== false} onChange={(e) => updateDonationEntry(plat, { eventEnabled: e.target.checked })} className="w-4 h-4 accent-white shrink-0" />
+                                                        </label>
+                                                        <label className="flex items-center justify-between gap-2 cursor-pointer">
+                                                            <span className="text-[11px] font-bold text-white">Tambah waktu Timer <span className="text-[9px] font-normal text-gray-500 block">Donasi otomatis menambah detik timer</span></span>
+                                                            <input type="checkbox" checked={!!cfg.timerEnabled} onChange={(e) => updateDonationEntry(plat, { timerEnabled: e.target.checked })} className="w-4 h-4 accent-white shrink-0" />
+                                                        </label>
+                                                        {cfg.timerEnabled && (
+                                                            <div>
+                                                                <span className="text-[11px] font-bold text-gray-300 block mb-1">Aturan tambah waktu (bisa banyak)</span>
+                                                                <DonationTimerTierEditor
+                                                                    tiers={cfg.timerTiers}
+                                                                    onChange={(tiers) => updateDonationEntry(plat, { timerTiers: tiers })}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        <label className="flex items-center justify-between gap-2 cursor-pointer">
+                                                            <span className="text-[11px] font-bold text-white">Request lagu prioritas <span className="text-[9px] font-normal text-gray-500 block">Link lagu di pesan donasi langsung jadi antrean berikutnya</span></span>
+                                                            <input type="checkbox" checked={!!cfg.songPriority} onChange={(e) => updateDonationEntry(plat, { songPriority: e.target.checked })} className="w-4 h-4 accent-white shrink-0" />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
                 </main>
                 <ConfirmModal
                     open={!!deleteMtxId}
@@ -734,6 +952,29 @@ export default function ConfigPage() {
                     title="Hapus server MediaMTX?"
                     description="Server ini akan dihapus permanen."
                     variant="danger"
+                />
+                <ConfirmModal
+                    open={!!donationConfirm}
+                    onClose={() => setDonationConfirm(null)}
+                    onConfirm={async () => {
+                        if (!donationConfirm) return;
+                        const { plat, field, action } = donationConfirm;
+                        const url = donationWebhookUrl(plat, donationPrivateKey);
+                        if (field === 'url' && action === 'show') {
+                            setShowDonationUrl(s => ({ ...s, [plat]: true }));
+                            gooeyToast.success(`Webhook URL ${plat} ditampilkan — jangan bagikan`);
+                        } else if (field === 'url' && action === 'copy') {
+                            try { await navigator.clipboard.writeText(url); gooeyToast.success(`URL ${plat} disalin — jangan share sembarangan`); setShowDonationUrl(s => ({ ...s, [plat]: true })); } catch {}
+                        } else if (field === 'token' && action === 'show') {
+                            setShowDonationToken(s => ({ ...s, [plat]: true }));
+                            gooeyToast.success(`Token ${plat} ditampilkan`);
+                        }
+                        setDonationConfirm(null);
+                    }}
+                    title={donationConfirm ? (donationConfirm.action === 'copy' ? `Copy Webhook URL ${donationConfirm.plat}?` : `Tampilkan ${donationConfirm.field === 'url' ? 'Webhook URL' : 'Token'} ${donationConfirm.plat}?`) : 'Konfirmasi'}
+                    description={donationConfirm ? (donationConfirm.action === 'copy' ? `URL webhook berisi privateKey dan bersifat rahasia. Pastikan hanya paste di dashboard resmi ${donationConfirm.plat}.` : `Data ${donationConfirm.field === 'url' ? 'Webhook URL berisi privateKey' : 'verification token'} bersifat rahasia. Jangan bagikan ke orang lain.`) : ''}
+                    variant="default"
+                    confirmLabel={donationConfirm?.action === 'copy' ? 'Copy' : 'Tampilkan'}
                 />
             </div>
         </div>

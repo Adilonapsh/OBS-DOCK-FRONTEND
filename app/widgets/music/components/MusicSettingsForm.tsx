@@ -1,8 +1,10 @@
 'use client';
 
-import { Palette, Type, Clock, Monitor, Music, Shield } from 'lucide-react';
+import Link from 'next/link';
+import { Palette, Type, Clock, Monitor, Music, Shield, Gift, Crown } from 'lucide-react';
 import { MUSIC_THEMES, MUSIC_FONTS, MUSIC_QUEUE_POS, SONG_ROLES, type MusicSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { useDonationMap, DONATION_PLATFORMS } from '../../../hooks/useDonationMap';
 
 type Props = {
   state: MusicSettings;
@@ -10,6 +12,8 @@ type Props = {
 };
 
 export function MusicSettingsForm({ state, update }: Props) {
+  const { map: donationMap, updateEntry: updateDonationEntry } = useDonationMap();
+  const priorityOnCount = DONATION_PLATFORMS.filter((p) => donationMap[p]?.songPriority).length;
   return (
     <>
       {/* Tema & Font */}
@@ -184,6 +188,18 @@ export function MusicSettingsForm({ state, update }: Props) {
             })}
           </div>
           <p className="text-[10px] text-gray-500">Jika <b className="text-white">Semua User</b> aktif, role lain diabaikan. Jika hanya <b className="text-white">Follower</b> dicentang, hanya follower yang bisa <span className="font-mono text-white">!song</span>.</p>
+        </div>
+      </div>
+
+      {/* Prioritas Donatur */}
+      <div className="space-y-3">
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Crown className="w-4 h-4 text-amber-400" /> Prioritas Donatur</h2>
+        <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+            <span className="text-[11px] font-bold text-white flex items-center gap-1.5"><Gift className="w-3 h-3 text-amber-400" /> Request donatur jadi prioritas <span className="text-[9px] font-normal text-gray-400 block">Lagu donatur (link di pesan donasi) langsung selip jadi antrean berikutnya{priorityOnCount > 0 && priorityOnCount < DONATION_PLATFORMS.length ? ` (${priorityOnCount}/${DONATION_PLATFORMS.length} platform)` : ''}</span></span>
+            <input type="checkbox" checked={priorityOnCount > 0} onChange={(e) => { DONATION_PLATFORMS.forEach((p) => updateDonationEntry(p, { songPriority: e.target.checked })); }} className="w-4 h-4 accent-white shrink-0" />
+          </label>
+          <p className="text-[10px] text-gray-500">Berlaku untuk semua platform donasi. Filter NSFW & blacklist tetap jalan. Atur per platform di <Link href="/connection" className="text-amber-300 underline">Connection → Donasi</Link>.</p>
         </div>
       </div>
 

@@ -4,13 +4,14 @@ import Link from "next/link";
 import {
   Menu, Plug, FlaskConical, ArrowLeft, Search, Zap, MessageSquare, Gift, Heart,
   UserPlus, Users, BarChart3, ListChecks, Timer, Music, Pin, ChevronDown,
-  RefreshCw, Copy, Check, Eye, EyeOff, Play, X,
+  RefreshCw, Copy, Check, Eye, EyeOff, Play, X, DollarSign,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 import { useTtSbMap, TT_SB_KEYS, TT_SB_PARAMS, type TtSbEventKey } from "../hooks/useTtSbMap";
 import { useWidgetSbMap, WIDGET_SB_GROUPS, WIDGET_SB_TEST_ARGS, WIDGET_SB_PARAMS, type WidgetSbEventKey } from "../hooks/useWidgetSbMap";
+import { useDonationSbMap, DONATION_SB_KEYS, DONATION_SB_PARAMS, DONATION_SB_TEST_ARGS, type DonationSbEventKey } from "../hooks/useDonationSbMap";
 import { resolveSbArgs } from "../hooks/sbArgs";
 
 const TEST_ARGS: Record<TtSbEventKey, Record<string, unknown>> = {
@@ -27,6 +28,14 @@ const TT_META: Record<TtSbEventKey, { label: string; desc: string; Icon: typeof 
   like: { label: "Like", desc: "Like livestream", Icon: Heart },
   follow: { label: "Follow", desc: "Follower baru", Icon: UserPlus },
   member: { label: "Member / Join", desc: "Member join / subscribe", Icon: Users },
+};
+
+const DONATION_META: Record<DonationSbEventKey, { label: string; desc: string; Icon: typeof MessageSquare }> = {
+  donation: { label: "On Donation", desc: "Donasi masuk (Saweria/TipTap/dll)", Icon: DollarSign },
+};
+
+const DONATION_TEST_ARGS: Record<DonationSbEventKey, Record<string, unknown>> = {
+  donation: { ...DONATION_SB_TEST_ARGS.donation },
 };
 
 const WIDGET_ICONS: Record<string, typeof MessageSquare> = {
@@ -50,7 +59,7 @@ function useToast() {
   return { toast, show };
 }
 
-// ---------- Toggle switch ----------
+// ---------- Toggle switch (premium) ----------
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -58,12 +67,45 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
       role="switch"
       aria-checked={on}
       onClick={() => onChange(!on)}
-      className={`relative w-10 h-[22px] rounded-full transition-colors shrink-0 ${on ? "bg-emerald-500" : "bg-white/10 hover:bg-white/15"}`}
       title={on ? "Nonaktifkan event" : "Aktifkan event"}
+      className={`group relative inline-flex h-7 w-[52px] items-center rounded-full p-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] shrink-0 border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] active:scale-[0.97] ${
+        on
+          ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-500 shadow-[0_3px_12px_rgba(16,185,129,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]"
+          : "bg-zinc-200 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 hover:bg-zinc-300 dark:hover:bg-white/10 hover:border-zinc-400 dark:hover:border-white/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+      }`}
     >
+      {/* track glow */}
       <span
-        className={`absolute top-[3px] w-4 h-4 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-[3px]"}`}
+        className={`absolute inset-0 rounded-full transition-opacity duration-300 ${on ? "opacity-100 bg-gradient-to-br from-white/15 to-transparent" : "opacity-0"}`}
       />
+      {/* ON label */}
+      <span
+        className={`absolute left-2 text-[8px] font-black tracking-widest transition-all duration-300 select-none pointer-events-none ${
+          on ? "text-white opacity-100 translate-x-0" : "text-zinc-500 dark:text-white/40 opacity-0 -translate-x-1"
+        }`}
+      >
+        ON
+      </span>
+      {/* thumb */}
+      <span
+        className={`relative inline-flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.18),0_1px_2px_rgba(0,0,0,0.12)] border border-black/[0.06] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+          on ? "translate-x-[24px] shadow-[0_3px_10px_rgba(0,0,0,0.2)]" : "translate-x-0"
+        }`}
+      >
+        {on ? (
+          <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+        ) : (
+          <X className="w-3 h-3 text-zinc-400 stroke-[2.5]" />
+        )}
+      </span>
+      {/* OFF label (when off, show faint OFF on right) */}
+      <span
+        className={`absolute right-2 text-[8px] font-black tracking-widest transition-all duration-300 select-none pointer-events-none ${
+          on ? "opacity-0 translate-x-1 text-white" : "opacity-100 translate-x-0 text-zinc-500 dark:text-white/30"
+        }`}
+      >
+        OFF
+      </span>
     </button>
   );
 }
@@ -284,12 +326,13 @@ function EventCard({ icon: Icon, title, desc, vars, enabled, action, params, pre
   );
 }
 
-type FilterTab = "all" | "active" | "unmapped" | "tiktok" | "widget";
+type FilterTab = "all" | "active" | "unmapped" | "tiktok" | "widget" | "donation";
 
 export default function IntegrationsPage() {
   const supabase = createClient();
   const { map, updateEntry } = useTtSbMap();
   const { map: widgetMap, updateEntry: updateWidgetEntry } = useWidgetSbMap();
+  const { map: donationSbMap, updateEntry: updateDonationSbEntry } = useDonationSbMap();
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sbStatus, setSbStatus] = useState<"DISCONNECTED" | "CONNECTED" | "ERROR">("DISCONNECTED");
@@ -408,8 +451,20 @@ export default function IntegrationsPage() {
       params: widgetMap[ev.key].params || {},
       base: WIDGET_SB_TEST_ARGS[ev.key],
     })));
-    return [...tt, ...wg];
-  }, [map, widgetMap]);
+    const dn = DONATION_SB_KEYS.map((key) => ({
+      group: "donation" as const,
+      groupTitle: "Donasi",
+      key: `dn:${key}`,
+      title: DONATION_META[key].label,
+      desc: DONATION_META[key].desc,
+      vars: DONATION_SB_PARAMS[key],
+      enabled: donationSbMap[key].enabled,
+      action: donationSbMap[key].action,
+      params: donationSbMap[key].params || {},
+      base: DONATION_TEST_ARGS[key],
+    }));
+    return [...tt, ...dn, ...wg];
+  }, [map, widgetMap, donationSbMap]);
 
   const totalActive = allItems.filter((i) => i.enabled && i.action.trim()).length;
   const totalEnabled = allItems.filter((i) => i.enabled).length;
@@ -422,7 +477,8 @@ export default function IntegrationsPage() {
           if (tab === "active" && !(i.enabled && i.action.trim())) return false;
           if (tab === "unmapped" && (i.action.trim() || !i.enabled)) return false;
           if (tab === "tiktok" && i.group !== "tiktok") return false;
-          if (tab === "widget" && i.group === "tiktok") return false;
+          if (tab === "widget" && (i.group === "tiktok" || i.group === "donation")) return false;
+          if (tab === "donation" && i.group !== "donation") return false;
           if (q && !`${i.title} ${i.desc} ${i.action} ${i.groupTitle}`.toLowerCase().includes(q)) return false;
           return true;
         })
@@ -437,8 +493,9 @@ export default function IntegrationsPage() {
   };
   const toggleGroup = (g: string) => setOpenGroups((p) => ({ ...p, [g]: p[g] === false ? true : false }));
 
-  const setGroupEnabled = (groupKey: string, keys: Array<TtSbEventKey | WidgetSbEventKey>, v: boolean) => {
+  const setGroupEnabled = (groupKey: string, keys: Array<TtSbEventKey | WidgetSbEventKey | DonationSbEventKey>, v: boolean) => {
     if (groupKey === "tiktok") (keys as TtSbEventKey[]).forEach((k) => updateEntry(k, { enabled: v }));
+    else if (groupKey === "donation") (keys as DonationSbEventKey[]).forEach((k) => updateDonationSbEntry(k, { enabled: v }));
     else (keys as WidgetSbEventKey[]).forEach((k) => updateWidgetEntry(k, { enabled: v }));
     show(v ? "Semua event grup diaktifkan." : "Semua event grup dimatikan.", "info");
   };
@@ -467,6 +524,7 @@ export default function IntegrationsPage() {
   };
 
   const tiktokItems = allItems.filter((i) => i.group === "tiktok");
+  const donationItems = allItems.filter((i) => i.group === "donation");
   const statusColor = connected ? "text-emerald-300" : sbStatus === "ERROR" ? "text-red-400" : "text-gray-500";
   const dotColor = connected ? "bg-emerald-400 animate-pulse" : sbStatus === "ERROR" ? "bg-red-500" : "bg-gray-600";
 
@@ -475,6 +533,7 @@ export default function IntegrationsPage() {
     { id: "active", label: "Aktif" },
     { id: "unmapped", label: "Butuh action" },
     { id: "tiktok", label: "TikTok" },
+    { id: "donation", label: "Donasi" },
     { id: "widget", label: "Widget" },
   ];
 
@@ -509,7 +568,7 @@ export default function IntegrationsPage() {
                   <Zap className="w-5 h-5 text-amber-300" /> Event Streamer.bot
                 </h1>
                 <p className="text-gray-400 text-[11px] md:text-xs mt-1.5 leading-relaxed max-w-[560px]">
-                  Setiap event TikTok & widget memicu <span className="text-white font-bold">DoAction</span> di Streamer.bot.
+                  Setiap event TikTok, donasi & widget memicu <span className="text-white font-bold">DoAction</span> di Streamer.bot.
                   Nyalakan event, pilih action, atur parameter, lalu tekan <span className="text-white font-bold">Tes</span>.
                   Eksekusi live berjalan di <span className="text-white font-bold">dock</span> - tersinkron otomatis.
                 </p>
@@ -612,6 +671,65 @@ export default function IntegrationsPage() {
                           onAction={(v) => updateEntry(key, { action: v })}
                           onParams={(v) => updateEntry(key, { params: v })}
                           onTest={() => sendTest(`tt:${key}`, map[key].action, TEST_ARGS[key], map[key].params || {})}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Grup Donasi */}
+          {visibleGroup("donation", donationItems.map((i) => i.key)) && (
+            <section className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
+              <button onClick={() => toggleGroup("donation")} className="w-full px-5 py-4 flex items-center gap-3 hover:bg-white/[0.02] transition-colors text-left">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-300 grid place-items-center shrink-0">
+                  <DollarSign className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-black uppercase text-[12px] tracking-widest">Donasi Streamer.bot</h3>
+                  <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[280px]">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all"
+                      style={{ width: `${(donationItems.filter((i) => i.enabled && i.action.trim()).length / Math.max(1, donationItems.length)) * 100}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="text-gray-500 text-[10px] font-black shrink-0">{donationItems.filter((i) => i.enabled).length}/{donationItems.length}</span>
+                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform shrink-0 ${openGroups["donation"] === false && !isSearching ? "" : "rotate-180"}`} />
+              </button>
+              {(openGroups["donation"] !== false || isSearching) && (
+                <div className="px-4 md:px-5 pb-5 space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setGroupEnabled("donation", DONATION_SB_KEYS, true)} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 transition-colors">Nyalakan semua</button>
+                    <button onClick={() => setGroupEnabled("donation", DONATION_SB_KEYS, false)} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 transition-colors">Matikan semua</button>
+                    <button onClick={() => testGroup(donationItems)} className="h-8 px-3 bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
+                      <Play className="w-3 h-3" /> Tes semua yg aktif
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    {donationItems.filter((i) => filteredKeys.has(i.key)).map((i) => {
+                      const key = i.key.replace("dn:", "") as DonationSbEventKey;
+                      const meta = DONATION_META[key];
+                      return (
+                        <EventCard
+                          key={i.key}
+                          icon={meta.Icon}
+                          title={meta.label}
+                          desc={`${meta.desc} • ${DONATION_SB_PARAMS[key].join(", ")}`}
+                          vars={DONATION_SB_PARAMS[key]}
+                          enabled={donationSbMap[key].enabled}
+                          action={donationSbMap[key].action}
+                          params={donationSbMap[key].params || {}}
+                          previewArgs={resolveSbArgs(DONATION_TEST_ARGS[key], donationSbMap[key].params || {})}
+                          sbActions={sbActions}
+                          connected={connected}
+                          testing={testingKey === `dn:${key}`}
+                          onToggle={(v) => updateDonationSbEntry(key, { enabled: v })}
+                          onAction={(v) => updateDonationSbEntry(key, { action: v })}
+                          onParams={(v) => updateDonationSbEntry(key, { params: v })}
+                          onTest={() => sendTest(`dn:${key}`, donationSbMap[key].action, DONATION_TEST_ARGS[key], donationSbMap[key].params || {})}
                         />
                       );
                     })}
