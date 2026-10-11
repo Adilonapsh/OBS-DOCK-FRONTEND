@@ -16,7 +16,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     // { href: "/designer", label: "Designer", icon: Layers },
-    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi },
   ],
@@ -27,7 +27,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     // { href: "/designer", label: "Designer", icon: Layers },
-    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi },
   ],
@@ -38,7 +38,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     // { href: "/designer", label: "Designer", icon: Layers },
-    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi },
   ],
@@ -49,7 +49,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     // { href: "/designer", label: "Designer", icon: Layers },
-    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog, active: true },
     { href: "/connection", label: "Connection", icon: Wifi },
   ],
@@ -60,7 +60,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     // { href: "/designer", label: "Designer", icon: Layers },
-    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi, active: true },
   ],
@@ -72,7 +72,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     // { href: "/designer", label: "Designer", icon: Layers },
-    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi, active: true },
   ],
@@ -83,7 +83,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/overlay", label: "Overlay", icon: Layers, active: true },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     // { href: "/designer", label: "Designer", icon: Layers },
-    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi },
   ],
@@ -93,7 +93,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2, active: true },
-    { href: "/integrations", label: "Integrasi", icon: Plug },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi },
   ],
@@ -104,7 +104,7 @@ const NAV: Record<string, NavItem[]> = {
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
     // { href: "/designer", label: "Designer", icon: Layers },
-    { href: "/integrations", label: "Integrasi", icon: Plug, active: true },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug, active: true },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi },
   ],
@@ -126,10 +126,11 @@ export default function Sidebar({
   const items = NAV[active] || NAV.dashboard;
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // Grouping: Tools (Dock/Monitor/Widgets) dan Setup (Connection/Integrasi)
+  // Grouping: Tools (Dock/Monitor/Widgets), Setup (Connection), Integrasi (Streamer.bot)
   const toolsHrefs = new Set(["/dock", "/monitor", "/widgets"]);
-  const setupHrefs = new Set(["/connection", "/integrations"]);
-  const mainItems = items.filter((i) => !toolsHrefs.has(i.href) && !setupHrefs.has(i.href) && i.href !== "/account");
+  const setupHrefs = new Set(["/connection"]);
+  const integrationHrefs = new Set(["/integrations"]);
+  const mainItems = items.filter((i) => !toolsHrefs.has(i.href) && !setupHrefs.has(i.href) && !integrationHrefs.has(i.href) && i.href !== "/account");
   const toolsItems = items
     .filter((i) => toolsHrefs.has(i.href))
     .sort((a, b) => {
@@ -139,9 +140,10 @@ export default function Sidebar({
   const setupItems = items
     .filter((i) => setupHrefs.has(i.href))
     .sort((a, b) => {
-      const order = ["/connection", "/integrations"];
+      const order = ["/connection"];
       return order.indexOf(a.href) - order.indexOf(b.href);
     });
+  const integrationItems = items.filter((i) => integrationHrefs.has(i.href));
   const accountItems = items.filter((i) => i.href === "/account");
 
   useEffect(() => {
@@ -224,6 +226,24 @@ export default function Sidebar({
             <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
               <p className="px-3 mb-1.5 text-[9px] font-black tracking-[0.18em] text-gray-500 uppercase">Setup</p>
               {setupItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                    item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" /> {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {integrationItems.length > 0 && (
+            <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
+              <p className="px-3 mb-1.5 text-[9px] font-black tracking-[0.18em] text-gray-500 uppercase">Integrasi</p>
+              {integrationItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

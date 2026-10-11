@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Palette, Clock, Gift } from 'lucide-react';
 import { TIMER_THEMES, TIMER_ANIMS, type TimerSettings } from '../config';
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
@@ -14,7 +13,6 @@ export function TimerSettingsForm({ state, update }: { state: TimerSettings; upd
   const timerOnCount = DONATION_PLATFORMS.filter((p) => donationMap[p]?.timerEnabled).length;
   const firstTiers = sanitizeTimerTiers(donationMap[DONATION_PLATFORMS[0]]?.timerTiers);
   const baseTiers = firstTiers.length > 0 ? firstTiers : [...DEFAULT_TIMER_TIERS];
-  const tiersMixed = DONATION_PLATFORMS.some((p) => JSON.stringify(sanitizeTimerTiers(donationMap[p]?.timerTiers)) !== JSON.stringify(baseTiers));
   const applyTimerToAll = (patch: { timerEnabled?: boolean; timerTiers?: TimerTier[] }) => {
     DONATION_PLATFORMS.forEach((p) => updateDonationEntry(p, patch));
   };
@@ -103,12 +101,12 @@ export function TimerSettingsForm({ state, update }: { state: TimerSettings; upd
             <input type="checkbox" checked={timerOnCount > 0} onChange={(e) => applyTimerToAll({ timerEnabled: e.target.checked })} className="w-4 h-4 accent-white shrink-0" />
           </label>
           <div>
-            <span className="text-[11px] font-bold text-gray-300 block mb-1">Aturan tambah waktu (bisa banyak) {tiersMixed && <span className="text-amber-400">(beda per platform — lihat Connection)</span>}</span>
+            <span className="text-[11px] font-bold text-gray-300 block mb-1">Aturan tambah waktu (bisa banyak)</span>
             <DonationTimerTierEditor
               tiers={baseTiers}
               onChange={(tiers) => applyTimerToAll({ timerTiers: tiers })}
             />
-            <span className="text-[10px] text-gray-500 mt-1 block">Berlaku berapa pun nominalnya (proporsional). Atur per platform di <Link href="/connection" className="text-amber-300 underline">Connection → Donasi</Link>.</span>
+            <span className="text-[10px] text-gray-500 mt-1 block">Berlaku berapa pun nominalnya (proporsional).</span>
           </div>
         </div>
       </div>

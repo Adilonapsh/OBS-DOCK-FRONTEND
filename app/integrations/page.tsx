@@ -281,11 +281,6 @@ function EventCard({ icon: Icon, title, desc, vars, enabled, action, params, pre
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-white font-black text-[12px] tracking-wide truncate">{title}</span>
-            {ready
-              ? <span className="shrink-0 px-1.5 py-px bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 rounded-full text-[8px] font-black uppercase tracking-widest">Aktif</span>
-              : enabled
-                ? <span className="shrink-0 px-1.5 py-px bg-amber-500/15 border border-amber-500/30 text-amber-300 rounded-full text-[8px] font-black uppercase tracking-widest">Belum ada action</span>
-                : <span className="shrink-0 px-1.5 py-px bg-white/5 border border-white/10 text-gray-500 rounded-full text-[8px] font-black uppercase tracking-widest">Mati</span>}
           </div>
           <div className="text-gray-500 text-[10px] truncate mt-0.5">{desc}</div>
         </div>
@@ -545,7 +540,7 @@ export default function IntegrationsPage() {
         <header className="h-14 bg-[#121212]/90 backdrop-blur border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-white"><Plug className="w-3 h-3" /> INTEGRASI</span>
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-white"><Plug className="w-3 h-3" /> STREAMER.BOT</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -632,7 +627,7 @@ export default function IntegrationsPage() {
                   <h3 className="text-white font-black uppercase text-[12px] tracking-widest">TikTok Live Streamer.bot</h3>
                   <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[280px]">
                     <div
-                      className="h-full bg-gradient-to-r from-pink-500 to-violet-500 rounded-full transition-all"
+                      className="h-full bg-white rounded-full transition-all"
                       style={{ width: `${(tiktokItems.filter((i) => i.enabled && i.action.trim()).length / Math.max(1, tiktokItems.length)) * 100}%` }}
                     />
                   </div>
@@ -691,7 +686,7 @@ export default function IntegrationsPage() {
                   <h3 className="text-white font-black uppercase text-[12px] tracking-widest">Donasi Streamer.bot</h3>
                   <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[280px]">
                     <div
-                      className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all"
+                      className="h-full bg-white rounded-full transition-all"
                       style={{ width: `${(donationItems.filter((i) => i.enabled && i.action.trim()).length / Math.max(1, donationItems.length)) * 100}%` }}
                     />
                   </div>
@@ -756,7 +751,7 @@ export default function IntegrationsPage() {
                     <h3 className="text-white font-black uppercase text-[12px] tracking-widest">{group.title} <span className="text-gray-600 normal-case font-bold">- {group.desc}</span></h3>
                     <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[280px]">
                       <div
-                        className="h-full bg-gradient-to-r from-violet-500 to-emerald-400 rounded-full transition-all"
+                        className="h-full bg-white rounded-full transition-all"
                         style={{ width: `${(activeCount / Math.max(1, items.length)) * 100}%` }}
                       />
                     </div>

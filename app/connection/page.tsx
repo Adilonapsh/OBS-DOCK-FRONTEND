@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Monitor, Radio, Settings, Save, TestTube, Eye, EyeOff, Menu, LayoutDashboard, Server, Plus, Trash2, Video, ExternalLink, Heart, Copy, Check, Play, DollarSign, Link2, ShieldCheck, X } from "lucide-react";
+import { Monitor, Radio, Settings, Save, TestTube, Eye, EyeOff, Menu, LayoutDashboard, Server, Plus, Trash2, Video, ExternalLink, Heart, Copy, Check, Play, Link2, ShieldCheck, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
@@ -10,7 +10,6 @@ import { gooeyToast } from "goey-toast";
 import Image from "next/image";
 import { encrypt, decrypt } from "../utils/encryption";
 import { useDonationMap, DONATION_PLATFORMS, DONATION_LOGOS, donationWebhookUrl, type DonationPlatform } from "../hooks/useDonationMap";
-import { DonationTimerTierEditor } from "../components/DonationTimerTierEditor";
 import { io as ioClient } from "socket.io-client";
 
 export default function ConfigPage() {
@@ -909,32 +908,6 @@ export default function ConfigPage() {
                                                         <button onClick={() => handleDonationTest(plat)} disabled={donationTesting === plat} className="shrink-0 h-10 px-4 bg-white text-black hover:bg-zinc-100 border border-white rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm disabled:opacity-50">
                                                             <Play className={`w-3.5 h-3.5 ${donationTesting === plat ? 'animate-pulse' : ''}`} /> {donationTesting === plat ? '…' : 'Test'}
                                                         </button>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Integrasi Widget</label>
-                                                    <div className="bg-black/30 border border-white/10 rounded-xl p-3 space-y-2">
-                                                        <label className="flex items-center justify-between gap-2 cursor-pointer">
-                                                            <span className="text-[11px] font-bold text-white">Tampil di Event & Goals <span className="text-[9px] font-normal text-gray-500 block">Kirim donasi ke Event overlay & Goals donasi</span></span>
-                                                            <input type="checkbox" checked={cfg.eventEnabled !== false} onChange={(e) => updateDonationEntry(plat, { eventEnabled: e.target.checked })} className="w-4 h-4 accent-white shrink-0" />
-                                                        </label>
-                                                        <label className="flex items-center justify-between gap-2 cursor-pointer">
-                                                            <span className="text-[11px] font-bold text-white">Tambah waktu Timer <span className="text-[9px] font-normal text-gray-500 block">Donasi otomatis menambah detik timer</span></span>
-                                                            <input type="checkbox" checked={!!cfg.timerEnabled} onChange={(e) => updateDonationEntry(plat, { timerEnabled: e.target.checked })} className="w-4 h-4 accent-white shrink-0" />
-                                                        </label>
-                                                        {cfg.timerEnabled && (
-                                                            <div>
-                                                                <span className="text-[11px] font-bold text-gray-300 block mb-1">Aturan tambah waktu (bisa banyak)</span>
-                                                                <DonationTimerTierEditor
-                                                                    tiers={cfg.timerTiers}
-                                                                    onChange={(tiers) => updateDonationEntry(plat, { timerTiers: tiers })}
-                                                                />
-                                                            </div>
-                                                        )}
-                                                        <label className="flex items-center justify-between gap-2 cursor-pointer">
-                                                            <span className="text-[11px] font-bold text-white">Request lagu prioritas <span className="text-[9px] font-normal text-gray-500 block">Link lagu di pesan donasi langsung jadi antrean berikutnya</span></span>
-                                                            <input type="checkbox" checked={!!cfg.songPriority} onChange={(e) => updateDonationEntry(plat, { songPriority: e.target.checked })} className="w-4 h-4 accent-white shrink-0" />
-                                                        </label>
                                                     </div>
                                                 </div>
                                             </div>

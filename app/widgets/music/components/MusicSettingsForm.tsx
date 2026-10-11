@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Palette, Type, Clock, Monitor, Music, Shield, Gift, Crown } from 'lucide-react';
 import { MUSIC_THEMES, MUSIC_FONTS, MUSIC_QUEUE_POS, SONG_ROLES, type MusicSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
@@ -199,7 +198,7 @@ export function MusicSettingsForm({ state, update }: Props) {
             <span className="text-[11px] font-bold text-white flex items-center gap-1.5"><Gift className="w-3 h-3 text-amber-400" /> Request donatur jadi prioritas <span className="text-[9px] font-normal text-gray-400 block">Lagu donatur (link di pesan donasi) langsung selip jadi antrean berikutnya{priorityOnCount > 0 && priorityOnCount < DONATION_PLATFORMS.length ? ` (${priorityOnCount}/${DONATION_PLATFORMS.length} platform)` : ''}</span></span>
             <input type="checkbox" checked={priorityOnCount > 0} onChange={(e) => { DONATION_PLATFORMS.forEach((p) => updateDonationEntry(p, { songPriority: e.target.checked })); }} className="w-4 h-4 accent-white shrink-0" />
           </label>
-          <p className="text-[10px] text-gray-500">Berlaku untuk semua platform donasi. Filter NSFW & blacklist tetap jalan. Atur per platform di <Link href="/connection" className="text-amber-300 underline">Connection → Donasi</Link>.</p>
+          <p className="text-[10px] text-gray-500">Berlaku untuk semua platform donasi. Filter NSFW & blacklist tetap jalan.</p>
         </div>
       </div>
 

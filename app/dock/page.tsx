@@ -3871,9 +3871,9 @@ export default function Home() {
 
                                 <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">TikTok → Streamer.bot</h4>
                                 <div className="stat-card space-y-2">
-                                    <p className="text-[9px] text-gray-600 leading-relaxed">Pemetaan event dikelola di halaman Integrasi (tersimpan di database).</p>
+                                    <p className="text-[9px] text-gray-600 leading-relaxed">Pemetaan event dikelola di halaman Streamer.bot (tersimpan di database).</p>
                                     <Link href="/integrations" className="h-9 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white">
-                                        <Zap className="w-3 h-3" /> Kelola Integrasi
+                                        <Zap className="w-3 h-3" /> Kelola Streamer.bot
                                     </Link>
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
                                         <span className="text-gray-400 uppercase font-bold text-[8px]">Event TikTok aktif</span>
