@@ -9,6 +9,7 @@ export const BRUTALIST_DEFAULTS = {
   brutalistItalic: true as boolean,
   brutalistUppercase: true as boolean,
   brutalistInline: false as boolean,
+  brutalistCompact: false as boolean,
 } as const;
 
 export type BrutalistSettings = typeof BRUTALIST_DEFAULTS;
@@ -33,6 +34,7 @@ export function appendBrutalistParams(p: URLSearchParams, s: Record<string, unkn
   p.set('brutalistItalic', (s.brutalistItalic as boolean) ? '1' : '0');
   p.set('brutalistUppercase', (s.brutalistUppercase as boolean) ? '1' : '0');
   p.set('brutalistInline', (s.brutalistInline as boolean) ? '1' : '0');
+  p.set('brutalistCompact', (s.brutalistCompact as boolean) ? '1' : '0');
 }
 
 export function parseBrutalistParams(get: (k: string) => string | null): BrutalistSettings {
@@ -59,5 +61,6 @@ export function parseBrutalistParams(get: (k: string) => string | null): Brutali
     brutalistItalic: pickBool('brutalistItalic', BRUTALIST_DEFAULTS.brutalistItalic),
     brutalistUppercase: pickBool('brutalistUppercase', BRUTALIST_DEFAULTS.brutalistUppercase),
     brutalistInline: pickBool('brutalistInline', BRUTALIST_DEFAULTS.brutalistInline),
+    brutalistCompact: pickBool('brutalistCompact', BRUTALIST_DEFAULTS.brutalistCompact),
   };
 }

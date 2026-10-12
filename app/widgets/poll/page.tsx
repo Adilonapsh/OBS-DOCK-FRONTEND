@@ -55,7 +55,6 @@ function PollSettingsInner(){
   const [privateKey,setPrivateKey]=useState(searchParams.get('key')||'');
   const [state,setState]=useState<any>({...defaults});
   const [activePoll,setActivePoll]=useState<any>(null);
-  const [connected,setConnected]=useState(false);
   const loadFromUrl=(urlStr:string)=>{
     const url=new URL(urlStr);
     const p=url.searchParams; const s:any={...defaults};
@@ -89,8 +88,7 @@ function PollSettingsInner(){
   useEffect(()=>{
     const s=io(getSocketUrl(),{transports:['websocket','polling']});
     const room=privateKey||'global';
-    s.on('connect',()=>{ setConnected(true); s.emit('join-room', room); s.emit('poll-get',{privateKey:room}); });
-    s.on('disconnect',()=>setConnected(false));
+    s.on('connect',()=>{ s.emit('join-room', room); s.emit('poll-get',{privateKey:room}); });
     s.on('poll-update',(p:any)=> setActivePoll(p));
     s.on('poll-clear',()=> setActivePoll(null));
     return ()=>{ s.disconnect(); };
@@ -114,7 +112,7 @@ function PollSettingsInner(){
             <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><BarChart3 className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
-              <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Poll <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white text-black rounded-full"><span className={`w-2 h-2 rounded-full ${connected?'bg-green-500 animate-pulse':'bg-red-500'}`} />{connected?'Live':'Offline'}</span></div>
+              <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Poll</div>
               <div className="hidden sm:block text-gray-500 text-[10px]">Style polling - buat poll-nya di Dock</div>
             </div>
           </div>

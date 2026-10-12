@@ -53,11 +53,7 @@ function HeartrateSettingsInner() {
         setSidebarOpen={shell.setSidebarOpen}
         user={shell.user}
         headerIcon={<Heart className="w-4 h-4 text-white fill-white" />}
-        title={
-          <>
-            Heartrate <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-red-500 text-white rounded-full"><span className="w-2 h-2 rounded-full bg-white animate-pulse" />Live BPM</span>
-          </>
-        }
+        title="Heartrate"
         subtitle="Hyperate - heart rate via Hyperate app (Phoenix WS) + socket relay"
         headerActions={
           <>

@@ -8,6 +8,7 @@ export const FOLLOW_THEMES = [
   { value: 'cute', label: 'Cute' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'alert', label: 'Alert - Twitch Wipe' },
 ] as const;
 
 export const FOLLOW_FONTS = WIDGET_FONTS;

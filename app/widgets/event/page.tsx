@@ -31,7 +31,7 @@ function EventSettingsInner() {
         setSidebarOpen={shell.setSidebarOpen}
         user={shell.user}
         headerIcon={<Gift className="w-4 h-4 text-white" />}
-        title={<>Event Overlay <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white text-black rounded-full"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />Live</span></>}
+        title="Event Overlay"
         subtitle="Join • Gift • Like - dari server.ts tiktok-member/gift/like (TikTok + Streamer.bot)"
         headerActions={
           <>

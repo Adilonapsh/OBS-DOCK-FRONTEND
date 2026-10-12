@@ -174,7 +174,6 @@ function ClockEditorInner() {
             </div>
           </div>
           <div className="flex self-end gap-2 shrink-0">
-            <button onClick={copyUrl} className="h-9 px-4 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center gap-2 border border-white"><Copy className="w-3.5 h-3.5"/> {shell.copied ? 'Copied!' : 'Copy URL'}</button>
             <a href={obsUrl} target="_blank" className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5"/> OBS</a>
             <a href={obsUrl} draggable onDragStart={(e)=>{e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed='copy';}} className="h-9 px-3 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5"/> Drag ke OBS</a>
           </div>
@@ -189,7 +188,15 @@ function ClockEditorInner() {
                 <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Theme</span>
-                    <select value={state.theme} onChange={e=>update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+                    <select value={state.theme} onChange={e=>{
+                      const t = e.target.value;
+                      update('theme', t);
+                      // Brutalist belum punya extras yang nyala: aktifkan Line 3 dengan format bawaan
+                      if (t === 'brutalist' && !state.l3 && !state.v3) {
+                        update('l3', '[Live] • dddd');
+                        update('v3', true);
+                      }
+                    }} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
                       {clockThemes.map(t=> <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
                     </select>
                   </label>
@@ -221,7 +228,19 @@ function ClockEditorInner() {
                 </div>
               </div>
 
-              {state.theme === 'brutalist' && <BrutalistSettingsSection state={state} update={update} />}
+              {state.theme === 'brutalist' && (
+                <>
+                  <BrutalistSettingsSection state={state} update={update} />
+                  <div className="space-y-3">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
+                      <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+                        <span className="text-[11px] font-bold text-white">Compact Mode <span className="text-[9px] font-normal text-gray-400 block">Hanya jam + tanggal + extra, tanpa background full</span></span>
+                        <input type="checkbox" checked={!!state.brutalistCompact} onChange={e=>update('brutalistCompact', e.target.checked)} className="w-4 h-4 accent-white shrink-0" />
+                      </label>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Line 1 */}
               <LineEditor title="Line 1 - Jam Utama" icon={<Clock3 className="w-3.5 h-3.5 text-white"/>} presets={timePresets} value={state.l1} onFormat={(v:string)=>update('l1',v)} state={state} prefix="1" update={update} />

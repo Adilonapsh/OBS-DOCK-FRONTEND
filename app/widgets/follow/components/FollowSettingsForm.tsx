@@ -6,6 +6,7 @@ import { FOLLOW_THEMES, FOLLOW_ANIMS, FOLLOW_HORIZONTAL_ANIMS, FOLLOW_HIDE_ANIMS
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
 import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
+import { SfxPicker } from '../../_shared/components/SfxPicker';
 
 export function FollowSettingsForm({ state, update, reset, privateKey, onCopy }: {
   state: FollowSettings; update: (k: keyof FollowSettings, v: unknown) => void; reset: () => void; privateKey: string; onCopy: () => void;
@@ -80,9 +81,9 @@ export function FollowSettingsForm({ state, update, reset, privateKey, onCopy }:
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" /> Suara Follow</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pakai Suara</span><input type="checkbox" checked={(state as unknown as { soundEnabled: boolean }).soundEnabled} onChange={(e) => update('soundEnabled' as keyof FollowSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Sound URL (mp3/wav)</span>
-            <input value={(state as unknown as { soundUrl: string }).soundUrl} onChange={(e) => update('soundUrl' as keyof FollowSettings, e.target.value)} placeholder="https://.../follow.mp3" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-[11px] font-mono text-white placeholder:text-gray-500" />
-            <span className="text-[10px] text-gray-500 mt-1 block">Default pixabay ding • bisa pakai URL mp3 sendiri • CORS harus allow</span>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Sumber Suara</span>
+            <div className="mt-1"><SfxPicker value={(state as unknown as { soundUrl: string }).soundUrl || ''} onChange={(v) => update('soundUrl' as keyof FollowSettings, v)} placeholder="https://.../follow.mp3" /></div>
+            <span className="text-[10px] text-gray-500 mt-1 block">Link mp3 / Upload file lokal / Cloud (di-cache di PC, tanpa delay) • URL luar butuh CORS allow</span>
           </label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Volume - {(state as unknown as { soundVolume: number }).soundVolume}%</span><input type="range" min={0} max={100} value={(state as unknown as { soundVolume: number }).soundVolume} onChange={(e) => update('soundVolume' as keyof FollowSettings, parseInt(e.target.value) || 80)} className="mt-1 w-full accent-white" /></label>
           <button onClick={playSound} className="w-full h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-white flex items-center justify-center gap-1.5"><Volume2 className="w-3 h-3" /> Test Suara</button>

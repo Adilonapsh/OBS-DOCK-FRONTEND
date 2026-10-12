@@ -14,6 +14,7 @@ import MinimalTheme from '../themes/Minimal';
 import CuteTheme from '../themes/Cute';
 import PlainTheme from '../themes/Plain';
 import BrutalistTheme from '../themes/Brutalist';
+import AlertTheme from '../themes/Alert';
 import type { FollowItem } from '../themes/types';
 import { SIM_FOLLOW_POOL } from '../themes/dummySim';
 import { useDummySimulation } from '../../_shared/hooks/useDummySimulation';
@@ -63,11 +64,16 @@ function FollowInner() {
     holdMs: hideAfter > 0 ? hideAfter * 1000 : 8000,
     hideDur,
     idPrefix: 'sim_fo',
+    // Tema alert main ±7.5 dtk per item: ritme simulasi ikut Max Follows
+    intervalMs: theme === 'alert' ? Math.max(2500, Math.round(8000 / Math.max(1, maxFollows))) : 2400,
   });
   const liveFollows = simulate ? sim.items : follows;
   const liveExiting = simulate ? sim.exitingIds : exitingIds;
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'follow-font'), [font]);
+  useEffect(() => {
+    if (theme === 'alert' && font === 'Outfit') loadGoogleFont('Orbitron', '700;900', 'follow-orbitron');
+  }, [theme, font]);
 
   // preload audio
   useEffect(() => {
@@ -158,6 +164,7 @@ function FollowInner() {
       case 'cute': return <CuteTheme {...themeProps} />;
       case 'plain': return <PlainTheme {...themeProps} />;
       case 'brutalist': return <BrutalistTheme {...themeProps} />;
+      case 'alert': return <AlertTheme {...themeProps} />;
       default: return <StandardTheme {...themeProps} />;
     }
   };
@@ -170,7 +177,7 @@ function FollowInner() {
         {!obsMode && !connected && liveFollows.length === 0 && <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0,6)}…` : 'global'} • server http://localhost:3000</div>}
         {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">FOLLOW • {theme} • {simulate ? 'simulate' : connected ? 'connected' : 'offline'} • {liveFollows.length}/{maxFollows}</div>}
         <button onClick={() => { if (soundEnabled && soundUrl) { const a = new Audio(soundUrl); a.volume = soundVolume/100; a.play().catch(()=>{}); } }} className="absolute top-16 right-4 hidden">test</button>
-        <AutoScale defaultBase={420} baseWidth={theme === 'cute' || theme === 'minimal' ? 360 : 420}>
+        <AutoScale defaultBase={420} baseWidth={theme === 'cute' || theme === 'minimal' ? 360 : theme === 'alert' ? 800 : 420}>
           {renderTheme()}
         </AutoScale>
       </div>

@@ -31,11 +31,7 @@ function ChatSettingsInner() {
         setSidebarOpen={shell.setSidebarOpen}
         user={shell.user}
         headerIcon={<MessageSquare className="w-4 h-4 text-white" />}
-        title={
-          <>
-            Chat Overlay <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white text-black rounded-full"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />Live</span>
-          </>
-        }
+        title="Chat Overlay"
         subtitle="TikTok + Streamer.bot (Twitch / YouTube / Kick) - via server.ts tiktok-chat"
         headerActions={
           <>

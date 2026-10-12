@@ -9,6 +9,7 @@ export const EVENT_THEMES = [
   { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'alert', label: 'Alert - Twitch Wipe' },
 ] as const;
 
 export const EVENT_FONTS = WIDGET_FONTS;

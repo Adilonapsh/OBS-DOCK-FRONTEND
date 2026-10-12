@@ -6,6 +6,37 @@ type Props = {
   update: (k: string, v: unknown) => void;
 };
 
+interface ColorFieldProps {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+}
+
+function ColorField({ label, value, onChange }: ColorFieldProps) {
+  return (
+    <label className="block min-w-0">
+      <span className="text-[11px] font-bold text-gray-300 block truncate" title={label}>
+        {label}
+      </span>
+      <div className="mt-1 flex items-center gap-1.5 min-w-0">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0 cursor-pointer"
+        />
+        <input
+          type="text"
+          size={1}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 min-w-0 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-2.5 text-xs text-white font-mono uppercase focus:outline-none focus:border-white/30"
+        />
+      </div>
+    </label>
+  );
+}
+
 export function BrutalistSettingsSection({ state, update }: Props) {
   const bg = (state.brutalistBg as string) || '#FFFFFF';
   const textColor = (state.brutalistTextColor as string) || '#000000';
@@ -41,37 +72,29 @@ export function BrutalistSettingsSection({ state, update }: Props) {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-[11px] font-bold text-gray-300">Bubble Background</span>
-            <span className="mt-1 flex gap-2">
-              <input type="color" value={bg} onChange={(e) => update('brutalistBg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0" />
-              <input type="text" value={bg} onChange={(e) => update('brutalistBg', e.target.value)} className="flex-1 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
-            </span>
-          </label>
-          <label className="block">
-            <span className="text-[11px] font-bold text-gray-300">Text Color</span>
-            <span className="mt-1 flex gap-2">
-              <input type="color" value={textColor} onChange={(e) => update('brutalistTextColor', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0" />
-              <input type="text" value={textColor} onChange={(e) => update('brutalistTextColor', e.target.value)} className="flex-1 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
-            </span>
-          </label>
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+          <ColorField
+            label="Bubble Background"
+            value={bg}
+            onChange={(val) => update('brutalistBg', val)}
+          />
+          <ColorField
+            label="Text Color"
+            value={textColor}
+            onChange={(val) => update('brutalistTextColor', val)}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-[11px] font-bold text-gray-300">Badge BG</span>
-            <span className="mt-1 flex gap-2">
-              <input type="color" value={badgeBg} onChange={(e) => update('brutalistBadgeBg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0" />
-              <input type="text" value={badgeBg} onChange={(e) => update('brutalistBadgeBg', e.target.value)} className="flex-1 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
-            </span>
-          </label>
-          <label className="block">
-            <span className="text-[11px] font-bold text-gray-300">Border Color</span>
-            <span className="mt-1 flex gap-2">
-              <input type="color" value={borderColor} onChange={(e) => update('brutalistBorderColor', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0" />
-              <input type="text" value={borderColor} onChange={(e) => update('brutalistBorderColor', e.target.value)} className="flex-1 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
-            </span>
-          </label>
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+          <ColorField
+            label="Badge BG"
+            value={badgeBg}
+            onChange={(val) => update('brutalistBadgeBg', val)}
+          />
+          <ColorField
+            label="Border Color"
+            value={borderColor}
+            onChange={(val) => update('brutalistBorderColor', val)}
+          />
         </div>
         <label className="block">
           <span className="text-[11px] font-bold text-gray-300">Shadow Offset — {shadow}px</span>

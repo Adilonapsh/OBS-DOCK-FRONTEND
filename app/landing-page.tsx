@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
+import { useTheme } from './components/ThemeProvider';
 import {
   User,
   ChevronDown,
@@ -31,7 +32,9 @@ import {
   Sliders,
   Volume2,
   Mic,
-  Radio
+  Radio,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 /* FAQ Data */
@@ -90,6 +93,7 @@ const CREATORS = [
 ];
 
 export default function LandingPage() {
+  const { theme, toggle } = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
     const supabase = createClient();
@@ -144,7 +148,7 @@ export default function LandingPage() {
   }, [showPrivateMock]);
 
   return (
-    <div className="min-h-dvh bg-[#f8fafc] text-[#475569] font-sans text-[15px] leading-[1.6] overflow-x-hidden relative pt-[72px] max-[640px]:pt-[64px] box-border">
+    <div className="landing-root min-h-dvh bg-[#f8fafc] text-[#475569] font-sans text-[15px] leading-[1.6] overflow-x-hidden relative pt-[72px] max-[640px]:pt-[64px] box-border transition-colors">
       <style>{`html{scroll-behavior:smooth;scroll-padding-top:90px} @media(max-width:640px){html{scroll-padding-top:72px}}
 @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 @keyframes pulse-skeleton{0%,100%{opacity:1}50%{opacity:0.7}}
@@ -201,6 +205,9 @@ export default function LandingPage() {
             <a href="#spotlight" className="px-4 py-2 rounded-full text-[14px] font-semibold text-[#334155] hover:text-[#0f172a]">Komunitas</a>
           </nav>
           <div className="flex items-center gap-3.5 max-[640px]:gap-2">
+            <button onClick={toggle} aria-label={theme === 'dark' ? 'Ganti ke light mode' : 'Ganti ke dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'} className="w-9 h-9 rounded-full inline-flex items-center justify-center border border-[#e2e8f0] bg-white text-[#334155] hover:border-[#94a3b8] hover:text-[#0f172a] transition-colors shrink-0">
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
             <Link href={isLoggedIn ? '/dashboard' : '/login'} className="w-9 h-9 rounded-full inline-flex items-center justify-center text-[#334155] hover:bg-[#e2e8f0] hover:text-[#0f172a] transition-colors"><User size={19} /></Link>
             <Link href={isLoggedIn ? '/dashboard' : '/register'} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] hover:-translate-y-px text-[#ffffff] px-5 py-[9px] rounded-full text-[14px] font-bold shadow-[0_4px_14px_rgba(0,94,166,0.28)] transition-all max-[640px]:px-[14px] max-[640px]:text-[13px] max-[640px]:gap-1.5"><Tv size={15} /><span>{isLoggedIn ? 'Dashboard' : 'Mulai Gratis'}</span></Link>
             <button onClick={() => setMobileOpen(p => !p)} aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'} aria-expanded={mobileOpen} className="hidden max-[1024px]:inline-flex w-10 h-10 rounded-[10px] border border-[#e2e8f0] bg-white text-[#334155] items-center justify-center shrink-0 hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:text-[#0f172a] transition-all">{mobileOpen ? <XIcon size={20} /> : <Menu size={20} />}</button>
@@ -236,6 +243,10 @@ export default function LandingPage() {
           <a href="#reviews" onClick={() => setMobileOpen(false)} className="flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-[#334155] hover:bg-[#f8fafc]">Testimoni</a>
           <a href="#faq" onClick={() => setMobileOpen(false)} className="flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-[#334155] hover:bg-[#f8fafc]">FAQ</a>
           <a href="#spotlight" onClick={() => setMobileOpen(false)} className="flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-[#334155] hover:bg-[#f8fafc]">Komunitas</a>
+          <button onClick={toggle} aria-label={theme === 'dark' ? 'Ganti ke light mode' : 'Ganti ke dark mode'} className="flex items-center justify-between w-full px-3.5 py-3.5 rounded-xl text-[14.5px] font-semibold text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] transition-colors">
+            <span>Tema: {theme === 'dark' ? 'Gelap' : 'Terang'}</span>
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
           <div className="mt-2.5 pt-3.5 border-t border-[#e2e8f0]"><Link href={isLoggedIn ? '/dashboard' : '/register'} onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full bg-[#005ea6] hover:bg-[#004a8c] text-[#ffffff] px-5 py-3.5 rounded-full text-[14px] font-bold shadow-[0_4px_14px_rgba(0,94,166,0.28)]"><Tv size={16} />{isLoggedIn ? 'Buka Dashboard' : 'Mulai Gratis'}</Link></div>
         </nav>
       </header>

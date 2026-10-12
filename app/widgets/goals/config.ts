@@ -14,6 +14,7 @@ export const GOALS_THEMES = [
   { value: 'plain', label: 'Plain' },
   { value: 'passion', label: 'Passion - Like Goal Studio' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'neonbar', label: 'Neon Bar - Video Progress' },
 ] as const;
 
 export const GOALS_FONTS = WIDGET_FONTS;
@@ -43,6 +44,7 @@ export const GOALS_DEFAULTS = {
   target: 100 as number,
   current: 0 as number,
   title: 'Follower Goal' as string,
+  completedText: 'COMPLETED!' as string,
   showLabel: true,
   showCounts: true,
   showBar: true,
@@ -65,6 +67,7 @@ export function buildGoalsUrl(base: string, s: GoalsSettings): string {
   p.set('target', String(s.target));
   p.set('current', String(s.current));
   p.set('title', s.title);
+  p.set('completedText', s.completedText || 'COMPLETED!');
   p.set('showLabel', s.showLabel ? '1' : '0');
   p.set('showCounts', s.showCounts ? '1' : '0');
   p.set('showBar', s.showBar ? '1' : '0');

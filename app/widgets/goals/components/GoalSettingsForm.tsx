@@ -66,6 +66,19 @@ export function GoalSettingsForm({ state, update }: Props) {
         </div>
       </div>
 
+      {state.theme === 'neonbar' && (
+        <div className="space-y-3">
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-cyan-400" /> Neon Bar</h2>
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+            <label className="block">
+              <span className="text-[11px] font-bold text-gray-300">Teks Completed (saat 100%)</span>
+              <input type="text" value={state.completedText} onChange={(e) => update('completedText', e.target.value.slice(0, 40))} placeholder="COMPLETED!" maxLength={40} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" />
+              <span className="text-[10px] text-gray-500 mt-1 block">Maks 40 karakter • kosong = COMPLETED!</span>
+            </label>
+          </div>
+        </div>
+      )}
+
       {state.theme === 'brutalist' && (
         <div className="space-y-3">
           <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-yellow-400" /> Brutalist — Neo Brutalist</h2>

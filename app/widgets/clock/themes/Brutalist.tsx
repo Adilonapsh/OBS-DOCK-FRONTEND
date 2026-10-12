@@ -23,6 +23,7 @@ export default function BrutalistClockTheme({
   brutalistTail,
   brutalistItalic,
   brutalistUppercase,
+  brutalistCompact,
 }: BrutalistClockProps) {
   const bubbleBg = brutalistBg || '#FFFFFF';
   const textColor = brutalistTextColor || '#000000';
@@ -33,6 +34,7 @@ export default function BrutalistClockTheme({
   const hasTail = brutalistTail ?? true;
   const isItalic = brutalistItalic ?? true;
   const isUppercase = brutalistUppercase ?? true;
+  const isCompact = brutalistCompact ?? false;
 
   const halftone: React.CSSProperties = {
     backgroundImage: 'radial-gradient(circle, #000 1.2px, transparent 1.45px)',
@@ -45,6 +47,95 @@ export default function BrutalistClockTheme({
 
   const getBorder = (w: number) => `${w}px solid ${borderColor}`;
   const getShadow = (o: number) => `${o}px ${o}px 0px 0px ${borderColor}`;
+
+  // Blok garis (dipakai mode full & compact)
+  const line1Block = line1Text ? (
+          <div className="relative ml-4">
+            <div
+              className="inline-flex px-3 py-2"
+              style={{ background: borderColor, border: getBorder(3), boxShadow: getShadow(4) }}
+            >
+              <span
+                className="font-black tracking-tight leading-none"
+                style={{
+                  fontSize: `${s1}px`,
+                  lineHeight: 0.9,
+                  fontFamily: `'${font}', sans-serif`,
+                  color: badgeBg,
+                  fontStyle: isItalic ? 'italic' : 'normal',
+                  textTransform: isUppercase ? 'uppercase' : 'none',
+                }}
+              >
+                {line1Text}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 border flex" style={{ backgroundColor: borderColor, borderColor }}>
+              <div className="flex-1" style={{ background: accent }}>
+                {hasHalftone && <div className="w-full h-full opacity-20" style={barHalftone} />}
+              </div>
+              <div className="w-6" style={{ backgroundColor: borderColor }} />
+            </div>
+          </div>
+  ) : null;
+
+  const line2Block = line2Text ? (
+          <div
+            className="relative ml-4 px-3 py-2 inline-flex self-start"
+            style={{ backgroundColor: badgeBg, border: getBorder(3), boxShadow: getShadow(4) }}
+          >
+            {hasHalftone && <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={halftone} />}
+            <span
+              className="relative font-black tracking-widest leading-none"
+              style={{
+                fontSize: `${s2}px`,
+                fontFamily: `'${font}', sans-serif`,
+                color: textColor,
+                fontStyle: isItalic ? 'italic' : 'normal',
+                textTransform: isUppercase ? 'uppercase' : 'none',
+              }}
+            >
+              {line2Text}
+            </span>
+          </div>
+  ) : null;
+
+  const line3Block = line3Text ? (
+          <div
+            className="relative ml-4 px-3 py-2 inline-flex self-start"
+            style={{ backgroundColor: borderColor, border: getBorder(3), boxShadow: getShadow(4) }}
+          >
+            <span
+              className="font-mono font-black tracking-[0.12em] leading-none"
+              style={{
+                fontSize: `${s3}px`,
+                fontFamily: `'${font}', monospace`,
+                color: badgeBg,
+                fontStyle: isItalic ? 'italic' : 'normal',
+                textTransform: isUppercase ? 'uppercase' : 'none',
+              }}
+            >
+              {line3Text}
+            </span>
+          </div>
+  ) : null;
+
+  // Compact: hanya box jam + tanggal + extra, tanpa background full
+  if (isCompact) {
+    return (
+      <div
+        id="clock-brutalist-wrapper"
+        className="clock-brutalist-theme relative inline-flex flex-col"
+        style={{
+          fontFamily: `'${font}', sans-serif`,
+          gap: `${gap}px`,
+        }}
+      >
+        {line1Block}
+        {line2Block}
+        {line3Block}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -76,75 +167,9 @@ export default function BrutalistClockTheme({
         <div className="absolute top-0 left-0 w-2 bottom-0 border-r-[4px]" style={{ background: accent, borderColor }} />
         <div className="absolute top-0 left-2 w-1 bottom-0 opacity-10" style={{ backgroundColor: borderColor }} />
 
-        {line1Text ? (
-          <div className="relative ml-4">
-            <div
-              className="inline-flex px-3 py-2"
-              style={{ background: borderColor, border: getBorder(3), boxShadow: getShadow(4) }}
-            >
-              <span
-                className="font-black tracking-tight leading-none"
-                style={{
-                  fontSize: `${s1}px`,
-                  lineHeight: 0.9,
-                  fontFamily: `'${font}', sans-serif`,
-                  color: badgeBg,
-                  fontStyle: isItalic ? 'italic' : 'normal',
-                  textTransform: isUppercase ? 'uppercase' : 'none',
-                }}
-              >
-                {line1Text}
-              </span>
-            </div>
-            <div className="mt-2 h-1.5 border flex" style={{ backgroundColor: borderColor, borderColor }}>
-              <div className="flex-1" style={{ background: accent }}>
-                {hasHalftone && <div className="w-full h-full opacity-20" style={barHalftone} />}
-              </div>
-              <div className="w-6" style={{ backgroundColor: borderColor }} />
-            </div>
-          </div>
-        ) : null}
-
-        {line2Text ? (
-          <div
-            className="relative ml-4 px-3 py-2 inline-flex self-start"
-            style={{ backgroundColor: badgeBg, border: getBorder(3), boxShadow: getShadow(4) }}
-          >
-            {hasHalftone && <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={halftone} />}
-            <span
-              className="relative font-black tracking-widest leading-none"
-              style={{
-                fontSize: `${s2}px`,
-                fontFamily: `'${font}', sans-serif`,
-                color: textColor,
-                fontStyle: isItalic ? 'italic' : 'normal',
-                textTransform: isUppercase ? 'uppercase' : 'none',
-              }}
-            >
-              {line2Text}
-            </span>
-          </div>
-        ) : null}
-
-        {line3Text ? (
-          <div
-            className="relative ml-4 px-3 py-2 inline-flex self-start"
-            style={{ backgroundColor: borderColor, border: getBorder(3), boxShadow: getShadow(4) }}
-          >
-            <span
-              className="font-mono font-black tracking-[0.12em] leading-none"
-              style={{
-                fontSize: `${s3}px`,
-                fontFamily: `'${font}', monospace`,
-                color: badgeBg,
-                fontStyle: isItalic ? 'italic' : 'normal',
-                textTransform: isUppercase ? 'uppercase' : 'none',
-              }}
-            >
-              {line3Text}
-            </span>
-          </div>
-        ) : null}
+        {line1Block}
+        {line2Block}
+        {line3Block}
 
         {/* decorative corner stamps - tail */}
         {hasTail && (

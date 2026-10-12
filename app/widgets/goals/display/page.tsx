@@ -26,6 +26,7 @@ function GoalsInner() {
   const target = Math.max(1, getIntParam(params, 'target', 100));
   const initialCurrent = Math.max(0, getIntParam(params, 'current', 0));
   const title = getStringParam(params, 'title', goalType === 'follow' ? 'Follower Goal' : goalType === 'subs' ? 'Subscriber Goal' : goalType === 'donation' ? 'Donation Goal' : 'Like Goal');
+  const completedText = getStringParam(params, 'completedText', 'COMPLETED!');
   const showLabel = getBoolParam(params, 'showLabel', true);
   const showCounts = getBoolParam(params, 'showCounts', true);
   const showBar = getBoolParam(params, 'showBar', true);
@@ -48,6 +49,7 @@ function GoalsInner() {
   useEffect(() => loadGoogleFont(font, '400;700;900', 'goals-font'), [font]);
   useEffect(() => {
     if (theme === 'passion' || theme === 'brutalist') loadGoogleFont('Passion One', '400;700;900', 'goals-passion');
+    if (theme === 'neonbar') loadGoogleFont('Orbitron', '700;900', 'goals-orbitron');
   }, [theme]);
 
   // simulate increment
@@ -162,6 +164,7 @@ function GoalsInner() {
             brutalistItalic={brutalistItalic}
             brutalistUppercase={brutalistUppercase}
             brutalistInline={brutalistInline}
+            completedText={completedText}
           />
         </AutoScale>
       </div>

@@ -18,4 +18,5 @@ export type ClockThemeProps = {
   brutalistTail?: boolean;
   brutalistItalic?: boolean;
   brutalistUppercase?: boolean;
+  brutalistCompact?: boolean;
 };

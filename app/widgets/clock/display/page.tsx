@@ -199,6 +199,7 @@ function ClockInner() {
                         brutalistTail={brutalist.brutalistTail}
                         brutalistItalic={brutalist.brutalistItalic}
                         brutalistUppercase={brutalist.brutalistUppercase}
+                        brutalistCompact={brutalist.brutalistCompact}
                     />
                 ) : (
                     <div
