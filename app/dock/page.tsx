@@ -1165,23 +1165,24 @@ export default function Home() {
             return;
         }
 
-        if (!sbSocketRef.current || sbSocketRef.current.readyState !== WebSocket.OPEN) {
-            gooeyToast.error("Streamer.bot tidak terhubung!");
-            return;
+        // Streamer.bot opsional: kalau tidak konek, aksi SB dilewati saja,
+        // poll lokal + widget tetap jalan (bisa buat poll tanpa Streamer.bot).
+        if (sbSocketRef.current && sbSocketRef.current.readyState === WebSocket.OPEN) {
+            const payload = {
+                request: "DoAction",
+                action: { name: "CREATE POLL" },
+                args: {
+                    pollQuestion: question,
+                    pollOptions: options.join(","),
+                    pollDuration: duration,
+                },
+                id: `CreatePoll_${Date.now()}`,
+            };
+
+            sbSocketRef.current.send(JSON.stringify(payload));
+        } else {
+            gooeyToast.warning("Streamer.bot tidak terhubung - aksi SB dilewati, poll tetap dibuat.");
         }
-
-        const payload = {
-            request: "DoAction",
-            action: { name: "CREATE POLL" },
-            args: {
-                pollQuestion: question,
-                pollOptions: options.join(","),
-                pollDuration: duration,
-            },
-            id: `CreatePoll_${Date.now()}`,
-        };
-
-        sbSocketRef.current.send(JSON.stringify(payload));
         createPoll(question, options, duration);
         // also emit to poll widget (real OBS data)
         const room = privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';

@@ -3,6 +3,7 @@
 import { Palette, Type, Clock, Monitor, Music, Shield, Gift, Crown } from 'lucide-react';
 import { MUSIC_THEMES, MUSIC_FONTS, MUSIC_QUEUE_POS, SONG_ROLES, type MusicSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { VinylDiscSettingsSection } from '../../_shared/components/VinylDiscSettingsSection';
 import { useDonationMap, DONATION_PLATFORMS } from '../../../hooks/useDonationMap';
 
 type Props = {
@@ -93,6 +94,8 @@ export function MusicSettingsForm({ state, update }: Props) {
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Durasi Fade-out ({(state as unknown as { fadeOutMs?: number }).fadeOutMs ?? 800}ms)</span><input type="range" min={200} max={3000} step={100} value={(state as unknown as { fadeOutMs?: number }).fadeOutMs ?? 800} onChange={(e) => update('fadeOutMs' as keyof MusicSettings, parseInt(e.target.value) || 800)} className="mt-1 w-full accent-white cursor-pointer" /></label>
         </div>
       </div>
+
+      {state.theme === 'vinyl-disc' && <VinylDiscSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
 
       {/* Warna Kustom */}
       <div className="space-y-3">

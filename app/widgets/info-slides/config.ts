@@ -8,6 +8,7 @@ export const INFO_SLIDES_THEMES = [
   { value: 'timer-glass', label: 'Timer Glass - Ala Timer (Recommended)' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'esports', label: 'Esports - Gold Panel' },
 ] as const;
 
 export const INFO_SLIDES_ANIMS = [

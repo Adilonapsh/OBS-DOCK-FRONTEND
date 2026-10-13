@@ -25,4 +25,5 @@ export type PollThemeProps = {
   showCount: boolean;
   showTotal: boolean;
   showTimer: boolean;
+  logo?: string;
 };

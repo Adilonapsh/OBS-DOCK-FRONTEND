@@ -9,6 +9,7 @@ export const SOCIAL_ROTATOR_THEMES = [
   { value: 'badge', label: 'Badge - Space Mono + Speech Bubble' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'esports', label: 'Esports - Gold Panel' },
 ] as const;
 
 export const SOCIAL_ROTATOR_ANIMS = [
@@ -61,6 +62,7 @@ export const SOCIAL_ROTATOR_DEFAULTS = {
   showIcon: true,
   showHandle: true,
   showLabel: true,
+  compact: false,
   anim: 'elegant',
   pos: 'center' as string,
   ...BRUTALIST_DEFAULTS,
@@ -98,6 +100,7 @@ export function buildSocialRotatorUrl(base: string, s: SocialRotatorSettings): s
   p.set('showIcon', s.showIcon ? '1' : '0');
   p.set('showHandle', s.showHandle ? '1' : '0');
   p.set('showLabel', (s as any).showLabel ? '1' : '0');
+  p.set('compact', (s as unknown as { compact?: boolean }).compact ? '1' : '0');
   p.set('anim', s.anim);
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   appendBrutalistParams(p, s as unknown as Record<string, unknown>);

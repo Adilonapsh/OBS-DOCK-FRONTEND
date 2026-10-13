@@ -17,6 +17,7 @@ import {
   SimpleTheme,
   CardTheme,
   VinylTheme,
+  VinylDiscTheme,
 } from '../../media-player/themes';
 import BrutalistMusicTheme from '../themes/Brutalist';
 
@@ -398,8 +399,11 @@ function MusicInner() {
   // Judul lagu ikut warna aksen. ?colorText=0 untuk putih polos.
   const colorText = getBoolParam(params, 'colorText', true);
   // Fade-out saat queue habis: visual + volume. ?fadeOut=0 untuk mati langsung.
-  const fadeOut = getBoolParam(params, 'fadeOut', true);
-  const fadeOutMs = Math.max(200, Math.min(3000, getIntParam(params, 'fadeOutMs', 800)));
+  const fadeOut = getBoolParam(params, 'fadeOut', true);  const fadeOutMs = Math.max(200, Math.min(3000, getIntParam(params, 'fadeOutMs', 800)));
+  // Jarum piringan hitam (tema Vinyl Disc).
+  const showTonearm = getBoolParam(params, 'showTonearm', true);
+  const showTextRing = getBoolParam(params, 'showTextRing', true);
+  const vinylDiscSpin = Math.max(5, Math.min(120, getIntParam(params, 'vinylDiscSpin', 35)));
   // ?muted=1 → tab ini bisu permanen dan TIDAK pernah jadi reporter.
   // Pakai untuk preview browser agar tidak rebutan posisi dengan OBS.
   const forceMuted = getBoolParam(params, 'muted', false) || getBoolParam(params, 'mute', false);
@@ -988,6 +992,9 @@ function MusicInner() {
     smtcBridgeAddress: '',
     smtcBridgePort: '',
     obsMode,
+    showTonearm,
+    showTextRing,
+    vinylDiscSpin,
   };
 
   const wrapperVisible = visible || !autoHide || showWhilePaused;
@@ -1205,6 +1212,8 @@ function MusicInner() {
             <CardTheme {...mediaProps} />
           ) : theme === 'vinyl' ? (
             <VinylTheme {...mediaProps} />
+          ) : theme === 'vinyl-disc' ? (
+            <VinylDiscTheme {...mediaProps} />
           ) : theme === 'brutalist' ? (
             <BrutalistMusicTheme {...mediaProps} />
           ) : (

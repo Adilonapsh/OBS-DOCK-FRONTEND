@@ -22,6 +22,7 @@ const pollThemes = [
   { value:'editorial', label:'Editorial' },
   { value:'plain', label:'Plain' },
   { value:'brutalist', label: 'Brutalist' },
+  { value:'esports', label:'Esports - Audience Poll' },
 ];
 
 const defaults = {
@@ -34,6 +35,7 @@ const defaults = {
   showCount: true,
   showTotal: true,
   showTimer: true,
+  logo: '',
 };
 
 function buildUrl(base:string, s:any){
@@ -47,6 +49,7 @@ function buildUrl(base:string, s:any){
   p.set('showCount', s.showCount?'1':'0');
   p.set('showTotal', s.showTotal?'1':'0');
   p.set('showTimer', s.showTimer?'1':'0');
+  if (s.logo) p.set('logo', s.logo);
   return `${base}?${p.toString()}`;
 }
 
@@ -154,6 +157,19 @@ function PollSettingsInner(){
                   </label>
                 </div>
               </div>
+
+              {state.theme === 'esports' && (
+                <div className="space-y-3">
+                  <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Sparkles className="w-4 h-4 text-yellow-400" /> Esports</h2>
+                  <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+                    <label className="block">
+                      <span className="text-[11px] font-bold text-gray-300">Logo (panel emas)</span>
+                      <input value={state.logo || ''} onChange={e=>update('logo', e.target.value)} placeholder="https://.../logo.png" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono placeholder:text-gray-600" />
+                      <span className="text-[10px] text-gray-500 mt-1 block">URL gambar logo di panel emas kiri - kosongkan untuk sembunyikan.</span>
+                    </label>
+                  </div>
+                </div>
+              )}
 
               {/* Posisi - Global */}
               <div className="space-y-3">

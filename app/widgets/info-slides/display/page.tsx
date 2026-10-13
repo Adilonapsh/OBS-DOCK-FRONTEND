@@ -14,6 +14,7 @@ import GlassTheme from '../themes/Glass';
 import TimerGlassTheme from '../themes/TimerGlass';
 import PlainTheme from '../themes/Plain';
 import BrutalistTheme from '../themes/Brutalist';
+import EsportsTheme from '../themes/Esports';
 import { parseSlides } from '../config';
 
 function InfoSlidesInner() {
@@ -59,6 +60,10 @@ function InfoSlidesInner() {
   const prev = useCallback(() => setIndex((i) => (i - 1 + total) % total), [total]);
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'info-slides-font'), [font]);
+  useEffect(() => {
+    if (theme !== 'esports') return;
+    loadGoogleFont('Teko', '500;700', 'info-slides-teko');
+  }, [theme]);
 
   useEffect(() => {
     if (!autoRotate || total <= 1) return;
@@ -95,8 +100,8 @@ function InfoSlidesInner() {
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@400;700;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; }`}</style>
       <div className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen ${theme === 'timer-glass' ? 'flex items-center justify-center p-6' : `flex p-6`}`}`} style={{ fontFamily: `'${font}', sans-serif`, background: obsMode ? 'transparent' : theme === 'timer-glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : '#0a0a0a', ...posStyle } as any}>
-        <AutoScale defaultBase={640} baseWidth={theme === 'timer-glass' ? 576 : 640}>
-          {theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'timer-glass' ? <TimerGlassTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : theme === 'brutalist' ? <BrutalistTheme {...themeProps} /> : <CleanTheme {...themeProps} />}
+        <AutoScale defaultBase={640} baseWidth={theme === 'timer-glass' ? 576 : theme === 'esports' ? 640 : 640}>
+          {theme === 'boxed' ? <BoxedTheme {...themeProps} /> : theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'timer-glass' ? <TimerGlassTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : theme === 'brutalist' ? <BrutalistTheme {...themeProps} /> : theme === 'esports' ? <EsportsTheme {...themeProps} /> : <CleanTheme {...themeProps} />}
         </AutoScale>
       </div>
       {!obsMode && (

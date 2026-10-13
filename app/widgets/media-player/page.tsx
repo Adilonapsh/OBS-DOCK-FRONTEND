@@ -9,6 +9,7 @@ import { Copy, Check, ExternalLink, Monitor, Palette, Music, Image as ImageIcon,
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import { getPositionStyle } from '../_shared/constants/positions';
 import { PositionPicker } from '../_shared/components/PositionPicker';
+import { VinylDiscSettingsSection } from '../_shared/components/VinylDiscSettingsSection';
 
 const themes = [
   { value: 'standard', label: 'Standard' },
@@ -22,6 +23,7 @@ const themes = [
   { value: 'album-art', label: 'Album Art' },
   { value: 'large-album-art', label: 'Large Album Art' },
   { value: 'vinyl', label: 'Vinyl' },
+  { value: 'vinyl-disc', label: 'Vinyl Disc' },
   { value: 'color-palette', label: 'Color Palette' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
@@ -51,6 +53,9 @@ function buildUrl(base: string, state: any): string {
   p.set('swapArtistTrack', String(state.swapArtistTrack));
   p.set('showPrimary', String(state.showPrimary));
   p.set('showSecondary', String(state.showSecondary));
+  p.set('showTonearm', String(state.showTonearm !== false));
+  p.set('showTextRing', String(state.showTextRing !== false));
+  p.set('vinylDiscSpin', String(state.vinylDiscSpin ?? 35));
   p.set('showAnimation', state.showAnimation);
   p.set('hideAnimation', state.hideAnimation);
   p.set('smtcBridgeAddress', state.smtcBridgeAddress);
@@ -80,6 +85,9 @@ const defaults = {
   swapArtistTrack: false,
   showPrimary: true,
   showSecondary: true,
+  showTonearm: true,
+  showTextRing: true,
+  vinylDiscSpin: 35,
   showAnimation: 'slide-in-from-bottom',
   hideAnimation: 'slide-out-bottom',
   smtcBridgeAddress: '127.0.0.1',
@@ -168,7 +176,7 @@ function MediaPlayerSettingsInner() {
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><Music className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
               <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Media Player <span className="hidden sm:inline px-2 py-0.5 bg-white text-black rounded-full text-[9px]">SMTC</span></div>
-              <div className="hidden sm:block text-gray-500 text-[10px]">Nutty-style Now Playing • SMTC Bridge 127.0.0.1:5000</div>
+              <div className="hidden sm:block text-gray-500 text-[10px]">Now Playing • SMTC Bridge</div>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -264,6 +272,8 @@ function MediaPlayerSettingsInner() {
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Hide Animation</span><select value={state.hideAnimation} onChange={e => update('hideAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{hideAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
                 </div>
               </div>
+
+              {state.theme === 'vinyl-disc' && <VinylDiscSettingsSection state={state} update={update} />}
 
               {/* SMTC Bridge */}
               <div className="space-y-3">

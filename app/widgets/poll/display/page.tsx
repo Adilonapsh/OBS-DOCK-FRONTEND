@@ -11,6 +11,7 @@ import FlowerTheme from '../themes/Flower';
 import EditorialTheme from '../themes/Editorial';
 import PlainTheme from '../themes/Plain';
 import BrutalistTheme from '../themes/Brutalist';
+import EsportsTheme from '../themes/Esports';
 import type { PollState } from '../themes/types';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
@@ -31,6 +32,7 @@ function PollInner(){
   const showCount = searchParams.get('showCount') !== '0';
   const showTotal = searchParams.get('showTotal') !== '0';
   const showTimer = searchParams.get('showTimer') !== '0';
+  const logo = searchParams.get('logo') || '';
   const pos = getStringParam(params,'pos','center');
   const posStyle = getPositionStyle(pos);
   const simulate = searchParams.get('simulate') === '1' || searchParams.get('preview') === '1';
@@ -81,6 +83,13 @@ function PollInner(){
     let link = document.querySelector(sel) as HTMLLinkElement|null;
     if(!link){ link=document.createElement('link'); link.rel='stylesheet'; (link as any).dataset.pollFont=font; link.href=href; document.head.appendChild(link);} else if(link.href!==href) link.href=href;
   },[font]);
+  useEffect(()=>{
+    if(theme!=='esports') return;
+    const href = `https://fonts.googleapis.com/css2?family=Teko:wght@500;700&display=swap`;
+    const sel = `link[data-poll-font="Teko"]`;
+    let link = document.querySelector(sel) as HTMLLinkElement|null;
+    if(!link){ link=document.createElement('link'); link.rel='stylesheet'; (link as any).dataset.pollFont='Teko'; link.href=href; document.head.appendChild(link);}
+  },[theme]);
 
   useEffect(()=>{
     if (simulate) { setConnected(true); return; } // mode simulate - demo data lokal, tidak perlu socket
@@ -97,7 +106,7 @@ function PollInner(){
   },[privateKey, simulate]);
 
   const hasPoll = !!displayedPoll && displayedPoll.visible !== false;
-  const pollBase = theme === 'anime' || theme === 'editorial' ? 680 : theme === 'donut' ? 560 : theme === 'flower' ? 420 : theme === 'minimal' || theme === 'plain' || theme === 'card' ? 520 : theme === 'brutalist' ? 640 : 640;
+  const pollBase = theme === 'anime' || theme === 'editorial' ? 680 : theme === 'donut' ? 560 : theme === 'flower' ? 420 : theme === 'minimal' || theme === 'plain' || theme === 'card' ? 520 : theme === 'brutalist' ? 640 : theme === 'esports' ? 1220 : 640;
 
   return (
     <>
@@ -138,7 +147,7 @@ function PollInner(){
         ) : (
           <div key={displayedPoll!.id + '-' + winnerKey} className={`${isExiting ? 'animate-[pollOut_0.36s_ease_forwards]' : 'animate-[pollIn_0.55s_cubic-bezier(0.16,1,0.3,1)]'} ${displayedPoll!.ended ? 'poll-ended' : ''} flex w-full`}>
             <AutoScale defaultBase={640} baseWidth={pollBase}>
-              {theme==='brutalist' ? <BrutalistTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='plain' ? <PlainTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='editorial' ? <EditorialTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='flower' ? <FlowerTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='anime' ? <AnimeTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='donut' ? <DonutTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='minimal' ? <MinimalTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='card' ? <CardTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : <BarTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} />}
+              {theme==='brutalist' ? <BrutalistTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='esports' ? <EsportsTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} logo={logo} /> : theme==='plain' ? <PlainTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='editorial' ? <EditorialTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='flower' ? <FlowerTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='anime' ? <AnimeTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='donut' ? <DonutTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='minimal' ? <MinimalTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : theme==='card' ? <CardTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} /> : <BarTheme poll={displayedPoll!} theme={theme} font={font} accent={accent} bg={bg} showPercent={showPercent} showCount={showCount} showTotal={showTotal} showTimer={showTimer} />}
             </AutoScale>
           </div>
         )}

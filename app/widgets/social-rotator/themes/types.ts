@@ -12,6 +12,7 @@ export type SocialRotatorThemeProps = {
   showIcon: boolean;
   showHandle: boolean;
   showLabel: boolean;
+  compact?: boolean;
   anim: string;
   duration: number;
   onPrev?: () => void;

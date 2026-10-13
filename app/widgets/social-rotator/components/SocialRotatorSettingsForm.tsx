@@ -80,6 +80,7 @@ export function SocialRotatorSettingsForm({ state, update }: { state: SocialRota
             <label className="flex items-center gap-2 p-2 bg-black/30 rounded-lg border border-white/5 text-[11px] font-bold text-white"><input type="checkbox" checked={state.showLabel} onChange={(e) => update('showLabel', e.target.checked)} className="w-3 h-3 accent-white" /> Label</label>
             <label className="flex items-center gap-2 p-2 bg-black/30 rounded-lg border border-white/5 text-[11px] font-bold text-white"><input type="checkbox" checked={state.showHandle} onChange={(e) => update('showHandle', e.target.checked)} className="w-3 h-3 accent-white" /> Handle</label>
           </div>
+          {state.theme === 'esports' && <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Compact <span className="text-[9px] font-normal text-gray-400 block">Background lebih pendek & ramping</span></span><input type="checkbox" checked={!!(state as unknown as { compact?: boolean }).compact} onChange={(e) => update('compact' as keyof SocialRotatorSettings, e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>}
         </div>
       </div>
 

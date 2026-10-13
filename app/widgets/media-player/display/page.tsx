@@ -15,6 +15,7 @@ import ClassicTheme from '../themes/Classic';
 import CardTheme from '../themes/Card';
 import AlbumArtTheme from '../themes/AlbumArt';
 import VinylTheme from '../themes/Vinyl';
+import VinylDiscTheme from '../themes/VinylDisc';
 import ColorPaletteTheme from '../themes/ColorPalette';
 import PlainTheme from '../themes/Plain';
 import BrutalistTheme from '../themes/Brutalist';
@@ -116,6 +117,9 @@ function MediaPlayerInner() {
   const swapArtistTrack = getBoolParam(params, 'swapArtistTrack', false);
   const showPrimary = getBoolParam(params, 'showPrimary', true);
   const showSecondary = getBoolParam(params, 'showSecondary', true);
+  const showTonearm = getBoolParam(params, 'showTonearm', true);
+  const showTextRing = getBoolParam(params, 'showTextRing', true);
+  const vinylDiscSpin = Math.max(5, Math.min(120, getIntParam(params, 'vinylDiscSpin', 35)));
   const displayDuration = getIntParam(params, 'displayDuration', 5);
   const showAnimation = params.get('showAnimation') || 'slide-in-from-bottom';
   const hideAnimation = params.get('hideAnimation') || 'slide-out-bottom';
@@ -361,7 +365,7 @@ function MediaPlayerInner() {
               const themeProps = {
                 track: primaryText, artist: secondaryText, art, bgArt, palette, accent, bgColor, textColor,
                 progressPercent, currentPos, timeline, showAlbumArt, showProgressBar, showPrimary, showSecondary,
-                isPausedOverlay, playbackStatus, textAlignCls, msToTime, error, smtcBridgeAddress, smtcBridgePort, obsMode,
+                isPausedOverlay, playbackStatus, textAlignCls, msToTime, error, smtcBridgeAddress, smtcBridgePort, obsMode, showTonearm, showTextRing, vinylDiscSpin,
               };
               switch (theme) {
                 case 'matte': return <MatteTheme {...themeProps} />;
@@ -373,6 +377,7 @@ function MediaPlayerInner() {
                 case 'card': return <CardTheme {...themeProps} />;
                 case 'album-art': return <AlbumArtTheme {...themeProps} />;
                 case 'vinyl': return <VinylTheme {...themeProps} />;
+                case 'vinyl-disc': return <VinylDiscTheme {...themeProps} />;
                 case 'color-palette': return <ColorPaletteTheme {...themeProps} />;
                 case 'plain': return <PlainTheme {...themeProps} />;
                 case 'brutalist': return <BrutalistTheme {...themeProps} />;

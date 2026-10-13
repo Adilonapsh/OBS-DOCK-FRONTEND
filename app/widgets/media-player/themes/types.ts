@@ -32,4 +32,7 @@ export type MediaThemeProps = {
   smtcBridgeAddress: string;
   smtcBridgePort: string;
   obsMode: boolean;
+  showTonearm?: boolean;
+  showTextRing?: boolean;
+  vinylDiscSpin?: number;
 };
