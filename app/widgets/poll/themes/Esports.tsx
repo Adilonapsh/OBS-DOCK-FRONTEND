@@ -42,8 +42,8 @@ export default function EsportsTheme({ poll, font, showPercent, showCount, showT
   return (
     <div className="poll-esports-theme" style={{ fontFamily: ff, color: 'white', paddingTop: 34 }}>
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Title tab (slide up dari balik panel) */}
-        <div style={{ width: '100%', height: 30, overflow: 'hidden', position: 'absolute', top: -30, display: 'flex', justifyContent: 'center', zIndex: 1 }}>
+        {/* Title tab (slide up dari balik panel) — width disamakan panel bawah */}
+        <div style={{ width: phase >= 3 ? width : 220, height: 30, overflow: 'hidden', position: 'absolute', top: -30, left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center', zIndex: 1, transition: 'width 0.8s cubic-bezier(0.25, 1, 0.2, 1)' }}>
           <div
             style={{
               width: '100%',

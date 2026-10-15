@@ -92,15 +92,70 @@ const CREATORS = [
   { name: 'Sarah Aliyah (@sarah_live)', role: 'TikTok Live · Pakai Gift Overlay + Poll Widget', img: '/assets/packs/vtuber.jpg' },
   { name: 'Dimas Kuroba (@kuroba_vt)', role: 'YouTube Gaming · Pakai Media Player + Lyrics Widget', img: '/assets/packs/data.jpg' },
 ];
-/* Gallery - placeholder, ganti src dengan foto asli nanti */
-const GALLERY = [
-  { src: 'https://picsum.photos/seed/obsdock1/800/600', title: 'Setup Stream 1' },
-  { src: 'https://picsum.photos/seed/obsdock2/800/600', title: 'Setup Stream 2' },
-  { src: 'https://picsum.photos/seed/obsdock3/800/600', title: 'Setup Stream 3' },
-  { src: 'https://picsum.photos/seed/obsdock4/800/600', title: 'Setup Stream 4' },
-  { src: 'https://picsum.photos/seed/obsdock5/800/600', title: 'Setup Stream 5' },
-  { src: 'https://picsum.photos/seed/obsdock6/800/600', title: 'Setup Stream 6' },
+/* Gallery - showcase hasil widget di OBS (mock CSS mirip display asli + simulate) */
+type GalleryCategory = 'chat' | 'poll' | 'overlay' | 'media' | 'utility' | 'dock';
+interface GalleryItem {
+  id: string;
+  title: string;
+  desc: string;
+  category: GalleryCategory;
+  size: string;
+  href: string;
+  badge: string;
+  embed: string;
+}
+const GALLERY_CATS: { id: GalleryCategory | 'semua'; label: string }[] = [
+  { id: 'semua', label: 'Semua' },
+  { id: 'chat', label: 'Chat' },
+  { id: 'poll', label: 'Poll & Goals' },
+  { id: 'overlay', label: 'Overlay' },
+  { id: 'media', label: 'Media' },
+  { id: 'utility', label: 'Utility' },
+  { id: 'dock', label: 'Dock' },
 ];
+const GALLERY: GalleryItem[] = [
+  { id: 'chat-cute', title: 'Chat Cute Lavender', desc: 'TikTok + Twitch stacked, badge MOD/SUB, animasi elegant blur.', category: 'chat', size: '420×520', href: '/widgets/chat?theme=cute', badge: '8 tema', embed: '/widgets/chat/display?theme=cute&simulate=1' },
+  { id: 'chat-ticker', title: 'Chat Ticker Horizontal', desc: 'Bottom bar pills nickname: pesan, animasi slideLeft.', category: 'chat', size: '800×120', href: '/widgets/chat?horizontal=1&inline=1', badge: 'inline', embed: '/widgets/chat/display?theme=standard&horizontal=1&inline=1&simulate=1' },
+  { id: 'poll-bar', title: 'Poll Donut Live Vote', desc: 'Vote via chat 1-6, donat % + total naik real-time.', category: 'poll', size: '640×320', href: '/widgets/poll?theme=donut', badge: '11 tema', embed: '/widgets/poll/display?theme=donut&simulate=1' },
+  { id: 'goals', title: 'Goals Neon Bar', desc: 'Target subs dengan progress bar video neon yang hidup.', category: 'poll', size: '420×140', href: '/widgets/goals?theme=neonbar', badge: 'neon', embed: '/widgets/goals/display?theme=neonbar&simulate=1' },
+  { id: 'event', title: 'Gift Alert Overlay', desc: 'Gift, follow, like dengan efek wipe ala Twitch, real-time.', category: 'overlay', size: '420×400', href: '/widgets/event?theme=alert', badge: 'alert', embed: '/widgets/event/display?theme=alert&simulate=1' },
+  { id: 'media-vinyl', title: 'Media Player Vinyl + Lirik', desc: 'Now Playing SMTC + lirik synced LRCLIB baris per baris.', category: 'media', size: '500×140', href: '/widgets/media-player?theme=vinyl', badge: '14 tema', embed: '/widgets/media-player/display?theme=vinyl&simulate=1' },
+  { id: 'timer-subathon', title: 'Timer Glass', desc: 'Glassmorphism blur + sync dock ±5m & countdown live.', category: 'utility', size: '360×340', href: '/widgets/timer?theme=glass', badge: '7 tema', embed: '/widgets/timer/display?theme=glass&simulate=1' },
+  { id: 'ticker-qr', title: 'Ticker Neon Glow', desc: 'Running text sponsor dengan glow neon yang jalan terus.', category: 'utility', size: '640×120', href: '/widgets/ticker?theme=neon', badge: 'neon', embed: '/widgets/ticker/display?theme=neon&simulate=1' },
+  { id: 'dock', title: 'Dock Control + Mobile', desc: 'Studio Mode & scene switcher dari browser / HP.', category: 'dock', size: '1280×720', href: '/dock', badge: 'OBS WS', embed: '' },
+];
+
+/* Preview gallery = page widget aslinya via iframe ?simulate=1 (bukan mock).
+   mode light menambahkan bg putih + text gelap agar terlihat versi terangnya. */
+type GalleryMode = 'dark' | 'light';
+function galleryEmbedUrl(embed: string, mode: GalleryMode): string {
+  if (!embed || mode === 'dark') return embed;
+  const sep = embed.includes('?') ? '&' : '?';
+  return `${embed}${sep}bg=%23ffffff&textColor=%230f172a`;
+}
+function GalleryPreview({ id, embed, large, mode }: { id: string; embed: string; large?: boolean; mode: GalleryMode }) {
+  if (id === 'dock' || !embed) {
+    return (
+      <div className="w-full h-full bg-black overflow-hidden">
+        <img src="/assets/dock-preview.png" alt="Dock Control page" loading="lazy" className="w-full h-full object-cover object-top block" />
+      </div>
+    );
+  }
+  return (
+    <div className="w-full h-full bg-[#0b0f19] overflow-hidden relative">
+      <iframe
+        key={embed}
+        src={embed}
+        loading="lazy"
+        scrolling="no"
+        title={`${id}-page`}
+        className="absolute inset-0 w-full h-full border-0 pointer-events-none"
+        style={{ overflow: 'hidden' }}
+      />
+      {large ? null : <span className="absolute inset-0" aria-hidden="true" />}
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const { theme, toggle } = useTheme();
@@ -144,6 +199,15 @@ export default function LandingPage() {
     toastTimeoutRef.current = window.setTimeout(() => setToastText(''), 2600);
   };
   const [activeAestheticTab, setActiveAestheticTab] = useState<'product' | 'game' | 'aesthetic'>('product');
+  const [activeGalleryCat, setActiveGalleryCat] = useState<GalleryCategory | 'semua'>('semua');
+  const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!activeGalleryId) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setActiveGalleryId(null); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
+  }, [activeGalleryId]);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const toggleFaq = (i: number) => setOpenFaq(prev => prev === i ? null : i);
   /* Private Key mock random code show/hide - interaktif scramble */
@@ -438,22 +502,49 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* GALLERY - placeholder, ganti foto asli nanti */}
+        {/* GALLERY - hasil widget di OBS */}
         <section id="gallery" className="py-20 bg-[#f8fafc] border-t border-[#e2e8f0]">
           <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
-            <h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-2">Galeri</h2>
-            <p className="text-[15px] text-[#475569] mb-9">Intip setup dan keseruan stream para kreator OBS Dock.</p>
+            <h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-2">Hasil di OBS</h2>
+            <p className="text-[15px] text-[#475569] mb-6">Live preview langsung dari page widget (mode simulate) — klik untuk detail + langsung coba widgetnya.</p>
+            <div className="flex gap-2 flex-wrap mb-8">
+              {GALLERY_CATS.map(c => (
+                <button key={c.id} onClick={() => setActiveGalleryCat(c.id)} className={`px-4 py-2 rounded-full text-[13px] font-bold transition-all ${activeGalleryCat === c.id ? 'bg-[#005ea6] text-white shadow-[0_4px_14px_rgba(0,94,166,0.28)]' : 'bg-white text-[#475569] border border-[#e2e8f0] hover:border-[#94a3b8] hover:text-[#0f172a]'}`}>{c.label}</button>
+              ))}
+            </div>
             <div className="grid grid-cols-3 max-[1024px]:grid-cols-2 max-[640px]:grid-cols-1 gap-5">
-              {GALLERY.map((g, i) => (
-                <div key={i} className="group relative bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.10)] transition-all">
-                  <div className="w-full h-[220px] overflow-hidden bg-[#e2e8f0]">
-                    <img src={g.src} alt={g.title} loading="lazy" className="w-full h-full object-cover block group-hover:scale-105 transition-transform duration-300" />
+              {GALLERY.filter(g => activeGalleryCat === 'semua' || g.category === activeGalleryCat).map(g => (
+                <button key={g.id} onClick={() => setActiveGalleryId(g.id)} className="group relative bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.10)] transition-all text-left">
+                  <div className="w-full h-[220px] overflow-hidden bg-[#0b0f19] relative">
+                    <GalleryPreview id={g.id} embed={g.embed} />
+                    <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur text-white text-[10px] font-black tracking-widest uppercase border border-white/15">{g.badge}</span>
+                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/95 text-[#0a0e1a] text-[10px] font-bold tabular-nums">{g.size}</span>
                   </div>
-                  <div className="p-4"><p className="font-bold text-[14px] text-[#0a0e1a]">{g.title}</p></div>
-                </div>
+                  <div className="p-4"><p className="font-bold text-[14px] text-[#0a0e1a]">{g.title}</p><p className="text-[12.5px] text-[#64748b] mt-1 leading-snug">{g.desc}</p><p className="mt-2 text-[12px] font-bold text-[#005ea6] inline-flex items-center gap-1">Lihat detail <ArrowRight size={13} /></p></div>
+                </button>
               ))}
             </div>
           </div>
+          {(() => {
+            const g = GALLERY.find(x => x.id === activeGalleryId);
+            if (!g) return null;
+            return (
+              <div onClick={() => setActiveGalleryId(null)} className="fixed inset-0 z-[120] bg-[rgba(15,23,42,0.6)] backdrop-blur-[4px] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={g.title}>
+                <div onClick={e => e.stopPropagation()} className="w-full max-w-[720px] bg-white rounded-[20px] overflow-hidden border border-[#e2e8f0] shadow-2xl">
+                  <div className="w-full h-[320px] max-[640px]:h-[240px] bg-[#0b0f19] relative"><GalleryPreview id={g.id} embed={g.embed} large /><button onClick={() => setActiveGalleryId(null)} aria-label="Tutup" className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white inline-flex items-center justify-center hover:bg-black/80"><XIcon size={16} /></button></div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 flex-wrap mb-2"><span className="px-2.5 py-1 rounded-full bg-[#e0f2fe] text-[#0369a1] text-[11px] font-black uppercase tracking-widest">{g.category}</span><span className="px-2.5 py-1 rounded-full bg-[#f1f5f9] text-[#475569] text-[11px] font-bold tabular-nums">Browser Source {g.size}</span></div>
+                    <h3 className="font-extrabold text-xl text-[#0a0e1a]">{g.title}</h3>
+                    <p className="text-sm text-[#475569] mt-1">{g.desc}</p>
+                    <div className="flex gap-2.5 mt-5 flex-wrap">
+                      <Link href={g.href} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] text-white px-5 py-2.5 rounded-full text-sm font-bold transition-colors">Coba widget ini <ArrowRight size={15} /></Link>
+                      <button onClick={() => setActiveGalleryId(null)} className="inline-flex items-center gap-2 bg-white text-[#334155] border border-[#e2e8f0] px-5 py-2.5 rounded-full text-sm font-bold hover:border-[#94a3b8]">Tutup</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </section>
 
         {/* INSIDE - BENTO GRID */}
