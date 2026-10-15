@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
+import { QRCodeSVG } from 'qrcode.react';
 import { useTheme } from './components/ThemeProvider';
 import {
   User,
@@ -91,6 +92,15 @@ const CREATORS = [
   { name: 'Sarah Aliyah (@sarah_live)', role: 'TikTok Live · Pakai Gift Overlay + Poll Widget', img: '/assets/packs/vtuber.jpg' },
   { name: 'Dimas Kuroba (@kuroba_vt)', role: 'YouTube Gaming · Pakai Media Player + Lyrics Widget', img: '/assets/packs/data.jpg' },
 ];
+/* Gallery - placeholder, ganti src dengan foto asli nanti */
+const GALLERY = [
+  { src: 'https://picsum.photos/seed/obsdock1/800/600', title: 'Setup Stream 1' },
+  { src: 'https://picsum.photos/seed/obsdock2/800/600', title: 'Setup Stream 2' },
+  { src: 'https://picsum.photos/seed/obsdock3/800/600', title: 'Setup Stream 3' },
+  { src: 'https://picsum.photos/seed/obsdock4/800/600', title: 'Setup Stream 4' },
+  { src: 'https://picsum.photos/seed/obsdock5/800/600', title: 'Setup Stream 5' },
+  { src: 'https://picsum.photos/seed/obsdock6/800/600', title: 'Setup Stream 6' },
+];
 
 export default function LandingPage() {
   const { theme, toggle } = useTheme();
@@ -146,6 +156,33 @@ export default function LandingPage() {
     const id = window.setInterval(() => setMockCode(gen()), interval);
     return () => window.clearInterval(id);
   }, [showPrivateMock]);
+  /* Floating hero parallax - lerp ultra smooth */
+  useEffect(() => {
+    let raf = 0;
+    let current = window.scrollY;
+    let target = window.scrollY;
+    const onScroll = () => { target = window.scrollY; };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    const loop = () => {
+      current += (target - current) * 0.08;
+      if (Math.abs(target - current) > 0.05) {
+        document.querySelectorAll('.parallax-layer').forEach((layer) => {
+          const el = layer as HTMLElement;
+          const sx = parseFloat(el.dataset.scrollX || '0');
+          const sy = parseFloat(el.dataset.scrollY || '0');
+          const sr = parseFloat(el.dataset.scrollRotate || '0');
+          const x = current * sx;
+          const y = current * sy;
+          const r = current * sr;
+          const scale = 1 + current * 0.0002;
+          el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale}) rotate(${r}deg)`;
+        });
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('scroll', onScroll); };
+  }, []);
 
   return (
     <div className="landing-root min-h-dvh bg-[#f8fafc] text-[#475569] font-sans text-[15px] leading-[1.6] overflow-x-hidden relative pt-[72px] max-[640px]:pt-[64px] box-border transition-colors">
@@ -158,7 +195,14 @@ export default function LandingPage() {
 @keyframes lyricGantiB{0%,42%{opacity:0;transform:translateY(18px)}50%,92%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(18px)}}
 .skeleton-shimmer{position:relative;overflow:hidden}
 .skeleton-shimmer::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent);transform:translateX(-100%);animation:shimmer 1.8s infinite}
-@media(prefers-reduced-motion:reduce){.skeleton-shimmer::after,.animate-pulse,[style*="animation"]{animation:none!important}}`}</style>
+@media(prefers-reduced-motion:reduce){.skeleton-shimmer::after,.animate-pulse,[style*="animation"]{animation:none!important}}
+.hero-dot-grid{background-size:30px 30px;background-image:radial-gradient(circle,#e2e8f0 1.5px,transparent 1.5px)}
+@keyframes heroFloat{0%{transform:translateY(0px) rotate(var(--rotation,0deg))}50%{transform:translateY(-12px) rotate(calc(var(--rotation,0deg) + 2deg))}100%{transform:translateY(0px) rotate(var(--rotation,0deg))}}
+.floating-card{position:relative;animation:heroFloat 6s ease-in-out infinite;will-change:transform;--rotation:0deg}
+.float-d1{animation-delay:0s}.float-d2{animation-delay:-1.5s}.float-d3{animation-delay:-3s}.float-d4{animation-delay:-4.5s}
+.entrance-anim{opacity:0;transform:scale(0.5) translateY(30px);animation:popEntrance 1s cubic-bezier(0.16,1,0.3,1) forwards}
+@keyframes popEntrance{to{opacity:1;transform:scale(1) translateY(0)}}
+.parallax-layer{will-change:transform}`}</style>
 
       {/* NAVBAR */}
       <header className="fixed top-0 left-0 right-0 w-full z-[90] bg-[rgba(248,250,252,0.95)] backdrop-blur-[12px] border-b border-[rgba(226,232,240,0.8)] h-[72px] max-[640px]:h-[64px]">
@@ -252,37 +296,160 @@ export default function LandingPage() {
       </header>
 
       <main>
-        {/* HERO - text tengah, image mengintip setengah (peeking) */}
-        <section className="relative min-h-[calc(100vh-72px)] max-[900px]:min-h-auto flex flex-col justify-center items-center pt-12 pb-[360px] max-[900px]:pb-[280px] max-[640px]:pb-[240px] bg-[#f8fafc] overflow-visible">
-          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4 w-full">
-            <div className="flex flex-col items-center text-center max-w-[1120px] mx-auto w-full">
-              <div className="inline-flex items-center gap-2 bg-white border border-[#e2e8f0] px-3.5 py-1.5 rounded-full text-[12.5px] font-bold text-[#334155] shadow-[0_1px_4px_rgba(0,0,0,0.04)] mb-4"><span className="w-[7px] h-[7px] rounded-full bg-[#10b981] shadow-[0_0_0_3px_rgba(16,185,129,0.2)]" />OBS Studio v28+ & WebSocket Privat Siap Pakai</div>
-              <h1 className="font-extrabold text-[clamp(36px,5vw,68px)] max-[640px]:text-[clamp(30px,8vw,42px)] leading-[1.05] tracking-[-0.05em] text-[#0a0e1a] mb-4 max-w-[860px] text-balance">Kontrol OBS & 14+ Widget Stream<br /><span className="text-[#005ea6]">Langsung dari Browser</span></h1>
-              <p className="text-[clamp(14.5px,1.2vw,16.5px)] leading-[1.55] text-[#475569] max-w-[660px] mb-5 text-pretty">Ganti scene Studio Mode, kontrol audio, pasang overlay chat & event donasi real-time, serta jalankan widget interaktif tanpa software rumit. Terhubung otomatis via Browser Source dan WebSocket room privat.</p>
-              <div className="flex items-center justify-center gap-3 mb-3.5 flex-wrap">
-                <Link href={isLoggedIn ? '/dashboard' : '/register'} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] hover:-translate-y-px text-[#ffffff] px-6 py-[11px] rounded-full text-[14px] font-bold shadow-[0_4px_14px_rgba(0,94,166,0.28)] transition-all whitespace-nowrap"><span>{isLoggedIn ? 'Buka Dashboard' : 'Mulai Sekarang - Gratis'}</span> <ArrowRight size={16} /></Link>
-                <a href="#inside" className="inline-flex items-center gap-2 bg-white text-[#1e293b] border border-[#e2e8f0] px-5 py-[11px] rounded-full text-[14px] font-bold hover:border-[#94a3b8] hover:text-[#005ea6] transition-all whitespace-nowrap"><Sliders size={16} />Jelajahi Fitur</a>
-              </div>
-              <div className="flex items-center justify-center gap-2 text-xs text-[#64748b] mb-2 flex-wrap"><span className="text-[#f59e0b] tracking-[2px] text-[13px]">★★★★★</span><span className="text-[#0f172a] font-bold">500+ streamer aktif</span><span>·</span><span>Tanpa kartu kredit</span><span>·</span><span>Setup instan 60 detik</span></div>
+        {/* HERO - center text + floating OBS Dock widgets di kiri-kanan */}
+        <section className="relative min-h-[calc(100vh-72px)] flex items-center justify-center w-full overflow-hidden bg-[#f8fafc] hero-dot-grid py-24 lg:py-32">
+          {/* Center content */}
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto w-full">
+            <div className="inline-flex items-center gap-2 bg-white backdrop-blur border border-[#e2e8f0] px-3.5 py-1.5 rounded-full text-[12.5px] font-bold text-[#334155] shadow-[0_1px_4px_rgba(0,0,0,0.04)] mb-5"><span className="w-[7px] h-[7px] rounded-full bg-[#10b981] shadow-[0_0_0_3px_rgba(16,185,129,0.2)]" />OBS Studio v28+ & WebSocket Privat Siap Pakai</div>
+            <h1 className="font-extrabold text-[clamp(36px,5vw,68px)] max-[640px]:text-[clamp(30px,8vw,42px)] leading-[1.05] tracking-[-0.05em] text-[#0a0e1a] mb-4 max-w-[860px] text-balance">Kontrol OBS & 14+ Widget Stream<br /><span className="text-[#005ea6]">Langsung dari Browser</span></h1>
+            <p className="text-[clamp(14.5px,1.2vw,16.5px)] leading-[1.55] text-[#475569] max-w-[660px] mb-6 text-pretty">Ganti scene Studio Mode, kontrol audio, pasang overlay chat & event donasi real-time, serta jalankan widget interaktif tanpa software rumit. Terhubung otomatis via Browser Source dan WebSocket room privat.</p>
+            <div className="flex items-center justify-center gap-3 mb-3.5 flex-wrap">
+              <Link href={isLoggedIn ? '/dashboard' : '/register'} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] hover:-translate-y-px text-[#ffffff] px-6 py-[11px] rounded-full text-[14px] font-bold shadow-[0_4px_14px_rgba(0,94,166,0.28)] transition-all whitespace-nowrap"><span>{isLoggedIn ? 'Buka Dashboard' : 'Mulai Sekarang - Gratis'}</span> <ArrowRight size={16} /></Link>
+              <a href="#inside" className="inline-flex items-center gap-2 bg-white text-[#1e293b] border border-[#e2e8f0] px-5 py-[11px] rounded-full text-[14px] font-bold hover:border-[#94a3b8] hover:text-[#005ea6] transition-all whitespace-nowrap"><Sliders size={16} />Jelajahi Fitur</a>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs text-[#64748b] mb-2 flex-wrap"><span className="text-[#f59e0b] tracking-[2px] text-[13px]">★★★★★</span><span className="text-[#0f172a] font-bold">500+ streamer aktif</span><span>·</span><span>Tanpa kartu kredit</span><span>·</span><span>Setup instan 60 detik</span></div>
+            {/* Dock preview mini - tetap tampil di bawah CTA */}
+            <div className="mt-10 w-full max-w-[720px] bg-[#0b0f19] rounded-[18px] border border-[#1e293b] shadow-[0_32px_70px_-12px_rgba(0,0,0,0.4)] overflow-hidden text-left">
+              <div className="w-full relative bg-black overflow-hidden block"><img src="/assets/dock-preview.png" alt="OBS Dock Controller Interface (/dock)" className="w-full h-auto block object-cover object-top max-h-[380px]" /></div>
             </div>
           </div>
-          {/* Image mengintip - diperbesar lagi */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full max-w-[1240px] px-6 max-[640px]:px-4 pointer-events-none">
-            <div className="w-full bg-[#0b0f19] rounded-[18px] border border-[#1e293b] shadow-[0_32px_70px_-12px_rgba(0,0,0,0.55)] overflow-hidden text-left hover:-translate-y-1 hover:shadow-[0_38px_80px_-12px_rgba(0,0,0,0.65)] transition-all pointer-events-auto">
-              <div className="w-full relative bg-black overflow-hidden block"><img src="/assets/dock-preview.png" alt="OBS Dock Controller Interface (/dock)" className="w-full h-auto block object-cover object-top max-h-[720px] max-[1000px]:max-h-[480px] max-[640px]:max-h-[360px] min-h-[320px]" /></div>
+
+          {/* Floating widgets - desktop only */}
+          <div className="hidden lg:block absolute inset-0 pointer-events-none z-0">
+            {/* 1. Chat Widget (Top Left) */}
+            <div className="absolute" style={{ top: '10%', left: '3.5%', zIndex: 10 }}>
+              <div className="parallax-layer" data-scroll-x="-0.25" data-scroll-y="-0.4" data-scroll-rotate="-0.02">
+                <div className="entrance-anim" style={{ animationDelay: '0.1s' }}>
+                  <div className="floating-card float-d1 bg-white rounded-[20px] p-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] border border-[#e2e8f0] w-60 text-left" style={{ ['--rotation' as string]: '-6deg' }}>
+                    <div className="flex items-center gap-2 mb-3"><span className="w-8 h-8 rounded-[10px] bg-[#e0f2fe] border border-[#bae6fd] inline-flex items-center justify-center"><MessageSquare size={15} color="#0369a1" /></span><div><p className="text-[12px] font-extrabold text-[#0a0e1a] leading-none">Live Chat</p><p className="text-[10px] text-[#64748b] font-medium">Twitch · YouTube · TikTok</p></div><span className="ml-auto w-2 h-2 rounded-full bg-[#10b981] animate-pulse" /></div>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="bg-[#f8fafc] rounded-xl px-2.5 py-1.5 border border-[#f1f5f9]"><p className="text-[10.5px] leading-snug text-[#334155]"><span className="font-bold text-[#005ea6]">Rian_FPS:</span> scene ganti smooth banget!</p></div>
+                      <div className="bg-[#f8fafc] rounded-xl px-2.5 py-1.5 border border-[#f1f5f9]"><p className="text-[10.5px] leading-snug text-[#334155]"><span className="font-bold text-[#ea580c]">SarahLive:</span> gift overlay muncul real-time 🔥</p></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Goals Widget (Middle Left) */}
+            <div className="absolute" style={{ top: '43%', left: '1.5%', zIndex: 10 }}>
+              <div className="parallax-layer" data-scroll-x="-0.4" data-scroll-y="-0.05" data-scroll-rotate="-0.01">
+                <div className="entrance-anim" style={{ animationDelay: '0.2s' }}>
+                  <div className="floating-card float-d2 bg-white rounded-[20px] p-5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] text-[#0a0e1a] w-48 border border-[#e2e8f0]" style={{ ['--rotation' as string]: '-4deg' }}>
+                    <p className="text-[10px] font-bold tracking-widest text-[#64748b] mb-1">SUB GOALS</p>
+                    <h3 className="font-extrabold text-xl leading-tight tracking-tight mb-4">342 / 500<br /><span className="text-sm font-bold text-[#475569]">Subs Bulan Ini</span></h3>
+                    <div className="flex flex-col gap-2"><span className="text-[10px] font-medium text-[#64748b]">68% tercapai</span><div className="w-full bg-[#e0f2fe] rounded-full h-1.5"><div className="bg-gradient-to-r from-[#005ea6] to-[#10b981] h-1.5 rounded-full w-[68%]" /></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Event Overlay stack (Bottom Left) */}
+            <div className="absolute" style={{ bottom: '16%', left: '4%', zIndex: 10 }}>
+              <div className="parallax-layer" data-scroll-x="-0.35" data-scroll-y="0.1" data-scroll-rotate="0.02">
+                <div className="entrance-anim" style={{ animationDelay: '0.3s' }}>
+                  <div className="floating-card float-d3 flex flex-col w-64" style={{ ['--rotation' as string]: '2deg' }}>
+                    <div className="bg-white rounded-2xl p-3 shadow-sm border border-[#e2e8f0] flex items-center gap-2.5 translate-y-6 scale-[0.85] opacity-60 mx-auto w-full">
+                      <span className="w-7 h-7 rounded-full bg-[#ffedd5] inline-flex items-center justify-center"><Gift size={13} color="#ea580c" /></span>
+                      <p className="text-[11px] text-[#475569]"><span className="font-bold text-[#0a0e1a]">BoyStream</span> gift <span className="font-bold text-[#005ea6]">Pauss x10</span></p>
+                    </div>
+                    <div className="bg-white rounded-2xl p-3 shadow-md border border-[#e2e8f0] flex items-center gap-2.5 translate-y-3 scale-[0.92] opacity-90 mx-auto w-full z-10">
+                      <span className="w-7 h-7 rounded-full bg-[#e0f2fe] inline-flex items-center justify-center"><User size={13} className="text-[#0369a1]" /></span>
+                      <p className="text-[11px] text-[#475569]"><span className="font-bold text-[#0a0e1a]">NitaChannel</span> follow <span className="font-bold text-[#005ea6]">baru!</span></p>
+                    </div>
+                    <div className="bg-white rounded-2xl p-3 shadow-xl border border-[#e2e8f0] flex items-center gap-2.5 z-20 w-full">
+                      <span className="w-8 h-8 rounded-full bg-[#dcfce7] inline-flex items-center justify-center shrink-0"><Gift size={14} color="#16a34a" /></span>
+                      <div className="flex-1"><p className="text-[11px] text-[#475569]"><span className="font-bold text-[#0a0e1a]">DimasKuroba</span> donasi <span className="font-bold text-[#005ea6]">Rp50rb</span></p><p className="text-[9px] text-[#94a3b8] mt-0.5">real-time via WebSocket · 2s lalu</p></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Media Player + Lirik (Top Right) */}
+            <div className="absolute" style={{ top: '9%', right: '4%', zIndex: 10 }}>
+              <div className="parallax-layer" data-scroll-x="0.3" data-scroll-y="-0.4" data-scroll-rotate="0.02">
+                <div className="entrance-anim" style={{ animationDelay: '0.15s' }}>
+                  <div className="floating-card float-d2 bg-white rounded-[20px] overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] w-60 border border-[#e2e8f0]" style={{ ['--rotation' as string]: '6deg' }}>
+                    <div className="p-4 pb-3 flex items-center gap-2.5">
+                      <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-blue-600 inline-flex items-center justify-center shrink-0"><Headphones size={16} className="text-white" /></span>
+                      <div className="min-w-0"><p className="text-[#64748b] text-[10px] font-bold tracking-widest">MEDIA PLAYER</p><p className="text-[#0a0e1a] font-bold text-[13px] truncate">Night Drive - Synthwave</p></div>
+                    </div>
+                    <div className="bg-[#faf5ff] mt-1 rounded-t-2xl p-3 relative mx-2 mb-2 border border-[#f3e8ff]">
+                      <div className="flex items-center gap-1.5 mb-2"><span className="w-12 h-1.5 bg-[#ede9fe] rounded-full" /><span className="ml-auto text-[9px] font-bold text-[#7c3aed] bg-[#ede9fe] px-1.5 py-0.5 rounded-full">LRCLIB ● SYNC</span></div>
+                      <p className="text-center text-[11px] font-bold text-[#a855f7]">♪ melaju lewat cahaya kota ♪</p>
+                      <div className="flex items-center gap-1.5 mt-2.5"><div className="h-1 flex-1 bg-[#e2e8f0] rounded-full overflow-hidden"><div className="h-full w-[45%] bg-[#005ea6] rounded-full" /></div><span className="text-[9px] font-bold text-[#64748b]">01:32</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. Poll Widget (Middle Right) */}
+            <div className="absolute" style={{ top: '42%', right: '1.8%', zIndex: 10 }}>
+              <div className="parallax-layer" data-scroll-x="0.4" data-scroll-y="-0.05" data-scroll-rotate="0.01">
+                <div className="entrance-anim" style={{ animationDelay: '0.25s' }}>
+                  <div className="floating-card float-d1 bg-white rounded-[20px] p-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] border-2 border-[#005ea6] w-52 text-left" style={{ ['--rotation' as string]: '4deg' }}>
+                    <div className="flex items-center gap-1.5 mb-2.5"><BarChart3 size={13} color="#005ea6" /><h4 className="text-[11px] font-extrabold text-[#0a0e1a]">Poll: Main apa next?</h4></div>
+                    <div className="flex flex-col gap-1.5">
+                      <div><div className="flex justify-between text-[10px] font-bold mb-1"><span className="text-[#0a0e1a]">Valorant</span><span className="text-[#005ea6]">62%</span></div><div className="h-1.5 bg-[#e0f2fe] rounded-full"><div className="h-full w-[62%] bg-[#005ea6] rounded-full" /></div></div>
+                      <div><div className="flex justify-between text-[10px] font-bold mb-1"><span className="text-[#0a0e1a]">GTA V</span><span className="text-[#64748b]">38%</span></div><div className="h-1.5 bg-[#f1f5f9] rounded-full"><div className="h-full w-[38%] bg-[#94a3b8] rounded-full" /></div></div>
+                    </div>
+                    <p className="text-[9px] text-[#64748b] font-medium mt-2">128 vote · TikTok Live</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 6. QR + Timer (Bottom Right) - QR asli bisa di-scan */}
+            <div className="absolute" style={{ bottom: '16%', right: '3.5%', zIndex: 10 }}>
+              <div className="parallax-layer" data-scroll-x="0.35" data-scroll-y="0.1" data-scroll-rotate="0.02">
+                <div className="entrance-anim" style={{ animationDelay: '0.35s' }}>
+                  <div className="floating-card float-d3 bg-white rounded-[20px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] w-56 border border-[#e2e8f0] overflow-hidden text-left" style={{ ['--rotation' as string]: '-4deg' }}>
+                    <div className="p-4 pb-2 flex flex-col items-center text-center">
+                      <div className="bg-[#ffffff] p-2 rounded-xl border-2 border-[#0a0e1a]">
+                        <QRCodeSVG value="We Fight Together" size={104} fgColor="#0a0e1a" bgColor="#ffffff" level="M" />
+                      </div>
+                      <p className="text-[12px] font-bold text-[#0a0e1a] mt-2">We Fight Together!</p>
+                      <p className="text-[10px] text-[#64748b]">Scan QR-nya</p>
+                    </div>
+                    <div className="mx-3.5 mb-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-[#64748b] tracking-widest">TIMER GIVEAWAY</span><span className="font-mono text-[13px] font-extrabold text-[#0a0e1a]">04:59</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* PLATFORMS - hover only, tidak perlu selectable - pt besar karena hero image mengintip diperbesar */}
-        <section id="platforms" className="pt-[420px] pb-[60px] max-[1000px]:pt-[320px] max-[640px]:pt-[260px] text-center border-t border-[#e2e8f0]">
+        {/* PLATFORMS */}
+        <section id="platforms" className="py-[60px] text-center border-t border-[#e2e8f0] bg-white relative z-20">
           <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
             <h2 className="font-extrabold text-[clamp(32px,4vw,50px)] tracking-[-0.04em] text-[#0a0e1a] mb-[30px] flex items-center justify-center flex-wrap gap-3 select-none"><span>Stream Overlays</span><span>for</span><span className="bg-[#005ea6] text-[#ffffff] px-5 py-0.5 rounded-full inline-block shadow-[0_4px_14px_rgba(0,94,166,0.28)] select-none">Every Platform</span></h2>
             <div className="flex justify-center items-center flex-wrap gap-4 max-w-[900px] mx-auto">
               {PLATFORMS.map(p => (
                 <div key={p.id} className="group inline-flex items-center gap-2 border rounded-full px-5 py-2.5 text-[14.5px] font-bold shadow-[0_2px_6px_rgba(0,0,0,0.04)] transition-all cursor-default select-none bg-white border-[#e2e8f0] text-[#334155] hover:bg-[#0f172a] hover:border-[#0f172a] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)]">
-                  <img src={p.icon} alt={p.name} className="w-5 h-5 object-contain transition-all group-hover:brightness-0" />
+                  <img src={p.icon} alt={p.name} className="w-5 h-5 object-contain transition-all group-hover:brightness-0 dark:invert dark:group-hover:invert-0" />
                   <span>{p.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* GALLERY - placeholder, ganti foto asli nanti */}
+        <section id="gallery" className="py-20 bg-[#f8fafc] border-t border-[#e2e8f0]">
+          <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
+            <h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-2">Galeri</h2>
+            <p className="text-[15px] text-[#475569] mb-9">Intip setup dan keseruan stream para kreator OBS Dock.</p>
+            <div className="grid grid-cols-3 max-[1024px]:grid-cols-2 max-[640px]:grid-cols-1 gap-5">
+              {GALLERY.map((g, i) => (
+                <div key={i} className="group relative bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.10)] transition-all">
+                  <div className="w-full h-[220px] overflow-hidden bg-[#e2e8f0]">
+                    <img src={g.src} alt={g.title} loading="lazy" className="w-full h-full object-cover block group-hover:scale-105 transition-transform duration-300" />
+                  </div>
+                  <div className="p-4"><p className="font-bold text-[14px] text-[#0a0e1a]">{g.title}</p></div>
                 </div>
               ))}
             </div>
