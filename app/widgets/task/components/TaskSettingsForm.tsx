@@ -5,6 +5,7 @@ import { Palette, Clock, ListChecks, Monitor, Copy, Image as ImageIcon } from 'l
 import { TASK_THEMES, TASK_ANIMS, TASK_HORIZONTAL_ANIMS, TASK_HIDE_ANIMS, type TaskSettings } from '../config';
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
+import { FlatlineTaskSettingsSection } from '../../_shared/components/FlatlineTaskSettingsSection';
 import type { TaskItem } from '../themes/types';
 
 export function TaskSettingsForm({
@@ -67,6 +68,10 @@ export function TaskSettingsForm({
         </div>
       </div>
 
+      {state.theme === 'flatline' && (
+        <FlatlineTaskSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />
+      )}
+
       {/* Posisi - Global */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>
@@ -93,7 +98,7 @@ export function TaskSettingsForm({
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Auto collapsed on time</span><input type="checkbox" checked={(state as unknown as { autoCollapse: boolean }).autoCollapse || false} onChange={(e) => update('autoCollapse' as keyof TaskSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
           {(state as unknown as { autoCollapse: boolean }).autoCollapse && (
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Collapse setelah (detik)</span><input type="number" min={1} max={60} value={(state as unknown as { collapseAfter: number }).collapseAfter ?? 3} onChange={(e) => update('collapseAfter' as keyof TaskSettings, parseInt(e.target.value) || 3)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /><span className="text-[10px] text-gray-500 mt-1 block">Awalnya muncul semua, sekian detik collapse ke 1 task belum done. Berlaku di Focus/Minimal/Glass.</span></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Collapse setelah (detik)</span><input type="number" min={1} max={60} value={(state as unknown as { collapseAfter: number }).collapseAfter ?? 3} onChange={(e) => update('collapseAfter' as keyof TaskSettings, parseInt(e.target.value) || 3)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /><span className="text-[10px] text-gray-500 mt-1 block">Awalnya muncul semua, sekian detik collapse ke 1 task belum done. Berlaku di Focus/Minimal/Glass/Flatline.</span></label>
           )}
           <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Jika aktif: awalnya tampil semua, setelah {(state as unknown as { collapseAfter: number }).collapseAfter ?? 3}s collapse ke task selanjutnya aja. Ketika di-checklist di Dock, muncul lagi semua, sekian detik collapse lagi.</div>
         </div>

@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Polling, { PollingRef } from "../components/Polling";
 import MusicControl from "./components/MusicControl";
+import MusicQueueList from "./components/MusicQueueList";
 import { useTtSbMap } from "../hooks/useTtSbMap";
 import { useWidgetSbMap } from "../hooks/useWidgetSbMap";
 import { useDonationSbMap, type DonationSbEventKey } from "../hooks/useDonationSbMap";
@@ -249,6 +250,7 @@ export default function Home() {
         cardTt: true,
         arrivals: true,
         summary: true,
+        musicQueue: true,
     };
     const [sectionVisible, setSectionVisible] = useState(defaultSectionVisible);
 
@@ -3449,6 +3451,10 @@ export default function Home() {
                                 </div>
                                 )}
 
+                                {(sectionVisible as any).musicQueue !== false && (
+                                    <MusicQueueList getRoom={() => privateKey || readStoredDockKey(true) || "global"} />
+                                )}
+
                                 {(sectionVisible as any).arrivals !== false && (
                                 <div className="flex-1 bg-[#161616] border border-white/5 rounded-xl p-4 flex flex-col overflow-hidden min-h-62.5">
                                     <div className="flex items-center justify-between mb-4">
@@ -3620,6 +3626,10 @@ export default function Home() {
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
                                         <span className="text-gray-400 uppercase font-bold text-[8px]">Ringkasan Sesi</span>
                                         <input type="checkbox" checked={(sectionVisible as any).summary !== false} onChange={(e) => toggleSection("summary" as any, e.target.checked)} className="w-3 h-3 accent-blue-500 cursor-pointer" />
+                                    </div>
+                                    <div className="flex justify-between items-center py-1 border-t border-white/5">
+                                        <span className="text-gray-400 uppercase font-bold text-[8px]">Music Queue</span>
+                                        <input type="checkbox" checked={(sectionVisible as any).musicQueue !== false} onChange={(e) => toggleSection("musicQueue" as any, e.target.checked)} className="w-3 h-3 accent-blue-500 cursor-pointer" />
                                     </div>
                                 </div>
 

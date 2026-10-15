@@ -8,6 +8,14 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/reset-password'
 
+  // OAuth Google dibatalkan/gagal (mis. user menekan kembali / provider belum aktif)
+  // -> Supabase redirect ke sini dengan ?error=... tanpa code.
+  if (!code && searchParams.get('error')) {
+    const url = new URL('/login', origin)
+    url.searchParams.set('error', 'oauth')
+    return NextResponse.redirect(url)
+  }
+
   if (code) {
     const supabaseResponse = NextResponse.redirect(`${origin}${next}`)
     const supabase = createServerClient(

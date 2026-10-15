@@ -1,5 +1,6 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
+import { FLATLINE_DEFAULTS, appendFlatlineParams } from '../_shared/constants/flatline';
 import { buildWidgetUrl } from '../_shared/utils/url';
 
 export const TIMER_THEMES = [
@@ -9,6 +10,7 @@ export const TIMER_THEMES = [
   { value: 'minimal', label: 'Minimal' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'flatline', label: 'Flatline - Sticker' },
 ] as const;
 
 export const TIMER_FONTS = WIDGET_FONTS;
@@ -37,6 +39,7 @@ export const TIMER_DEFAULTS = {
   subathonMode: 'powerup' as string,
   showProgress: true as boolean,
   ...BRUTALIST_DEFAULTS,
+  ...FLATLINE_DEFAULTS,
 } as const;
 
 export type TimerSettings = typeof TIMER_DEFAULTS;
@@ -52,6 +55,7 @@ export function buildTimerUrl(base: string, s: TimerSettings): string {
   );
   const p = new URLSearchParams(url.split('?')[1] || '');
   appendBrutalistParams(p, s as unknown as Record<string, unknown>);
+  appendFlatlineParams(p, s as unknown as Record<string, unknown>);
   const baseUrl = url.split('?')[0];
   return `${baseUrl}?${p.toString()}`;
 }

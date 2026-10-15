@@ -1,4 +1,5 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { TASK_FLATLINE_DEFAULTS, appendTaskFlatlineParams } from '../_shared/constants/flatlineTask';
 import type { TaskItem } from './themes/types';
 
 export const TASK_THEMES = [
@@ -7,6 +8,7 @@ export const TASK_THEMES = [
   { value: 'minimal', label: 'Minimal' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'flatline', label: 'Flatline - Pill' },
 ] as const;
 
 export const TASK_FONTS = WIDGET_FONTS;
@@ -66,6 +68,7 @@ export const TASK_DEFAULTS = {
   inline: false,
   autoCollapse: false,
   collapseAfter: 3,
+  ...TASK_FLATLINE_DEFAULTS,
   tasks: [
     { id: '1', text: '10 Pushups', completed: false, user: 'GamerPro' },
     { id: '2', text: 'Drink water!', completed: true, user: 'StreamFan' },
@@ -95,6 +98,7 @@ export function buildTaskUrl(base: string, s: TaskSettings): string {
   p.set('inline', (s as unknown as { inline: boolean }).inline ? '1' : '0');
   p.set('autoCollapse', (s as unknown as { autoCollapse: boolean }).autoCollapse ? '1' : '0');
   p.set('collapseAfter', String((s as unknown as { collapseAfter: number }).collapseAfter ?? 3));
+  appendTaskFlatlineParams(p, s as unknown as Record<string, unknown>);
   p.set('tasks', encodeURIComponent(JSON.stringify(s.tasks)));
   return `${base}?${p.toString()}`;
 }

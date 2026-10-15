@@ -5,6 +5,7 @@ import FocusTheme from '../themes/Focus';
 import MinimalTheme from '../themes/Minimal';
 import GlassTheme from '../themes/Glass';
 import PlainTheme from '../themes/Plain';
+import FlatlineTheme from '../themes/Flatline';
 import type { TaskSettings } from '../config';
 import { ANIM_MAP } from '../../_shared/constants/animations';
 
@@ -88,8 +89,16 @@ export function TaskPreview({ state, onToggleTask }: {
     collapseAfter,
     collapsedIds,
     isExpanded,
+    taskFlatPill: (state as unknown as Record<string, unknown>).taskFlatPill as string,
+    taskFlatBright: (state as unknown as Record<string, unknown>).taskFlatBright as string,
+    taskFlatDim: (state as unknown as Record<string, unknown>).taskFlatDim as string,
+    taskFlatLine: (state as unknown as Record<string, unknown>).taskFlatLine as string,
+    taskFlatLineDone: (state as unknown as Record<string, unknown>).taskFlatLineDone as string,
+    taskFlatChevron: (state as unknown as Record<string, unknown>).taskFlatChevron as boolean,
+    taskFlatUppercase: (state as unknown as Record<string, unknown>).taskFlatUppercase as boolean,
   } as const;
 
+  if (state.theme === 'flatline') return <FlatlineTheme {...props} />;
   if (state.theme === 'glass') return <GlassTheme {...props} onAddTask={() => {}} />;
   if (state.theme === 'minimal') return <MinimalTheme {...props} />;
   if (state.theme === 'plain') return <PlainTheme {...props} />;

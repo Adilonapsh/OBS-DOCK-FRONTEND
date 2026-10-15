@@ -14,7 +14,9 @@ import MinimalTheme from '../themes/Minimal';
 import GlassTheme from '../themes/Glass';
 import PlainTheme from '../themes/Plain';
 import BrutalistTheme from '../themes/Brutalist';
+import FlatlineTheme from '../themes/Flatline';
 import { parseTasksParam } from '../config';
+import { parseTaskFlatlineParams } from '../../_shared/constants/flatlineTask';
 import type { TaskItem } from '../themes/types';
 
 function TaskInner() {
@@ -38,6 +40,7 @@ function TaskInner() {
   const inline = getBoolParam(params, 'inline', false);
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
+  const flatlineTask = parseTaskFlatlineParams((k) => params.get(k));
   const tasksParam = parseTasksParam(params.get('tasks'));
   // mode OBS: default kosong (tunggu data real dari dock), bukan demo
   const tasksFromUrl: TaskItem[] = obsMode ? (tasksParam || []) : (tasksParam || [
@@ -178,15 +181,16 @@ function TaskInner() {
     collapseAfter,
     collapsedIds,
     isExpanded,
+    ...flatlineTask,
   };
 
   return (
     <>
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@600;700;800;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#e6c8bf'}; }`}</style>
-      <div className={`${obsMode ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4' : 'w-full min-h-screen flex p-6'}`} style={{ ...posStyle, background: obsMode ? 'transparent' : theme === 'glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : 'linear-gradient(135deg, #eacbc2 0%, #dfb8ad 100%)' } as any}>
-        <AutoScale defaultBase={360} baseWidth={theme === 'glass' ? 420 : theme === 'focus' ? 330 : theme === 'brutalist' ? 380 : 360}>
-          {theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'minimal' ? <MinimalTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : theme === 'brutalist' ? <BrutalistTheme {...themeProps} /> : <FocusTheme {...themeProps} />}
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@600;700;800;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : theme === 'flatline' ? (flatlineTask.taskFlatPage || '#8c90d5') : '#e6c8bf'}; }`}</style>
+      <div className={`${obsMode ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4' : 'w-full min-h-screen flex p-6'}`} style={{ ...posStyle, background: obsMode ? 'transparent' : theme === 'glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : theme === 'flatline' ? (flatlineTask.taskFlatPage || '#8c90d5') : 'linear-gradient(135deg, #eacbc2 0%, #dfb8ad 100%)' } as any}>
+        <AutoScale defaultBase={360} baseWidth={theme === 'glass' ? 420 : theme === 'focus' ? 330 : theme === 'brutalist' ? 380 : theme === 'flatline' ? 380 : 360}>
+          {theme === 'glass' ? <GlassTheme {...themeProps} /> : theme === 'minimal' ? <MinimalTheme {...themeProps} /> : theme === 'plain' ? <PlainTheme {...themeProps} /> : theme === 'brutalist' ? <BrutalistTheme {...themeProps} /> : theme === 'flatline' ? <FlatlineTheme {...themeProps} /> : <FocusTheme {...themeProps} />}
         </AutoScale>
       </div>
     </>

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { User, Mail, Lock, Eye, EyeOff, UserPlus, Monitor, Sparkles, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import AuthLayout from "../components/AuthLayout";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -159,12 +160,17 @@ export default function RegisterPage() {
                             {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
                             {loading ? "Memproses..." : "Buat Akun"}
                         </button>
+                        <p className="text-center text-[10px] text-gray-600 leading-relaxed">
+                            Dengan mendaftar, kamu menyetujui <Link href="/terms" className="text-gray-200 font-bold underline decoration-white/30 underline-offset-2 hover:text-white">Syarat & Ketentuan</Link> dan <Link href="/privacy" className="text-gray-200 font-bold underline decoration-white/30 underline-offset-2 hover:text-white">Kebijakan Privasi</Link> kami.
+                        </p>
 
                         <div className="flex items-center gap-3 py-1">
                             <div className="flex-1 h-px bg-white/5" />
                             <span className="text-[8px] font-black tracking-widest uppercase text-gray-600">atau</span>
                             <div className="flex-1 h-px bg-white/5" />
                         </div>
+
+                        <GoogleAuthButton next="/dashboard" label="Daftar dengan Google" onError={setError} />
 
                         <button type="button" onClick={() => { const gk = "guest_" + Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join(""); sessionStorage.setItem("guest_private_key", gk); sessionStorage.setItem("dock_private_verified", gk); try { localStorage.setItem("dock_private_key", gk); } catch {} router.push("/dock"); }} className="w-full h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-colors">
                             <Monitor className="w-3.5 h-3.5" /> Masuk sebagai Guest

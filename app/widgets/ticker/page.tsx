@@ -2,7 +2,7 @@
 
 import { useMemo, Suspense } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Monitor, RefreshCw, Megaphone } from 'lucide-react';
+import { ExternalLink, Monitor, RefreshCw, Megaphone, GripVertical } from 'lucide-react';
 import { useTickerSettings } from './hooks/useTickerSettings';
 import { useWidgetPageShell } from '../_shared/hooks/useWidgetPage';
 import { WidgetPageModals, toggleShowKey } from '../_shared/components/WidgetPageModals';
@@ -57,6 +57,15 @@ function TickerSettingsInner() {
               <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>
               <button onClick={() => window.open(previewUrl, '_blank')} className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white"><ExternalLink className="w-3 h-3" /> Popout Style</button>
             </div>
+            <a
+              href={obsUrl}
+              draggable
+              onDragStart={(e) => { e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed = 'copy'; }}
+              title="Tahan & drag langsung ke OBS Sources"
+              className="mt-2 h-9 flex items-center justify-center gap-1.5 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl text-[10px] font-black uppercase cursor-grab active:cursor-grabbing select-none"
+            >
+              <GripVertical className="w-3.5 h-3.5" /> Drag ke OBS
+            </a>
           </>
         }
       />

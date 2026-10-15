@@ -10,6 +10,7 @@ import { ANIM_MAP, KEYFRAMES_CSS } from '../../_shared/constants/animations';
 import { getTimerTheme } from '../themes/registry';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { parseBrutalistParams } from '../../_shared/constants/brutalist';
+import { parseFlatlineParams } from '../../_shared/constants/flatline';
 import { AutoScale } from '../../_shared/components/AutoScale';
 
 function TimerInner() {
@@ -32,6 +33,7 @@ function TimerInner() {
   const pos = getStringParam(params, 'pos', 'center');
   const showProgress = getBoolParam(params, 'showProgress', true);
   const brutalist = parseBrutalistParams((k) => params.get(k));
+  const flatline = parseFlatlineParams((k) => params.get(k));
 
   const [focusMinutes, setFocusMinutes] = useState(focusMinutesParam);
   const [totalSessions, setTotalSessions] = useState(totalSessionsParam);
@@ -167,17 +169,17 @@ function TimerInner() {
       (timerSocketRef.current as any).emit('timer-control', { privateKey: room, action: sec >= 0 ? 'add' : 'sub', seconds: Math.abs(sec) });
     }
   };
-  const themeProps = { font, fontSize, accent, bg, bgOpacity, textColor, pos, timerSeconds: totalSeconds, isRunning: isRunning && !pausedByMode, currentSession, totalSessions, focusMinutes, showProgress, ...brutalist, onToggleTimer: () => setIsRunning((v) => !v), onResetTimer: () => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); }, onNextSession: () => { setCurrentSession((c) => (c < totalSessions ? c + 1 : 1)); setTotalSeconds(focusMinutes * 60); setIsRunning(false); }, onAddTime: handleAddTime, anim: animName, subathonMode, addedSeconds } as const;
+  const themeProps = { font, fontSize, accent, bg, bgOpacity, textColor, pos, timerSeconds: totalSeconds, isRunning: isRunning && !pausedByMode, currentSession, totalSessions, focusMinutes, showProgress, ...brutalist, ...flatline, onToggleTimer: () => setIsRunning((v) => !v), onResetTimer: () => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); }, onNextSession: () => { setCurrentSession((c) => (c < totalSessions ? c + 1 : 1)); setTotalSeconds(focusMinutes * 60); setIsRunning(false); }, onAddTime: handleAddTime, anim: animName, subathonMode, addedSeconds } as const;
   const Theme = getTimerTheme(theme);
   // subathonMode sengaja tidak dimasukkan ke displayKey - mode diubah dari dock tidak boleh
   // menyebabkan Theme remount (yang akan memicu ulang animasi entry dan membuat timer tampak reset)
-  const displayKey = `${theme}-${accent}-${bg}-${textColor}-${bgOpacity}-${font}-${anim}-${pos}`;
+  const displayKey = `${theme}-${accent}-${bg}-${textColor}-${bgOpacity}-${font}-${anim}-${pos}-${flatline.flatlineCard}-${flatline.flatlineHours}-${flatline.flatlineMinutes}-${flatline.flatlineDays}-${flatline.flatlineSeconds}-${flatline.flatlineBubble}-${flatline.flatlineBadge}-${flatline.flatlineBackText}-${flatline.flatlineShowBubbles}-${flatline.flatlineShowBack}-${flatline.flatlineTilt}-${flatline.flatlineLayout}`;
 
   return (
     <>
       {obsMode && !simulate && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode && !simulate ? 'transparent !important' : '#e6c8bf'}; }`}</style>
-      <div className={`${obsMode && !simulate ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen flex p-6 relative`}`} style={{ ...posStyle, background: obsMode && !simulate ? 'transparent' : theme === 'subathon' ? '#abb3f8' : theme === 'glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : 'linear-gradient(135deg, #eacbc2 0%, #dfb8ad 100%)' } as any}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode && !simulate ? 'transparent !important' : theme === 'flatline' ? (flatline.flatlinePageBg || '#8c90d5') : '#e6c8bf'}; }`}</style>
+      <div className={`${obsMode && !simulate ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen flex p-6 relative`}`} style={{ ...posStyle, background: obsMode && !simulate ? 'transparent' : theme === 'subathon' ? '#abb3f8' : theme === 'glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : theme === 'flatline' ? (flatline.flatlinePageBg || '#8c90d5') : 'linear-gradient(135deg, #eacbc2 0%, #dfb8ad 100%)' } as any}>
         <div className="flex flex-col items-center gap-4">
           <AutoScale defaultBase={360} baseWidth={theme === 'focus' ? 330 : theme === 'glass' ? 576 : 360}>
             <Theme key={displayKey} {...themeProps} />

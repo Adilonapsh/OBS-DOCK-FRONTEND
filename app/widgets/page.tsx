@@ -22,7 +22,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate";
+  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant";
   recommended?: boolean;
   w: number;
   h: number;
@@ -255,6 +255,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "full",
     recommended: true,
     w: 1920, h: 1080,
+  },
+  {
+    id: "valorant",
+    title: "Valorant Rank",
+    desc: "Ranked stats card Valorant - regular + mini overlay, RR progress, W/L + winrate + streak, animasi RANK UP/DOWN. Fetch via backend /api/valo (bebas CORS).",
+    category: "info",
+    tags: ["Valorant", "Rank", "RR", "OBS"],
+    layout: "valorant",
+    params: "region=ap&platform=pc&view=regular&refresh=30&theme=auto&font=Outfit",
+    preview: "valorant",
+    recommended: true,
+    w: 650, h: 420,
   },
 ];
 
@@ -514,6 +526,22 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "valorant") {
+    return (
+      <div className="w-full h-full bg-black flex items-center justify-center p-3">
+        <div className="flex items-center gap-2 px-3 py-2 bg-white/[0.06] border border-white/10 rounded-2xl w-full max-w-[220px]">
+          <div className="w-10 h-10 rounded-xl bg-[#ff4655]/20 border border-[#ff4655]/30 grid place-items-center shrink-0">
+            <span className="text-[#ff4655] font-black text-[10px]">IMM</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[#ff4655] font-black text-[9px] uppercase tracking-widest leading-none">Diamond 2</div>
+            <div className="mt-1.5 h-1.5 bg-white/10 rounded-full overflow-hidden"><div className="h-full w-[67%] bg-[#ff4655] rounded-full" /></div>
+            <div className="mt-1 text-white/60 text-[6px] font-bold">67 RR • 12W - 8L</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   // full
   return (    <div className="w-full h-full bg-black relative p-2 overflow-hidden">
       <div className="absolute top-2 left-2 flex gap-1">
@@ -661,6 +689,10 @@ function WidgetsListing() {
     }
     if (item.id === 'heartrate') {
       const base = `${window.location.origin}/widgets/heartrate/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'valorant') {
+      const base = `${window.location.origin}/widgets/valorant/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     if (item.id === 'custom') {
@@ -870,6 +902,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/heartrate${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'valorant' ? (
+                        <Link href={`/widgets/valorant${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'custom' ? (
                         <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Layers className="w-3 h-3" /> Open Editor
@@ -884,7 +920,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

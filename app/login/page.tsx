@@ -5,6 +5,7 @@ import Link from "next/link";
 import { User, Lock, Eye, EyeOff, LogIn, Monitor, Sparkles, AlertCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import AuthLayout from "../components/AuthLayout";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 function LoginContent() {
     const router = useRouter();
@@ -28,6 +29,13 @@ function LoginContent() {
         });
         return () => subscription.unsubscribe();
     }, []);
+
+    useEffect(() => {
+        // pesan error dari OAuth Google yang dibatalkan/gagal (redirect /auth/confirm → /login?error=oauth)
+        if (searchParams.get("error") === "oauth") {
+            setError("Login Google dibatalkan atau gagal. Pastikan provider Google aktif di Supabase Dashboard → Authentication → Providers, lalu coba lagi.");
+        }
+    }, [searchParams]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -173,6 +181,8 @@ function LoginContent() {
                             <span className="text-[8px] font-black tracking-widest uppercase text-gray-600">atau</span>
                             <div className="flex-1 h-px bg-white/5" />
                         </div>
+
+                        <GoogleAuthButton next={next} label="Masuk dengan Google" onError={setError} />
 
                         <button type="button" onClick={() => { const gk = "guest_" + Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join(""); sessionStorage.setItem("guest_private_key", gk); sessionStorage.setItem("dock_private_verified", gk); try { localStorage.setItem("dock_private_key", gk); } catch {} router.push("/dock"); }} className="w-full h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-colors">
                             <Monitor className="w-3.5 h-3.5" /> Masuk sebagai Guest

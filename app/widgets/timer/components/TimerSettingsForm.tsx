@@ -5,6 +5,7 @@ import { TIMER_THEMES, TIMER_ANIMS, type TimerSettings } from '../config';
 import { WIDGET_FONTS } from '../../_shared/constants/fonts';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
 import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
+import { FlatlineSettingsSection } from '../../_shared/components/FlatlineSettingsSection';
 import { useDonationMap, DONATION_PLATFORMS, DEFAULT_TIMER_TIERS, sanitizeTimerTiers, type TimerTier } from '../../../hooks/useDonationMap';
 import { DonationTimerTierEditor } from '../../../components/DonationTimerTierEditor';
 
@@ -51,6 +52,10 @@ export function TimerSettingsForm({ state, update }: { state: TimerSettings; upd
         </div>
       </div>
 
+      {state.theme === 'flatline' && (
+        <FlatlineSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />
+      )}
+
       {state.theme === 'brutalist' && (
         <>
           <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />
@@ -78,15 +83,15 @@ export function TimerSettingsForm({ state, update }: { state: TimerSettings; upd
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Timer (menit)</span><input type="number" min={1} max={120} value={state.focusMinutes} onChange={(e) => update('focusMinutes', parseInt(e.target.value) || 50)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
             {/* <label className="block"><span className="text-[11px] font-bold text-gray-300">Sessions</span><input type="number" min={1} max={10} value={state.totalSessions} onChange={(e) => update('totalSessions', parseInt(e.target.value) || 3)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label> */}
           </div>
-          {(state.theme === 'subathon' || state.theme === 'glass') && (
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Mode - {state.theme === 'glass' ? 'Glass' : 'Subathon'}</span>
+          {(state.theme === 'subathon' || state.theme === 'glass' || state.theme === 'flatline') && (
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Mode - {state.theme === 'glass' ? 'Glass' : state.theme === 'flatline' ? 'Flatline' : 'Subathon'}</span>
               <select value={(state as unknown as { subathonMode: string }).subathonMode} onChange={(e) => update('subathonMode' as keyof typeof state, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
                 <option value="powerup" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Power-Up - 2X cream</option>
                 <option value="sleep" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Sleep - Zz purple</option>
                 <option value="locked" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Locked - gembok</option>
                 <option value="paused" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Paused - pause</option>
               </select>
-              <span className="text-[10px] text-gray-500 mt-1 block">Mode general - dipakai Glass & Subathon (shared TimerCoreConfig.subathonMode). Tema lain ingore field ini.</span>
+              <span className="text-[10px] text-gray-500 mt-1 block">Mode general - dipakai Glass, Subathon & Flatline (shared TimerCoreConfig.subathonMode). Tema lain ingore field ini.</span>
             </label>
           )}
           <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Timer di OBS bisa di-play/pause/reset via preview. Default 50:00 × 3 sesi (subathon pakai HH:MM:SS 42:56:08).</div>

@@ -41,6 +41,13 @@ export default function DashboardPage() {
                 currentUser = authUser;
                 setUser(authUser);
             }
+            // Backfill info dock untuk login OAuth (Google) yang tidak lewat form login
+            try {
+                if (typeof window !== "undefined" && !localStorage.getItem("obs-login") && currentUser?.email) {
+                    localStorage.setItem("obs-login", JSON.stringify({ email: currentUser.email, loginAt: new Date().toISOString(), userId: currentUser.id }));
+                    localStorage.setItem("isLoggedIn", "true");
+                }
+            } catch {}
             const userId = currentUser?.id;
             if (!userId) { setLoading(false); return; }
             let key: string | null = null;

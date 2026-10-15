@@ -12,6 +12,7 @@ import GlassTheme from './Glass';
 import SubathonTheme from './Subathon';
 import PlainTheme from './Plain';
 import BrutalistTheme from './Brutalist';
+import FlatlineTheme from './Flatline';
 
 export const TIMER_THEME_REGISTRY: ThemeRegistry<TimerThemeProps> = {
   focus: FocusTheme,
@@ -20,6 +21,7 @@ export const TIMER_THEME_REGISTRY: ThemeRegistry<TimerThemeProps> = {
   subathon: SubathonTheme,
   plain: PlainTheme,
   brutalist: BrutalistTheme,
+  flatline: FlatlineTheme,
 };
 
 export function getTimerTheme(theme: string): React.ComponentType<TimerThemeProps> {
