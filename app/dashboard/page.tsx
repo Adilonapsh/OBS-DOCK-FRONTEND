@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Monitor, LayoutDashboard, LogOut, Key, Copy, RefreshCw, Users, MessageSquare, Gift, Zap, BarChart3, Settings, ExternalLink, Menu, Eye, EyeOff, Layers, Palette } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { logoutToLogin } from "@/utils/logout";
+import { getOrCreatePrivateKey, regeneratePrivateKey } from "@/utils/privateKey";
 import Sidebar from "../components/Sidebar";
 import Highlights from "./components/Highlights";
 import ConfirmModal from "../components/ConfirmModal";
@@ -50,19 +52,10 @@ export default function DashboardPage() {
             } catch {}
             const userId = currentUser?.id;
             if (!userId) { setLoading(false); return; }
-            let key: string | null = null;
-            try {
-                const { data: p } = await supabase.from("profiles").select("private_key, username").eq("id", userId).single();
-                key = (p as any)?.private_key || null;
-            } catch {}
-            if (!key) {
-                try {
-                    const { data: s } = await supabase.from("user_private_keys").select("private_key").eq("user_id", userId).single();
-                    key = (s as any)?.private_key || null;
-                } catch {}
-            }
-            // Private key HANYA dibaca di sini - dibuat saat register (DB trigger)
-            // atau via tombol Regenerate. Jangan generate otomatis saat login.
+            // Baca key, buatkan otomatis bila kosong (mis. login Google tanpa trigger DB).
+            // Tidak pernah overwrite key yang sudah ada.
+            const key = await getOrCreatePrivateKey(supabase, userId);
+            if (key) { try { localStorage.setItem("user_private_key", key); } catch {} }
             setPrivateKey(key);
             setLoading(false);
         };
@@ -74,12 +67,7 @@ export default function DashboardPage() {
     };
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        if (typeof window !== "undefined") {
-            localStorage.removeItem("isLoggedIn");
-            sessionStorage.removeItem("dock_private_verified");
-        }
-        router.push("/login");
+        await logoutToLogin(supabase);
     };
 
     // jangan block full page saat pindah - tampilkan dashboard langsung, private key load di background
@@ -193,10 +181,14 @@ export default function DashboardPage() {
                     open={showRegenerateConfirm}
                     onClose={() => setShowRegenerateConfirm(false)}
                     onConfirm={async () => {
-                        const { data } = await (supabase as any).rpc("regenerate_private_key");
-                        if (data) {
-                            setPrivateKey(data as string);
+                        if (!user?.id) return;
+                        const { key, error } = await regeneratePrivateKey(supabase, user.id);
+                        if (key) {
+                            setPrivateKey(key);
+                            try { localStorage.setItem("user_private_key", key); } catch {}
                             gooeyToast.success("Private key berhasil diregenerasi");
+                        } else {
+                            gooeyToast.error(error || "Gagal regenerate private key");
                         }
                     }}
                     title="Regenerate Private Key?"

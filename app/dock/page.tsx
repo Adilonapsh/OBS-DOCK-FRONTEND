@@ -16,6 +16,7 @@ import { Label } from "@heroui/react/label";
 import { TextArea } from "@heroui/react/textarea";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { logoutToLogin } from "@/utils/logout";
 import Polling, { PollingRef } from "../components/Polling";
 import MusicControl from "./components/MusicControl";
 import MusicQueueList from "./components/MusicQueueList";
@@ -2911,7 +2912,7 @@ export default function Home() {
                             </div>
                             {privateKeyError && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold px-3 py-2 rounded-lg">{privateKeyError}</div>}
                             <button onClick={handleVerifyPrivateKey} className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[11px] uppercase tracking-widest">Verifikasi & Masuk Dock</button>
-                            <button onClick={async () => { await supabase.auth.signOut(); if (typeof window !== "undefined") { sessionStorage.removeItem("dock_private_verified"); try { localStorage.removeItem("dock_private_key"); } catch {} } router.push("/login"); }} className="w-full h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest">Logout</button>
+                            <button onClick={async () => { try { localStorage.removeItem("dock_private_key"); } catch {} await logoutToLogin(supabase); }} className="w-full h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest">Logout</button>
                         </div>
                     </div>
                 </div>

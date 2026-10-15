@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { User, Mail, Lock, Globe, Key, Copy, RefreshCw, Save, LogOut, LayoutDashboard, Monitor, Eye, EyeOff, Camera, CheckCircle2, Menu } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { logoutToLogin } from "@/utils/logout";
+import { getOrCreatePrivateKey, regeneratePrivateKey } from "@/utils/privateKey";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
 import ConfirmModal from "../components/ConfirmModal";
@@ -37,11 +39,15 @@ export default function AccountPage() {
             setUser(session.user);
             const { data: prof } = await supabase.from("profiles").select("username, email, avatar_url, timezone, private_key").eq("id", session.user.id).single();
             const p = prof as any;
-            // fallback ke user_private_keys jika profiles.private_key null
+            // fallback ke user_private_keys jika profiles.private_key null,
+            // buatkan otomatis bila kosong sekalian (tahan baris user yang belum ada)
             let pk = p?.private_key;
             if (!pk) {
                 const { data: sec } = await supabase.from("user_private_keys").select("private_key").eq("user_id", session.user.id).single();
                 pk = (sec as any)?.private_key || null;
+            }
+            if (!pk) {
+                pk = await getOrCreatePrivateKey(supabase, session.user.id);
             }
             setForm({
                 username: p?.username || (session.user.user_metadata as any)?.username || "",
@@ -129,9 +135,9 @@ export default function AccountPage() {
     };
 
     const handleConfirmRegenerate = async () => {
-        const { data, error } = await (supabase as any).rpc("regenerate_private_key");
-        if (error) { setMsg({ type: "error", text: error.message }); return; }
-        const newKey = data as string;
+        if (!user) return;
+        const { key: newKey, error } = await regeneratePrivateKey(supabase, user.id);
+        if (!newKey) { setMsg({ type: "error", text: error || "Gagal regenerate private key." }); return; }
         setForm(prev => ({ ...prev, private_key: newKey }));
         if (typeof window !== "undefined") {
             sessionStorage.setItem("dock_private_verified", newKey);
@@ -141,9 +147,7 @@ export default function AccountPage() {
     };
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        if (typeof window !== "undefined") { localStorage.removeItem("isLoggedIn"); sessionStorage.clear(); }
-        router.push("/login");
+        await logoutToLogin(supabase);
     };
 
     // jangan block full page - tampilkan layout, data load background

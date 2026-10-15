@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Layers, Grid2x2, Plug } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { logoutToLogin } from "@/utils/logout";
 
 type NavItem = { href: string; label: string; icon: React.ElementType; active?: boolean };
 
@@ -121,7 +121,6 @@ export default function Sidebar({
   onClose: () => void;
   user?: any;
 }) {
-  const router = useRouter();
   const supabase = createClient();
   const items = NAV[active] || NAV.dashboard;
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -163,12 +162,7 @@ export default function Sidebar({
   }, [user?.id]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("isLoggedIn");
-      sessionStorage.clear();
-    }
-    router.push("/login");
+    await logoutToLogin(supabase);
   };
 
   return (
