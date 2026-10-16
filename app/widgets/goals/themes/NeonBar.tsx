@@ -14,7 +14,7 @@ function hexToRgb(hex: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-// NeonBar — progress bar video-background ala referensi: logo kiri + fill
+// NeonBar- progress bar video-background ala referensi: logo kiri + fill
 // putih animasi + angka font kustom (default Orbitron) + sekuens COMPLETED saat 100%.
 // Video diambil dari /video/banner.mp4 (file: FRONTEND/public/video/banner.mp4).
 // Tanpa file = background hitam.
@@ -107,13 +107,13 @@ export default function NeonBar({ title, current, target, percent, font, fontSiz
             ref={videoRef}
             onTimeUpdate={onVideoTime}
             className="absolute inset-0 w-full h-full"
-            style={{ 
-              objectFit: 'cover', 
+            style={{
+              objectFit: 'cover',
               opacity: VID_BASE_OPACITY,
-              zIndex: 0, 
+              zIndex: 0,
               filter: `brightness(${0.6 * vidDim}) contrast(1.2) saturate(1.5)`,
               transition: 'filter 0.25s linear',
-              mixBlendMode: 'multiply' 
+              mixBlendMode: 'multiply'
             }}
             autoPlay
             loop
@@ -184,7 +184,7 @@ export default function NeonBar({ title, current, target, percent, font, fontSiz
         </div>
       ) : (
         <div className="text-center font-black text-white" style={{ fontFamily: ff, fontSize: Math.max(14, fontSize) }}>
-          {title} — {current.toLocaleString()} / {target.toLocaleString()} ({pct}%)
+          {title}- {current.toLocaleString()} / {target.toLocaleString()} ({pct}%)
         </div>
       )}
       {!showLabel && showCounts && showBar && (

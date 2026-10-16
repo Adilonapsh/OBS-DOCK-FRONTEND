@@ -11,7 +11,7 @@ function hexToRgb(hex: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-// VinylDisc — piringan hitam ala referensi: blur ring warna cover, teks
+// VinylDisc- piringan hitam ala referensi: blur ring warna cover, teks
 // melingkar (judul • artis) putar kiri, cover art putar kanan, tonearm opsional.
 // Warna ring diambil dari palette vibrant (ala extractAlbumColor referensi,
 // tanpa masalah CORS canvas). Shared: dipakai media-player & music request.
@@ -74,30 +74,30 @@ export default function VinylDiscTheme(props: MediaThemeProps & { showTonearm?: 
         </div>
         {/* Teks melingkar putar kiri + fade mask */}
         {showTextRing && (
-        <div
-          className="absolute rounded-full pointer-events-none flex items-center justify-center"
-          style={{ width: '86%', height: '86%', animation: `vinyldisc-spin-left ${spin}s linear infinite`, animationPlayState: playState }}
-        >
-          <svg viewBox="0 0 320 320" style={{ width: '100%', height: '100%' }}>
-            <defs>
-              <path id="vinyldisc-circle" d="M 160, 160 m -130, 0 a 130,130 0 1,1 260,0 a 130,130 0 1,1 -260,0" />
-              <linearGradient id="vinyldisc-fade" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="white" stopOpacity="0.05" />
-                <stop offset="25%" stopColor="white" stopOpacity="1" />
-                <stop offset="75%" stopColor="white" stopOpacity="1" />
-                <stop offset="100%" stopColor="white" stopOpacity="0.05" />
-              </linearGradient>
-              <mask id="vinyldisc-fademask">
-                <circle cx="160" cy="160" r="150" fill="url(#vinyldisc-fade)" />
-              </mask>
-            </defs>
-            <g mask="url(#vinyldisc-fademask)">
-              <text style={{ fontSize: 14.5, fill: 'white', fontWeight: 900, letterSpacing: 4.5, textTransform: 'uppercase' }}>
-                <textPath href="#vinyldisc-circle" startOffset="0%">{ringText}</textPath>
-              </text>
-            </g>
-          </svg>
-        </div>
+          <div
+            className="absolute rounded-full pointer-events-none flex items-center justify-center"
+            style={{ width: '86%', height: '86%', animation: `vinyldisc-spin-left ${spin}s linear infinite`, animationPlayState: playState }}
+          >
+            <svg viewBox="0 0 320 320" style={{ width: '100%', height: '100%' }}>
+              <defs>
+                <path id="vinyldisc-circle" d="M 160, 160 m -130, 0 a 130,130 0 1,1 260,0 a 130,130 0 1,1 -260,0" />
+                <linearGradient id="vinyldisc-fade" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="white" stopOpacity="0.05" />
+                  <stop offset="25%" stopColor="white" stopOpacity="1" />
+                  <stop offset="75%" stopColor="white" stopOpacity="1" />
+                  <stop offset="100%" stopColor="white" stopOpacity="0.05" />
+                </linearGradient>
+                <mask id="vinyldisc-fademask">
+                  <circle cx="160" cy="160" r="150" fill="url(#vinyldisc-fade)" />
+                </mask>
+              </defs>
+              <g mask="url(#vinyldisc-fademask)">
+                <text style={{ fontSize: 14.5, fill: 'white', fontWeight: 900, letterSpacing: 4.5, textTransform: 'uppercase' }}>
+                  <textPath href="#vinyldisc-circle" startOffset="0%">{ringText}</textPath>
+                </text>
+              </g>
+            </svg>
+          </div>
         )}
         {/* Piringan / cover art putar kanan */}
         {showAlbumArt && (

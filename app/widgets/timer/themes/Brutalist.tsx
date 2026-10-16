@@ -95,7 +95,7 @@ export default function BrutalistTimerTheme({
   const hasDays = d > 0;
   const totalSec = Math.max(1, (focusMinutes || 50) * 60);
   const progress = Math.min(1, Math.max(0, timerSeconds / totalSec));
-  // Brutalist khusus Timer — background bisa diubah via settings (hanya tema brutalist)
+  // Brutalist khusus Timer- background bisa diubah via settings (hanya tema brutalist)
   const bubbleBg = brutalistBg || '#FFFFFF';
   const txtColor = brutalistTextColor || '#000000';
   const badgeBg = brutalistBadgeBg || '#FFFFFF';
@@ -108,7 +108,7 @@ export default function BrutalistTimerTheme({
       className="timer-brutalist w-full max-w-[560px] flex flex-col select-none relative"
       style={{ fontFamily: `'${font}', sans-serif`, animation: animStyle }}
     >
-      {/* MAIN CARD - neo-brutalist INLINE — background khusus brutalist bisa diubah */}
+      {/* MAIN CARD - neo-brutalist INLINE- background khusus brutalist bisa diubah */}
       <div
         className="relative overflow-hidden flex flex-row items-center gap-3 px-4 py-3"
         style={{
@@ -197,7 +197,7 @@ export default function BrutalistTimerTheme({
         </div>
         {/* added seconds flash - fade up/down */}
         <AddedSecondsFlash value={addedSeconds} />
-        
+
         {/* right status idle - visible */}
         <div className="shrink-0 flex flex-col items-center gap-1.5 min-w-[72px] relative z-[1]">
           {/* <span
@@ -209,7 +209,7 @@ export default function BrutalistTimerTheme({
           </span>
         </div>
 
-        
+
       </div>
     </div>
   );

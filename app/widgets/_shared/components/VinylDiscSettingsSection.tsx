@@ -27,7 +27,7 @@ export function VinylDiscSettingsSection({ state, update }: Props) {
           </label>
         </div>
         <label className="block">
-          <span className="text-[11px] font-bold text-gray-300">Kecepatan Putaran — {spin}s/putaran</span>
+          <span className="text-[11px] font-bold text-gray-300">Kecepatan Putaran- {spin}s/putaran</span>
           <input type="range" min={5} max={120} step={1} value={spin} onChange={(e) => update('vinylDiscSpin', parseInt(e.target.value) || 35)} className="mt-1 w-full accent-white cursor-pointer" />
         </label>
       </div>

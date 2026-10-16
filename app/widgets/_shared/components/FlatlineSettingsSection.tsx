@@ -48,7 +48,7 @@ export function FlatlineSettingsSection({ state, update }: Props) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2">Flatline — Sticker Cards</h2>
+      <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2">Flatline- Sticker Cards</h2>
       <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
         <div>
           <span className="text-[11px] font-bold text-gray-300">Preset Cepat</span>
@@ -77,7 +77,7 @@ export function FlatlineSettingsSection({ state, update }: Props) {
         </div>
 
         <div>
-          <span className="text-[11px] font-bold text-gray-300">Text Color — Hari, Jam, Menit & Detik (angka besar)</span>
+          <span className="text-[11px] font-bold text-gray-300">Text Color- Hari, Jam, Menit & Detik (angka besar)</span>
           <div className="mt-1 grid grid-cols-2 gap-2.5 sm:gap-3">
             <ColorField label="Days (kuning)" value={days} onChange={(val) => update('flatlineDays', val)} />
             <ColorField label="Hours (pink)" value={hours} onChange={(val) => update('flatlineHours', val)} />
@@ -87,7 +87,7 @@ export function FlatlineSettingsSection({ state, update }: Props) {
         </div>
 
         <div>
-          <span className="text-[11px] font-bold text-gray-300">Background Color — Kartu & Page</span>
+          <span className="text-[11px] font-bold text-gray-300">Background Color- Kartu & Page</span>
           <div className="mt-1 grid grid-cols-2 gap-2.5 sm:gap-3">
             <ColorField label="Card (navy)" value={card} onChange={(val) => update('flatlineCard', val)} />
             <ColorField label="Page BG (preview)" value={pageBg} onChange={(val) => update('flatlinePageBg', val)} />
@@ -103,12 +103,12 @@ export function FlatlineSettingsSection({ state, update }: Props) {
         </div>
 
         <label className="block">
-          <span className="text-[11px] font-bold text-gray-300">Kemiringan Kartu Belakang — {tilt}°</span>
+          <span className="text-[11px] font-bold text-gray-300">Kemiringan Kartu Belakang- {tilt}°</span>
           <input type="range" min={0} max={16} value={tilt} onChange={(e) => update('flatlineTilt', parseInt(e.target.value) || 0)} className="mt-1 w-full accent-white cursor-pointer" />
         </label>
 
         <div>
-          <span className="text-[11px] font-bold text-gray-300">Layout — Arah Tampilan</span>
+          <span className="text-[11px] font-bold text-gray-300">Layout- Arah Tampilan</span>
           <div className="mt-1 grid grid-cols-2 gap-2">
             {(['vertical', 'horizontal'] as const).map((l) => {
               const active = layout === l;
@@ -138,7 +138,7 @@ export function FlatlineSettingsSection({ state, update }: Props) {
             <input type="checkbox" checked={showBack} onChange={(e) => update('flatlineShowBack', e.target.checked)} className="w-4 h-4 accent-white" />
           </label>
         </div>
-        <p className="text-[10px] text-gray-500">DD = hari (muncul otomatis kalau timer ≥ 24 jam). Vertikal: detik di pill bawah. Horizontal: full inline HH : MM : SS. Bubble delta cuma muncul pas ada tambah/kurang waktu. Page BG cuma buat preview — di OBS tetap transparan.</p>
+        <p className="text-[10px] text-gray-500">DD = hari (muncul otomatis kalau timer ≥ 24 jam). Vertikal: detik di pill bawah. Horizontal: full inline HH : MM : SS. Bubble delta cuma muncul pas ada tambah/kurang waktu. Page BG cuma buat preview- di OBS tetap transparan.</p>
       </div>
     </div>
   );

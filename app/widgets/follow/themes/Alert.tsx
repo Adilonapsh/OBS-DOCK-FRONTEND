@@ -7,7 +7,7 @@ const TOPO_WHITE = `url("data:image/svg+xml;utf8,<svg width='100%' height='100%'
 const TOPO_BLACK = `url("data:image/svg+xml;utf8,<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'><path d='M0 50 Q 20 40, 40 60 T 80 50 T 120 60' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='2'/><path d='M0 20 Q 30 10, 50 30 T 90 20 T 150 40' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='2'/></svg>")`;
 const VID_FADE_SECONDS = 0.9; // video di-fade ke hitam di ujung loop biar tidak patah
 
-// Alert — notifikasi gaya Twitch ala referensi: kotak putih mengembang,
+// Alert- notifikasi gaya Twitch ala referensi: kotak putih mengembang,
 // wipe hitam menyapu, nama follower muncul, lalu exit. Satu alert per satu
 // follow, sisanya antri. Teks heading ikut label event (subscribed/new member/…).
 export default function AlertTheme({ follows, font, maxFollows = 6 }: FollowThemeProps) {
@@ -72,7 +72,7 @@ export default function AlertTheme({ follows, font, maxFollows = 6 }: FollowThem
         if (v) {
           try {
             v.currentTime = 0;
-            void v.play().catch(() => {});
+            void v.play().catch(() => { });
           } catch { /* abaikan */ }
         }
       }, 3100);

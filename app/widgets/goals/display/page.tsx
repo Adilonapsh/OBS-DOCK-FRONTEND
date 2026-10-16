@@ -118,7 +118,7 @@ function GoalsInner() {
     socket.on('tiktok-follow', (data: Record<string, unknown>) => {
       if (goalType === 'subs') handleBridgedFollowForSubs(data);
     });
-    // Donasi (Saweria/TipTap/Trakteer/dll) — nominal Rp langsung nambah goal donasi.
+    // Donasi (Saweria/TipTap/Trakteer/dll)- nominal Rp langsung nambah goal donasi.
     // Hidupkan goal donasi di halaman widget (goalType=donation) + pastikan
     // platform diaktifkan di Connection → Donasi Webhook.
     socket.on('donation', (data: Record<string, unknown>) => {

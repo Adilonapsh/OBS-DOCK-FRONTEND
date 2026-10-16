@@ -1,6 +1,6 @@
 'use client';
 
-// ValorantCircle — 1:1 port dari HTML "Valorant Exact Circular Overlay" user.
+// ValorantCircle- 1:1 port dari HTML "Valorant Exact Circular Overlay" user.
 // Ring SVG (ticks + track + inner arc + progress RR) + rank icon tengah + badge RR%.
 // Warna ngikut themeColor (auto = warna tier | custom = accent). Data (rr/icon) dari display/page.
 
@@ -30,7 +30,7 @@ export function ValorantCircle({
   const progress = Math.min(100, Math.max(0, rr));
   const offset = CIRC - (progress / 100) * CIRC;
   const tier = themeColor && themeColor !== 'transparent' ? themeColor : '#e82c5f';
-  // Titik ujung arc progress (start di atas, searah jarum jam) — badge ditempel di sini
+  // Titik ujung arc progress (start di atas, searah jarum jam)- badge ditempel di sini
   const endRad = ((-90 + (progress / 100) * 360) * Math.PI) / 180;
   const endX = 125 + R_PROGRESS * Math.cos(endRad);
   const endY = 125 + R_PROGRESS * Math.sin(endRad);
@@ -101,7 +101,7 @@ export function ValorantCircle({
         />
       ) : null}
 
-      {/* RR badge — nempel di ujung arc progress, meluncur mengikuti perubahan RR */}
+      {/* RR badge- nempel di ujung arc progress, meluncur mengikuti perubahan RR */}
       <div
         style={{
           position: 'absolute', left: endX, top: endY, transform: 'translate(-50%,-50%)',

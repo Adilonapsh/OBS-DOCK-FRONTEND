@@ -28,7 +28,7 @@ export type FlatlineThemeExtra = {
   flatlineLayout?: string;
 };
 
-// Flatline — 1:1 port dari HTML user (back-card miring + front-card + bubble mode/delta)
+// Flatline- 1:1 port dari HTML user (back-card miring + front-card + bubble mode/delta)
 // timerSeconds -> DAYS (hari, otomatis jika >= 24 jam) / HRS (jam) / MIN (menit) / pill (detik).
 export default function FlatlineTheme({
   font,
@@ -128,14 +128,14 @@ export default function FlatlineTheme({
   // Horizontal selalu tampil full + SEC inline (HH:MM:SS); vertikal detik tetap di pill footer.
   const baseRows = d > 0
     ? [
-        { v: dStr, label: 'DAYS', color: daysColor },
-        { v: hStr, label: 'HRS', color: hoursColor },
-        { v: mStr, label: 'MIN', color: minutesColor },
-      ]
+      { v: dStr, label: 'DAYS', color: daysColor },
+      { v: hStr, label: 'HRS', color: hoursColor },
+      { v: mStr, label: 'MIN', color: minutesColor },
+    ]
     : [
-        { v: hStr, label: 'HRS', color: hoursColor },
-        { v: mStr, label: 'MIN', color: minutesColor },
-      ];
+      { v: hStr, label: 'HRS', color: hoursColor },
+      { v: mStr, label: 'MIN', color: minutesColor },
+    ];
   const rows = isHorizontal ? [...baseRows, { v: sStr, label: 'SEC', color: secColor }] : baseRows;
   const hSize = Math.round((rows.length > 3 ? 38 : 56) * Math.min(1.15, Math.max(0.7, scale)));
 
@@ -164,7 +164,7 @@ export default function FlatlineTheme({
           </div>
         )}
 
-        {/* Front Card — horizontal: height fit to text; vertikal: fix 330px + footer pill */}
+        {/* Front Card- horizontal: height fit to text; vertikal: fix 330px + footer pill */}
         <div
           style={{
             position: 'relative', width: '100%', height: isHorizontal ? 'auto' : '100%', backgroundColor: card,
@@ -194,23 +194,23 @@ export default function FlatlineTheme({
               ))}
             </div>
           ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', marginTop: -10 }}>
-            {/* Vertikal: DD/DAYS muncul otomatis kalau >= 24 jam, font mengecil biar muat 3 baris */}
-            {rows.map((row, i, arr) => {
-              const badgeLeft = i % 2 === 0;
-              return (
-                <div
-                  key={row.label}
-                  style={{ fontSize: d > 0 ? Math.round(timeSize * 0.62) : timeSize, fontWeight: 900, lineHeight: 0.85, letterSpacing: -2, position: 'relative', color: row.color, marginBottom: i < arr.length - 1 ? 8 : 0 }}
-                >
-                  {row.v}
-                  <span style={{ position: 'absolute', backgroundColor: badgeBg, color: '#ffffff', fontSize: 9, fontWeight: 700, padding: '4px 10px', borderRadius: 99, letterSpacing: 0.5, boxShadow: '0 4px 10px rgba(0,0,0,0.3)', zIndex: 3, bottom: -5, ...(badgeLeft ? { left: -8, transform: 'rotate(-12deg)' } : { right: 8, transform: 'rotate(10deg)' }), lineHeight: 1.4 }}>
-                    {row.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', marginTop: -10 }}>
+              {/* Vertikal: DD/DAYS muncul otomatis kalau >= 24 jam, font mengecil biar muat 3 baris */}
+              {rows.map((row, i, arr) => {
+                const badgeLeft = i % 2 === 0;
+                return (
+                  <div
+                    key={row.label}
+                    style={{ fontSize: d > 0 ? Math.round(timeSize * 0.62) : timeSize, fontWeight: 900, lineHeight: 0.85, letterSpacing: -2, position: 'relative', color: row.color, marginBottom: i < arr.length - 1 ? 8 : 0 }}
+                  >
+                    {row.v}
+                    <span style={{ position: 'absolute', backgroundColor: badgeBg, color: '#ffffff', fontSize: 9, fontWeight: 700, padding: '4px 10px', borderRadius: 99, letterSpacing: 0.5, boxShadow: '0 4px 10px rgba(0,0,0,0.3)', zIndex: 3, bottom: -5, ...(badgeLeft ? { left: -8, transform: 'rotate(-12deg)' } : { right: 8, transform: 'rotate(10deg)' }), lineHeight: 1.4 }}>
+                      {row.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           )}
 
           {/* Footer vertikal saja: pill detik (horizontal tanpa footer, detik sudah inline SEC) */}

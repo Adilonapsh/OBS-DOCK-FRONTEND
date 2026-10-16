@@ -1,5 +1,5 @@
 -- ============================================
--- Migration 017: Donasi secure — currency + RPC privateKey
+-- Migration 017: Donasi secure- currency + RPC privateKey
 -- Jalankan di Supabase SQL Editor
 -- ============================================
 

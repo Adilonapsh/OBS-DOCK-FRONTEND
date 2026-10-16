@@ -93,10 +93,10 @@ export default function ConfigPage() {
                                     });
                                 }
                             }
-                        } catch {}
+                        } catch { }
                         return;
                     }
-                } catch {}
+                } catch { }
             }
 
             // fallback: ambil dari database via session (auth)
@@ -141,7 +141,7 @@ export default function ConfigPage() {
                             tokenUrl: j.tokenUrl || j.wsUrl || j.token || '',
                             autoConnect: j.autoConnect ?? true,
                         });
-                    } catch {}
+                    } catch { }
                 }
             } else if (!bypassKey) {
                 // guest: load hyperate dari localStorage
@@ -155,7 +155,7 @@ export default function ConfigPage() {
                             autoConnect: j.autoConnect ?? true,
                         });
                     }
-                } catch {}
+                } catch { }
             }
         };
         load();
@@ -180,7 +180,7 @@ export default function ConfigPage() {
                         setMtxServers(decMtx);
                         return;
                     }
-                } catch {}
+                } catch { }
             }
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
@@ -205,7 +205,7 @@ export default function ConfigPage() {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) setMtxServers(parsed);
                 }
-            } catch {}
+            } catch { }
         };
         loadMtx();
     }, []);
@@ -220,8 +220,8 @@ export default function ConfigPage() {
                 if (!u) return;
                 const { data: prof } = await supabase.from('profiles').select('private_key').eq('id', u.id).single();
                 const pk = (prof as any)?.private_key || '';
-                if (pk) { setDonationPrivateKey(pk); try { localStorage.setItem('dock_private_key', pk); } catch {} }
-            } catch {}
+                if (pk) { setDonationPrivateKey(pk); try { localStorage.setItem('dock_private_key', pk); } catch { } }
+            } catch { }
         };
         loadDonationKey();
     }, []);
@@ -238,19 +238,19 @@ export default function ConfigPage() {
         };
         const backend = getBackendUrl();
         try {
-            const s = ioClient(backend, { transports: ['websocket','polling'] as const });
+            const s = ioClient(backend, { transports: ['websocket', 'polling'] as const });
             s.on('connect', () => {
                 s.emit('donation-config-sync', { privateKey: donationPrivateKey, key: donationPrivateKey, configs: donationMap });
                 setTimeout(() => s.disconnect(), 1200);
             });
-        } catch {}
+        } catch { }
         for (const plat of Object.keys(donationMap) as DonationPlatform[]) {
             const cfg = (donationMap as any)[plat];
             fetch(`${backend}/api/donation/config`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ privateKey: donationPrivateKey, key: donationPrivateKey, platform: plat, token: cfg.token, enabled: cfg.enabled, eventEnabled: cfg.eventEnabled, timerEnabled: cfg.timerEnabled, timerRpPerMinute: cfg.timerRpPerMinute, timerTiers: cfg.timerTiers, songPriority: cfg.songPriority, goalEnabled: cfg.goalEnabled }),
-            }).catch(()=>{});
+            }).catch(() => { });
         }
     }, [donationMap, donationPrivateKey]);
 
@@ -330,7 +330,7 @@ export default function ConfigPage() {
         try {
             sessionStorage.setItem("hyperate-id", hyperateConfig.channelId.trim());
             sessionStorage.setItem("hyperate-token", hyperateConfig.tokenUrl.trim());
-        } catch {}
+        } catch { }
         const { data: { session } } = await supabase.auth.getSession();
         let error: any = null;
         if (session) {
@@ -373,12 +373,12 @@ export default function ConfigPage() {
         // WS test via Phoenix - sesuai capture: wss://app.hyperate.io/socket/websocket?token=...
         let ws: WebSocket | null = null;
         let done = false;
-        const timeout = setTimeout(() => { if (!done) { done = true; try { ws?.close(); } catch {}; gooeyToast.error("Hyperate timeout - cek ID / token"); setTesting(null); } }, 8000);
+        const timeout = setTimeout(() => { if (!done) { done = true; try { ws?.close(); } catch { }; gooeyToast.error("Hyperate timeout - cek ID / token"); setTesting(null); } }, 8000);
         try {
             ws = new WebSocket(wsUrl);
             ws.onopen = () => {
                 const payload = JSON.stringify(["1", "1", `hr:${channelId}`, "phx_join", {}]);
-                try { ws!.send(payload); } catch {}
+                try { ws!.send(payload); } catch { }
             };
             ws.onmessage = (ev) => {
                 try {
@@ -387,17 +387,17 @@ export default function ConfigPage() {
                     const evName = arr[3] as string;
                     if (evName === "phx_reply") {
                         const p = arr[4] as { status?: string };
-                        if (p?.status === "ok" && !done) { done = true; clearTimeout(timeout); gooeyToast.success(`Hyperate terhubung! channel hr:${channelId} joined`); try { ws?.close(); } catch {}; setTesting(null); }
-                        else if (p?.status === "error" && !done) { done = true; clearTimeout(timeout); gooeyToast.error(`Hyperate join error - cek ID hr:${channelId}`); try { ws?.close(); } catch {}; setTesting(null); }
+                        if (p?.status === "ok" && !done) { done = true; clearTimeout(timeout); gooeyToast.success(`Hyperate terhubung! channel hr:${channelId} joined`); try { ws?.close(); } catch { }; setTesting(null); }
+                        else if (p?.status === "error" && !done) { done = true; clearTimeout(timeout); gooeyToast.error(`Hyperate join error - cek ID hr:${channelId}`); try { ws?.close(); } catch { }; setTesting(null); }
                     } else if (evName === "hr_update" || evName === "hr") {
                         const hr = (arr[4] as { hr?: number })?.hr;
-                        if (!done) { done = true; clearTimeout(timeout); gooeyToast.success(`Hyperate LIVE ${hr ?? ""} BPM!`); try { ws?.close(); } catch {}; setTesting(null); return; }
+                        if (!done) { done = true; clearTimeout(timeout); gooeyToast.success(`Hyperate LIVE ${hr ?? ""} BPM!`); try { ws?.close(); } catch { }; setTesting(null); return; }
                         // jika sudah ok, tetap update (untuk test live)
                         if (typeof hr === 'number') gooeyToast.success(`HR ${hr} BPM`);
                     }
-                } catch {}
+                } catch { }
             };
-            ws.onerror = () => { if (!done) { done = true; clearTimeout(timeout); gooeyToast.error("Hyperate WS error - cek token / CORS"); setTesting(null); try { ws?.close(); } catch {} } };
+            ws.onerror = () => { if (!done) { done = true; clearTimeout(timeout); gooeyToast.error("Hyperate WS error - cek token / CORS"); setTesting(null); try { ws?.close(); } catch { } } };
             ws.onclose = () => { if (!done) { /* will timeout */ } };
         } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); clearTimeout(timeout); gooeyToast.error(msg); setTesting(null); }
     };
@@ -457,7 +457,7 @@ export default function ConfigPage() {
                 error = res.error;
                 // jika private key tidak ada di DB (misal guest), fallback ke localStorage
                 if (error && String(error.message).includes("Private key tidak valid")) {
-                    try { localStorage.setItem("mtx-servers", JSON.stringify(mtxServers)); } catch {}
+                    try { localStorage.setItem("mtx-servers", JSON.stringify(mtxServers)); } catch { }
                     gooeyToast.success(`Server "${srv.serverName}" disimpan lokal (guest key belum ada di DB)`);
                     setSaving(null);
                     return;
@@ -467,7 +467,7 @@ export default function ConfigPage() {
                 }
             } else {
                 // tidak ada session & tidak ada private_key → simpan lokal saja (guest)
-                try { localStorage.setItem("mtx-servers", JSON.stringify(mtxServers)); } catch {}
+                try { localStorage.setItem("mtx-servers", JSON.stringify(mtxServers)); } catch { }
                 gooeyToast.success(`Server "${srv.serverName}" disimpan lokal (tanpa DB)`);
                 setSaving(null);
                 return;
@@ -545,7 +545,7 @@ export default function ConfigPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ privateKey: donationPrivateKey || 'global', key: donationPrivateKey || 'global', platform, amount: 15000, donorName: 'TestDonasi', message: `Test ${platform} - halo!` }),
             });
-            const j = await res.json().catch(()=> ({}));
+            const j = await res.json().catch(() => ({}));
             if (j?.ok) gooeyToast.success(`Test donasi ${platform} terkirim → cek widget / dock`);
             else gooeyToast.error(`Test gagal: ${j?.error || res.statusText}`);
         } catch (e: any) {
@@ -756,53 +756,53 @@ export default function ConfigPage() {
                                         );
                                     }
                                     return (
-                                    <div key={srv.id} className="bg-black/20 border border-white/10 rounded-xl p-4 space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase text-white tracking-wide">{srv.serverName || "Server Baru"}</span>
-                                            <div className="flex items-center gap-1">
-                                                <button onClick={() => setEditingMtxId(null)} className="px-2 py-1 text-[10px] font-bold text-gray-400 hover:text-white">Batal</button>
-                                                <button onClick={() => removeMtx(srv.id)} className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Server Name</label>
-                                            <input value={srv.serverName} onChange={e => updateMtx(srv.id, "serverName", e.target.value)} placeholder="My MediaMTX - Jakarta" className="w-full h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-[12px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Path API URL</label>
-                                            <input value={srv.apiUrl} onChange={e => updateMtx(srv.id, "apiUrl", e.target.value)} placeholder="http://192.168.1.10:9997/v3/paths/list" className="w-full h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-[11px] font-mono-custom text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
-                                            <p className="text-[9px] text-gray-600 mt-1">Endpoint MediaMTX untuk list path, ex: /v3/paths/list atau /api/paths</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Streaming Player URL Base <span className="text-gray-600 normal-case font-normal">(opsional)</span></label>
-                                            <input value={srv.playerUrlBase} onChange={e => updateMtx(srv.id, "playerUrlBase", e.target.value)} placeholder="http://192.168.1.10:8889" className="w-full h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-[11px] font-mono-custom text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
-                                            <p className="text-[9px] text-gray-600 mt-1">Base URL untuk player HLS/WebRTC, ex: http://ip:8889/streamName</p>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Basic Auth User <span className="text-gray-600 normal-case font-normal">(opsional)</span></label>
-                                                <input value={srv.basicUser} onChange={e => updateMtx(srv.id, "basicUser", e.target.value)} placeholder="admin" className="w-full h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-[12px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Basic Auth Password <span className="text-gray-600 normal-case font-normal">(opsional)</span></label>
-                                                <div className="relative">
-                                                    <input type={mtxShowPass[srv.id] ? "text" : "password"} value={srv.basicPass} onChange={e => updateMtx(srv.id, "basicPass", e.target.value)} placeholder="••••••••" className="w-full h-9 pl-3 pr-9 bg-white/5 border border-white/10 rounded-lg text-[12px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
-                                                    <button type="button" onClick={() => setMtxShowPass(prev => ({ ...prev, [srv.id]: !prev[srv.id] }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">{mtxShowPass[srv.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}</button>
+                                        <div key={srv.id} className="bg-black/20 border border-white/10 rounded-xl p-4 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-black uppercase text-white tracking-wide">{srv.serverName || "Server Baru"}</span>
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => setEditingMtxId(null)} className="px-2 py-1 text-[10px] font-bold text-gray-400 hover:text-white">Batal</button>
+                                                    <button onClick={() => removeMtx(srv.id)} className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => saveMtx(srv)} disabled={saving === `mtx-${srv.id}`} className={`flex-1 ${uniformBtn}`}><Save className="w-3 h-3" /> {saving === `mtx-${srv.id}` ? "Menyimpan..." : "Simpan Server"}</button>
-                                            <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className={`px-3 ${uniformBtn}`}><TestTube className="w-3 h-3" /> {testing === `mtx-${srv.id}` ? "..." : "Test API"}</button>
-                                            <a href={srv.playerUrlBase || "#"} target="_blank" className={`px-3 h-9 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 shadow-sm ${srv.playerUrlBase ? "bg-white text-black hover:bg-zinc-100 border-white" : "bg-white/5 border-white/10 text-gray-400 pointer-events-none"}`}><ExternalLink className="w-3 h-3" /> Player</a>
-                                        </div>
-                                        {srv.apiUrl && srv.playerUrlBase && (
-                                            <div className="bg-blue-600/5 border border-blue-600/10 rounded-lg p-2">
-                                                <p className="text-[9px] font-mono-custom text-blue-300 break-all">Player: {srv.playerUrlBase.replace(/\/$/, "")}/{"{stream}"} - API: {srv.apiUrl}</p>
+                                            <div>
+                                                <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Server Name</label>
+                                                <input value={srv.serverName} onChange={e => updateMtx(srv.id, "serverName", e.target.value)} placeholder="My MediaMTX - Jakarta" className="w-full h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-[12px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
                                             </div>
-                                        )}
-                                    </div>
-                                );
+                                            <div>
+                                                <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Path API URL</label>
+                                                <input value={srv.apiUrl} onChange={e => updateMtx(srv.id, "apiUrl", e.target.value)} placeholder="http://192.168.1.10:9997/v3/paths/list" className="w-full h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-[11px] font-mono-custom text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
+                                                <p className="text-[9px] text-gray-600 mt-1">Endpoint MediaMTX untuk list path, ex: /v3/paths/list atau /api/paths</p>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Streaming Player URL Base <span className="text-gray-600 normal-case font-normal">(opsional)</span></label>
+                                                <input value={srv.playerUrlBase} onChange={e => updateMtx(srv.id, "playerUrlBase", e.target.value)} placeholder="http://192.168.1.10:8889" className="w-full h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-[11px] font-mono-custom text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
+                                                <p className="text-[9px] text-gray-600 mt-1">Base URL untuk player HLS/WebRTC, ex: http://ip:8889/streamName</p>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Basic Auth User <span className="text-gray-600 normal-case font-normal">(opsional)</span></label>
+                                                    <input value={srv.basicUser} onChange={e => updateMtx(srv.id, "basicUser", e.target.value)} placeholder="admin" className="w-full h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-[12px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1">Basic Auth Password <span className="text-gray-600 normal-case font-normal">(opsional)</span></label>
+                                                    <div className="relative">
+                                                        <input type={mtxShowPass[srv.id] ? "text" : "password"} value={srv.basicPass} onChange={e => updateMtx(srv.id, "basicPass", e.target.value)} placeholder="••••••••" className="w-full h-9 pl-3 pr-9 bg-white/5 border border-white/10 rounded-lg text-[12px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
+                                                        <button type="button" onClick={() => setMtxShowPass(prev => ({ ...prev, [srv.id]: !prev[srv.id] }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">{mtxShowPass[srv.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => saveMtx(srv)} disabled={saving === `mtx-${srv.id}`} className={`flex-1 ${uniformBtn}`}><Save className="w-3 h-3" /> {saving === `mtx-${srv.id}` ? "Menyimpan..." : "Simpan Server"}</button>
+                                                <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className={`px-3 ${uniformBtn}`}><TestTube className="w-3 h-3" /> {testing === `mtx-${srv.id}` ? "..." : "Test API"}</button>
+                                                <a href={srv.playerUrlBase || "#"} target="_blank" className={`px-3 h-9 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 shadow-sm ${srv.playerUrlBase ? "bg-white text-black hover:bg-zinc-100 border-white" : "bg-white/5 border-white/10 text-gray-400 pointer-events-none"}`}><ExternalLink className="w-3 h-3" /> Player</a>
+                                            </div>
+                                            {srv.apiUrl && srv.playerUrlBase && (
+                                                <div className="bg-blue-600/5 border border-blue-600/10 rounded-lg p-2">
+                                                    <p className="text-[9px] font-mono-custom text-blue-300 break-all">Player: {srv.playerUrlBase.replace(/\/$/, "")}/{"{stream}"} - API: {srv.apiUrl}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
                                 })
                             )}
                         </div>
@@ -815,17 +815,17 @@ export default function ConfigPage() {
                                 <Image src="/assets/logo/saweria.png" alt="Donasi" width={16} height={16} className="rounded-sm" />
                                 Donasi Webhook
                             </h3>
-                            <span className="text-[9px] font-bold text-gray-500">{Object.values(donationMap).filter(v=>v.enabled).length}/{DONATION_PLATFORMS.length} aktif</span>
+                            <span className="text-[9px] font-bold text-gray-500">{Object.values(donationMap).filter(v => v.enabled).length}/{DONATION_PLATFORMS.length} aktif</span>
                         </div>
                         <div className="p-5 space-y-4">
                             <div className="p-3 bg-amber-100 dark:bg-amber-500/10 border border-amber-400 dark:border-amber-500/30 rounded-xl shadow-sm dark:shadow-none text-[11px] leading-relaxed text-zinc-900 dark:text-amber-100">
                                 <div className="font-black flex items-center gap-1.5 text-amber-900 dark:text-amber-200"><ShieldCheck className="w-3.5 h-3.5 text-amber-700 dark:text-amber-300" /> Cara pakai:</div>
                                 <ol className="list-decimal list-inside mt-1.5 space-y-1 text-zinc-800 dark:text-amber-100/90">
-                                    <li>Copy <b className="text-zinc-900 dark:text-white">Webhook URL</b> per platform — paste ke dashboard Saweria/TipTap/Trakteer/BagiBagi (menu Webhook/Integrasi).</li>
-                                    <li>Masukkan <b className="text-zinc-900 dark:text-white">Webhook Verification Token</b> di dashboard platform & di sini — token di header (<code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded border border-amber-300 dark:border-transparent text-amber-800 dark:text-amber-200 font-mono">x-verification-token / Saweria-Callback-Signature / X-Bagibagi-Signature</code>).</li>
-                                    <li>Aktifkan toggle, lalu <b className="text-zinc-900 dark:text-white">Test</b> — donasi muncul di dock & widget.</li>
+                                    <li>Copy <b className="text-zinc-900 dark:text-white">Webhook URL</b> per platform- paste ke dashboard Saweria/TipTap/Trakteer/BagiBagi (menu Webhook/Integrasi).</li>
+                                    <li>Masukkan <b className="text-zinc-900 dark:text-white">Webhook Verification Token</b> di dashboard platform & di sini- token di header (<code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded border border-amber-300 dark:border-transparent text-amber-800 dark:text-amber-200 font-mono">x-verification-token / Saweria-Callback-Signature / X-Bagibagi-Signature</code>).</li>
+                                    <li>Aktifkan toggle, lalu <b className="text-zinc-900 dark:text-white">Test</b>- donasi muncul di dock & widget.</li>
                                 </ol>
-                                <div className="mt-2 text-[10px] text-zinc-700 dark:text-amber-200/80">PrivateKey: <code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded font-mono border border-amber-300 dark:border-transparent text-zinc-900 dark:text-amber-100">{donationPrivateKey ? `${donationPrivateKey.slice(0,12)}…` : 'loading…'}</code> — tanpa key masuk ke <code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded border border-amber-300 dark:border-transparent text-amber-800 dark:text-amber-200 font-mono">global</code>.</div>
+                                <div className="mt-2 text-[10px] text-zinc-700 dark:text-amber-200/80">PrivateKey: <code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded font-mono border border-amber-300 dark:border-transparent text-zinc-900 dark:text-amber-100">{donationPrivateKey ? `${donationPrivateKey.slice(0, 12)}…` : 'loading…'}</code>- tanpa key masuk ke <code className="bg-white dark:bg-black/40 px-1.5 py-0.5 rounded border border-amber-300 dark:border-transparent text-amber-800 dark:text-amber-200 font-mono">global</code>.</div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-3">
@@ -851,7 +851,7 @@ export default function ConfigPage() {
                                         <div key={plat} className={`rounded-xl border p-4 space-y-3 transition-all ${isActive ? 'bg-white/[0.04] border-emerald-500/25' : cfg.enabled ? 'bg-white/[0.03] border-amber-500/30' : 'bg-black/20 border-white/10'}`}>
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 overflow-hidden p-1 border ${isActive ? 'bg-white border-emerald-500/20' : 'bg-white border-white/10'}`}>
-                                                    <img src={DONATION_LOGOS[plat]} alt={plat} className="w-full h-full object-contain" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display='none'}} />
+                                                    <img src={DONATION_LOGOS[plat]} alt={plat} className="w-full h-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
@@ -935,9 +935,9 @@ export default function ConfigPage() {
                         const url = donationWebhookUrl(plat, donationPrivateKey);
                         if (field === 'url' && action === 'show') {
                             setShowDonationUrl(s => ({ ...s, [plat]: true }));
-                            gooeyToast.success(`Webhook URL ${plat} ditampilkan — jangan bagikan`);
+                            gooeyToast.success(`Webhook URL ${plat} ditampilkan- jangan bagikan`);
                         } else if (field === 'url' && action === 'copy') {
-                            try { await navigator.clipboard.writeText(url); gooeyToast.success(`URL ${plat} disalin — jangan share sembarangan`); setShowDonationUrl(s => ({ ...s, [plat]: true })); } catch {}
+                            try { await navigator.clipboard.writeText(url); gooeyToast.success(`URL ${plat} disalin- jangan share sembarangan`); setShowDonationUrl(s => ({ ...s, [plat]: true })); } catch { }
                         } else if (field === 'token' && action === 'show') {
                             setShowDonationToken(s => ({ ...s, [plat]: true }));
                             gooeyToast.success(`Token ${plat} ditampilkan`);

@@ -103,9 +103,9 @@ function EventInner() {
   const likeAudioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     if (typeof Audio === 'undefined') return;
-    if (joinSoundEnabled && joinSoundUrl) { const a = new Audio(joinSoundUrl); a.volume = joinSoundVolume/100; a.preload='auto'; joinAudioRef.current = a; }
-    if (giftSoundEnabled && giftSoundUrl) { const a = new Audio(giftSoundUrl); a.volume = giftSoundVolume/100; a.preload='auto'; giftAudioRef.current = a; }
-    if (likeSoundEnabled && likeSoundUrl) { const a = new Audio(likeSoundUrl); a.volume = likeSoundVolume/100; a.preload='auto'; likeAudioRef.current = a; }
+    if (joinSoundEnabled && joinSoundUrl) { const a = new Audio(joinSoundUrl); a.volume = joinSoundVolume / 100; a.preload = 'auto'; joinAudioRef.current = a; }
+    if (giftSoundEnabled && giftSoundUrl) { const a = new Audio(giftSoundUrl); a.volume = giftSoundVolume / 100; a.preload = 'auto'; giftAudioRef.current = a; }
+    if (likeSoundEnabled && likeSoundUrl) { const a = new Audio(likeSoundUrl); a.volume = likeSoundVolume / 100; a.preload = 'auto'; likeAudioRef.current = a; }
     return () => { joinAudioRef.current?.pause(); giftAudioRef.current?.pause(); likeAudioRef.current?.pause(); };
   }, [joinSoundEnabled, joinSoundUrl, joinSoundVolume, giftSoundEnabled, giftSoundUrl, giftSoundVolume, likeSoundEnabled, likeSoundUrl, likeSoundVolume]);
 
@@ -119,8 +119,8 @@ function EventInner() {
       else if (type === 'gift') { a = giftAudioRef.current; url = giftSoundUrl; vol = giftSoundVolume; enabled = giftSoundEnabled; a = a || (giftSoundEnabled ? new Audio(url) : null); if (a && !giftAudioRef.current) giftAudioRef.current = a; }
       else if (type === 'like') { a = likeAudioRef.current; url = likeSoundUrl; vol = likeSoundVolume; enabled = likeSoundEnabled; a = a || (likeSoundEnabled ? new Audio(url) : null); if (a && !likeAudioRef.current) likeAudioRef.current = a; }
       if (!enabled || !url || !a) return;
-      a.currentTime = 0; a.volume = vol/100; a.play().catch(()=>{});
-    } catch {}
+      a.currentTime = 0; a.volume = vol / 100; a.play().catch(() => { });
+    } catch { }
   };
 
   const pushEvent = (item: EventItem, filter: boolean) => {
@@ -150,7 +150,7 @@ function EventInner() {
       const now = Date.now();
       if ((seenJoin.get(key) || 0) > now - 5000) return;
       seenJoin.set(key, now);
-      pushEvent({ id: `join_${now}_${Math.random().toString(36).slice(2,4)}`, type: 'join', nickname, profilePictureUrl, platform, label, timestamp: now }, showJoin);
+      pushEvent({ id: `join_${now}_${Math.random().toString(36).slice(2, 4)}`, type: 'join', nickname, profilePictureUrl, platform, label, timestamp: now }, showJoin);
     };
     socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
     socket.on('disconnect', () => setConnected(false));
@@ -170,13 +170,13 @@ function EventInner() {
     });
     socket.on('tiktok-gift', (data: Record<string, unknown>) => {
       const d = data as { nickname?: string; uniqueId?: string; giftName?: string; giftPictureUrl?: string; repeatCount?: number; diamondCount?: number; profilePictureUrl?: string };
-      pushEvent({ id: `gift_${Date.now()}_${Math.random().toString(36).slice(2,4)}`, type: 'gift', nickname: d.nickname || d.uniqueId || 'Someone', giftName: d.giftName || 'Gift', giftPictureUrl: d.giftPictureUrl, repeatCount: d.repeatCount || 1, diamondCount: d.diamondCount, profilePictureUrl: d.profilePictureUrl, timestamp: Date.now() }, showGift);
+      pushEvent({ id: `gift_${Date.now()}_${Math.random().toString(36).slice(2, 4)}`, type: 'gift', nickname: d.nickname || d.uniqueId || 'Someone', giftName: d.giftName || 'Gift', giftPictureUrl: d.giftPictureUrl, repeatCount: d.repeatCount || 1, diamondCount: d.diamondCount, profilePictureUrl: d.profilePictureUrl, timestamp: Date.now() }, showGift);
     });
     socket.on('tiktok-like', (data: Record<string, unknown>) => {
       const d = data as { nickname?: string; uniqueId?: string; likeCount?: number; profilePictureUrl?: string };
-      pushEvent({ id: `like_${Date.now()}_${Math.random().toString(36).slice(2,4)}`, type: 'like', nickname: d.nickname || d.uniqueId || 'Someone', likeCount: d.likeCount || 1, profilePictureUrl: d.profilePictureUrl, timestamp: Date.now() }, showLike);
+      pushEvent({ id: `like_${Date.now()}_${Math.random().toString(36).slice(2, 4)}`, type: 'like', nickname: d.nickname || d.uniqueId || 'Someone', likeCount: d.likeCount || 1, profilePictureUrl: d.profilePictureUrl, timestamp: Date.now() }, showLike);
     });
-    // Donasi (Saweria/TipTap/Trakteer/dll) — di-map sebagai gift agar semua tema langsung render.
+    // Donasi (Saweria/TipTap/Trakteer/dll)- di-map sebagai gift agar semua tema langsung render.
     // Hormati toggle showDonations dari URL widget.
     socket.on('donation', (data: Record<string, unknown>) => {
       const d = data as { donorName?: string; nickname?: string; amount?: number; amountFormatted?: string; message?: string; currency?: string; platform?: string; profilePictureUrl?: string };
@@ -184,7 +184,7 @@ function EventInner() {
       const formatted = String(d.amountFormatted || `Rp ${amount.toLocaleString('id-ID')}`);
       const platform = String(d.platform || 'donation');
       pushEvent({
-        id: `donation_${Date.now()}_${Math.random().toString(36).slice(2,4)}`,
+        id: `donation_${Date.now()}_${Math.random().toString(36).slice(2, 4)}`,
         type: 'gift',
         nickname: d.donorName || d.nickname || 'Donatur',
         giftName: `Donasi ${formatted}`,
@@ -243,9 +243,9 @@ function EventInner() {
   return (
     <>
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@400;700;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; }`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, '+')}:wght@400;700;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; }`}</style>
       <div id="event-display-root" className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-2` : `w-full min-h-screen bg-[#0a0a0a] flex p-4`}`} style={{ background: obsMode ? 'transparent' : '#0a0a0a', fontFamily: `'${font}', sans-serif`, ...posStyle } as any}>
-        {!obsMode && !connected && liveEvents.length === 0 && <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0,6)}…` : 'global'} • server http://localhost:3000</div>}
+        {!obsMode && !connected && liveEvents.length === 0 && <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0, 6)}…` : 'global'} • server http://localhost:3000</div>}
         {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">EVENT • {theme} • {simulate ? 'simulate' : connected ? 'connected' : 'offline'} • {liveEvents.length}/{maxEvents}</div>}
         <AutoScale defaultBase={420} baseWidth={theme === 'perchar' ? 480 : theme === 'alert' ? 800 : 420}>
           {renderTheme()}

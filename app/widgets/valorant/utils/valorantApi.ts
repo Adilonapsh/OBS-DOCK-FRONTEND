@@ -1,4 +1,4 @@
-// Client khusus widget Valorant — SEMUA request lewat backend sendiri
+// Client khusus widget Valorant- SEMUA request lewat backend sendiri
 // (NEXT_PUBLIC_BACKEND_URL → /api/valo/*), tidak pernah direct ke
 // vaccie.pythonanywhere.com supaya bebas CORS di OBS Browser Source.
 

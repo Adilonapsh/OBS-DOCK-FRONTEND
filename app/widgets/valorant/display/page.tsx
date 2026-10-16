@@ -154,7 +154,7 @@ function ValorantInner() {
       let source = rankStr;
       if (!source && mmr.text) source = mmr.text;
       if (!source) {
-        setError('Upstream kosong — tampilan lama dipertahankan');
+        setError('Upstream kosong- tampilan lama dipertahankan');
         return;
       }
       const parsed = parseRankString(source);

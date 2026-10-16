@@ -13,7 +13,7 @@ type SfxPickerProps = {
   placeholder?: string;
   /** Default: getSocketUrl() (env NEXT_PUBLIC_BACKEND_URL → localhost:3000) */
   backendUrl?: string;
-  /** Batas file upload lokal (default 700 KB — tersimpan inline base64 di settings + URL OBS) */
+  /** Batas file upload lokal (default 700 KB- tersimpan inline base64 di settings + URL OBS) */
   maxUploadBytes?: number;
 };
 
@@ -38,7 +38,7 @@ function dataUrlBytes(dataUrl: string): number {
 }
 
 /**
- * SfxPicker — pemilih sumber suara reusable untuk semua widget.
+ * SfxPicker- pemilih sumber suara reusable untuk semua widget.
  * 3 sumber: Link URL langsung | Upload file lokal (inline base64) | Cloud
  * (katalog myinstants via backend /sfx/browse, di-cache lazy di disk streamer
  * dan diserve dari backend lokal supaya trigger tanpa latency).
@@ -115,7 +115,7 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
       return;
     }
     if (f.size > maxUploadBytes) {
-      setUploadError(`File ${formatBytes(f.size)} melebihi batas ${formatBytes(maxUploadBytes)} — pakai Cloud / Link untuk file besar.`);
+      setUploadError(`File ${formatBytes(f.size)} melebihi batas ${formatBytes(maxUploadBytes)}- pakai Cloud / Link untuk file besar.`);
       return;
     }
     const reader = new FileReader();
@@ -136,9 +136,8 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
     <button
       key={t}
       onClick={() => setTab(t)}
-      className={`flex-1 h-7 rounded-lg text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-colors ${
-        tab === t ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/5'
-      }`}
+      className={`flex-1 h-7 rounded-lg text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-colors ${tab === t ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/5'
+        }`}
     >
       {icon}
       {label}
@@ -223,7 +222,7 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
             </button>
           )}
           {uploadError && <div className="text-[10px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-2 py-1.5">{uploadError}</div>}
-          <div className="text-[10px] text-gray-500">Maks {formatBytes(maxUploadBytes)} — file disimpan inline di settings & URL OBS.</div>
+          <div className="text-[10px] text-gray-500">Maks {formatBytes(maxUploadBytes)}- file disimpan inline di settings & URL OBS.</div>
         </div>
       )}
 
@@ -271,9 +270,8 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
                 return (
                   <div
                     key={it.slug}
-                    className={`flex items-center gap-1.5 p-1.5 rounded-xl border transition-colors ${
-                      selected ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-black/30 border-white/5 hover:border-white/15'
-                    }`}
+                    className={`flex items-center gap-1.5 p-1.5 rounded-xl border transition-colors ${selected ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-black/30 border-white/5 hover:border-white/15'
+                      }`}
                   >
                     <button
                       onClick={() => previewUrl(clipUrl)}
@@ -290,9 +288,8 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
                         stopAudio();
                         onChange(clipUrl);
                       }}
-                      className={`h-7 px-2.5 shrink-0 rounded-lg text-[10px] font-black uppercase ${
-                        selected ? 'bg-emerald-500 text-black' : 'bg-white text-black hover:bg-zinc-200'
-                      }`}
+                      className={`h-7 px-2.5 shrink-0 rounded-lg text-[10px] font-black uppercase ${selected ? 'bg-emerald-500 text-black' : 'bg-white text-black hover:bg-zinc-200'
+                        }`}
                     >
                       {selected ? 'Dipakai' : 'Pilih'}
                     </button>
@@ -302,7 +299,7 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
             </div>
           )}
           {!loading && cloudReady && items.length === 0 && !cloudError && (
-            <div className="text-[11px] text-gray-500 text-center py-2">Tidak ketemu — coba kata kunci lain.</div>
+            <div className="text-[11px] text-gray-500 text-center py-2">Tidak ketemu- coba kata kunci lain.</div>
           )}
           {items.length > 0 && (
             <button
@@ -313,7 +310,7 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
               {loadingMore && <Loader2 className="w-3 h-3 animate-spin" />} Muat lagi
             </button>
           )}
-          <div className="text-[10px] text-gray-500">Klip terpilih di-cache di PC streamer & diserve lokal — tanpa delay saat live.</div>
+          <div className="text-[10px] text-gray-500">Klip terpilih di-cache di PC streamer & diserve lokal- tanpa delay saat live.</div>
         </div>
       )}
     </div>

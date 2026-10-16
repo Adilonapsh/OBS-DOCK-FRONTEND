@@ -44,7 +44,7 @@ export function GoalSettingsForm({ state, update }: Props) {
             <span className="text-[11px] font-bold text-gray-300">Jenis Goal</span>
             <select value={state.goalType} onChange={(e) => {
               const v = e.target.value;
-              const titles: Record<string,string> = { follow: 'Follower Goal', subs: 'Subscriber Goal', like: 'Like Goal', donation: 'Donation Goal' };
+              const titles: Record<string, string> = { follow: 'Follower Goal', subs: 'Subscriber Goal', like: 'Like Goal', donation: 'Donation Goal' };
               update('goalType', v);
               update('title', titles[v] || v);
             }} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
@@ -54,7 +54,7 @@ export function GoalSettingsForm({ state, update }: Props) {
               {state.goalType === 'follow' && 'Follow TikTok + Twitch + YouTube + Kick'}
               {state.goalType === 'subs' && 'Subs / Member / GiftSub (Twitch/YouTube/Kick + TikTok)'}
               {state.goalType === 'like' && 'Like TikTok (❤️)'}
-              {state.goalType === 'donation' && 'Nominal donasi (Rp) dari Saweria/TipTap/Trakteer/dll — target & saat ini dalam Rupiah'}
+              {state.goalType === 'donation' && 'Nominal donasi (Rp) dari Saweria/TipTap/Trakteer/dll- target & saat ini dalam Rupiah'}
             </span>
           </label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Judul Goal</span><input type="text" value={state.title} onChange={(e) => update('title', e.target.value)} placeholder="Follower Goal" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
@@ -81,7 +81,7 @@ export function GoalSettingsForm({ state, update }: Props) {
 
       {state.theme === 'brutalist' && (
         <div className="space-y-3">
-          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-yellow-400" /> Brutalist — Neo Brutalist</h2>
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-yellow-400" /> Brutalist- Neo Brutalist</h2>
           <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
             <div>
               <span className="text-[11px] font-bold text-gray-300">Preset Cepat</span>
@@ -187,7 +187,7 @@ export function GoalSettingsForm({ state, update }: Props) {
               </label>
             </div>
             <label className="block">
-              <span className="text-[11px] font-bold text-gray-300">Shadow — {(state as any).brutalistShadow ?? 6}px</span>
+              <span className="text-[11px] font-bold text-gray-300">Shadow- {(state as any).brutalistShadow ?? 6}px</span>
               <input type="range" min={0} max={14} value={(state as any).brutalistShadow ?? 6} onChange={(e) => update('brutalistShadow' as any, parseInt(e.target.value) || 6)} className="mt-1 w-full accent-white cursor-pointer" />
             </label>
             <div className="grid grid-cols-2 gap-2">

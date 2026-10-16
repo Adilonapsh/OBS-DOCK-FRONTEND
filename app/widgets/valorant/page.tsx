@@ -35,7 +35,7 @@ function ValorantSettingsInner() {
         user={shell.user}
         headerIcon={<Trophy className="w-4 h-4 text-white" />}
         title="Valorant Rank"
-        subtitle="Ranked stats card — fetch via backend /api/valo (bebas CORS) + auto-refresh & animasi rank up/down"
+        subtitle="Ranked stats card- fetch via backend /api/valo (bebas CORS) + auto-refresh & animasi rank up/down"
         headerActions={
           <>
             <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
@@ -54,7 +54,7 @@ function ValorantSettingsInner() {
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[420px] grid place-items-center p-6">
               <iframe key={simulateUrl} src={simulateUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="valorant-preview" />
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">Preview simulate — data asli hanya di OBS (<code className="bg-white/10 px-1 rounded text-white">…/valorant/display?obs=1</code>) yang fetch lewat backend.</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">Preview simulate- data asli hanya di OBS (<code className="bg-white/10 px-1 rounded text-white">…/valorant/display?obs=1</code>) yang fetch lewat backend.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
               <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>

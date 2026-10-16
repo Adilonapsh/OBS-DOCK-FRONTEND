@@ -49,7 +49,7 @@ function AlertCard({ item, fontFamily, onDone }: { item: EventItem; fontFamily: 
   };
 
   useEffect(() => {
-    // Parkir video di frame awal (pause) sejak kartu mount — preload jalan,
+    // Parkir video di frame awal (pause) sejak kartu mount- preload jalan,
     // jadi pas giliran nama tinggal play dari detik 0 dengan mulus
     const pv = videoRef.current;
     if (pv) {
@@ -70,7 +70,7 @@ function AlertCard({ item, fontFamily, onDone }: { item: EventItem; fontFamily: 
         if (v) {
           try {
             v.currentTime = 0;
-            void v.play().catch(() => {});
+            void v.play().catch(() => { });
           } catch { /* abaikan */ }
         }
       }, 3100);
@@ -248,7 +248,7 @@ function AlertCard({ item, fontFamily, onDone }: { item: EventItem; fontFamily: 
   );
 }
 
-// Alert — N alert berbarengan (ikut setting Max Events, maks 5), sisanya antri
+// Alert- N alert berbarengan (ikut setting Max Events, maks 5), sisanya antri
 export default function AlertTheme({ events, font, maxEvents = 3 }: EventThemeProps) {
   const slots = Math.max(1, Math.min(5, maxEvents || 3));
   const [active, setActive] = useState<EventItem[]>([]);

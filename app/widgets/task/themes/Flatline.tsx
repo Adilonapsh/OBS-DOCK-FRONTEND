@@ -11,7 +11,7 @@ export type FlatlineTaskExtra = {
   taskFlatUppercase?: boolean;
 };
 
-// Flatline Pill — 1:1 port dari HTML user (task-pill + wipe bright->dim + strikethrough + chevron >>).
+// Flatline Pill- 1:1 port dari HTML user (task-pill + wipe bright->dim + strikethrough + chevron >>).
 // Klik pill = toggle completed (optimistic + sync socket via onToggleTask dari display).
 export default function FlatlineTaskTheme({
   tasks,
@@ -130,7 +130,7 @@ export default function FlatlineTaskTheme({
           '--tf-line': line,
           '--tf-line-done': lineDone,
           backgroundColor: pill,
-            padding: '22px 32px',
+          padding: '22px 32px',
           borderRadius: 12,
           boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
           animation: getAnim('__empty__'),

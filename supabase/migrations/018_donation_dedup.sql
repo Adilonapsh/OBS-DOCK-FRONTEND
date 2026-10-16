@@ -1,5 +1,5 @@
 -- ============================================
--- Migration 018: Donasi dedup — transaction_id unik per user+platform
+-- Migration 018: Donasi dedup- transaction_id unik per user+platform
 -- Mencegah retry webhook / double-hit tercatat 2x di DB.
 -- Jalankan di Supabase SQL Editor
 -- ============================================
@@ -26,7 +26,7 @@ create unique index if not exists uq_donation_user_platform_tx
   where transaction_id is not null and transaction_id <> '';
 
 -- Update RPC insert: kembalikan id lama jika transaction_id sudah tercatat
--- (idempotent — retry webhook aman, tidak double).
+-- (idempotent- retry webhook aman, tidak double).
 create or replace function public.insert_donation_by_private_key(
   p_key text,
   p_platform text,

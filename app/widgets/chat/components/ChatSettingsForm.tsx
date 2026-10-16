@@ -113,7 +113,7 @@ export function ChatSettingsForm({
         </div>
       )}
 
-      {/* Brutalist — Neo Brutalist */}
+      {/* Brutalist- Neo Brutalist */}
       {state.theme === 'brutalist' && (
         <BrutalistSettingsSection
           state={state as unknown as Record<string, unknown>}

@@ -32,7 +32,6 @@ import {
   Gift,
   Sliders,
   Volume2,
-  Mic,
   Radio,
   Sun,
   Moon
@@ -124,7 +123,7 @@ const INFO_SLIDES_EMBED = `/widgets/info-slides/display?theme=brutalist&autoRota
 const GALLERY: GalleryItem[] = [
   { id: 'chat-brutalist', title: 'Chat Brutalist', desc: 'Menampilkan live chat TikTok, Twitch, YouTube & Kick langsung di layar stream.', category: 'chat', size: '420×520', href: '/widgets/chat?theme=brutalist', badge: '8 tema', embed: '/widgets/chat/display?theme=brutalist&simulate=1&brutalistTail=0&obs=1' },
   { id: 'info-slides', title: 'Info Slides Brutalist', desc: 'Menampilkan info sponsor, jadwal, rules & donasi bergantian otomatis.', category: 'utility', size: '640×160', href: '/widgets/info-slides?theme=brutalist', badge: 'brutalist', embed: INFO_SLIDES_EMBED },
-  { id: 'poll-brutalist', title: 'Poll Brutalist', desc: 'Polling interaktif — viewer vote langsung dari chat dengan ketik 1-6.', category: 'poll', size: '640×320', href: '/widgets/poll?theme=brutalist&autoscale=0', badge: '11 tema', embed: '/widgets/poll/display?theme=brutalist&simulate=1&autoscale=0&pos=t&obs=1' },
+  { id: 'poll-brutalist', title: 'Poll Brutalist', desc: 'Polling interaktif- viewer vote langsung dari chat dengan ketik 1-6.', category: 'poll', size: '640×320', href: '/widgets/poll?theme=brutalist&autoscale=0', badge: '11 tema', embed: '/widgets/poll/display?theme=brutalist&simulate=1&autoscale=0&pos=t&obs=1' },
   { id: 'goals', title: 'Goals Neon Bar', desc: 'Menampilkan target follower, subs & donasi beserta progress real-time.', category: 'poll', size: '420×140', href: '/widgets/goals?theme=neonbar', badge: 'neon', embed: '/widgets/goals/display?theme=neonbar&simulate=1&obs=1' },
   { id: 'event', title: 'Gift Alert Overlay', desc: 'Notifikasi gift, follow & like yang muncul otomatis saat ada event.', category: 'overlay', size: '420×400', href: '/widgets/event?theme=alert', badge: 'alert', embed: '/widgets/event/display?theme=alert&simulate=1&obs=1' },
   { id: 'music-request', title: 'Song Request Brutalist', desc: 'Viewer request lagu via chat, antrean lagu tampil langsung di layar.', category: 'media', size: '420×220', href: '/widgets/music?theme=brutalist', badge: 'brutalist', embed: '/widgets/music/display?theme=brutalist&simulate=1&obs=1' },
@@ -135,7 +134,7 @@ const GALLERY: GalleryItem[] = [
 
 /* Preview gallery = page widget aslinya via iframe ?simulate=1&obs=1 (transparan
    persis seperti Browser Source di OBS). Kontras Gelap/Terang datang dari
-   "scene" di belakang widget — simulasi footage game gelap vs terang. */
+   "scene" di belakang widget- simulasi footage game gelap vs terang. */
 type GalleryMode = 'dark' | 'light';
 const GALLERY_STAGE_DARK = {
   background:
@@ -204,7 +203,12 @@ export default function LandingPage() {
   const [mobileDropdown, setMobileDropdown] = useState<'fitur' | 'widget' | null>(null);
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    if (!mobileOpen) setMobileDropdown(null);
+    if (!mobileOpen) {
+      // Ditunda agar tidak jadi cascading render (react-hooks/set-state-in-effect).
+      // Reset dropdown mobile setelah menu tertutup.
+      const t = window.setTimeout(() => setMobileDropdown(null), 0);
+      return () => { document.body.style.overflow = ''; window.clearTimeout(t); };
+    }
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
   useEffect(() => {
@@ -222,8 +226,7 @@ export default function LandingPage() {
   const [activeAestheticTab, setActiveAestheticTab] = useState<'product' | 'game' | 'aesthetic'>('product');
   const [activeGalleryCat, setActiveGalleryCat] = useState<GalleryCategory | 'semua'>('semua');
   const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null);
-  const [galleryMode, setGalleryMode] = useState<GalleryMode>('dark');
-  // galleryMode selalu sync dengan page theme
+  // Mode preview gallery selalu sync dengan page theme (tidak perlu state terpisah).
   const effectiveGalleryMode: GalleryMode = theme === 'dark' ? 'dark' : 'light';
   useEffect(() => {
     if (!activeGalleryId) return;
@@ -244,6 +247,12 @@ export default function LandingPage() {
     const id = window.setInterval(() => setMockCode(gen()), interval);
     return () => window.clearInterval(id);
   }, [showPrivateMock]);
+  /* Simulasi scene aktif di bento Dock Control - bergantian otomatis */
+  const [bentoScene, setBentoScene] = useState<1 | 2>(1);
+  useEffect(() => {
+    const id = window.setInterval(() => setBentoScene(p => (p === 1 ? 2 : 1)), 2200);
+    return () => window.clearInterval(id);
+  }, []);
   /* Floating hero parallax - lerp ultra smooth */
   useEffect(() => {
     let raf = 0;
@@ -271,6 +280,21 @@ export default function LandingPage() {
     raf = requestAnimationFrame(loop);
     return () => { cancelAnimationFrame(raf); window.removeEventListener('scroll', onScroll); };
   }, []);
+  /* Reveal-on-scroll: section .reveal-on-scroll fade-up saat masuk viewport */
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll('.reveal-on-scroll'));
+    if (!els.length) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      els.forEach(el => el.classList.add('in-view'));
+      return;
+    }
+    const io = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); } }),
+      { threshold: 0.12 }
+    );
+    els.forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   return (
     <div className="landing-root min-h-dvh bg-[#f8fafc] text-[#475569] font-sans text-[15px] leading-[1.6] overflow-x-hidden relative pt-[72px] max-[640px]:pt-[64px] box-border transition-colors">
@@ -290,7 +314,14 @@ export default function LandingPage() {
 .float-d1{animation-delay:0s}.float-d2{animation-delay:-1.5s}.float-d3{animation-delay:-3s}.float-d4{animation-delay:-4.5s}
 .entrance-anim{opacity:0;transform:scale(0.5) translateY(30px);animation:popEntrance 1s cubic-bezier(0.16,1,0.3,1) forwards}
 @keyframes popEntrance{to{opacity:1;transform:scale(1) translateY(0)}}
-.parallax-layer{will-change:transform}`}</style>
+.parallax-layer{will-change:transform}
+@keyframes soundwave{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1)}}
+.soundwave-bar{width:3px;border-radius:2px;background:#a855f7;transform-origin:bottom;animation:soundwave 1.1s ease-in-out infinite}
+.reveal-on-scroll{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(0.16,1,0.3,1)}
+.reveal-on-scroll.in-view{opacity:1;transform:none}
+.kudos-toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);background:#0a0e1a;color:#fff;font-size:13px;font-weight:600;padding:12px 20px;border-radius:999px;box-shadow:0 12px 32px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:130;max-width:min(92vw,480px);text-align:center}
+.kudos-toast.show{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){.soundwave-bar,.reveal-on-scroll,.floating-card,.entrance-anim{animation:none!important;transition:none!important}.reveal-on-scroll{opacity:1;transform:none}}`}</style>
 
       {/* NAVBAR */}
       <header className="fixed top-0 left-0 right-0 w-full z-[90] bg-[rgba(248,250,252,0.95)] backdrop-blur-[12px] border-b border-[rgba(226,232,240,0.8)] h-[72px] max-[640px]:h-[64px]">
@@ -530,7 +561,7 @@ export default function LandingPage() {
         <section id="gallery" className="py-20 bg-[#f8fafc] border-t border-[#e2e8f0]">
           <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
             <h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-2">Hasil di OBS</h2>
-            <p className="text-[15px] text-[#475569] mb-6">Widget transparan persis seperti Browser Source di OBS — ganti scene Gelap/Terang untuk buktiin tetap kebaca, klik untuk detail.</p>
+            <p className="text-[15px] text-[#475569] mb-6">Widget transparan persis seperti Browser Source di OBS- ganti scene Gelap/Terang untuk buktiin tetap kebaca, klik untuk detail.</p>
             <div className="flex items-center justify-between gap-3 flex-wrap mb-8">
               <div className="flex gap-2 flex-wrap">
                 {GALLERY_CATS.map(c => (
@@ -577,16 +608,57 @@ export default function LandingPage() {
         </section>
 
         {/* INSIDE - BENTO GRID */}
-        <section id="inside" className="py-[70px] pb-20 border-t border-[#e2e8f0] bg-white">
+        <section id="inside" className="py-[70px] pb-20 border-t border-[#e2e8f0] bg-white reveal-on-scroll">
           <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
             <h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-9">Semua yang ada di OBS Dock</h2>
             <div className="grid grid-cols-12 gap-5 mb-6 auto-rows-[minmax(180px,auto)] max-[1024px]:grid-cols-1 max-[1024px]:auto-rows-auto">
-              {/* Bento 1 - Dock Control (besar, tall) */}
-              <div className="col-span-12 lg:col-span-5 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[340px] max-[1024px]:h-[260px] bg-[#eff6ff] border-b border-[#e2e8f0] flex items-center justify-center relative overflow-hidden p-4 shrink-0 skeleton-shimmer"><div style={{ width: '85%', height: '80%', background: '#fff', borderRadius: 16, border: '1.5px solid #93c5fd', boxShadow: '0 10px 25px rgba(59,130,246,0.12)', position: 'relative', padding: 16 }}><div style={{ position: 'absolute', top: 12, right: 12, width: 80, height: 18, background: '#e0f2fe', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 6px' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#0369a1' }} /><span style={{ width: 40, height: 4, background: '#93c5fd', borderRadius: 2 }} /></div><div style={{ position: 'absolute', bottom: 16, left: 16, width: '45%', height: '52%', background: '#f8fafc', border: '2px solid #005ea6', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 34, height: 34, borderRadius: '50%', background: '#cbd5e1' }} /></div><div style={{ position: 'absolute', bottom: 22, right: 16, width: '42%', height: 16, background: '#f1f5f9', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#005ea6' }} /><span style={{ width: 48, height: 5, background: '#005ea6', borderRadius: 2 }} /></div></div></div><div className="p-[22px] flex-1 flex flex-col justify-center"><h3 className="font-extrabold text-[19px] tracking-[-0.02em] text-[#0a0e1a] mb-2">Dock Control</h3><p className="text-[13.5px] text-[#475569] leading-[1.55]">Panel OBS langsung di browser - scene switcher, studio mode, dan stream tools tanpa buka aplikasi lain.</p></div></div>
+              {/* Bento 1 - Dock Control (besar, tall) dengan Live Scene Switcher Simulation */}
+              <div className="col-span-12 lg:col-span-5 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0">
+                <div className="h-[340px] max-[1024px]:h-[260px] bg-[#eff6ff] border-b border-[#e2e8f0] flex items-center justify-center relative overflow-hidden p-4 shrink-0 skeleton-shimmer">
+                  <div style={{ width: '88%', height: '84%', background: '#fff', borderRadius: 16, border: '1.5px solid #93c5fd', boxShadow: '0 10px 25px rgba(59,130,246,0.12)', position: 'relative', padding: 16 }}>
+                    <div style={{ position: 'absolute', top: 12, right: 12, width: 90, height: 20, background: '#e0f2fe', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px' }}>
+                      <span className="w-2 h-2 rounded-full bg-[#10b981] animate-ping" />
+                      <span style={{ fontSize: 9, fontWeight: 'bold', color: '#0369a1' }}>STUDIO MODE</span>
+                    </div>
+                    <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 11, fontWeight: 'bold', color: '#0f172a' }}>
+                      OBS Scene Switcher
+                    </div>
+                    {/* Scene 1 button simulation */}
+                    <div style={{ position: 'absolute', bottom: 16, left: 14, width: '45%', height: '58%', background: bentoScene === 1 ? '#eff6ff' : '#f8fafc', border: bentoScene === 1 ? '2.5px solid #005ea6' : '1.5px solid #cbd5e1', borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)', transform: bentoScene === 1 ? 'scale(1.04)' : 'scale(1)', boxShadow: bentoScene === 1 ? '0 8px 16px rgba(0,94,166,0.15)' : 'none' }}>
+                      <div style={{ width: 30, height: 30, borderRadius: '50%', background: bentoScene === 1 ? '#005ea6' : '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 'bold', transition: 'background 0.3s' }}>S1</div>
+                      <span style={{ fontSize: 10.5, fontWeight: 'bold', color: bentoScene === 1 ? '#005ea6' : '#64748b' }}>Game Scene</span>
+                      {bentoScene === 1 && <span className="text-[8.5px] font-bold text-[#10b981] bg-[#dcfce7] px-1.5 py-0.5 rounded-full">ACTIVE</span>}
+                    </div>
+                    {/* Scene 2 button simulation */}
+                    <div style={{ position: 'absolute', bottom: 16, right: 14, width: '45%', height: '58%', background: bentoScene === 2 ? '#eff6ff' : '#f8fafc', border: bentoScene === 2 ? '2.5px solid #005ea6' : '1.5px solid #cbd5e1', borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)', transform: bentoScene === 2 ? 'scale(1.04)' : 'scale(1)', boxShadow: bentoScene === 2 ? '0 8px 16px rgba(0,94,166,0.15)' : 'none' }}>
+                      <div style={{ width: 30, height: 30, borderRadius: '50%', background: bentoScene === 2 ? '#005ea6' : '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 'bold', transition: 'background 0.3s' }}>S2</div>
+                      <span style={{ fontSize: 10.5, fontWeight: 'bold', color: bentoScene === 2 ? '#005ea6' : '#64748b' }}>Just Chat</span>
+                      {bentoScene === 2 && <span className="text-[8.5px] font-bold text-[#10b981] bg-[#dcfce7] px-1.5 py-0.5 rounded-full">ACTIVE</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-[22px] flex-1 flex flex-col justify-center">
+                  <h3 className="font-extrabold text-[19px] tracking-[-0.02em] text-[#0a0e1a] mb-2">Dock Control</h3>
+                  <p className="text-[13.5px] text-[#475569] leading-[1.55]">Panel OBS langsung di browser - scene switcher, studio mode, dan stream tools tanpa buka aplikasi lain.</p>
+                </div>
+              </div>
               {/* Bento 2 - Event Overlay (1 per 1 fade, hold 1 detik, delay per div) */}
               <div className="col-span-12 lg:col-span-4 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[340px] max-[1024px]:h-[260px] bg-[#fff7ed] border-b border-[#e2e8f0] flex flex-col items-center justify-center gap-3.5 p-4 shrink-0 overflow-hidden"><div style={{ animationDelay: '0ms' }} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 shadow-[0_6px_16px_rgba(249,115,22,0.08)] opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#f97316]" /><div className="flex-1 flex flex-col gap-1"><span className="w-[60%] h-1.5 bg-[#fdba74] rounded" /><span className="w-[40%] h-1 bg-[#fed7aa] rounded" /></div><span className="w-[22px] h-2.5 bg-[#ea580c] rounded" /></div><div style={{ animationDelay: '1400ms' }} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 shadow-[0_6px_16px_rgba(249,115,22,0.08)] opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#ea580c]" /><div className="flex-1 flex flex-col gap-1"><span className="w-[70%] h-1.5 bg-[#fdba74] rounded" /><span className="w-[35%] h-1 bg-[#fed7aa] rounded" /></div></div><div style={{ animationDelay: '2800ms' }} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#fb923c]" /><span className="w-1/2 h-1.5 bg-[#fdba74] rounded" /></div></div><div className="p-[22px] flex-1 flex flex-col justify-center"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Event Overlay</h3><p className="text-[13.5px] text-[#475569]">Gift, follow, sub, dan donasi muncul real-time - WebSocket privat memastikan event streamer lain tidak bocor.</p></div></div>
               {/* Bento 3 - Media Player + Lirik (crossfade gantian, arah terus ke atas) */}
-              <div className="col-span-12 lg:col-span-3 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#faf5ff] border-b border-[#e2e8f0] flex items-center justify-center p-4 shrink-0 overflow-hidden"><div className="w-[80%] h-[85px] bg-white rounded-xl border border-[#e9d5ff] shadow-[0_8px_20px_rgba(168,85,247,0.1)] flex flex-col items-center justify-center overflow-hidden relative py-2"><div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 animate-[lyricGantiA_3.6s_ease-in-out_infinite]"><span className="h-1.5 w-[38%] bg-[#c084fc]/70 rounded block" /><span className="h-2.5 w-[68%] bg-[#a855f7] rounded block shadow-[0_2px_8px_rgba(168,85,247,0.18)]" /><span className="h-1.5 w-[42%] bg-[#e9d5ff] rounded block" /></div><div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 animate-[lyricGantiB_3.6s_ease-in-out_infinite]"><span className="h-1.5 w-[52%] bg-[#c084fc]/60 rounded block" /><span className="h-2.5 w-[64%] bg-[#a855f7] rounded block shadow-[0_2px_8px_rgba(168,85,247,0.18)]" /><span className="h-1.5 w-[48%] bg-[#e9d5ff]/80 rounded block" /></div></div></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Media Player + Lirik</h3><p className="text-[13.5px] text-[#475569]">11 tema visual, sinkronisasi lirik otomatis LRCLIB, dan SMTC Bridge - musik stream tampil profesional.</p></div></div>
+              <div className="col-span-12 lg:col-span-3 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0">
+                <div className="h-[210px] max-[1024px]:h-[190px] bg-[#faf5ff] border-b border-[#e2e8f0] flex items-center justify-center p-4 shrink-0 overflow-hidden relative">
+                  <div className="absolute top-3 right-3 flex items-end gap-0.5 h-3">
+                    <span className="soundwave-bar" style={{ animationDelay: '0s', backgroundColor: '#a855f7' }} />
+                    <span className="soundwave-bar" style={{ animationDelay: '0.3s', backgroundColor: '#a855f7' }} />
+                    <span className="soundwave-bar" style={{ animationDelay: '0.15s', backgroundColor: '#a855f7' }} />
+                  </div>
+                  <div className="w-[80%] h-[85px] bg-white rounded-xl border border-[#e9d5ff] shadow-[0_8px_20px_rgba(168,85,247,0.1)] flex flex-col items-center justify-center overflow-hidden relative py-2">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 animate-[lyricGantiA_3.6s_ease-in-out_infinite]"><span className="h-1.5 w-[38%] bg-[#c084fc]/70 rounded block" /><span className="h-2.5 w-[68%] bg-[#a855f7] rounded block shadow-[0_2px_8px_rgba(168,85,247,0.18)]" /><span className="h-1.5 w-[42%] bg-[#e9d5ff] rounded block" /></div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 animate-[lyricGantiB_3.6s_ease-in-out_infinite]"><span className="h-1.5 w-[52%] bg-[#c084fc]/60 rounded block" /><span className="h-2.5 w-[64%] bg-[#a855f7] rounded block shadow-[0_2px_8px_rgba(168,85,247,0.18)]" /><span className="h-1.5 w-[48%] bg-[#e9d5ff]/80 rounded block" /></div>
+                  </div>
+                </div>
+                <div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Media Player + Lirik</h3><p className="text-[13.5px] text-[#475569]">11 tema visual, sinkronisasi lirik otomatis LRCLIB, dan SMTC Bridge - musik stream tampil profesional.</p></div>
+              </div>
               {/* Bento 4 - Widget Dashboard (kecil kanan bawah) */}
               <div className="col-span-12 lg:col-span-3 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-center p-4 shrink-0 skeleton-shimmer"><div className="w-[85%] h-[95px] bg-white rounded-xl border border-[#cbd5e1] p-2.5 flex flex-col gap-2"><div className="w-full h-[26px] bg-[#e2e8f0] rounded-md" /><div className="grid grid-cols-3 gap-1.5"><div className="h-[38px] bg-[#f8fafc] border border-[#e2e8f0] rounded-md" /><div className="h-[38px] bg-[#f8fafc] border border-[#e2e8f0] rounded-md" /><div className="h-[38px] bg-[#f8fafc] border border-[#e2e8f0] rounded-md" /></div></div></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Widget Dashboard</h3><p className="text-[13.5px] text-[#475569]">Kelola semua widget - chat, poll, timer, ticker - dari satu panel terpusat.</p></div></div>
               {/* Bento 5 - Mobile Dock (lebar 5) */}
@@ -609,7 +681,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-5 max-[1024px]:grid-cols-2 max-[480px]:grid-cols-1 gap-4">
                 {STICKY_REVIEWS.map(r => (
                   <div key={r.id} className={`rounded-xl p-4 flex flex-col justify-between shadow-[0_4px_10px_rgba(0,0,0,0.04)] border border-black/5 min-h-[180px] hover:-translate-y-1 hover:scale-[1.02] transition-transform ${r.tint}`}>
-                    <div><div className="text-[#ff4d2e] text-[11px] tracking-[1px] mb-2">{"★".repeat(r.stars)}</div><div className="text-[13.5px] font-bold leading-[1.4] mb-3 flex-1">"{r.quote}"</div></div><div className="text-[11.5px] opacity-80 border-t border-black/5 pt-2"><span className="font-bold">{r.author}</span> · {r.product}</div>
+                    <div><div className="text-[#ff4d2e] text-[11px] tracking-[1px] mb-2">{"★".repeat(r.stars)}</div><div className="text-[13.5px] font-bold leading-[1.4] mb-3 flex-1">&ldquo;{r.quote}&rdquo;</div></div><div className="text-[11.5px] opacity-80 border-t border-black/5 pt-2"><span className="font-bold">{r.author}</span> · {r.product}</div>
                   </div>
                 ))}
               </div>
@@ -707,7 +779,10 @@ export default function LandingPage() {
         </div>
       </footer>
       <button onClick={() => showToast('Customer support chat live siap membantu!')} aria-label="Live Chat Support" title="Need help? Chat with us" className="fixed bottom-7 right-7 w-[54px] h-[54px] rounded-full bg-[#005ea6] hover:bg-[#004a8c] hover:scale-[1.08] text-[#ffffff] flex items-center justify-center shadow-[0_8px_24px_rgba(0,94,166,0.45)] z-[100] transition-all"><MessageCircle size={24} /></button>
-      <div className={`fixed bottom-7 left-1/2 -translate-x-1/2 bg-[#0f172a] text-[#ffffff] px-6 py-3 rounded-full text-[13.5px] font-bold shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-[200] pointer-events-none transition-all duration-200 ${toastText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>{toastText}</div>
+      {/* Toast Notification Bar */}
+      <div role="status" aria-live="polite" className={`kudos-toast ${toastText ? 'show' : ''}`}>
+        {toastText}
+      </div>
     </div>
   );
 }

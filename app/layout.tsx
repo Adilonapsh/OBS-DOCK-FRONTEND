@@ -16,8 +16,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OBS OVERLAYS",
-  description: "TruOverlay is a free and open-source overlay for OBS Studio that allows you to display various information on your stream, such as chat messages, alerts, and more.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://app.obsdock.com"
+  ),
+  title: {
+    default: "OBS Dock- Kontrol OBS & Widget Stream dari Browser",
+    template: "%s | OBS Dock",
+  },
+  description:
+    "OBS Dock: kontrol OBS Studio Mode & scene switcher dari browser/HP, plus 14+ widget dan overlay real-time (chat, poll, goals, gift, media player + lirik) via WebSocket privat.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

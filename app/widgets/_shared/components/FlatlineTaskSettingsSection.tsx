@@ -43,7 +43,7 @@ export function FlatlineTaskSettingsSection({ state, update }: Props) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2">Flatline — Task Pill</h2>
+      <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2">Flatline- Task Pill</h2>
       <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
         <div>
           <span className="text-[11px] font-bold text-gray-300">Preset Cepat</span>
@@ -69,7 +69,7 @@ export function FlatlineTaskSettingsSection({ state, update }: Props) {
         </div>
 
         <div>
-          <span className="text-[11px] font-bold text-gray-300">Text Color — Terang & Redup (wipe)</span>
+          <span className="text-[11px] font-bold text-gray-300">Text Color- Terang & Redup (wipe)</span>
           <div className="mt-1 grid grid-cols-2 gap-2.5 sm:gap-3">
             <ColorField label="Bright (aktif)" value={bright} onChange={(val) => update('taskFlatBright', val)} />
             <ColorField label="Dim (selesai)" value={dim} onChange={(val) => update('taskFlatDim', val)} />
@@ -77,7 +77,7 @@ export function FlatlineTaskSettingsSection({ state, update }: Props) {
         </div>
 
         <div>
-          <span className="text-[11px] font-bold text-gray-300">Background Color — Pill & Page</span>
+          <span className="text-[11px] font-bold text-gray-300">Background Color- Pill & Page</span>
           <div className="mt-1 grid grid-cols-2 gap-2.5 sm:gap-3">
             <ColorField label="Pill (navy)" value={pill} onChange={(val) => update('taskFlatPill', val)} />
             <ColorField label="Page BG (preview)" value={page} onChange={(val) => update('taskFlatPage', val)} />
@@ -99,7 +99,7 @@ export function FlatlineTaskSettingsSection({ state, update }: Props) {
             <input type="checkbox" checked={uppercase} onChange={(e) => update('taskFlatUppercase', e.target.checked)} className="w-4 h-4 accent-white" />
           </label>
         </div>
-        <p className="text-[10px] text-gray-500">Klik pill = checklist: teks terang ter-wipe kiri-ke-kanan jadi redup + garis strikethrough. Page BG cuma buat preview — di OBS tetap transparan.</p>
+        <p className="text-[10px] text-gray-500">Klik pill = checklist: teks terang ter-wipe kiri-ke-kanan jadi redup + garis strikethrough. Page BG cuma buat preview- di OBS tetap transparan.</p>
       </div>
     </div>
   );

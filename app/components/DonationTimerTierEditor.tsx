@@ -10,7 +10,7 @@ function fmtMenit(minutes: number): string {
   return m > 0 ? `${h} jam ${m} mnt` : `${h} jam`;
 }
 
-// Editor aturan "Rp X = Y menit" — bisa tambah banyak tier.
+// Editor aturan "Rp X = Y menit"- bisa tambah banyak tier.
 // Berlaku berapa pun nominalnya (proporsional): tier tertinggi yang
 // terpenuhi dipakai; di bawah tier terkecil pakai rate tier terkecil.
 export function DonationTimerTierEditor({

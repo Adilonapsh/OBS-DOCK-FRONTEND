@@ -50,7 +50,7 @@ export function BrutalistSettingsSection({ state, update }: Props) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"> Brutalist — Neo Brutalist</h2>
+      <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"> Brutalist- Neo Brutalist</h2>
       <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
         <div>
           <span className="text-[11px] font-bold text-gray-300">Preset Cepat</span>
@@ -97,7 +97,7 @@ export function BrutalistSettingsSection({ state, update }: Props) {
           />
         </div>
         <label className="block">
-          <span className="text-[11px] font-bold text-gray-300">Shadow Offset — {shadow}px</span>
+          <span className="text-[11px] font-bold text-gray-300">Shadow Offset- {shadow}px</span>
           <input type="range" min={0} max={14} value={shadow} onChange={(e) => update('brutalistShadow', parseInt(e.target.value) || 6)} className="mt-1 w-full accent-white cursor-pointer" />
         </label>
         <div className="grid grid-cols-2 gap-2">

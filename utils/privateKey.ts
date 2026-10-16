@@ -16,11 +16,11 @@ export async function readPrivateKey(supabase: SupabaseClient, userId: string): 
     try {
         const { data } = await supabase.from('profiles').select('private_key').eq('id', userId).single();
         if ((data as any)?.private_key) return (data as any).private_key as string;
-    } catch {}
+    } catch { }
     try {
         const { data } = await supabase.from('user_private_keys').select('private_key').eq('user_id', userId).single();
         if ((data as any)?.private_key) return (data as any).private_key as string;
-    } catch {}
+    } catch { }
     return null;
 }
 
@@ -32,7 +32,7 @@ async function writePrivateKey(supabase: SupabaseClient, userId: string, newKey:
         try {
             const { data } = await supabase.from('profiles').select('username, email, avatar_url').eq('id', userId).single();
             existing = data;
-        } catch {}
+        } catch { }
         const { error: e1 } = await supabase.from('profiles').upsert({
             id: userId,
             username: existing?.username ?? null,
@@ -61,7 +61,7 @@ export async function getOrCreatePrivateKey(supabase: SupabaseClient, userId: st
 }
 
 // Regenerate: selalu key baru. Coba RPC resmi dulu (security definer, menembus RLS),
-// tapi verifikasi hasilnya — bila tidak tersimpan (baris belum ada), tulis manual via upsert.
+// tapi verifikasi hasilnya- bila tidak tersimpan (baris belum ada), tulis manual via upsert.
 export async function regeneratePrivateKey(
     supabase: SupabaseClient,
     userId: string
@@ -73,7 +73,7 @@ export async function regeneratePrivateKey(
             if (check) return { key: check };
             // RPC return key tapi tidak tersimpan (baris belum ada) → lanjut jalur manual.
         }
-    } catch {}
+    } catch { }
     const newKey = randomPrivateKey();
     const ok = await writePrivateKey(supabase, userId, newKey);
     if (!ok) {

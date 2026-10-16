@@ -64,7 +64,7 @@ export function TimerSettingsForm({ state, update }: { state: TimerSettings; upd
               <span className="text-[11px] font-bold text-white">Show Progress</span>
               <input type="checkbox" checked={(state as unknown as { showProgress: boolean }).showProgress ?? true} onChange={(e) => update('showProgress' as keyof typeof state, e.target.checked)} className="w-4 h-4 accent-white" />
             </label>
-            <p className="text-[10px] text-gray-500">Progress bar di belakang card — off = tanpa bg progress (tetap 0 saat timer 0).</p>
+            <p className="text-[10px] text-gray-500">Progress bar di belakang card- off = tanpa bg progress (tetap 0 saat timer 0).</p>
           </div>
         </>
       )}

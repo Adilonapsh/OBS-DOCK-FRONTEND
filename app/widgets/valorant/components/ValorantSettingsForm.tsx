@@ -98,7 +98,7 @@ export function ValorantSettingsForm({
         </div>
       </div>
 
-      {/* Brutalist — Neo Brutalist */}
+      {/* Brutalist- Neo Brutalist */}
       {state.theme === 'brutalist' && (
         <BrutalistSettingsSection
           state={state as unknown as Record<string, unknown>}
@@ -106,10 +106,10 @@ export function ValorantSettingsForm({
         />
       )}
 
-      {/* Pastel — sumber warna */}
+      {/* Pastel- sumber warna */}
       {state.theme === 'pastel' && (
         <div className="space-y-3">
-          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-pink-300" /> Pastel — Cute Card</h2>
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-pink-300" /> Pastel- Cute Card</h2>
           <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
             <label className="block">
               <span className="text-[11px] font-bold text-gray-300">Sumber Warna</span>
