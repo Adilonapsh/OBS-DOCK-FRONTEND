@@ -178,8 +178,8 @@ function TimerInner() {
   return (
     <>
       {obsMode && !simulate && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode && !simulate ? 'transparent !important' : theme === 'flatline' ? (flatline.flatlinePageBg || '#8c90d5') : '#e6c8bf'}; }`}</style>
-      <div className={`${obsMode && !simulate ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen flex p-6 relative`}`} style={{ ...posStyle, background: obsMode && !simulate ? 'transparent' : theme === 'subathon' ? '#abb3f8' : theme === 'glass' ? 'linear-gradient(135deg, #a5b4fc 0%, #bac7ff 100%)' : theme === 'flatline' ? (flatline.flatlinePageBg || '#8c90d5') : 'linear-gradient(135deg, #eacbc2 0%, #dfb8ad 100%)' } as any}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap'); ${KEYFRAMES_CSS} html,body{ background: ${obsMode && !simulate ? 'transparent !important' : theme === 'flatline' ? (flatline.flatlinePageBg || '#7fb8e8') : '#cde9f6'}; }`}</style>
+      <div className={`${obsMode && !simulate ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-4` : `w-full min-h-screen flex p-6 relative`}`} style={{ ...posStyle, background: obsMode && !simulate ? 'transparent' : theme === 'subathon' ? '#a5d8f5' : theme === 'glass' ? 'linear-gradient(135deg, #93c5fd 0%, #a7f3d0 100%)' : theme === 'flatline' ? (flatline.flatlinePageBg || '#7fb8e8') : 'linear-gradient(135deg, #bae6fd 0%, #bbf7d0 100%)' } as any}>
         <div className="flex flex-col items-center gap-4">
           <AutoScale defaultBase={360} baseWidth={theme === 'focus' ? 330 : theme === 'glass' ? 576 : 360}>
             <Theme key={displayKey} {...themeProps} />
@@ -199,7 +199,7 @@ function TimerInner() {
 
 export default function TimerDisplayPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#e6c8bf] grid place-items-center text-white/60 text-sm">Loading timer…</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#cde9f6] grid place-items-center text-white/60 text-sm">Loading timer…</div>}>
       <TimerInner />
     </Suspense>
   );

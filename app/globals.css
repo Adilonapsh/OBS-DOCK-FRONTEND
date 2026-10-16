@@ -525,3 +525,10 @@ html.dark .landing-root .hover\:text-\[\#0f172a\]:hover { color: #ffffff !import
 html.dark .landing-root .hover\:text-\[\#005ea6\]:hover { color: #5eb2ff !important; }
 /* shadows lebih lembut di dark */
 html.dark .landing-root .shadow-\[0_4px_12px_rgba\(15\,23\,42\,0\.05\)\] { box-shadow: 0 4px 12px rgba(0,0,0,0.45) !important; }
+
+/* tombol aktif biru — paksa text tetap putih di dark mode */
+html.dark .landing-root .bg-\[\#005ea6\] { background: #005ea6 !important; }
+html.dark .landing-root .bg-\[\#005ea6\] .text-white,
+html.dark .landing-root .bg-\[\#005ea6\].text-white,
+html.dark .landing-root .bg-\[\#005ea6\] * { color: #ffffff !important; }
+html.dark .landing-root .\!text-white { color: #ffffff !important; }

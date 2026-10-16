@@ -53,7 +53,7 @@ export default function RegisterPage() {
         if (authError) {
             let msg = authError.message;
             if (msg.includes("already registered")) msg = "Email sudah terdaftar. Silakan masuk.";
-            else if (msg.includes("Database error saving new user")) msg = "Database error saving new user: private_key/trigger belum terpasang. Jalankan supabase/schema.sql atau 002_add_private_key.sql di Supabase SQL Editor.";
+            else if (msg.includes("Database error saving new user")) msg = "Terjadi galat sistem saat membuat akun. Coba lagi atau hubungi admin.";
             setError(msg);
             setLoading(false);
             return;
@@ -82,7 +82,7 @@ export default function RegisterPage() {
             }
         }
 
-        // jika supabase butuh konfirmasi email, session bisa null
+        // jika verifikasi email aktif, session bisa null
         if (data.user && !data.session) {
             setSuccess("Akun dibuat! Private key sudah dibuat. Cek email untuk konfirmasi, lalu masuk.");
         } else {
@@ -104,8 +104,8 @@ export default function RegisterPage() {
                 </p>
             }
             icon={<UserPlus className="w-4 h-4 text-blue-400" />}
-            title="Daftar Akun Supabase"
-            subtitle="Akun akan disimpan di Supabase Authentication. Cek email jika konfirmasi aktif."
+            title="Buat Akun Baru"
+            subtitle="Daftar untuk menyimpan widget dan private key kamu. Cek email jika verifikasi aktif."
             footerRight={<Link href="/login" className="text-[8px] font-black tracking-widest uppercase text-blue-400 hover:text-blue-300">Sudah punya akun? Masuk</Link>}
         >
                     <form onSubmit={handleRegister} className="space-y-4">

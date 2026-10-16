@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo, useMemo } from "react";
 import { Activity, AlertTriangle, CheckCircle, RefreshCcw, Video, Eye, Menu, Maximize2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import StreamDetailModal from "./StreamDetailModal";
@@ -77,13 +77,20 @@ const getPrivateKey = () => {
   );
 };
 
-function StreamCard({ st, onClick }: { st: StreamItem; onClick: () => void }) {
+const StreamCard = memo(function StreamCard({ st, onClick }: { st: StreamItem; onClick: () => void }) {
   const openFullscreen = (e: React.MouseEvent) => {
     e.stopPropagation();
     const key = getPrivateKey();
     const url = `/monitor/fullscreen?stream=${encodeURIComponent(st.name)}${key ? `&key=${encodeURIComponent(key)}` : ""}`;
     window.open(url, "_blank");
   };
+  // src di-memo per stream agar re-render (polling / ganti group) tidak reload iframe.
+  // iframe hanya reload bila src berubah atau komponen di-unmount.
+  const previewSrc = useMemo(
+    () => getStreamUrlFromItem(st),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [st._id, st.name, st.hlsUrlBase, st.serverUrl]
+  );
   return (
     <div
       onClick={onClick}
@@ -107,7 +114,8 @@ function StreamCard({ st, onClick }: { st: StreamItem; onClick: () => void }) {
       <div className={cn("mt-4 aspect-video rounded-xl flex flex-col items-center justify-center relative overflow-hidden border border-white/5", st.ready ? "bg-black" : "bg-white/5")}>
         {st.ready ? (
           <iframe
-            src={getStreamUrlFromItem(st)}
+            key={st._id}
+            src={previewSrc}
             title={`Preview: ${st.name}`}
             className="w-full h-full border-0 pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity"
             allow="autoplay; encrypted-media"
@@ -139,7 +147,7 @@ function StreamCard({ st, onClick }: { st: StreamItem; onClick: () => void }) {
       </div>
     </div>
   );
-}
+});
 
 export default function MonitorPage() {
   const supabase = createClient();
@@ -298,6 +306,60 @@ export default function MonitorPage() {
   const online = streams.filter((s) => s.ready).length;
   const offline = total - online;
 
+  // ---- Anti-reload iframe saat pindah group ----
+  // Prinsip: SATU grid + key stabil (st._id). Pindah group hanya ubah CSS `order`,
+  // tidak memindah DOM / unmount. iframe hanya reload bila src berubah / unmount.
+  // Header group dirender terpisah (tanpa iframe) sehingga aman di-remount.
+  const sortedStreams = useMemo(
+    () => [...streams].sort((a, b) => a._id.localeCompare(b._id)),
+    [streams]
+  );
+  const groupKeyOf = (st: StreamItem) =>
+    groupBy === "server"
+      ? st.serverName || "Unassigned Server"
+      : st.confName === "all_others"
+        ? "Kategori: Umum (all_others)"
+        : st.confName || "Kategori: Umum";
+  const groupSummaries = useMemo(() => {
+    if (groupBy === "none") return [];
+    const m = new Map<string, StreamItem[]>();
+    for (const st of streams) {
+      const k = groupKeyOf(st);
+      if (!m.has(k)) m.set(k, []);
+      m.get(k)!.push(st);
+    }
+    return [...m.entries()]
+      .map(([key, items]) => ({
+        key,
+        label: groupBy === "server" ? `Server: ${key}` : `Group: ${key}`,
+        total: items.length,
+        onlineCount: items.filter((i) => i.ready).length,
+      }))
+      .sort((a, b) => a.key.localeCompare(b.key));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streams, groupBy]);
+  const visualOrder = useMemo(() => {
+    const m = new Map<string, number>();
+    if (groupBy === "none") {
+      sortedStreams.forEach((st, i) => m.set(st._id, i));
+      return m;
+    }
+    const grouped = new Map<string, string[]>();
+    for (const st of sortedStreams) {
+      const g = groupKeyOf(st);
+      if (!grouped.has(g)) grouped.set(g, []);
+      grouped.get(g)!.push(st._id);
+    }
+    let o = 0;
+    [...grouped.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .forEach(([, ids]) => {
+        ids.sort().forEach((id) => m.set(id, o++));
+      });
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortedStreams, groupBy]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
       <Sidebar active="monitor" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
@@ -395,72 +457,32 @@ export default function MonitorPage() {
           </div>
 
           <div className="w-full">
-            {(() => {
-              if (streams.length === 0 && !loading) {
-                return <div className="border border-white/10 rounded-xl p-8 text-center bg-[#161616] text-gray-500 text-sm">0 Data Ditemukan</div>;
-              }
-              if (groupBy === "server") {
-                const grouped = streams.reduce((acc, st) => {
-                  const group = st.serverName || "Unassigned Server";
-                  if (!acc[group]) acc[group] = [];
-                  acc[group].push(st);
-                  return acc;
-                }, {} as Record<string, StreamItem[]>);
-                return (
-                  <div className="space-y-8">
-                    {Object.entries(grouped).map(([srvName, items]) => (
-                      <div key={srvName} className="space-y-4">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2 border-b border-white/10 pb-2">
-                          <span>Server: {srvName}</span>
-                          <span className="text-[10px] bg-white/10 text-gray-400 px-2.5 py-0.5 rounded-full font-mono border border-white/5">
-                            {items.filter((i) => i.ready).length}/{items.length} ONLINE
-                          </span>
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {items.map((st) => (
-                            <StreamCard key={st._id} st={st} onClick={() => setSelectedStream(st)} />
-                          ))}
-                        </div>
-                      </div>
+            {streams.length === 0 && !loading ? (
+              <div className="border border-white/10 rounded-xl p-8 text-center bg-[#161616] text-gray-500 text-sm">0 Data Ditemukan</div>
+            ) : (
+              <>
+                {groupBy !== "none" && (
+                  <div className="space-y-2 mb-6">
+                    {groupSummaries.map((g) => (
+                      <h3 key={g.key} className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2 border-b border-white/10 pb-2">
+                        <span>{g.label}</span>
+                        <span className="text-[10px] bg-white/10 text-gray-400 px-2.5 py-0.5 rounded-full font-mono border border-white/5">
+                          {g.onlineCount}/{g.total} ONLINE
+                        </span>
+                      </h3>
                     ))}
                   </div>
-                );
-              }
-              if (groupBy === "group") {
-                const grouped = streams.reduce((acc, st) => {
-                  const group = st.confName === "all_others" ? "Kategori: Umum (all_others)" : st.confName || "Kategori: Umum";
-                  if (!acc[group]) acc[group] = [];
-                  acc[group].push(st);
-                  return acc;
-                }, {} as Record<string, StreamItem[]>);
-                return (
-                  <div className="space-y-8">
-                    {Object.entries(grouped).map(([groupName, items]) => (
-                      <div key={groupName} className="space-y-4">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2 border-b border-white/10 pb-2">
-                          <span>Group: {groupName}</span>
-                          <span className="text-[10px] bg-white/10 text-gray-400 px-2.5 py-0.5 rounded-full font-mono border border-white/5">
-                            {items.filter((i) => i.ready).length}/{items.length} ONLINE
-                          </span>
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {items.map((st) => (
-                            <StreamCard key={st._id} st={st} onClick={() => setSelectedStream(st)} />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-              return (
+                )}
+                {/* Grid tunggal + key stabil: pindah group hanya ubah `order`, iframe tidak reload */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {streams.map((st) => (
-                    <StreamCard key={st._id} st={st} onClick={() => setSelectedStream(st)} />
+                  {sortedStreams.map((st) => (
+                    <div key={st._id} style={{ order: visualOrder.get(st._id) ?? 0 }} className="min-w-0">
+                      <StreamCard st={st} onClick={() => setSelectedStream(st)} />
+                    </div>
                   ))}
                 </div>
-              );
-            })()}
+              </>
+            )}
           </div>
 
           <StreamDetailModal key={selectedStream?._id ?? "none"} stream={selectedStream ? (streams.find((s) => s._id === selectedStream._id) ?? selectedStream) : null} onClose={() => setSelectedStream(null)} />

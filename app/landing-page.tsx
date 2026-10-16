@@ -113,26 +113,47 @@ const GALLERY_CATS: { id: GalleryCategory | 'semua'; label: string }[] = [
   { id: 'utility', label: 'Utility' },
   { id: 'dock', label: 'Dock' },
 ];
+/* Slide terisi untuk preview gallery info-slides (brutalist) */
+const INFO_SLIDES_GALLERY = [
+  { id: 'g1', badge: 'SPONSOR', title: 'TrueNAP Ultra Low Latency', desc: 'Internet khusus streamer, ping kecil anti frame drop', accent: '#FFE600' },
+  { id: 'g2', badge: 'JADWAL', title: 'Live Tiap Malam 19.00 WIB', desc: 'Mabar viewer tiap Jumat, turnamen tiap akhir bulan', accent: '#00E5FF' },
+  { id: 'g3', badge: 'RULES', title: 'No Toxic No Sara', desc: 'Jaga chat tetap asik dan respect semua viewer', accent: '#FF6B9D' },
+  { id: 'g4', badge: 'SAWERIA', title: 'Dukung via Saweria', desc: 'Scan QR di layar, setiap dukungan berarti', accent: '#7CFF6B' },
+];
+const INFO_SLIDES_EMBED = `/widgets/info-slides/display?theme=brutalist&autoRotate=true&obs=1&slides=${encodeURIComponent(JSON.stringify(INFO_SLIDES_GALLERY))}`;
 const GALLERY: GalleryItem[] = [
-  { id: 'chat-cute', title: 'Chat Cute Lavender', desc: 'TikTok + Twitch stacked, badge MOD/SUB, animasi elegant blur.', category: 'chat', size: '420×520', href: '/widgets/chat?theme=cute', badge: '8 tema', embed: '/widgets/chat/display?theme=cute&simulate=1' },
-  { id: 'chat-ticker', title: 'Chat Ticker Horizontal', desc: 'Bottom bar pills nickname: pesan, animasi slideLeft.', category: 'chat', size: '800×120', href: '/widgets/chat?horizontal=1&inline=1', badge: 'inline', embed: '/widgets/chat/display?theme=standard&horizontal=1&inline=1&simulate=1' },
-  { id: 'poll-bar', title: 'Poll Donut Live Vote', desc: 'Vote via chat 1-6, donat % + total naik real-time.', category: 'poll', size: '640×320', href: '/widgets/poll?theme=donut', badge: '11 tema', embed: '/widgets/poll/display?theme=donut&simulate=1' },
-  { id: 'goals', title: 'Goals Neon Bar', desc: 'Target subs dengan progress bar video neon yang hidup.', category: 'poll', size: '420×140', href: '/widgets/goals?theme=neonbar', badge: 'neon', embed: '/widgets/goals/display?theme=neonbar&simulate=1' },
-  { id: 'event', title: 'Gift Alert Overlay', desc: 'Gift, follow, like dengan efek wipe ala Twitch, real-time.', category: 'overlay', size: '420×400', href: '/widgets/event?theme=alert', badge: 'alert', embed: '/widgets/event/display?theme=alert&simulate=1' },
-  { id: 'media-vinyl', title: 'Media Player Vinyl + Lirik', desc: 'Now Playing SMTC + lirik synced LRCLIB baris per baris.', category: 'media', size: '500×140', href: '/widgets/media-player?theme=vinyl', badge: '14 tema', embed: '/widgets/media-player/display?theme=vinyl&simulate=1' },
-  { id: 'timer-subathon', title: 'Timer Glass', desc: 'Glassmorphism blur + sync dock ±5m & countdown live.', category: 'utility', size: '360×340', href: '/widgets/timer?theme=glass', badge: '7 tema', embed: '/widgets/timer/display?theme=glass&simulate=1' },
-  { id: 'ticker-qr', title: 'Ticker Neon Glow', desc: 'Running text sponsor dengan glow neon yang jalan terus.', category: 'utility', size: '640×120', href: '/widgets/ticker?theme=neon', badge: 'neon', embed: '/widgets/ticker/display?theme=neon&simulate=1' },
+  { id: 'chat-brutalist', title: 'Chat Brutalist', desc: 'Menampilkan live chat TikTok, Twitch, YouTube & Kick langsung di layar stream.', category: 'chat', size: '420×520', href: '/widgets/chat?theme=brutalist', badge: '8 tema', embed: '/widgets/chat/display?theme=brutalist&simulate=1&brutalistTail=0&obs=1' },
+  { id: 'info-slides', title: 'Info Slides Brutalist', desc: 'Menampilkan info sponsor, jadwal, rules & donasi bergantian otomatis.', category: 'utility', size: '640×160', href: '/widgets/info-slides?theme=brutalist', badge: 'brutalist', embed: INFO_SLIDES_EMBED },
+  { id: 'poll-brutalist', title: 'Poll Brutalist', desc: 'Polling interaktif — viewer vote langsung dari chat dengan ketik 1-6.', category: 'poll', size: '640×320', href: '/widgets/poll?theme=brutalist&autoscale=0', badge: '11 tema', embed: '/widgets/poll/display?theme=brutalist&simulate=1&autoscale=0&pos=t&obs=1' },
+  { id: 'goals', title: 'Goals Neon Bar', desc: 'Menampilkan target follower, subs & donasi beserta progress real-time.', category: 'poll', size: '420×140', href: '/widgets/goals?theme=neonbar', badge: 'neon', embed: '/widgets/goals/display?theme=neonbar&simulate=1&obs=1' },
+  { id: 'event', title: 'Gift Alert Overlay', desc: 'Notifikasi gift, follow & like yang muncul otomatis saat ada event.', category: 'overlay', size: '420×400', href: '/widgets/event?theme=alert', badge: 'alert', embed: '/widgets/event/display?theme=alert&simulate=1&obs=1' },
+  { id: 'music-request', title: 'Song Request Brutalist', desc: 'Viewer request lagu via chat, antrean lagu tampil langsung di layar.', category: 'media', size: '420×220', href: '/widgets/music?theme=brutalist', badge: 'brutalist', embed: '/widgets/music/display?theme=brutalist&simulate=1&obs=1' },
+  { id: 'timer-brutalist', title: 'Timer Brutalist', desc: 'Hitung mundur untuk giveaway, subathon & fokus sesi stream.', category: 'utility', size: '360×340', href: '/widgets/timer?theme=brutalist', badge: '7 tema', embed: '/widgets/timer/display?theme=brutalist&simulate=1&obs=1' },
+  { id: 'ticker-brutalist', title: 'Ticker Brutalist', desc: 'Teks berjalan untuk pengumuman, sponsor & info penting di stream.', category: 'utility', size: '640×120', href: '/widgets/ticker?theme=brutalist', badge: 'brutalist', embed: '/widgets/ticker/display?theme=brutalist&simulate=1&obs=1' },
   { id: 'dock', title: 'Dock Control + Mobile', desc: 'Studio Mode & scene switcher dari browser / HP.', category: 'dock', size: '1280×720', href: '/dock', badge: 'OBS WS', embed: '' },
 ];
 
-/* Preview gallery = page widget aslinya via iframe ?simulate=1 (bukan mock).
-   mode light menambahkan bg putih + text gelap agar terlihat versi terangnya. */
+/* Preview gallery = page widget aslinya via iframe ?simulate=1&obs=1 (transparan
+   persis seperti Browser Source di OBS). Kontras Gelap/Terang datang dari
+   "scene" di belakang widget — simulasi footage game gelap vs terang. */
 type GalleryMode = 'dark' | 'light';
-function galleryEmbedUrl(embed: string, mode: GalleryMode): string {
-  if (!embed || mode === 'dark') return embed;
-  const sep = embed.includes('?') ? '&' : '?';
-  return `${embed}${sep}bg=%23ffffff&textColor=%230f172a`;
-}
+const GALLERY_STAGE_DARK = {
+  background:
+    'radial-gradient(420px 200px at 15% 0%, rgba(14,165,233,0.35), transparent 70%),' +
+    'radial-gradient(420px 220px at 90% 100%, rgba(16,185,129,0.35), transparent 70%),' +
+    'radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1.4px),' +
+    'linear-gradient(160deg, #0a1628 0%, #0b0f19 60%, #04120d 100%)',
+  backgroundSize: 'auto, auto, 18px 18px, auto',
+} as const;
+const GALLERY_STAGE_LIGHT = {
+  background:
+    'radial-gradient(300px 160px at 85% 8%, rgba(255,255,255,0.95), transparent 70%),' +
+    'radial-gradient(420px 220px at 10% 100%, rgba(14,165,233,0.28), transparent 70%),' +
+    'radial-gradient(360px 200px at 90% 90%, rgba(16,185,129,0.22), transparent 70%),' +
+    'radial-gradient(circle, rgba(15,23,42,0.12) 1px, transparent 1.4px),' +
+    'linear-gradient(160deg, #e0f2fe 0%, #f8fafc 55%, #dcfce7 100%)',
+  backgroundSize: 'auto, auto, auto, 18px 18px, auto',
+} as const;
 function GalleryPreview({ id, embed, large, mode }: { id: string; embed: string; large?: boolean; mode: GalleryMode }) {
   if (id === 'dock' || !embed) {
     return (
@@ -142,14 +163,14 @@ function GalleryPreview({ id, embed, large, mode }: { id: string; embed: string;
     );
   }
   return (
-    <div className="w-full h-full bg-[#0b0f19] overflow-hidden relative">
+    <div className="w-full h-full overflow-hidden relative" style={mode === 'light' ? GALLERY_STAGE_LIGHT : GALLERY_STAGE_DARK}>
       <iframe
         key={embed}
         src={embed}
         loading="lazy"
         scrolling="no"
         title={`${id}-page`}
-        className="absolute inset-0 w-full h-full border-0 pointer-events-none"
+        className="absolute inset-0 w-full h-full border-0 pointer-events-none bg-transparent"
         style={{ overflow: 'hidden' }}
       />
       {large ? null : <span className="absolute inset-0" aria-hidden="true" />}
@@ -201,6 +222,9 @@ export default function LandingPage() {
   const [activeAestheticTab, setActiveAestheticTab] = useState<'product' | 'game' | 'aesthetic'>('product');
   const [activeGalleryCat, setActiveGalleryCat] = useState<GalleryCategory | 'semua'>('semua');
   const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null);
+  const [galleryMode, setGalleryMode] = useState<GalleryMode>('dark');
+  // galleryMode selalu sync dengan page theme
+  const effectiveGalleryMode: GalleryMode = theme === 'dark' ? 'dark' : 'light';
   useEffect(() => {
     if (!activeGalleryId) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setActiveGalleryId(null); };
@@ -215,7 +239,7 @@ export default function LandingPage() {
   const [mockCode, setMockCode] = useState('sk_live_9f3a7b2c1d8e4f6a');
   useEffect(() => {
     const chars = '0123456789abcdef';
-    const gen = () => 'sk_live_' + Array.from({length: 12}, () => chars[Math.floor(Math.random()*chars.length)]).join('') + '_' + Array.from({length: 4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+    const gen = () => 'sk_live_' + Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('') + '_' + Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     const interval = showPrivateMock ? 1800 : 90;
     const id = window.setInterval(() => setMockCode(gen()), interval);
     return () => window.clearInterval(id);
@@ -363,7 +387,7 @@ export default function LandingPage() {
         {/* HERO - center text + floating OBS Dock widgets di kiri-kanan */}
         <section className="relative min-h-[calc(100vh-72px)] flex items-center justify-center w-full overflow-hidden bg-[#f8fafc] hero-dot-grid py-24 lg:py-32">
           {/* Center content */}
-          <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto w-full">
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-6xl mx-auto w-full">
             <div className="inline-flex items-center gap-2 bg-white backdrop-blur border border-[#e2e8f0] px-3.5 py-1.5 rounded-full text-[12.5px] font-bold text-[#334155] shadow-[0_1px_4px_rgba(0,0,0,0.04)] mb-5"><span className="w-[7px] h-[7px] rounded-full bg-[#10b981] shadow-[0_0_0_3px_rgba(16,185,129,0.2)]" />OBS Studio v28+ & WebSocket Privat Siap Pakai</div>
             <h1 className="font-extrabold text-[clamp(36px,5vw,68px)] max-[640px]:text-[clamp(30px,8vw,42px)] leading-[1.05] tracking-[-0.05em] text-[#0a0e1a] mb-4 max-w-[860px] text-balance">Kontrol OBS & 14+ Widget Stream<br /><span className="text-[#005ea6]">Langsung dari Browser</span></h1>
             <p className="text-[clamp(14.5px,1.2vw,16.5px)] leading-[1.55] text-[#475569] max-w-[660px] mb-6 text-pretty">Ganti scene Studio Mode, kontrol audio, pasang overlay chat & event donasi real-time, serta jalankan widget interaktif tanpa software rumit. Terhubung otomatis via Browser Source dan WebSocket room privat.</p>
@@ -373,8 +397,8 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center justify-center gap-2 text-xs text-[#64748b] mb-2 flex-wrap"><span className="text-[#f59e0b] tracking-[2px] text-[13px]">★★★★★</span><span className="text-[#0f172a] font-bold">500+ streamer aktif</span><span>·</span><span>Tanpa kartu kredit</span><span>·</span><span>Setup instan 60 detik</span></div>
             {/* Dock preview mini - tetap tampil di bawah CTA */}
-            <div className="mt-10 w-full max-w-[720px] bg-[#0b0f19] rounded-[18px] border border-[#1e293b] shadow-[0_32px_70px_-12px_rgba(0,0,0,0.4)] overflow-hidden text-left">
-              <div className="w-full relative bg-black overflow-hidden block"><img src="/assets/dock-preview.png" alt="OBS Dock Controller Interface (/dock)" className="w-full h-auto block object-cover object-top max-h-[380px]" /></div>
+            <div className="mt-10 w-full max-w-[1020px] bg-[#0b0f19] rounded-[18px] border border-[#1e293b] shadow-[0_32px_70px_-12px_rgba(0,0,0,0.4)] overflow-hidden text-left">
+              <div className="w-full relative bg-black overflow-hidden block"><img src="/assets/dock-preview.png" alt="OBS Dock Controller Interface (/dock)" className="w-full h-auto block object-cover object-top max-h-[600px]" /></div>
             </div>
           </div>
 
@@ -436,12 +460,12 @@ export default function LandingPage() {
                 <div className="entrance-anim" style={{ animationDelay: '0.15s' }}>
                   <div className="floating-card float-d2 bg-white rounded-[20px] overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] w-60 border border-[#e2e8f0]" style={{ ['--rotation' as string]: '6deg' }}>
                     <div className="p-4 pb-3 flex items-center gap-2.5">
-                      <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-blue-600 inline-flex items-center justify-center shrink-0"><Headphones size={16} className="text-white" /></span>
+                      <span className="w-9 h-9 rounded-xl bg-[#e0f2fe] border border-[#bae6fd] inline-flex items-center justify-center shrink-0"><Headphones size={16} color="#0369a1" /></span>
                       <div className="min-w-0"><p className="text-[#64748b] text-[10px] font-bold tracking-widest">MEDIA PLAYER</p><p className="text-[#0a0e1a] font-bold text-[13px] truncate">Night Drive - Synthwave</p></div>
                     </div>
-                    <div className="bg-[#faf5ff] mt-1 rounded-t-2xl p-3 relative mx-2 mb-2 border border-[#f3e8ff]">
-                      <div className="flex items-center gap-1.5 mb-2"><span className="w-12 h-1.5 bg-[#ede9fe] rounded-full" /><span className="ml-auto text-[9px] font-bold text-[#7c3aed] bg-[#ede9fe] px-1.5 py-0.5 rounded-full">LRCLIB ● SYNC</span></div>
-                      <p className="text-center text-[11px] font-bold text-[#a855f7]">♪ melaju lewat cahaya kota ♪</p>
+                    <div className="bg-[#f0f9ff] mt-1 rounded-t-2xl p-3 relative mx-2 mb-2 border border-[#bae6fd]">
+                      <div className="flex items-center gap-1.5 mb-2"><span className="w-12 h-1.5 bg-[#bae6fd] rounded-full" /><span className="ml-auto text-[9px] font-bold text-[#0369a1] bg-[#e0f2fe] px-1.5 py-0.5 rounded-full">LRCLIB ● SYNC</span></div>
+                      <p className="text-center text-[11px] font-bold text-[#005ea6]">♪ melaju lewat cahaya kota ♪</p>
                       <div className="flex items-center gap-1.5 mt-2.5"><div className="h-1 flex-1 bg-[#e2e8f0] rounded-full overflow-hidden"><div className="h-full w-[45%] bg-[#005ea6] rounded-full" /></div><span className="text-[9px] font-bold text-[#64748b]">01:32</span></div>
                     </div>
                   </div>
@@ -506,17 +530,22 @@ export default function LandingPage() {
         <section id="gallery" className="py-20 bg-[#f8fafc] border-t border-[#e2e8f0]">
           <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
             <h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-2">Hasil di OBS</h2>
-            <p className="text-[15px] text-[#475569] mb-6">Live preview langsung dari page widget (mode simulate) — klik untuk detail + langsung coba widgetnya.</p>
-            <div className="flex gap-2 flex-wrap mb-8">
-              {GALLERY_CATS.map(c => (
-                <button key={c.id} onClick={() => setActiveGalleryCat(c.id)} className={`px-4 py-2 rounded-full text-[13px] font-bold transition-all ${activeGalleryCat === c.id ? 'bg-[#005ea6] text-white shadow-[0_4px_14px_rgba(0,94,166,0.28)]' : 'bg-white text-[#475569] border border-[#e2e8f0] hover:border-[#94a3b8] hover:text-[#0f172a]'}`}>{c.label}</button>
-              ))}
+            <p className="text-[15px] text-[#475569] mb-6">Widget transparan persis seperti Browser Source di OBS — ganti scene Gelap/Terang untuk buktiin tetap kebaca, klik untuk detail.</p>
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-8">
+              <div className="flex gap-2 flex-wrap">
+                {GALLERY_CATS.map(c => (
+                  <button key={c.id} onClick={() => setActiveGalleryCat(c.id)} className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-colors ${activeGalleryCat === c.id ? 'bg-[#005ea6] hover:bg-[#004a8c] !text-white' : 'bg-white text-[#334155] border border-[#e2e8f0] hover:border-[#94a3b8]'}`}>{c.label}</button>
+                ))}
+              </div>
+              <button onClick={toggle} aria-label={theme === 'dark' ? 'Ganti ke light mode' : 'Ganti ke dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'} className="w-9 h-9 rounded-full inline-flex items-center justify-center border border-[#e2e8f0] bg-white text-[#334155] hover:border-[#94a3b8] hover:text-[#0f172a] transition-colors shrink-0">
+                {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+              </button>
             </div>
             <div className="grid grid-cols-3 max-[1024px]:grid-cols-2 max-[640px]:grid-cols-1 gap-5">
               {GALLERY.filter(g => activeGalleryCat === 'semua' || g.category === activeGalleryCat).map(g => (
                 <button key={g.id} onClick={() => setActiveGalleryId(g.id)} className="group relative bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.10)] transition-all text-left">
-                  <div className="w-full h-[220px] overflow-hidden bg-[#0b0f19] relative">
-                    <GalleryPreview id={g.id} embed={g.embed} />
+                  <div className="w-full h-[220px] overflow-hidden relative">
+                    <GalleryPreview id={g.id} embed={g.embed} mode={effectiveGalleryMode} />
                     <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur text-white text-[10px] font-black tracking-widest uppercase border border-white/15">{g.badge}</span>
                     <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/95 text-[#0a0e1a] text-[10px] font-bold tabular-nums">{g.size}</span>
                   </div>
@@ -531,13 +560,13 @@ export default function LandingPage() {
             return (
               <div onClick={() => setActiveGalleryId(null)} className="fixed inset-0 z-[120] bg-[rgba(15,23,42,0.6)] backdrop-blur-[4px] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={g.title}>
                 <div onClick={e => e.stopPropagation()} className="w-full max-w-[720px] bg-white rounded-[20px] overflow-hidden border border-[#e2e8f0] shadow-2xl">
-                  <div className="w-full h-[320px] max-[640px]:h-[240px] bg-[#0b0f19] relative"><GalleryPreview id={g.id} embed={g.embed} large /><button onClick={() => setActiveGalleryId(null)} aria-label="Tutup" className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white inline-flex items-center justify-center hover:bg-black/80"><XIcon size={16} /></button></div>
+                  <div className="w-full h-[320px] max-[640px]:h-[240px] relative"><GalleryPreview id={g.id} embed={g.embed} mode={effectiveGalleryMode} large /><button onClick={() => setActiveGalleryId(null)} aria-label="Tutup" className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white inline-flex items-center justify-center hover:bg-black/80"><XIcon size={16} /></button></div>
                   <div className="p-6">
                     <div className="flex items-center gap-2 flex-wrap mb-2"><span className="px-2.5 py-1 rounded-full bg-[#e0f2fe] text-[#0369a1] text-[11px] font-black uppercase tracking-widest">{g.category}</span><span className="px-2.5 py-1 rounded-full bg-[#f1f5f9] text-[#475569] text-[11px] font-bold tabular-nums">Browser Source {g.size}</span></div>
                     <h3 className="font-extrabold text-xl text-[#0a0e1a]">{g.title}</h3>
                     <p className="text-sm text-[#475569] mt-1">{g.desc}</p>
                     <div className="flex gap-2.5 mt-5 flex-wrap">
-                      <Link href={g.href} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] text-white px-5 py-2.5 rounded-full text-sm font-bold transition-colors">Coba widget ini <ArrowRight size={15} /></Link>
+                      <Link href={g.href} style={{ color: '#ffffff' }} className="inline-flex items-center gap-2 bg-[#005ea6] hover:bg-[#004a8c] px-5 py-2.5 rounded-full text-sm font-bold transition-colors no-underline"><span style={{ color: '#ffffff' }}>Coba widget ini</span> <ArrowRight size={15} color="#ffffff" /></Link>
                       <button onClick={() => setActiveGalleryId(null)} className="inline-flex items-center gap-2 bg-white text-[#334155] border border-[#e2e8f0] px-5 py-2.5 rounded-full text-sm font-bold hover:border-[#94a3b8]">Tutup</button>
                     </div>
                   </div>
@@ -555,7 +584,7 @@ export default function LandingPage() {
               {/* Bento 1 - Dock Control (besar, tall) */}
               <div className="col-span-12 lg:col-span-5 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[340px] max-[1024px]:h-[260px] bg-[#eff6ff] border-b border-[#e2e8f0] flex items-center justify-center relative overflow-hidden p-4 shrink-0 skeleton-shimmer"><div style={{ width: '85%', height: '80%', background: '#fff', borderRadius: 16, border: '1.5px solid #93c5fd', boxShadow: '0 10px 25px rgba(59,130,246,0.12)', position: 'relative', padding: 16 }}><div style={{ position: 'absolute', top: 12, right: 12, width: 80, height: 18, background: '#e0f2fe', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 6px' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#0369a1' }} /><span style={{ width: 40, height: 4, background: '#93c5fd', borderRadius: 2 }} /></div><div style={{ position: 'absolute', bottom: 16, left: 16, width: '45%', height: '52%', background: '#f8fafc', border: '2px solid #005ea6', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 34, height: 34, borderRadius: '50%', background: '#cbd5e1' }} /></div><div style={{ position: 'absolute', bottom: 22, right: 16, width: '42%', height: 16, background: '#f1f5f9', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#005ea6' }} /><span style={{ width: 48, height: 5, background: '#005ea6', borderRadius: 2 }} /></div></div></div><div className="p-[22px] flex-1 flex flex-col justify-center"><h3 className="font-extrabold text-[19px] tracking-[-0.02em] text-[#0a0e1a] mb-2">Dock Control</h3><p className="text-[13.5px] text-[#475569] leading-[1.55]">Panel OBS langsung di browser - scene switcher, studio mode, dan stream tools tanpa buka aplikasi lain.</p></div></div>
               {/* Bento 2 - Event Overlay (1 per 1 fade, hold 1 detik, delay per div) */}
-              <div className="col-span-12 lg:col-span-4 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[340px] max-[1024px]:h-[260px] bg-[#fff7ed] border-b border-[#e2e8f0] flex flex-col items-center justify-center gap-3.5 p-4 shrink-0 overflow-hidden"><div style={{animationDelay:'0ms'}} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 shadow-[0_6px_16px_rgba(249,115,22,0.08)] opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#f97316]" /><div className="flex-1 flex flex-col gap-1"><span className="w-[60%] h-1.5 bg-[#fdba74] rounded" /><span className="w-[40%] h-1 bg-[#fed7aa] rounded" /></div><span className="w-[22px] h-2.5 bg-[#ea580c] rounded" /></div><div style={{animationDelay:'1400ms'}} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 shadow-[0_6px_16px_rgba(249,115,22,0.08)] opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#ea580c]" /><div className="flex-1 flex flex-col gap-1"><span className="w-[70%] h-1.5 bg-[#fdba74] rounded" /><span className="w-[35%] h-1 bg-[#fed7aa] rounded" /></div></div><div style={{animationDelay:'2800ms'}} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#fb923c]" /><span className="w-1/2 h-1.5 bg-[#fdba74] rounded" /></div></div><div className="p-[22px] flex-1 flex flex-col justify-center"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Event Overlay</h3><p className="text-[13.5px] text-[#475569]">Gift, follow, sub, dan donasi muncul real-time - WebSocket privat memastikan event streamer lain tidak bocor.</p></div></div>
+              <div className="col-span-12 lg:col-span-4 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[340px] max-[1024px]:h-[260px] bg-[#fff7ed] border-b border-[#e2e8f0] flex flex-col items-center justify-center gap-3.5 p-4 shrink-0 overflow-hidden"><div style={{ animationDelay: '0ms' }} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 shadow-[0_6px_16px_rgba(249,115,22,0.08)] opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#f97316]" /><div className="flex-1 flex flex-col gap-1"><span className="w-[60%] h-1.5 bg-[#fdba74] rounded" /><span className="w-[40%] h-1 bg-[#fed7aa] rounded" /></div><span className="w-[22px] h-2.5 bg-[#ea580c] rounded" /></div><div style={{ animationDelay: '1400ms' }} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 shadow-[0_6px_16px_rgba(249,115,22,0.08)] opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#ea580c]" /><div className="flex-1 flex flex-col gap-1"><span className="w-[70%] h-1.5 bg-[#fdba74] rounded" /><span className="w-[35%] h-1 bg-[#fed7aa] rounded" /></div></div><div style={{ animationDelay: '2800ms' }} className="w-[85%] h-[46px] bg-white rounded-xl border border-[#fed7aa] flex items-center gap-2.5 px-3.5 opacity-0 animate-[fadeUpHold_4.2s_ease-in-out_infinite]"><span className="w-3.5 h-3.5 rounded-full bg-[#fb923c]" /><span className="w-1/2 h-1.5 bg-[#fdba74] rounded" /></div></div><div className="p-[22px] flex-1 flex flex-col justify-center"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Event Overlay</h3><p className="text-[13.5px] text-[#475569]">Gift, follow, sub, dan donasi muncul real-time - WebSocket privat memastikan event streamer lain tidak bocor.</p></div></div>
               {/* Bento 3 - Media Player + Lirik (crossfade gantian, arah terus ke atas) */}
               <div className="col-span-12 lg:col-span-3 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#faf5ff] border-b border-[#e2e8f0] flex items-center justify-center p-4 shrink-0 overflow-hidden"><div className="w-[80%] h-[85px] bg-white rounded-xl border border-[#e9d5ff] shadow-[0_8px_20px_rgba(168,85,247,0.1)] flex flex-col items-center justify-center overflow-hidden relative py-2"><div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 animate-[lyricGantiA_3.6s_ease-in-out_infinite]"><span className="h-1.5 w-[38%] bg-[#c084fc]/70 rounded block" /><span className="h-2.5 w-[68%] bg-[#a855f7] rounded block shadow-[0_2px_8px_rgba(168,85,247,0.18)]" /><span className="h-1.5 w-[42%] bg-[#e9d5ff] rounded block" /></div><div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 animate-[lyricGantiB_3.6s_ease-in-out_infinite]"><span className="h-1.5 w-[52%] bg-[#c084fc]/60 rounded block" /><span className="h-2.5 w-[64%] bg-[#a855f7] rounded block shadow-[0_2px_8px_rgba(168,85,247,0.18)]" /><span className="h-1.5 w-[48%] bg-[#e9d5ff]/80 rounded block" /></div></div></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Media Player + Lirik</h3><p className="text-[13.5px] text-[#475569]">11 tema visual, sinkronisasi lirik otomatis LRCLIB, dan SMTC Bridge - musik stream tampil profesional.</p></div></div>
               {/* Bento 4 - Widget Dashboard (kecil kanan bawah) */}
@@ -563,7 +592,7 @@ export default function LandingPage() {
               {/* Bento 5 - Mobile Dock (lebar 5) */}
               <div className="col-span-12 lg:col-span-5 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#f0fdf4] border-b border-[#e2e8f0] flex items-center justify-center p-4 shrink-0 skeleton-shimmer"><div className="w-[70%] h-[110px] bg-white rounded-[14px] border border-[#bbf7d0] flex items-center justify-center gap-3.5 p-4"><div className="w-[54px] h-[54px] rounded-full border-[3px] border-[#16a34a] flex items-center justify-center"><div className="w-[18px] h-[18px] rounded-full bg-[#86efac]" /></div><div className="flex flex-col gap-2 flex-1"><div className="h-2.5 bg-[#dcfce7] rounded-full" /><div className="h-2.5 bg-[#dcfce7] rounded-full w-[70%]" /></div></div></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2">Mobile Dock</h3><p className="text-[13.5px] text-[#475569]">Buka dock dari HP saat live - ganti scene, kontrol widget, tanpa sentuh laptop.</p></div></div>
               {/* Bento 6 - Private Key (interaktif - scramble, klik card, hover) */}
-              <div onClick={() => setShowPrivateMock(v=>!v)} className="group col-span-12 lg:col-span-7 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] hover:border-[#bae6fd] transition-all min-h-0 cursor-pointer active:scale-[0.99]"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#ecfeff] border-b border-[#e2e8f0] flex flex-col items-center justify-center gap-3 p-4 shrink-0 group-hover:bg-[#e0f2fe]/60 transition-colors"><div onClick={e => e.stopPropagation()} className="flex items-center gap-2 bg-white rounded-xl border border-[#bae6fd] group-hover:border-[#0369a1]/30 group-hover:shadow-[0_4px_12px_rgba(0,94,166,0.12)] px-3 py-2 shadow-sm w-[88%] max-w-[360px] transition-all"><span className={`flex-1 font-mono text-[11px] font-bold tracking-wider truncate transition-all duration-300 ${showPrivateMock ? 'text-[#0a0e1a]' : 'text-transparent [text-shadow:_0_0_8px_rgba(15,23,42,0.5)] select-none blur-[3px] animate-[pulse-skeleton_0.6s_ease-in-out_infinite]'}`}>{mockCode}<span className={`inline-block w-[2px] h-3 bg-[#0369a1] ml-0.5 align-middle ${showPrivateMock ? 'animate-[pulse-skeleton_1s_ease-in-out_infinite]' : 'opacity-40'}`} /></span><button onClick={() => setShowPrivateMock(v=>!v)} aria-label={showPrivateMock?'Sembunyikan key':'Tampilkan key'} className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-all active:scale-90 ${showPrivateMock ? 'bg-[#005ea6] border-[#005ea6] text-[#ffffff] hover:bg-[#004a8c]' : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#334155] hover:bg-[#e2e8f0] hover:text-[#0f172a]'}`}>{showPrivateMock ? <EyeOff size={14}/> : <Eye size={14}/>}</button></div><div className="flex items-center gap-2 text-[10px] font-bold tracking-widest"><span className={`px-2 py-1 rounded-full border text-[10px] font-bold transition-all flex items-center gap-1 ${showPrivateMock ? 'bg-[#dcfce7] border-[#bbf7d0] text-[#14532d] animate-[pulse-skeleton_1.2s_ease-in-out_infinite]' : 'bg-[#fef9c3] border-[#fde68a] text-[#713f12]'}`}>{showPrivateMock ? <><Unlock size={11} />TERBUKA</> : <><Lock size={11} />TERKUNCI</>}</span><span className={`font-mono text-[10px] transition-colors ${showPrivateMock ? 'text-[#0369a1]' : 'text-[#64748b]'}`}>{showPrivateMock ? 'room: private' : 'room: ••••••'}</span></div><span className="text-[10px] text-[#94a3b8] font-medium mt-1 group-hover:text-[#64748b] transition-colors">{showPrivateMock ? '' : ''}</span></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2 group-hover:text-[#005ea6] transition-colors">Private Key & WebSocket</h3><p className="text-[13.5px] text-[#475569]">Tiap akun punya room WebSocket sendiri. Event stream kamu tidak akan bocor ke streamer lain.</p></div></div>
+              <div onClick={() => setShowPrivateMock(v => !v)} className="group col-span-12 lg:col-span-7 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] hover:border-[#bae6fd] transition-all min-h-0 cursor-pointer active:scale-[0.99]"><div className="h-[210px] max-[1024px]:h-[190px] bg-[#ecfeff] border-b border-[#e2e8f0] flex flex-col items-center justify-center gap-3 p-4 shrink-0 group-hover:bg-[#e0f2fe]/60 transition-colors"><div onClick={e => e.stopPropagation()} className="flex items-center gap-2 bg-white rounded-xl border border-[#bae6fd] group-hover:border-[#0369a1]/30 group-hover:shadow-[0_4px_12px_rgba(0,94,166,0.12)] px-3 py-2 shadow-sm w-[88%] max-w-[360px] transition-all"><span className={`flex-1 font-mono text-[11px] font-bold tracking-wider truncate transition-all duration-300 ${showPrivateMock ? 'text-[#0a0e1a]' : 'text-transparent [text-shadow:_0_0_8px_rgba(15,23,42,0.5)] select-none blur-[3px] animate-[pulse-skeleton_0.6s_ease-in-out_infinite]'}`}>{mockCode}<span className={`inline-block w-[2px] h-3 bg-[#0369a1] ml-0.5 align-middle ${showPrivateMock ? 'animate-[pulse-skeleton_1s_ease-in-out_infinite]' : 'opacity-40'}`} /></span><button onClick={() => setShowPrivateMock(v => !v)} aria-label={showPrivateMock ? 'Sembunyikan key' : 'Tampilkan key'} className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-all active:scale-90 ${showPrivateMock ? 'bg-[#005ea6] border-[#005ea6] text-[#ffffff] hover:bg-[#004a8c]' : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#334155] hover:bg-[#e2e8f0] hover:text-[#0f172a]'}`}>{showPrivateMock ? <EyeOff size={14} /> : <Eye size={14} />}</button></div><div className="flex items-center gap-2 text-[10px] font-bold tracking-widest"><span className={`px-2 py-1 rounded-full border text-[10px] font-bold transition-all flex items-center gap-1 ${showPrivateMock ? 'bg-[#dcfce7] border-[#bbf7d0] text-[#14532d] animate-[pulse-skeleton_1.2s_ease-in-out_infinite]' : 'bg-[#fef9c3] border-[#fde68a] text-[#713f12]'}`}>{showPrivateMock ? <><Unlock size={11} />TERBUKA</> : <><Lock size={11} />TERKUNCI</>}</span><span className={`font-mono text-[10px] transition-colors ${showPrivateMock ? 'text-[#0369a1]' : 'text-[#64748b]'}`}>{showPrivateMock ? 'room: private' : 'room: ••••••'}</span></div><span className="text-[10px] text-[#94a3b8] font-medium mt-1 group-hover:text-[#64748b] transition-colors">{showPrivateMock ? '' : ''}</span></div><div className="p-[22px] flex-1"><h3 className="font-extrabold text-[19px] text-[#0a0e1a] mb-2 group-hover:text-[#005ea6] transition-colors">Private Key & WebSocket</h3><p className="text-[13.5px] text-[#475569]">Tiap akun punya room WebSocket sendiri. Event stream kamu tidak akan bocor ke streamer lain.</p></div></div>
             </div>
             <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[20px] px-7 py-4.5 flex items-center justify-between gap-5 flex-wrap shadow-[0_4px_12px_rgba(15,23,42,0.05)]">
               <div className="flex items-center gap-5"><div className="flex items-center gap-2.5 bg-white px-4 py-2 rounded-full border border-[#e2e8f0]"><span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#0f172a] text-[#ffffff] text-xs font-bold">●</span><span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#0f172a] text-[#ffffff] text-xs font-bold">S</span><span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#0f172a] text-[#ffffff] text-xs font-bold">T</span></div><div className="text-sm font-semibold text-[#334155] max-w-[580px]">Semua widget dan overlay tersedia sebagai Browser Source - langsung paste URL ke OBS, Streamlabs, atau StreamElements.</div></div>
@@ -594,7 +623,7 @@ export default function LandingPage() {
           <div className="max-w-[1280px] mx-auto px-8 max-[640px]:px-4">
             <div className="mb-7"><h2 className="font-extrabold text-[clamp(32px,3.8vw,48px)] tracking-[-0.035em] text-[#0a0e1a] mb-9">Temukan Fitur yang Tepat</h2><div className="flex gap-2 bg-[#f1f5f9] p-1 rounded-full w-fit mb-8"><button onClick={() => setActiveAestheticTab('product')} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${activeAestheticTab === 'product' ? 'bg-[#005ea6] text-[#ffffff] shadow-[0_4px_14px_rgba(0,94,166,0.28)]' : 'text-[#475569] hover:text-[#0f172a]'}`}>Fitur Utama</button><button onClick={() => setActiveAestheticTab('game')} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${activeAestheticTab === 'game' ? 'bg-[#005ea6] text-[#ffffff] shadow-[0_4px_14px_rgba(0,94,166,0.28)]' : 'text-[#475569] hover:text-[#0f172a]'}`}>Multi-Platform</button><button onClick={() => setActiveAestheticTab('aesthetic')} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${activeAestheticTab === 'aesthetic' ? 'bg-[#005ea6] text-[#ffffff] shadow-[0_4px_14px_rgba(0,94,166,0.28)]' : 'text-[#475569] hover:text-[#0f172a]'}`}>Semua Widget</button></div></div>
             <div className="grid grid-cols-3 max-[1024px]:grid-cols-1 gap-5 mb-6">
-              {(activeAestheticTab === 'product' ? AESTHETIC_CATEGORIES.filter(c => ['dock','mediaplayer','poll','utils'].includes(c.id)) : activeAestheticTab === 'game' ? AESTHETIC_CATEGORIES.filter(c => ['overlay','chat','mobiledock'].includes(c.id)) : AESTHETIC_CATEGORIES).map(c => (
+              {(activeAestheticTab === 'product' ? AESTHETIC_CATEGORIES.filter(c => ['dock', 'mediaplayer', 'poll', 'utils'].includes(c.id)) : activeAestheticTab === 'game' ? AESTHETIC_CATEGORIES.filter(c => ['overlay', 'chat', 'mobiledock'].includes(c.id)) : AESTHETIC_CATEGORIES).map(c => (
                 <div key={c.id} className="bg-white border border-[#e2e8f0] rounded-[20px] p-6 flex items-start gap-4 shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] hover:border-[#cbd5e1] transition-all">
                   <div className="w-12 h-12 rounded-xl border flex items-center justify-center shrink-0" style={{ backgroundColor: c.bg, borderColor: c.border }}>{c.icon}</div><div className="flex-1"><h3 className="font-extrabold text-lg tracking-[-0.02em] text-[#0a0e1a] mb-1.5">{c.title}</h3><p className="text-[13.5px] text-[#475569] leading-[1.5]">{c.desc}</p></div>
                 </div>
