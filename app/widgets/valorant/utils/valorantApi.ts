@@ -12,6 +12,10 @@ export type ValoTier = {
 };
 
 function backendBase(): string {
+  // Pakai same-origin + rewrites (next.config.ts) biar bebas CORS.
+  // Browser: fetch('/api/valo/...') → Next.js proxy ke BACKEND.
+  // SSR (window undefined): pakai absolute backend URL.
+  if (typeof window !== 'undefined') return '';
   return getSocketUrl().replace(/\/$/, '');
 }
 

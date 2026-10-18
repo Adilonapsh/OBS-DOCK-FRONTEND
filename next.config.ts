@@ -17,6 +17,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    const backend = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000").replace(/\/$/, "");
+    return [
+      {
+        source: "/api/valo/:path*",
+        destination: `${backend}/api/valo/:path*`,
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {

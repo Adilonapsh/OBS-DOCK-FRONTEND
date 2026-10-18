@@ -20,12 +20,14 @@ export function ValorantCircle({
   iconUrl,
   themeColor,
   rankName,
+  promo,
 }: {
   font: string;
   rr: number;
   iconUrl: string;
   themeColor: string;
   rankName: string;
+  promo?: { direction: 'up' | 'down'; tierName: string; iconUrl: string } | null;
 }) {
   const progress = Math.min(100, Math.max(0, rr));
   const offset = CIRC - (progress / 100) * CIRC;
@@ -37,7 +39,11 @@ export function ValorantCircle({
 
   return (
     <div style={{ position: 'relative', width: 250, height: 250, fontFamily: `'Poppins','${font}',sans-serif`, color: '#fff' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@800;900&display=swap');`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@800;900&display=swap');
+        @keyframes valoCirclePop{0%{opacity:0;transform:scale(0.5) translateY(14px)}60%{opacity:1;transform:scale(1.12) translateY(0)}100%{opacity:1;transform:scale(1) translateY(0)}}
+        @keyframes valoCircleUp{from{opacity:0;transform:translateY(12px) scale(0.85)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes valoCirclePing{0%{transform:scale(1);opacity:0.7}100%{transform:scale(1.18);opacity:0}}
+      `}</style>
       <svg viewBox="0 0 250 250" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
         {/* 8 minor ticks */}
         {MINOR_TICKS.map((a) => (
@@ -88,18 +94,64 @@ export function ValorantCircle({
         />
       </svg>
 
-      {/* Center rank icon */}
+      {/* Center rank icon — key berubah saat promo biar ada pop animation */}
       {iconUrl ? (
         <img
-          src={iconUrl}
-          alt={rankName || 'rank'}
+          key={promo ? `${promo.direction}-${promo.tierName}` : iconUrl}
+          src={promo?.iconUrl || iconUrl}
+          alt={promo?.tierName || rankName || 'rank'}
           style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
             width: 110, height: 110, objectFit: 'contain', zIndex: 2,
-            filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))', transition: 'transform 0.3s ease',
+            filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))',
+            animation: promo ? 'valoCirclePop 0.6s cubic-bezier(0.175,0.885,0.32,1.275) both' : undefined,
+            transition: 'transform 0.3s ease',
           }}
         />
       ) : null}
+
+      {/* Promo overlay rank up/down — lingkup circle, tidak nutup badge RR */}
+      {promo && (
+        <div
+          style={{
+            position: 'absolute', inset: 0, zIndex: 20,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            borderRadius: '50%', overflow: 'hidden',
+            background: `radial-gradient(circle at center, ${tier}66 0%, rgba(8,8,12,0.88) 72%)`,
+            backdropFilter: 'blur(3px)',
+          }}
+        >
+          {/* ping ring */}
+          <div
+            style={{
+              position: 'absolute', inset: 6, borderRadius: '50%',
+              border: `3px solid ${tier}`,
+              animation: 'valoCirclePing 1s ease-out infinite',
+              pointerEvents: 'none',
+            }}
+          />
+          <div style={{
+            fontSize: 11, fontWeight: 900, letterSpacing: 3, color: '#fff',
+            opacity: 0, animation: 'valoCircleUp 0.5s ease forwards 0.1s',
+          }}>
+            {promo.direction === 'up' ? 'RANK UP' : 'RANK DOWN'}
+          </div>
+          <div style={{
+            fontSize: 17, fontWeight: 900, letterSpacing: 1, color: tier,
+            textShadow: '0 2px 10px rgba(0,0,0,0.6)', textTransform: 'uppercase',
+            marginTop: 4, maxWidth: 180, textAlign: 'center', lineHeight: 1.1,
+            opacity: 0, animation: 'valoCircleUp 0.5s ease forwards 0.25s',
+          }}>
+            {promo.tierName}
+          </div>
+          <div style={{
+            marginTop: 6, fontSize: promo.direction === 'up' ? 26 : 22,
+            opacity: 0, animation: 'valoCircleUp 0.5s ease forwards 0.35s',
+          }}>
+            {promo.direction === 'up' ? '▲' : '▼'}
+          </div>
+        </div>
+      )}
 
       {/* RR badge- nempel di ujung arc progress, meluncur mengikuti perubahan RR */}
       <div

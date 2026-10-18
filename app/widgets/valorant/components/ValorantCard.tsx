@@ -54,7 +54,7 @@ export function ValorantCard(props: {
   // View circle: standalone circular RR overlay (port HTML ref) - independen dari themeMode,
   // warna ngikut themeColor (auto = warna tier | custom = accent).
   if (view === 'circle') {
-    return <ValorantCircle font={font} rr={rr} iconUrl={iconUrl} themeColor={themeColor} rankName={rankName} />;
+    return <ValorantCircle font={font} rr={rr} iconUrl={iconUrl} themeColor={themeColor} rankName={rankName} promo={promo} />;
   }
 
   // Skin neo-brutalist: chrome flat + border tebal + hard shadow,
@@ -71,9 +71,25 @@ export function ValorantCard(props: {
   if (view === 'mini') {
     return (
       <div style={{ ...cssVars, fontFamily: family }} className="w-full max-w-[440px]">
-        <style>{`@keyframes valoFloat{0%{transform:translateY(0)}50%{transform:translateY(-5px)}100%{transform:translateY(0)}}`}</style>
+        <style>{`@keyframes valoFloat{0%{transform:translateY(0)}50%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+        @keyframes valoPop{to{opacity:1;transform:scale(1)}}
+        @keyframes valoPopIcon{to{opacity:1;transform:scale(1) translateY(0)}}
+        @keyframes valoUp{to{opacity:1;transform:translateY(0)}}
+        `}</style>
         <div className="relative flex items-center gap-5 rounded-[20px] px-4 py-4 overflow-hidden" style={{ background: '#1c1d22', boxShadow: `0 0 25px -5px rgba(${r},${g},${b},0.4), inset 0 0 0 1.5px rgba(${r},${g},${b},0.4)` }}>
-          <div className="absolute inset-0 pointer-events-none opacity-100" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+          {promo && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center gap-3 px-4" style={{ background: `radial-gradient(circle at center, rgba(${r},${g},${b},0.55) 0%, rgba(10,10,15,0.94) 100%)`, backdropFilter: 'blur(8px)', borderRadius: 'inherit' }}>
+              {promo.iconUrl ? <img key={`${promo.direction}-${promo.tierName}`} src={promo.iconUrl} alt="rank" className="w-[56px] h-[56px] object-contain shrink-0" style={{ opacity: 0, transform: 'scale(0.5) translateY(12px)', animation: 'valoPopIcon 0.55s cubic-bezier(0.175,0.885,0.32,1.275) forwards 0.15s', filter: `drop-shadow(0 0 14px ${themeColor})` }} /> : null}
+              <div className="flex flex-col min-w-0">
+                <div className="text-[10px] font-extrabold tracking-[0.25em] text-white" style={{ opacity: 0, transform: 'translateY(10px)', animation: 'valoUp 0.5s ease forwards 0.1s' }}>
+                  {promo.direction === 'up' ? 'RANK UP ▲' : 'RANK DOWN ▼'}
+                </div>
+                <div className="text-[20px] font-black tracking-wide truncate" style={{ color: themeColor, textShadow: `0 0 12px rgba(${r},${g},${b},0.5)`, opacity: 0, transform: 'scale(0.85)', animation: 'valoPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards 0.3s' }}>
+                  {promo.tierName.toUpperCase()}
+                </div>
+              </div>
+            </div>
+          )}          <div className="absolute inset-0 pointer-events-none opacity-100" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
           <div className="relative w-[65px] h-[65px] shrink-0 grid place-items-center">
             <div className="absolute inset-0 rounded-full" style={{ background: `radial-gradient(circle, rgba(${r},${g},${b},0.4) 0%, transparent 70%)` }} />
             {iconUrl ? <img src={iconUrl} alt="rank" className="relative z-10 w-full h-full object-contain" style={{ filter: `drop-shadow(0 0 8px rgba(${r},${g},${b},0.4))`, animation: 'valoFloat 4s ease-in-out infinite' }} /> : null}
@@ -227,9 +243,25 @@ function BrutalistCard(p: SkinProps) {
   if (p.view === 'mini') {
     return (
       <div style={{ fontFamily: p.family }} className="w-full max-w-[440px]">
-        <style>{`@keyframes valoFloat{0%{transform:translateY(0)}50%{transform:translateY(-5px)}100%{transform:translateY(0)}}`}</style>
+        <style>{`@keyframes valoFloat{0%{transform:translateY(0)}50%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+        @keyframes valoPop{to{opacity:1;transform:scale(1)}}
+        @keyframes valoPopIcon{to{opacity:1;transform:scale(1) translateY(0)}}
+        @keyframes valoUp{to{opacity:1;transform:translateY(0)}}
+        `}</style>
         <div className="relative flex items-center gap-4 rounded-2xl px-4 py-3.5 overflow-hidden" style={{ background: bg, border: edge, boxShadow: hard }}>
-          <div className="absolute inset-0 pointer-events-none" style={halftone} />
+          {p.promo && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center gap-3 px-4" style={{ background: `${bg}f2`, backdropFilter: 'blur(6px)' }}>
+              {p.promo.iconUrl ? <img key={`${p.promo.direction}-${p.promo.tierName}`} src={p.promo.iconUrl} alt="rank" className="w-[52px] h-[52px] object-contain shrink-0" style={{ opacity: 0, transform: 'scale(0.5) translateY(12px)', animation: 'valoPopIcon 0.55s cubic-bezier(0.175,0.885,0.32,1.275) forwards 0.15s', filter: `drop-shadow(3px 3px 0 ${border})` }} /> : null}
+              <div className="flex flex-col min-w-0">
+                <div className={`text-[10px] font-black tracking-[0.25em] ${upCls}`} style={{ color: ink, opacity: 0, transform: 'translateY(10px)', animation: 'valoUp 0.5s ease forwards 0.1s' }}>
+                  {p.promo.direction === 'up' ? 'RANK UP' : 'RANK DOWN'}
+                </div>
+                <div className={`text-[19px] font-black tracking-wide truncate ${upCls} ${itCls}`} style={{ color: tier, textShadow: `2px 2px 0 ${border}`, opacity: 0, transform: 'scale(0.85)', animation: 'valoPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards 0.3s' }}>
+                  {p.promo.tierName.toUpperCase()}
+                </div>
+              </div>
+            </div>
+          )}          <div className="absolute inset-0 pointer-events-none" style={halftone} />
           <div className="relative w-[60px] h-[60px] shrink-0 grid place-items-center rounded-xl" style={{ background: badgeBg, border: edge, boxShadow: hardSm }}>
             {p.iconUrl ? <img src={p.iconUrl} alt="rank" className="relative z-10 w-full h-full object-contain p-1" /> : null}
           </div>
@@ -353,12 +385,25 @@ function PastelCard(p: SkinProps) {
         <style>{`
           @keyframes pastelBounce{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
           @keyframes pastelShake{10%,90%{transform:translate3d(-1px,0,0)}20%,80%{transform:translate3d(2px,0,0)}30%,50%,70%{transform:translate3d(-4px,0,0)}40%,60%{transform:translate3d(4px,0,0)}}
+          @keyframes pastelPopIcon{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
           .pastel-bounce{animation:pastelBounce 0.5s ease;}
           .pastel-bounce .pastel-mini-icon{transform:scale(1.25);}
           .pastel-shake{animation:pastelShake 0.4s cubic-bezier(.36,.07,.19,.97) both;}
         `}</style>
-        <div className={animCls} style={{ backgroundColor: bg, backgroundImage: 'linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px)', backgroundSize: '15px 15px', border: `4px solid ${border}`, borderRadius: 20, boxShadow: '0 15px 30px rgba(0,0,0,0.15)', padding: 16, position: 'relative', overflow: 'hidden', transition: 'background-color 0.5s ease' }}>
-          <div className="flex items-center" style={{ gap: 16, position: 'relative', zIndex: 2 }}>
+        <div key={p.promo ? `${p.promo.direction}-${p.promo.tierName}` : 'idle'} className={animCls} style={{ backgroundColor: promoBg, backgroundImage: 'linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px)', backgroundSize: '15px 15px', border: `4px solid ${border}`, borderRadius: 20, boxShadow: '0 15px 30px rgba(0,0,0,0.15)', padding: 16, position: 'relative', overflow: 'hidden', transition: 'background-color 0.5s ease' }}>
+          {p.promo && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center gap-3 px-4" style={{ background: promoBg, borderRadius: 'inherit' }}>
+              {p.promo.iconUrl ? <img key={`promo-${p.promo.direction}-${p.promo.tierName}`} src={p.promo.iconUrl} alt="rank" style={{ width: 52, height: 52, objectFit: 'contain', flexShrink: 0, opacity: 0, animation: 'pastelPopIcon 0.6s cubic-bezier(0.175,0.885,0.32,1.275) forwards', filter: 'drop-shadow(0 0 14px rgba(255,255,255,0.6))' }} /> : null}
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: border, textTransform: 'uppercase' }}>
+                  {p.promo.direction === 'up' ? 'Rank Up ▲' : 'Rank Down ▼'}
+                </div>
+                <div style={{ fontSize: 19, fontWeight: 900, color: '#fff', textTransform: 'uppercase', textShadow: '0 2px 6px rgba(0,0,0,0.2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {p.promo.tierName}
+                </div>
+              </div>
+            </div>
+          )}          <div className="flex items-center" style={{ gap: 16, position: 'relative', zIndex: 2 }}>
             <div className="pastel-mini-icon" style={{ width: 60, height: 60, flexShrink: 0, transition: 'transform 0.4s ease' }}>
               {p.iconUrl ? <img src={p.iconUrl} alt="rank" style={{ width: '100%', height: '100%', filter: `drop-shadow(0 0 10px ${bg}) brightness(1.05)` }} /> : null}
             </div>
