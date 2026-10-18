@@ -246,7 +246,8 @@ export default function ConfigPage() {
         } catch { }
         for (const plat of Object.keys(donationMap) as DonationPlatform[]) {
             const cfg = (donationMap as any)[plat];
-            fetch(`${backend}/api/donation/config`, {
+            // pakai proxy same-origin biar bebas CORS (next.config.ts -> backend)
+            fetch(`/api/donation/config`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ privateKey: donationPrivateKey, key: donationPrivateKey, platform: plat, token: cfg.token, enabled: cfg.enabled, eventEnabled: cfg.eventEnabled, timerEnabled: cfg.timerEnabled, timerRpPerMinute: cfg.timerRpPerMinute, timerTiers: cfg.timerTiers, songPriority: cfg.songPriority, goalEnabled: cfg.goalEnabled }),
@@ -529,18 +530,9 @@ export default function ConfigPage() {
     };
 
     const handleDonationTest = async (platform: DonationPlatform) => {
-        const getBackendUrl = () => {
-            const env = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim().replace(/\/$/, '');
-            if (env) return env;
-            if (typeof window === 'undefined') return 'http://localhost:3000';
-            const h = window.location.hostname;
-            if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000';
-            return window.location.origin;
-        };
-        const backend = getBackendUrl();
         setDonationTesting(platform);
         try {
-            const res = await fetch(`${backend}/api/donation/test`, {
+            const res = await fetch(`/api/donation/test`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ privateKey: donationPrivateKey || 'global', key: donationPrivateKey || 'global', platform, amount: 15000, donorName: 'TestDonasi', message: `Test ${platform} - halo!` }),

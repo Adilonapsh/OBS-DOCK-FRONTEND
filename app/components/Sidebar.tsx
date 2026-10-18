@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Layers, Grid2x2, Plug } from "lucide-react";
+import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Layers, Grid2x2, Plug, Wallet2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { logoutToLogin } from "@/utils/logout";
 
@@ -15,6 +15,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
@@ -26,6 +27,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
@@ -37,6 +39,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video, active: true },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
@@ -48,6 +51,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog, active: true },
@@ -59,6 +63,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
@@ -71,6 +76,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
@@ -82,6 +88,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers, active: true },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
@@ -92,7 +99,18 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/dock", label: "Dock", icon: Monitor },
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
-    { href: "/widgets", label: "Widgets", icon: Grid2x2, active: true },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
+    { href: "/account", label: "Account", icon: UserCog },
+    { href: "/connection", label: "Connection", icon: Wifi },
+  ],
+  donations: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dock", label: "Dock", icon: Monitor },
+    { href: "/monitor", label: "Monitor", icon: Video },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2, active: true },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi },
@@ -103,6 +121,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug, active: true },
     { href: "/account", label: "Account", icon: UserCog },
@@ -116,7 +135,7 @@ export default function Sidebar({
   onClose,
   user,
 }: {
-  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "integrations" | "designer";
+  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "integrations" | "designer" | "donations";
   open: boolean;
   onClose: () => void;
   user?: any;

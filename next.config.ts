@@ -24,6 +24,26 @@ const nextConfig: NextConfig = {
         source: "/api/valo/:path*",
         destination: `${backend}/api/valo/:path*`,
       },
+      {
+        source: "/api/donation/:path*",
+        destination: `${backend}/api/donation/:path*`,
+      },
+      {
+        source: "/api/webhook/:path*",
+        destination: `${backend}/api/webhook/:path*`,
+      },
+      {
+        source: "/webhook/:path*",
+        destination: `${backend}/webhook/:path*`,
+      },
+      {
+        source: "/sfx/:path*",
+        destination: `${backend}/sfx/:path*`,
+      },
+      {
+        source: "/api/sfx/:path*",
+        destination: `${backend}/sfx/:path*`,
+      },
     ];
   },
 };

@@ -87,7 +87,8 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
       setCloudError('');
     }
     try {
-      const res = await fetch(`${backend}/sfx/browse?q=${encodeURIComponent(query)}&page=${pg}&region=id`);
+      // pakai proxy same-origin biar bebas CORS (next.config.ts -> backend)
+      const res = await fetch(`/sfx/browse?q=${encodeURIComponent(query)}&page=${pg}&region=id`);
       const data = (await res.json()) as { ok?: boolean; items?: SfxCloudItem[]; error?: string };
       if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setItems((prev) => (append ? [...prev, ...(data.items || [])] : data.items || []));
@@ -264,8 +265,8 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
           {items.length > 0 && (
             <div className="max-h-44 overflow-y-auto custom-scrollbar space-y-1 pr-0.5">
               {items.map((it) => {
-                const clipUrl = `${backend}${it.url}`;
-                const selected = value === clipUrl;
+                const clipUrl = it.url; // sudah /sfx/clip/... via proxy
+                const selected = value === clipUrl || value === `${backend}${it.url}`;
                 const isPlaying = playing === clipUrl;
                 return (
                   <div
