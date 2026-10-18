@@ -13,6 +13,20 @@ export const TICKER_DIRECTIONS = [
   { value: 'right', label: 'Kanan (→)' },
 ] as const;
 
+export const TICKER_SOURCES = [
+  { value: 'manual', label: 'Manual (teks saja)' },
+  { value: 'donation', label: 'Donasi (Saweria/TipTap/dll)' },
+  { value: 'mixed', label: 'Keduanya (Manual + Donasi)' },
+] as const;
+
+export const TICKER_DONATION_PERIODS = [
+  { value: 'today', label: 'Hari ini' },
+  { value: 'yesterday', label: 'Kemarin' },
+  { value: 'week', label: 'Minggu ini' },
+  { value: 'month', label: 'Bulan ini' },
+  { value: 'all', label: 'Semua' },
+] as const;
+
 export const TICKER_DEFAULTS = {
   pos: 'b' as string,
   theme: 'standard' as string,
@@ -27,6 +41,11 @@ export const TICKER_DEFAULTS = {
   direction: 'left' as string,
   showBadge: true,
   badgeText: 'INFO',
+  source: 'manual' as string, // manual | donation | mixed
+  donationLimit: 10 as number,
+  donationShowMessage: true as boolean,
+  donationMinAmount: 0 as number,
+  donationPeriod: 'all' as string, // today | yesterday | week | month | all
   ...BRUTALIST_DEFAULTS,
 } as const;
 
@@ -62,6 +81,13 @@ export function buildTickerUrl(base: string, s: TickerSettings): string {
   p.set('direction', s.direction);
   p.set('showBadge', s.showBadge ? '1' : '0');
   if (s.badgeText) p.set('badgeText', s.badgeText);
+  p.set('source', (s as any).source || 'manual');
+  if ((s as any).source !== 'manual') {
+    p.set('donationLimit', String((s as any).donationLimit ?? 10));
+    p.set('donationShowMessage', (s as any).donationShowMessage ? '1' : '0');
+    p.set('donationMinAmount', String((s as any).donationMinAmount ?? 0));
+    p.set('donationPeriod', (s as any).donationPeriod || 'all');
+  }
   p.set('pos', s.pos || 'b');
   appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   return `${base}?${p.toString()}`;

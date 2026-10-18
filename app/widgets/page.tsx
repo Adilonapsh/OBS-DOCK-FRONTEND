@@ -6,7 +6,7 @@ import {
   Layers, Monitor, Search, Eye, EyeOff, ExternalLink, Sparkles,
   Gift, Heart, UserPlus, Zap, LayoutGrid, Filter,
   Settings2, AlertCircle, Menu, Palette, Pencil,
-  Music, Cog, GripVertical, Volume2, Pin, QrCode, Target
+  Music, Cog, GripVertical, Volume2, Pin, QrCode, Target, Trophy
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
@@ -22,7 +22,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant";
+  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant" | "donation-leaderboard";
   recommended?: boolean;
   w: number;
   h: number;
@@ -267,6 +267,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "valorant",
     recommended: true,
     w: 650, h: 420,
+  },
+  {
+    id: "donation-leaderboard",
+    title: "Donation Leaderboard",
+    desc: "Top donatur Saweria/TipTap/Trakteer/dll — agregat total Rp per donatur, avatar & platform, 3 tema. Live via Socket.IO + history 50.",
+    category: "progress",
+    tags: ["Donasi", "Leaderboard", "Top Donatur", "Saweria"],
+    layout: "donation-leaderboard",
+    params: "theme=standard&font=Outfit&limit=5&title=Top%20Donatur",
+    preview: "donation-leaderboard",
+    recommended: true,
+    w: 400, h: 420,
   },
 ];
 
@@ -542,6 +554,18 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "donation-leaderboard") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col p-2 gap-1 justify-center">
+        <div className="flex items-center gap-1.5 px-2 py-1 text-white font-black text-[6px] uppercase tracking-widest"><Trophy className="w-3 h-3 text-amber-400" /> Top Donatur</div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/[0.06] border border-white/10 rounded-lg"><span className="w-4 h-4 rounded-full bg-amber-400 grid place-items-center text-black font-black text-[7px]">1</span><span className="text-white font-black text-[7px]">BudiSantuy</span><span className="ml-auto text-amber-400 font-black text-[7px]">Rp 130.000</span></div>
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/[0.06] border border-white/10 rounded-lg opacity-80"><span className="w-4 h-4 rounded-full bg-zinc-400 grid place-items-center text-black font-black text-[7px]">2</span><span className="text-white font-black text-[7px]">SitiPlay</span><span className="ml-auto text-white/70 font-black text-[7px]">Rp 75.000</span></div>
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/[0.06] border border-white/10 rounded-lg opacity-60"><span className="w-4 h-4 rounded-full bg-amber-700 grid place-items-center text-white font-black text-[7px]">3</span><span className="text-white font-black text-[7px]">Rizky_JR</span><span className="ml-auto text-white/60 font-black text-[7px]">Rp 50.000</span></div>
+        </div>
+      </div>
+    );
+  }
   // full
   return (    <div className="w-full h-full bg-black relative p-2 overflow-hidden">
       <div className="absolute top-2 left-2 flex gap-1">
@@ -693,6 +717,10 @@ function WidgetsListing() {
     }
     if (item.id === 'valorant') {
       const base = `${window.location.origin}/widgets/valorant/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'donation-leaderboard') {
+      const base = `${window.location.origin}/widgets/donation-leaderboard/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     if (item.id === 'custom') {
@@ -906,6 +934,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/valorant${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'donation-leaderboard' ? (
+                        <Link href={`/widgets/donation-leaderboard${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'custom' ? (
                         <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Layers className="w-3 h-3" /> Open Editor
@@ -920,7 +952,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'donation-leaderboard' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

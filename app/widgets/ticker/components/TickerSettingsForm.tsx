@@ -1,7 +1,7 @@
 'use client';
 
 import { Palette, Monitor, Copy, Megaphone } from 'lucide-react';
-import { TICKER_THEMES, TICKER_FONTS, TICKER_DIRECTIONS, type TickerSettings } from '../config';
+import { TICKER_THEMES, TICKER_FONTS, TICKER_DIRECTIONS, TICKER_SOURCES, TICKER_DONATION_PERIODS, type TickerSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
 import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 
@@ -38,12 +38,41 @@ export function TickerSettingsForm({
         </div>
       </div>
 
+      {/* Sumber ticker */}
+      <div className="space-y-3">
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Megaphone className="w-4 h-4 text-cyan-400" /> Sumber Ticker</h2>
+        <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+          <label className="block">
+            <span className="text-[11px] font-bold text-gray-300">Mode</span>
+            <select value={(state as any).source || 'manual'} onChange={(e) => update('source' as any, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+              {TICKER_SOURCES.map((s) => <option key={s.value} value={s.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{s.label}</option>)}
+            </select>
+            <span className="text-[10px] text-gray-500">Donasi ambil dari Saweria/TipTap/Trakteer/dll via webhook (butuh privateKey).</span>
+          </label>
+          {(state as any).source !== 'manual' && (
+            <>
+              <label className="block">
+                <span className="text-[11px] font-bold text-gray-300">Periode</span>
+                <select value={(state as any).donationPeriod || 'all'} onChange={(e) => update('donationPeriod' as any, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+                  {TICKER_DONATION_PERIODS.map((p) => <option key={p.value} value={p.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{p.label}</option>)}
+                </select>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block"><span className="text-[11px] font-bold text-gray-300">Limit donasi</span><input type="number" min={1} max={20} value={(state as any).donationLimit ?? 10} onChange={(e) => update('donationLimit' as any, Math.max(1, Math.min(20, parseInt(e.target.value) || 10)))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
+                <label className="block"><span className="text-[11px] font-bold text-gray-300">Min Rp</span><input type="number" min={0} value={(state as any).donationMinAmount ?? 0} onChange={(e) => update('donationMinAmount' as any, Math.max(0, parseInt(e.target.value) || 0))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
+              </div>
+              <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Tampilkan pesan donatur</span><input type="checkbox" checked={(state as any).donationShowMessage ?? true} onChange={(e) => update('donationShowMessage' as any, e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* Isi ticker */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Megaphone className="w-4 h-4 text-cyan-400" /> Isi Ticker</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <label className="block">
-            <span className="text-[11px] font-bold text-gray-300">Teks (1 baris = 1 item)</span>
+            <span className="text-[11px] font-bold text-gray-300">Teks (1 baris = 1 item) {(state as any).source !== 'manual' && <span className="text-cyan-400 font-normal">— dipakai saat mode campuran / fallback</span>}</span>
             <textarea value={state.items} onChange={(e) => update('items', e.target.value)} rows={4} placeholder={'Pengumuman 1\nPengumuman 2'} className="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50" />
           </label>
           <div className="grid grid-cols-2 gap-3">
