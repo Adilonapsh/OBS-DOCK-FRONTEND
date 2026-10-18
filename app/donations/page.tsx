@@ -9,8 +9,8 @@ import Sidebar from '@/app/components/Sidebar';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import { io, Socket } from 'socket.io-client';
 import {
-  DollarSign, Search, RefreshCw, Download, ExternalLink, Menu, Eye, EyeOff,
-  TrendingUp, Users, Wallet, Calendar, Copy, Filter, X, ChevronLeft, ChevronRight,
+  Search, RefreshCw, Download, ExternalLink, Menu, Eye, EyeOff,
+  TrendingUp, Users, Wallet, Wallet2, Calendar, Copy, Filter, X, ChevronLeft, ChevronRight,
   Gift, Music, Link2, Clock, Hash
 } from 'lucide-react';
 import { gooeyToast } from 'goey-toast';
@@ -243,13 +243,13 @@ function DonationsInner() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
-      <Sidebar active="dashboard" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
+      <Sidebar active="donations" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
 
       <div className="flex-1 flex flex-col min-w-0 lg:pl-[240px]">
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500 text-black rounded-full text-[10px] font-black tracking-widest uppercase"><DollarSign className="w-3 h-3" /> DONASI</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500 text-black rounded-full text-[10px] font-black tracking-widest uppercase"><Wallet2 className="w-3 h-3" /> DONASI</span>
             <span className="hidden md:inline text-[10px] text-gray-500 font-bold">{filtered.length} logs • {privateKey ? `${privateKey.slice(0, 6)}…` : 'global'}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -411,9 +411,9 @@ function DonationsInner() {
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
             <div>
               <div className="text-amber-300 font-black uppercase text-[11px]">Webhook Donasi</div>
-              <div className="text-gray-400 text-[11px] mt-1">Atur token di <Link href="/integrations" className="text-white font-bold underline">Integrations → Donation</Link>. Logs masuk via <code className="bg-white/10 px-1 rounded text-white">POST /webhook/:platform/:key</code> + RPC <code className="bg-white/10 px-1 rounded text-white">get_donations_by_private_key</code>.</div>
+              <div className="text-gray-400 text-[11px] mt-1">Atur token di <Link href="/connections" className="text-white font-bold underline">Connections → Donation</Link>.</div>
             </div>
-            <Link href="/integrations" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 text-black rounded-xl text-[11px] font-black uppercase"><ExternalLink className="w-3 h-3" /> Atur Webhook</Link>
+            <Link href="/connection" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 text-black rounded-xl text-[11px] font-black uppercase"><ExternalLink className="w-3 h-3" /> Atur Webhook</Link>
           </div>
         </main>
       </div>
