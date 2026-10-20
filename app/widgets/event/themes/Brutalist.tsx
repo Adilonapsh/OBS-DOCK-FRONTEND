@@ -58,7 +58,12 @@ export default function BrutalistTheme({
     return (
       <div
         className="event-brutalist-theme w-full max-w-none flex flex-row flex-wrap gap-3 items-center"
-        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}
+        style={{
+          fontFamily: `'${font}', sans-serif`,
+          fontSize: `${fontSize}px`,
+          paddingBottom: (hasTail ? 24 : 0) + shadowOffset + 2,
+          paddingRight: shadowOffset + 4,
+        }}
       >
         {events.length === 0 ? null : (
           events.map((e) => {
@@ -67,7 +72,7 @@ export default function BrutalistTheme({
             return (
               <div
                 key={e.id}
-                className="brutalist-bubble relative flex items-center gap-2.5 px-3 py-2 shrink-0 max-w-[300px] overflow-hidden brutalist-item"
+                className="brutalist-bubble relative flex items-center gap-2.5 px-3 py-2 shrink-0 max-w-[300px] brutalist-item"
                 style={{ animation: getAnim(e.id), opacity: bgOpacity / 100, backgroundColor: bubbleBg, border: getBorder(3), boxShadow: getShadow() }}
               >
                 {hasHalftone && <div className="absolute inset-0 pointer-events-none brutal-halftone opacity-[0.05]" />}
@@ -112,7 +117,12 @@ export default function BrutalistTheme({
   return (
     <div
       className="event-brutalist-theme w-full max-w-[440px] flex flex-col gap-3.5"
-      style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}
+      style={{
+        fontFamily: `'${font}', sans-serif`,
+        fontSize: `${fontSize}px`,
+        paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2,
+        paddingRight: shadowOffset + 4,
+      }}
     >
       {events.length === 0 ? null : (
         events.map((e) => {
@@ -122,7 +132,7 @@ export default function BrutalistTheme({
           return (
             <div
               key={e.id}
-              className="brutalist-bubble relative overflow-hidden will-change-transform brutalist-item"
+              className="brutalist-bubble relative will-change-transform brutalist-item"
               style={{ animation: getAnim(e.id), opacity: bgOpacity / 100, backgroundColor: bubbleBg, border: getBorder(4), boxShadow: getShadow() }}
             >
               {hasHalftone && <div className="absolute inset-0 pointer-events-none brutal-halftone opacity-[0.06]" />}

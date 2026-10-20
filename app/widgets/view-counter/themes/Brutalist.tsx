@@ -42,6 +42,7 @@ export default function BrutalistTheme({
 
   if (isInline) {
     return (
+      <div style={{ paddingBottom: (hasTail ? 24 : 0) + shadowOffset + 2, paddingRight: shadowOffset + 4 }}>
       <div
         className="brutalist-bubble relative flex items-center justify-center max-w-full shrink-0 mx-auto"
         style={{
@@ -113,10 +114,12 @@ export default function BrutalistTheme({
           )}
         </div>
       </div>
+      </div>
     );
   }
 
   return (
+    <div style={{ paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2, paddingRight: shadowOffset + 4 }}>
     <div
       className="brutalist-bubble relative px-5 py-4 w-full max-w-[380px] mx-auto"
       style={{
@@ -208,6 +211,7 @@ export default function BrutalistTheme({
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

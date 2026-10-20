@@ -53,6 +53,13 @@ export default function BrutalistTheme({
   };
 
   const isRow = Boolean(horizontal || inline);
+  const tailSpace = isRow ? 24 : 32;
+  const containerStyle = {
+    fontFamily: `'${font}', sans-serif`,
+    fontSize: `${fontSize}px`,
+    paddingBottom: (hasTail ? tailSpace : 0) + shadowOffset + 2,
+    paddingRight: shadowOffset + 4,
+  };
   const containerClass = isRow
     ? 'w-full max-w-none flex flex-row flex-wrap gap-4 items-end'
     : 'w-full max-w-[420px] flex flex-col gap-6';
@@ -62,7 +69,7 @@ export default function BrutalistTheme({
 
   if (isRow) {
     return (
-      <div className={containerClass} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+      <div className={containerClass} style={containerStyle}>
         {visible.map((f) => {
           const isExiting = exitingIds?.has(f.id);
           return (
@@ -155,7 +162,7 @@ export default function BrutalistTheme({
   }
 
   return (
-    <div className={containerClass} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+    <div className={containerClass} style={containerStyle}>
       {visible.map((f) => {
         const isExiting = exitingIds?.has(f.id);
         return (

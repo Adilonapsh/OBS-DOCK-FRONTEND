@@ -330,7 +330,7 @@ function PinnedInner() {
           ) : theme === 'brutalist' ? (
             <div
               className="w-[420px] max-w-[90vw] flex flex-row gap-4 items-start"
-              style={{ fontFamily, paddingBottom: (brutalistTail ? 32 : 0) + brutalistShadow + 2 }}
+              style={{ fontFamily, paddingBottom: (brutalistTail ? 32 : 0) + brutalistShadow + 2, paddingRight: brutalistShadow + 4 }}
             >
               {showAvatar && (
                 <div className="block shrink-0 mt-1.5 overflow-hidden" style={{ border: `4px solid ${brutalistBorderColor}`, backgroundColor: '#FFFFFF', boxShadow: `3px 3px 0px 0px ${brutalistBorderColor}`, width: 44, height: 44 }}>

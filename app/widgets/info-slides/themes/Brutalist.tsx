@@ -51,10 +51,18 @@ export default function BrutalistTheme({
   return (
     <>
       <style>{`@keyframes brutalistIn{from{opacity:0;transform:translateX(-12px) scale(0.98)}to{opacity:1;transform:translateX(0) scale(1)}}@keyframes brutalistOut{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(12px) scale(0.98)}}`}</style>
-      <div className="w-full max-w-[640px] select-none" style={{ fontFamily: `'${font}', sans-serif` }}>
+      <div
+        className="w-full max-w-[640px] select-none"
+        style={{
+          fontFamily: `'${font}', sans-serif`,
+          boxSizing: 'border-box',
+          paddingRight: hasTail ? 48 : 0,
+          paddingBottom: hasTail ? 48 : 0,
+        }}
+      >
         <div
           key={slide.id + index}
-          className="relative border-[4px] overflow-hidden flex flex-col"
+          className="relative border-[4px] flex flex-col"
           style={{ background: bubbleBg, borderColor, boxShadow, animation: animStyle }}
         >
         {/* halftone wash */}

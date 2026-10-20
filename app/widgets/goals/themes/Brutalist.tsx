@@ -115,7 +115,15 @@ export default function Brutalist({
   }
 
   return (
-    <div className="w-full max-w-full p-2" style={{ fontFamily: `'Passion One', '${font}', sans-serif`, boxSizing: 'border-box' }}>
+    <div
+      className="w-full max-w-full p-2"
+      style={{
+        fontFamily: `'Passion One', '${font}', sans-serif`,
+        boxSizing: 'border-box',
+        paddingBottom: (brutalistTail ? 32 : 0) + brutalistShadow + 2,
+        paddingRight: brutalistShadow + 4,
+      }}
+    >
       <div
         className="relative rounded-none p-4 w-full max-w-full"
         style={{

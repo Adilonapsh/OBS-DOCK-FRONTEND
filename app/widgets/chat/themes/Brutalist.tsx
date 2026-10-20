@@ -197,7 +197,7 @@ export default function BrutalistTheme({
     <>
       <div
         className="w-full max-w-[420px] flex flex-col gap-6"
-        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2 }}
+        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2, paddingRight: shadowOffset + 4 }}
       >
         {visible.map((c, i) => {
           const isExiting = exitingIds?.has(c.id);
