@@ -54,7 +54,7 @@ export function GoalSettingsForm({ state, update }: Props) {
               {state.goalType === 'follow' && 'Follow TikTok + Twitch + YouTube + Kick'}
               {state.goalType === 'subs' && 'Subs / Member / GiftSub (Twitch/YouTube/Kick + TikTok)'}
               {state.goalType === 'like' && 'Like TikTok (❤️)'}
-              {state.goalType === 'donation' && 'Nominal donasi (Rp) dari Saweria/TipTap/Trakteer/dll- target & saat ini dalam Rupiah'}
+              {state.goalType === 'donation' && 'Nominal donasi (Rp) dari donation logs Saweria/TipTap/Trakteer/dll - target & saat ini dalam Rupiah'}
             </span>
           </label>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Judul Goal</span><input type="text" value={state.title} onChange={(e) => update('title', e.target.value)} placeholder="Follower Goal" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
@@ -62,7 +62,7 @@ export function GoalSettingsForm({ state, update }: Props) {
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Target</span><input type="number" min={1} max={100000} value={state.target} onChange={(e) => update('target', Math.max(1, parseInt(e.target.value) || 1))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Saat Ini</span><input type="number" min={0} max={100000} value={state.current} onChange={(e) => update('current', Math.max(0, parseInt(e.target.value) || 0))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
           </div>
-          <p className="text-[10px] text-gray-500">{state.goalType === 'donation' ? 'Current bertambah otomatis dari nominal donasi (Rp). Contoh target Rp 500.000. Bisa juga edit manual.' : 'Current bertambah otomatis dari livestream (follow/subs/like/donasi). Bisa juga edit manual.'}</p>
+          <p className="text-[10px] text-gray-500">{state.goalType === 'donation' ? 'Saat Ini = isian manual + total donation logs. Donasi baru tetap menambah live. Contoh target Rp 500.000.' : 'Current bertambah otomatis dari livestream (follow/subs/like/donasi). Bisa juga edit manual.'}</p>
         </div>
       </div>
 

@@ -19,6 +19,12 @@ function GoalsSettingsInner() {
   const obsUrl = useMemo(() => `${widgetUrl}&obs=1`, [widgetUrl]);
   const previewUrl = useMemo(() => buildGoalsUrl('/widgets/goals/display', state), [state]);
   const simulateUrl = useMemo(() => `${previewUrl}${previewUrl.includes('?') ? '&' : '?'}simulate=1`, [previewUrl]);
+  // Donation goal: preview pakai data asli dari donation logs, bukan simulasi acak.
+  const previewSrc = useMemo(() => {
+    if (state.goalType !== 'donation') return simulateUrl;
+    const base = buildGoalsUrl('/widgets/goals/display', state);
+    return `${base}${privateKey ? `&key=${privateKey}` : ''}`;
+  }, [state, privateKey, simulateUrl]);
 
   const handleCopy = () => shell.copy(obsUrl);
 
@@ -30,7 +36,7 @@ function GoalsSettingsInner() {
         user={shell.user}
         headerIcon={<Target className="w-4 h-4 text-white" />}
         title={<>Goals <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-emerald-500 text-white rounded-full">Live</span></>}
-        subtitle="Goal progress untuk Follow / Subs / Like / Donasi - pilih jenis goal, atur target, live update dari livestream"
+        subtitle="Goal progress untuk Follow / Subs / Like / Donasi - donation goal otomatis dari donation logs, live update dari livestream"
         headerActions={
           <>
             <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
@@ -46,9 +52,9 @@ function GoalsSettingsInner() {
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.current}/{state.target} • {state.goalType}</span>
             </div>
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px]">
-              <iframe key={simulateUrl} src={simulateUrl} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="goals-preview" />
+              <iframe key={previewSrc} src={previewSrc} className="absolute inset-0 w-full h-full border-0 bg-transparent" title="goals-preview" />
             </div>
-            <div className="mt-2 text-[10px] text-gray-500 text-center">Live preview via iframe (<code className="bg-white/10 px-1 rounded text-white">simulate=1</code>) - data real di OBS (<code className="bg-white/10 px-1 rounded text-white">.../goals/display?obs=1</code>).</div>
+            <div className="mt-2 text-[10px] text-gray-500 text-center">{state.goalType === 'donation' ? <>Preview donasi memakai total <code className="bg-white/10 px-1 rounded text-white">donation logs</code> - data real di OBS (<code className="bg-white/10 px-1 rounded text-white">.../goals/display?obs=1</code>).</> : <>Live preview via iframe (<code className="bg-white/10 px-1 rounded text-white">simulate=1</code>) - data real di OBS (<code className="bg-white/10 px-1 rounded text-white">.../goals/display?obs=1</code>).</>}</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
               <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>

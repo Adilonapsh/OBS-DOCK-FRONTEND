@@ -3,7 +3,7 @@
 import { QR_THEMES, QR_LEVELS, QR_FONTS, type QrSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
 import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
-import { Palette, Type, Monitor, QrCode, ImagePlus, Trash2 } from 'lucide-react';
+import { Palette, Type, Monitor, QrCode, ImagePlus, Trash2, Minimize2 } from 'lucide-react';
 
 type Props = {
   state: QrSettings;
@@ -140,6 +140,41 @@ export function QrSettingsForm({ state, update }: Props) {
               <input type="text" value={state.bg} onChange={(e) => update('bg', e.target.value)} placeholder="transparent" className="w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
             </span>
           </label>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Minimize2 className="w-4 h-4 text-cyan-400" /> Auto Collapse</h2>
+        <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+            <span className="text-[11px] font-bold text-white">Aktifkan auto collapse</span>
+            <input type="checkbox" checked={state.autoCollapse} onChange={(e) => update('autoCollapse', e.target.checked)} className="w-4 h-4 accent-white" />
+          </label>
+          {state.autoCollapse && (
+            <>
+              <label className="block">
+                <span className="text-[11px] font-bold text-gray-300">Tampil penuh selama (detik)</span>
+                <input type="number" min={1} max={600} value={state.collapseAfter} onChange={(e) => update('collapseAfter', Math.max(1, Math.min(600, parseInt(e.target.value) || 15)))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" />
+              </label>
+              <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+                <span className="text-[11px] font-bold text-white">Auto expand lagi</span>
+                <input type="checkbox" checked={state.autoExpand} onChange={(e) => update('autoExpand', e.target.checked)} className="w-4 h-4 accent-white" />
+              </label>
+              {state.autoExpand && (
+                <label className="block">
+                  <span className="text-[11px] font-bold text-gray-300">Collapsed selama (detik)</span>
+                  <input type="number" min={1} max={600} value={state.expandAfter} onChange={(e) => update('expandAfter', Math.max(1, Math.min(600, parseInt(e.target.value) || 10)))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" />
+                </label>
+              )}
+              <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+                <span className="text-[11px] font-bold text-white">Expand saat hover</span>
+                <input type="checkbox" checked={state.hoverExpand} onChange={(e) => update('hoverExpand', e.target.checked)} className="w-4 h-4 accent-white" />
+              </label>
+              <p className="text-[10px] text-gray-500 leading-relaxed">
+                Saat collapse, QR diganti pill berisi teks URL dengan gaya mengikuti tema yang dipilih. Lalu membesar lagi otomatis bila Auto expand aktif (loop). Klik/hover juga membuka QR.
+              </p>
+            </>
+          )}
         </div>
       </div>
 

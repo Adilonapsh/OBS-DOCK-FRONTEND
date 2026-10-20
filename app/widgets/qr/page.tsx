@@ -31,7 +31,7 @@ function QrSettingsInner() {
         user={shell.user}
         headerIcon={<QrCode className="w-4 h-4 text-white" />}
         title={<>QR Code</>}
-        subtitle="QR statis untuk donasi / link / sosial - 4 tema"
+        subtitle="QR statis untuk donasi / link / sosial - 8 tema + auto collapse"
         headerActions={
           <>
             <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Defaults</button>

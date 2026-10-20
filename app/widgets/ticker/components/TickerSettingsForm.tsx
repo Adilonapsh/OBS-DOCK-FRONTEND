@@ -79,7 +79,8 @@ export function TickerSettingsForm({
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Separator</span><input value={state.separator} onChange={(e) => update('separator', e.target.value)} maxLength={4} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Arah</span><select value={state.direction} onChange={(e) => update('direction', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{TICKER_DIRECTIONS.map((d) => <option key={d.value} value={d.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{d.label}</option>)}</select></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Kecepatan - {state.speed}s/loop</span><input type="range" min={5} max={60} value={state.speed} onChange={(e) => update('speed', parseInt(e.target.value) || 20)} className="mt-1 w-full accent-white" /><span className="text-[10px] text-gray-500">Makin kecil makin cepat</span></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Kecepatan - {state.speed}s sekali jalan</span><input type="range" min={5} max={60} value={state.speed} onChange={(e) => update('speed', parseInt(e.target.value) || 20)} className="mt-1 w-full accent-white" /><span className="text-[10px] text-gray-500">Makin kecil makin cepat</span></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Jeda sebelum ulang - {state.repeatDelay}s</span><input type="range" min={0} max={15} value={state.repeatDelay} onChange={(e) => update('repeatDelay', parseInt(e.target.value) || 0)} className="mt-1 w-full accent-white" /><span className="text-[10px] text-gray-500">Setelah teks terakhir selesai, ticker berhenti sebentar lalu mulai lagi dari kanan.</span></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Badge (pill INFO)</span><input type="checkbox" checked={state.showBadge} onChange={(e) => update('showBadge', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           {state.showBadge && (
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks Badge</span><input value={state.badgeText} onChange={(e) => update('badgeText', e.target.value)} maxLength={12} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
@@ -115,7 +116,7 @@ export function TickerSettingsForm({
       <div className="space-y-3">
         <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl p-3">
           <div className="text-cyan-300 font-black uppercase text-[10px]">Cara Pakai di OBS</div>
-          <div className="text-gray-400 text-[11px] leading-relaxed mt-1">Copy URL di atas → OBS → Browser Source (lebar 800+, tinggi 80) → teks jalan loop otomatis. Cocok untuk pengumuman, sponsor, atau rules di bawah layar.</div>
+          <div className="text-gray-400 text-[11px] leading-relaxed mt-1">Copy URL di atas → OBS → Browser Source (lebar 800+, tinggi 80) → teks jalan, lalu mulai lagi dari kanan setelah jeda. Cocok untuk pengumuman, sponsor, atau rules di bawah layar.</div>
         </div>
       </div>
 

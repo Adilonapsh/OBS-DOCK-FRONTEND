@@ -10,7 +10,6 @@ import { buildTickerUrl } from './config';
 import { WidgetShell } from '../_shared/components/WidgetShell';
 import { UrlBar } from '../_shared/components/UrlBar';
 import { TickerSettingsForm } from './components/TickerSettingsForm';
-import { TICKER_KEYFRAMES_CSS } from './config';
 
 function TickerSettingsInner() {
   const { state, update, reset, privateKey, loadFromUrl } = useTickerSettings();
@@ -25,7 +24,6 @@ function TickerSettingsInner() {
 
   return (
     <>
-      <style>{TICKER_KEYFRAMES_CSS}</style>
       <WidgetShell
         sidebarOpen={shell.sidebarOpen}
         setSidebarOpen={shell.setSidebarOpen}
@@ -45,7 +43,7 @@ function TickerSettingsInner() {
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • {state.speed}s/loop</div>
+              <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-white" /> Preview - {state.theme} • {state.speed}s + {state.repeatDelay}s jeda</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.font} • {state.fontSize}px • OBS = transparan</span>
             </div>
             <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[360px] grid place-items-center p-4">

@@ -10,7 +10,7 @@ import { getPositionStyle } from '../../_shared/constants/positions';
 import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { tickerThemeComponents } from '../themes/registry';
 import StandardTheme from '../themes/Standard';
-import { parseTickerItems, DEMO_TICKER_ITEMS, TICKER_KEYFRAMES_CSS } from '../config';
+import { parseTickerItems, DEMO_TICKER_ITEMS } from '../config';
 import { createClient } from '@/utils/supabase/client';
 
 function getDonationTime(d: Record<string, unknown>): number {
@@ -59,6 +59,7 @@ function TickerInner() {
   const textColor = getStringParam(params, 'textColor', '');
   const separator = getStringParam(params, 'separator', '•');
   const speed = Math.max(3, Math.min(120, getIntParam(params, 'speed', 20)));
+  const repeatDelay = Math.max(0, Math.min(60, getIntParam(params, 'repeatDelay', 2)));
   const direction = (getStringParam(params, 'direction', 'left') === 'right' ? 'right' : 'left') as 'left' | 'right';
   const showBadge = getBoolParam(params, 'showBadge', true);
   const badgeText = getStringParam(params, 'badgeText', 'INFO');
@@ -216,6 +217,7 @@ function TickerInner() {
     textColor,
     separator,
     speed,
+    repeatDelay,
     direction,
     showBadge,
     badgeText,
@@ -228,7 +230,7 @@ function TickerInner() {
   return (
     <>
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
-      <style>{`${TICKER_KEYFRAMES_CSS} @import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, '+')}:wght@400;700;900&display=swap'); html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; scrollbar-width:none;-ms-overflow-style:none; } html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, '+')}:wght@400;700;900&display=swap'); html,body{ background: ${obsMode ? 'transparent !important' : '#0a0a0a'}; scrollbar-width:none;-ms-overflow-style:none; } html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}`}</style>
       <div
         id="ticker-display-root"
         className={`${obsMode ? `fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-2` : `w-full min-h-screen bg-[#0a0a0a] flex p-4`}`}

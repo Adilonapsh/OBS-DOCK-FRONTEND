@@ -152,7 +152,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "ticker",
     title: "Ticker",
-    desc: "Running text pengumuman / sponsor loop - 3 tema (Standard/Clean/Neon), kecepatan & arah atur, badge INFO.",
+    desc: "Running text pengumuman / sponsor - setelah teks terakhir selesai, mulai lagi dari kanan. 4 tema, kecepatan, jeda & arah atur.",
     category: "info",
     tags: ["Ticker", "Running Text", "Pengumuman", "Sponsor", "OBS"],
     layout: "ticker",
@@ -200,9 +200,9 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "goals",
     title: "Goals",
-    desc: "Goal progress untuk Follow / Subs / Like - pilih jenis goal, atur target, live update dari TikTok & Streamer.bot.",
+    desc: "Goal progress untuk Follow / Subs / Like / Donasi - donation goal otomatis dari donation logs, target & live update bisa diatur.",
     category: "progress",
-    tags: ["Goals", "Follow", "Subs", "Like", "TikTok", "Streamer.bot"],
+    tags: ["Goals", "Follow", "Subs", "Like", "Donasi", "TikTok", "Streamer.bot"],
     layout: "goals",
     params: "theme=standard&font=Outfit&goalType=follow&target=100",
     preview: "goal",
@@ -224,7 +224,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "qr",
     title: "QR Code",
-    desc: "QR statis untuk donasi / link / sosial - 7 tema (Standard/Bubble/Clean/Boxed/Minimal/Cute/Plain), logo custom di tengah, warna & error correction bisa diatur.",
+    desc: "QR statis untuk donasi / link / sosial - 8 tema, logo custom di tengah, warna & error correction bisa diatur, auto collapse beranimasi jadi pill teks URL lalu expand lagi otomatis.",
     category: "info",
     tags: ["QR", "Donasi", "Link", "Saweria"],
     layout: "qr",

@@ -12,6 +12,7 @@ export default function BrutalistTheme({
   textColor,
   separator,
   speed,
+  repeatDelay,
   direction,
   showBadge,
   badgeText,
@@ -73,6 +74,7 @@ export default function BrutalistTheme({
           items={items}
           separator={separator}
           speed={speed}
+          repeatDelay={repeatDelay}
           direction={direction}
           renderItem={(t) => (
             <span

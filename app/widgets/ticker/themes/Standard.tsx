@@ -3,7 +3,7 @@ import { TickerTrack } from './TickerTrack';
 
 export const themeMeta = { value: 'standard', label: 'Standard - Bar + Badge' } as const;
 
-export default function StandardTheme({ items, font, fontSize, accent, bg, textColor, separator, speed, direction, showBadge, badgeText }: TickerThemeProps) {
+export default function StandardTheme({ items, font, fontSize, accent, bg, textColor, separator, speed, repeatDelay, direction, showBadge, badgeText }: TickerThemeProps) {
   const barBg = bg === 'transparent' ? 'rgba(10,10,10,0.85)' : bg;
   const text = textColor || '#ffffff';
   return (
@@ -24,6 +24,7 @@ export default function StandardTheme({ items, font, fontSize, accent, bg, textC
           items={items}
           separator={separator}
           speed={speed}
+          repeatDelay={repeatDelay}
           direction={direction}
           renderItem={(t) => <span className="font-bold whitespace-nowrap">{t}</span>}
         />

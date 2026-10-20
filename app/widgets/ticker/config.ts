@@ -37,7 +37,8 @@ export const TICKER_DEFAULTS = {
   textColor: '', // '' = otomatis (bawaan tiap tema)
   items: 'Selamat datang di live! 🔥\nJangan lupa follow & share ya!\nSaweria: saweria.co/username',
   separator: '•',
-  speed: 20, // detik per loop
+  speed: 20, // detik per sekali jalan
+  repeatDelay: 2, // jeda sebelum mulai lagi dari kanan
   direction: 'left' as string,
   showBadge: true,
   badgeText: 'INFO',
@@ -57,9 +58,6 @@ export const DEMO_TICKER_ITEMS = [
   'Saweria: saweria.co/username',
 ];
 
-// keyframes marquee dipakai display + preview (jangan duplikat manual)
-export const TICKER_KEYFRAMES_CSS = `@keyframes ticker-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}.ticker-marquee{animation-name:ticker-marquee;animation-timing-function:linear;animation-iteration-count:infinite;}`;
-
 export function parseTickerItems(raw: string): string[] {
   return raw
     .split('\n')
@@ -78,6 +76,7 @@ export function buildTickerUrl(base: string, s: TickerSettings): string {
   if (s.items) p.set('items', s.items);
   if (s.separator) p.set('separator', s.separator);
   p.set('speed', String(s.speed));
+  p.set('repeatDelay', String(s.repeatDelay));
   p.set('direction', s.direction);
   p.set('showBadge', s.showBadge ? '1' : '0');
   if (s.badgeText) p.set('badgeText', s.badgeText);

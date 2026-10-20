@@ -2,7 +2,7 @@
 
 import StandardTheme from '../themes/Standard';
 import { tickerThemeComponents } from '../themes/registry';
-import { parseTickerItems, DEMO_TICKER_ITEMS, TICKER_KEYFRAMES_CSS, type TickerSettings } from '../config';
+import { parseTickerItems, DEMO_TICKER_ITEMS, type TickerSettings } from '../config';
 
 export function TickerPreview({ state }: { state: TickerSettings }) {
   const items = parseTickerItems(state.items);
@@ -15,6 +15,7 @@ export function TickerPreview({ state }: { state: TickerSettings }) {
     textColor: state.textColor,
     separator: state.separator,
     speed: state.speed,
+    repeatDelay: state.repeatDelay,
     direction: (state.direction === 'right' ? 'right' : 'left') as 'left' | 'right',
     showBadge: state.showBadge,
     badgeText: state.badgeText,
@@ -22,10 +23,5 @@ export function TickerPreview({ state }: { state: TickerSettings }) {
 
   // auto-register: theme baru di themes/*.tsx langsung kepakai di preview
   const Theme = tickerThemeComponents[state.theme] ?? StandardTheme;
-  return (
-    <>
-      <style>{TICKER_KEYFRAMES_CSS}</style>
-      <Theme {...props} />
-    </>
-  );
+  return <Theme {...props} />;
 }

@@ -7,6 +7,7 @@ import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { AutoScale } from '../../_shared/components/AutoScale';
+import { QrAutoCollapse } from '../components/QrAutoCollapse';
 import StandardTheme from '../themes/Standard';
 import BubbleTheme from '../themes/Bubble';
 import CleanTheme from '../themes/Clean';
@@ -40,6 +41,11 @@ function QrInner() {
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
   const brutalist = parseBrutalistParams((k) => params.get(k));
+  const autoCollapse = getBoolParam(params, 'autoCollapse', false);
+  const collapseAfter = Math.max(1, Math.min(600, getIntParam(params, 'collapseAfter', 15)));
+  const autoExpand = getBoolParam(params, 'autoExpand', true);
+  const expandAfter = Math.max(1, Math.min(600, getIntParam(params, 'expandAfter', 10)));
+  const hoverExpand = getBoolParam(params, 'hoverExpand', true);
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'qr-font'), [font]);
 
@@ -50,23 +56,33 @@ function QrInner() {
       <style>{`.qr-font { font-family: '${font}', sans-serif; }`}</style>
       <div className="w-full h-full flex" style={posStyle as React.CSSProperties}>
         <AutoScale defaultBase={300} baseWidth={size + 100} defaultEnabled={false}>
-          {theme === 'bubble' ? (
-            <BubbleTheme {...themeProps} />
-          ) : theme === 'clean' ? (
-            <CleanTheme {...themeProps} />
-          ) : theme === 'boxed' ? (
-            <BoxedTheme {...themeProps} />
-          ) : theme === 'minimal' ? (
-            <MinimalTheme {...themeProps} />
-          ) : theme === 'cute' ? (
-            <CuteTheme {...themeProps} />
-          ) : theme === 'plain' ? (
-            <PlainTheme {...themeProps} />
-          ) : theme === 'brutalist' ? (
-            <BrutalistTheme {...themeProps} />
-          ) : (
-            <StandardTheme {...themeProps} />
-          )}
+          <QrAutoCollapse
+            enabled={autoCollapse}
+            collapseAfter={collapseAfter}
+            autoExpand={autoExpand}
+            expandAfter={expandAfter}
+            hoverExpand={hoverExpand}
+            theme={theme}
+            pillProps={themeProps}
+          >
+            {theme === 'bubble' ? (
+              <BubbleTheme {...themeProps} />
+            ) : theme === 'clean' ? (
+              <CleanTheme {...themeProps} />
+            ) : theme === 'boxed' ? (
+              <BoxedTheme {...themeProps} />
+            ) : theme === 'minimal' ? (
+              <MinimalTheme {...themeProps} />
+            ) : theme === 'cute' ? (
+              <CuteTheme {...themeProps} />
+            ) : theme === 'plain' ? (
+              <PlainTheme {...themeProps} />
+            ) : theme === 'brutalist' ? (
+              <BrutalistTheme {...themeProps} />
+            ) : (
+              <StandardTheme {...themeProps} />
+            )}
+          </QrAutoCollapse>
         </AutoScale>
         {!obsMode && !value && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Isi ?value=https://… untuk tampilkan QR</div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { getSocketUrl } from '../../_shared/utils/socket';
@@ -9,6 +9,28 @@ import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import { goalThemeComponents } from '../themes/registry';
+import { createClient } from '@/utils/supabase/client';
+
+function sumDonationRows(rows: Record<string, unknown>[]): number {
+  return rows.reduce((sum, row) => {
+    const amount = Number((row as { amount?: unknown }).amount) || 0;
+    return sum + Math.max(0, Math.floor(amount));
+  }, 0);
+}
+
+function donationTxId(row: Record<string, unknown>): string {
+  const r = row as { transactionId?: unknown; transaction_id?: unknown; id?: unknown };
+  return String(r.transactionId || r.transaction_id || r.id || '');
+}
+
+function isBeforeCutoff(row: Record<string, unknown>, cutoffMs: number): boolean {
+  const createdAt = (row as { created_at?: unknown }).created_at;
+  if (typeof createdAt === 'string') {
+    const time = Date.parse(createdAt);
+    if (!Number.isNaN(time)) return time < cutoffMs;
+  }
+  return true;
+}
 
 function GoalsInner() {
   const searchParams = useSearchParams();
@@ -45,6 +67,9 @@ function GoalsInner() {
 
   const [current, setCurrent] = useState(initialCurrent);
   const [connected, setConnected] = useState(simulate);
+  const donationLiveSum = useRef(0);
+  const donationLiveTx = useRef<Set<string>>(new Set());
+  const donationLogsReady = useRef(false);
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'goals-font'), [font]);
   useEffect(() => {
@@ -60,6 +85,81 @@ function GoalsInner() {
     }, 3000);
     return () => window.clearInterval(t);
   }, [simulate, target]);
+
+  // Donation Goal: current = nominal awal + total donation logs.
+  // p_before = waktu halaman dibuka, supaya donasi live yang masuk setelahnya
+  // tidak dihitung dua kali (sekali dari log, sekali dari socket).
+  useEffect(() => {
+    if (simulate || goalType !== 'donation') return;
+    let cancelled = false;
+    const startedAt = new Date().toISOString();
+    const cutoffMs = Date.parse(startedAt);
+    donationLiveSum.current = 0;
+    donationLiveTx.current = new Set();
+    donationLogsReady.current = false;
+
+    const hydrate = async () => {
+      const supabase = createClient();
+      const rpc = (supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+      }).rpc.bind(supabase);
+      let total: number | null = null;
+
+      try {
+        const key = privateKey || (typeof window !== 'undefined'
+          ? (sessionStorage.getItem('dock_private_verified') || sessionStorage.getItem('bypass_private_key') || '')
+          : '');
+
+        if (key) {
+          const { data, error } = await rpc('get_donation_total_by_private_key', {
+            p_key: key,
+            p_before: startedAt,
+          });
+          if (!error) {
+            const row = Array.isArray(data) ? data[0] : data;
+            total = Math.max(0, Math.floor(Number((row as { total?: unknown } | null)?.total ?? 0) || 0));
+          } else {
+            // Fallback untuk DB yang belum menjalankan migration 020:
+            // ambil log terbaru lalu jumlahkan (maks 50 dari RPC).
+            const { data: rows, error: rowsError } = await rpc('get_donations_by_private_key', {
+              p_key: key,
+              p_limit: 50,
+            });
+            if (!rowsError && Array.isArray(rows)) {
+              const filtered = (rows as Record<string, unknown>[]).filter((row) => {
+                const tx = donationTxId(row);
+                if (tx && donationLiveTx.current.has(tx)) return false;
+                return isBeforeCutoff(row, cutoffMs);
+              });
+              total = sumDonationRows(filtered);
+            }
+          }
+        }
+
+        // Fallback: user login langsung (tanpa private key di URL).
+        if (total === null) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            const { data: rows } = await supabase
+              .from('donation_logs')
+              .select('amount, transaction_id, created_at')
+              .lt('created_at', startedAt)
+              .limit(1000);
+            if (Array.isArray(rows)) total = sumDonationRows(rows as Record<string, unknown>[]);
+          }
+        }
+      } catch {
+        // biarkan total null -> pakai nilai manual + live yang sudah masuk
+      }
+
+      if (cancelled) return;
+      setCurrent(Math.max(0, initialCurrent + (total ?? 0) + donationLiveSum.current));
+      donationLogsReady.current = true;
+    };
+
+    hydrate();
+    return () => { cancelled = true; };
+  }, [goalType, simulate, privateKey, initialCurrent]);
 
   useEffect(() => {
     if (simulate) return;
@@ -119,12 +219,18 @@ function GoalsInner() {
       if (goalType === 'subs') handleBridgedFollowForSubs(data);
     });
     // Donasi (Saweria/TipTap/Trakteer/dll)- nominal Rp langsung nambah goal donasi.
-    // Hidupkan goal donasi di halaman widget (goalType=donation) + pastikan
-    // platform diaktifkan di Connection → Donasi Webhook.
+    // Total historis diambil dari donation_logs; event ini hanya untuk update live.
     socket.on('donation', (data: Record<string, unknown>) => {
       if (goalType !== 'donation') return;
-      const d = data as { amount?: number };
-      inc(Math.max(0, Math.floor(Number(d.amount) || 0)));
+      const d = data as { amount?: unknown };
+      const amount = Math.max(0, Math.floor(Number(d.amount) || 0));
+      if (amount <= 0) return;
+      if (!donationLogsReady.current) {
+        donationLiveSum.current += amount;
+        const tx = donationTxId(data);
+        if (tx) donationLiveTx.current.add(tx);
+      }
+      inc(amount);
     });
 
     return () => { socket.disconnect(); };

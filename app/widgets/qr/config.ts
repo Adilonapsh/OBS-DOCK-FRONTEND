@@ -37,6 +37,11 @@ export const QR_DEFAULTS = {
   level: 'M' as string,
   logo: '' as string,
   showLogo: true,
+  autoCollapse: false as boolean,
+  collapseAfter: 15 as number,
+  autoExpand: true as boolean,
+  expandAfter: 10 as number,
+  hoverExpand: true as boolean,
   ...BRUTALIST_DEFAULTS,
 } as const;
 
@@ -57,6 +62,13 @@ export function buildQrUrl(base: string, s: QrSettings): string {
   p.set('accent', s.accent);
   if (s.level && s.level !== 'M') p.set('level', s.level);
   if (s.showLogo && s.logo) p.set('logo', s.logo);
+  p.set('autoCollapse', s.autoCollapse ? '1' : '0');
+  if (s.autoCollapse) {
+    p.set('collapseAfter', String(s.collapseAfter));
+    p.set('autoExpand', s.autoExpand ? '1' : '0');
+    if (s.autoExpand) p.set('expandAfter', String(s.expandAfter));
+    p.set('hoverExpand', s.hoverExpand ? '1' : '0');
+  }
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   const q = p.toString();

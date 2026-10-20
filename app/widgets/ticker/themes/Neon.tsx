@@ -3,7 +3,7 @@ import { TickerTrack } from './TickerTrack';
 
 export const themeMeta = { value: 'neon', label: 'Neon - Glow Accent' } as const;
 
-export default function NeonTheme({ items, font, fontSize, accent, bg, textColor, separator, speed, direction, showBadge, badgeText }: TickerThemeProps) {
+export default function NeonTheme({ items, font, fontSize, accent, bg, textColor, separator, speed, repeatDelay, direction, showBadge, badgeText }: TickerThemeProps) {
   const barBg = bg === 'transparent' ? 'rgba(5,5,15,0.9)' : bg;
   const text = textColor || accent;
   return (
@@ -29,6 +29,7 @@ export default function NeonTheme({ items, font, fontSize, accent, bg, textColor
           items={items}
           separator={separator}
           speed={speed}
+          repeatDelay={repeatDelay}
           direction={direction}
           renderItem={(t) => <span className="font-black tracking-wide whitespace-nowrap">{t}</span>}
         />

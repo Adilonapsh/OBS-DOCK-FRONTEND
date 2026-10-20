@@ -8,7 +8,8 @@ export type TickerThemeProps = {
   bg: string;
   textColor?: string;
   separator: string;
-  speed: number; // detik per loop
+  speed: number; // detik sekali jalan
+  repeatDelay: number; // jeda sebelum mengulang dari kanan
   direction: 'left' | 'right';
   showBadge: boolean;
   badgeText: string;
