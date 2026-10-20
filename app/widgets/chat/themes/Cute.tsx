@@ -1,9 +1,11 @@
+import { useRef } from 'react';
 import type { ChatItem, ChatThemeProps } from './types';
 import { chatRoles, chatNameColor } from './roleUtils';
 import { platformLogo } from './platformLogo';
 import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
+import { useHorizontalShift } from './useHorizontalShift';
 import './Cute.css';
 
 function getBadges(c: ChatItem): { label: string }[] {
@@ -29,8 +31,10 @@ function isEmoteOnly(comment?: string) {
 export const themeMeta = { value: 'cute', label: 'Cute - Lavender Pastel' } as const;
 
 export default function CuteTheme({ chats, font, accent, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, cuteBubbleBg, cuteResubFrom, cuteResubTo, cuteBadgeBg, cuteBadgeText, cuteNameMod, cuteNameUser, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+  const horizontalRef = useRef<HTMLDivElement>(null);
+  useHorizontalShift(horizontalRef, !!horizontal);
   const hide = hideAnim || 'fadeOut';
-  const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.35s'; return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`; };
+  const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.35s'; const ease = horizontal && name.startsWith('slide') ? 'ease-in-out' : 'cubic-bezier(0.16,1,0.3,1)'; return `${name} ${d} ${ease} both`; };
   const defaultBubble = cuteBubbleBg || '#1e1d2b';
   const resubFrom = cuteResubFrom || '#c4a2f8';
   const resubTo = cuteResubTo || '#fca4d4';
@@ -48,8 +52,9 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
   if (horizontal) {
     return (
       <div
-        className="cute-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-end content-end p-1"
-        style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}
+        ref={horizontalRef}
+        className="cute-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end p-1"
+        style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', clipPath: 'inset(-120px -40px -120px 0)' }}
       >
         {chats.length === 0 ? null : chats.map((c, i) => {
           const badges = getBadges(c);
@@ -59,7 +64,7 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
             const before = c.comment.split(/resubscribed/i)[0]?.trim() || c.nickname;
             const resubText = c.comment.match(/resubscribed.*$/i)?.[0] || 'resubscribed';
             return (
-              <div key={c.id} className="px-3 py-2 flex items-center gap-2 shrink-0 max-w-[320px] rounded-[12px]" style={{ background: resubGrad, animation: getAnim(c.id) }}>
+              <div key={c.id} data-chat-id={c.id} className="px-3 py-2 flex items-center gap-2 shrink-0 max-w-[320px] rounded-[12px]" style={{ background: resubGrad, animation: getAnim(c.id) }}>
                 <span className="role-badge" style={{ background: badgeBg, color: '#a3b2f8' }}>RESUB</span>
                 <span className="font-extrabold text-[12px] text-white tracking-wide truncate">{before} {resubText}</span>
               </div>
@@ -68,7 +73,7 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
           return (
-            <div key={c.id} className="px-3 py-2 flex items-center gap-2 shrink-0 max-w-[300px] rounded-[12px]" style={{ background: bubble, animation: getAnim(c.id), opacity: bubbleOp, borderColor: hl(c.comment) ? accent : undefined, borderWidth: hl(c.comment) ? 1 : undefined, borderStyle: hl(c.comment) ? 'solid' : undefined, boxShadow: hl(c.comment) ? `0 0 0 1px ${accent}` : undefined }}>
+            <div key={c.id} data-chat-id={c.id} className="px-3 py-2 flex items-center gap-2 shrink-0 max-w-[300px] rounded-[12px]" style={{ background: bubble, animation: getAnim(c.id), opacity: bubbleOp, borderColor: hl(c.comment) ? accent : undefined, borderWidth: hl(c.comment) ? 1 : undefined, borderStyle: hl(c.comment) ? 'solid' : undefined, boxShadow: hl(c.comment) ? `0 0 0 1px ${accent}` : undefined }}>
               {showAvatar && <img src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=2e2c45&color=a8a3ce`} alt={c.nickname} className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/10" />}
               {showName && showBadges && badges.map((b) => (<span key={b.label} className="role-badge" style={{ background: badgeBg, color: badgeText }}>{b.label}</span>))}
               {showName && (

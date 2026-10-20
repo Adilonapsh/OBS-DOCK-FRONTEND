@@ -1,14 +1,18 @@
+import { useRef } from 'react';
 import type { ChatThemeProps } from './types';
 import { platformLogo } from './platformLogo';
 import { chatRoles, chatRoleLabel, chatRolePill, chatNameColor } from './roleUtils';
 import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
+import { useHorizontalShift } from './useHorizontalShift';
 import './Standard.css';
 
 export const themeMeta = { value: 'standard', label: 'Standard - Dark Glass' } as const;
 
 export default function StandardTheme({ chats, font, accent, bg, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+  const horizontalRef = useRef<HTMLDivElement>(null);
+  useHorizontalShift(horizontalRef, !!horizontal);
   const fallbackBg = bg === 'transparent' ? 'rgba(18,18,18,0.88)' : bg;
   const bgColor = useChatBubbles ? bubbleBg(bubbleColor, bubbleOpacity, fallbackBg) : fallbackBg;
   const bgOp = useChatBubbles ? 1 : bgOpacity / 100;
@@ -20,18 +24,20 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
     const name = isExiting ? hide : effectiveAnim;
     const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name);
     const d = isEleg ? '0.62s' : '0.45s';
-    return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`;
+    const ease = horizontal && name.startsWith('slide') ? 'ease-in-out' : 'cubic-bezier(0.16,1,0.3,1)';
+    return `${name} ${d} ${ease} both`;
   };
   const hl = (comment: string) => highlightMentions && isMentionMessage(comment);
   if (horizontal) {
     return (
-      <div className="chat-standard-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-end content-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+      <div ref={horizontalRef} className="chat-standard-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, clipPath: 'inset(-120px -40px -120px 0)' }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
           return (
           <div
             key={c.id}
+            data-chat-id={c.id}
             className="chat-bubble flex items-center gap-2 backdrop-blur-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-3 py-2 will-change-transform shrink-0 max-w-[360px]"
             style={{
               background: bgColor,

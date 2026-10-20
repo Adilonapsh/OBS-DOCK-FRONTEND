@@ -328,7 +328,10 @@ function PinnedInner() {
             </div>
             </SpinWrap>
           ) : theme === 'brutalist' ? (
-            <div className="w-[420px] max-w-[90vw] flex flex-row gap-4 items-start" style={{ fontFamily }}>
+            <div
+              className="w-[420px] max-w-[90vw] flex flex-row gap-4 items-start"
+              style={{ fontFamily, paddingBottom: (brutalistTail ? 32 : 0) + brutalistShadow + 2 }}
+            >
               {showAvatar && (
                 <div className="block shrink-0 mt-1.5 overflow-hidden" style={{ border: `4px solid ${brutalistBorderColor}`, backgroundColor: '#FFFFFF', boxShadow: `3px 3px 0px 0px ${brutalistBorderColor}`, width: 44, height: 44 }}>
                   <img src={pinned.profilePictureUrl} alt="" className="w-10 h-10 object-cover rotate-[-2deg] scale-110" onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(pinned.nickname)}&background=222&color=fff`; }} />

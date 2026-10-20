@@ -8,6 +8,7 @@ import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/u
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
+import { contrastText, isLightBg, readableOn, READABLE_SHADOW } from '../../_shared/utils/color';
 import {
   ClassicTheme,
   MatteTheme,
@@ -255,8 +256,12 @@ function QueueRotator({ queue, currentIndex, accent, showQueue, maxQueue, classN
         {thumb ? (
           <img src={thumb} alt="" className="w-8 h-[18px] rounded object-cover shrink-0" loading="lazy" />
         ) : null}
-        <span className="text-[12px] truncate flex-1 text-white font-black">{item.title}</span>
-        {item.requestedBy && <span className="text-white/35 text-[10px] truncate shrink-0 max-w-[100px]">{item.requestedBy}</span>}
+        <span className="text-[12px] truncate flex-1 text-white font-black" style={{ textShadow: READABLE_SHADOW }}>{item.title}</span>
+        {item.requestedBy && (
+          <span className="text-[10px] truncate shrink-0 max-w-[100px]" style={{ color: 'rgba(255,255,255,0.82)', textShadow: READABLE_SHADOW }}>
+            {item.requestedBy}
+          </span>
+        )}
       </div>
       </div>
     </div>
@@ -403,6 +408,7 @@ function MusicInner() {
   // Jarum piringan hitam (tema Vinyl Disc).
   const showTonearm = getBoolParam(params, 'showTonearm', true);
   const showTextRing = getBoolParam(params, 'showTextRing', true);
+  const vinylDiscOutline = getBoolParam(params, 'vinylDiscOutline', true);
   const vinylDiscSpin = Math.max(5, Math.min(120, getIntParam(params, 'vinylDiscSpin', 35)));
   // ?muted=1 → tab ini bisu permanen dan TIDAK pernah jadi reporter.
   // Pakai untuk preview browser agar tidak rebutan posisi dengan OBS.
@@ -947,12 +953,17 @@ function MusicInner() {
   const autoBg = palette.DarkMuted || palette.DarkVibrant || '#000000';
   const resolvedBg = useCustomColors ? color2 : autoColor ? autoBg : '#000000';
   const resolvedAccent = useCustomColors ? color1 : autoColor ? autoAccent : accent;
-  // Teks judul ikut aksen (Vibrant dipilih agar kontras di bg gelap maupun terang).
-  // Tema media-player yang teksnya inherit (standard/classic/mattedark/compact)
-  // ikut berwarna via textColor; tema ber-bg hardcoded (card/matte/vinyl/simple)
-  // tetap pakai warna bawaannya agar kontras aman.
+  // Teks judul ikut aksen hanya kalau kontrasnya cukup terhadap background.
+  // Kalau warna dari thumbnail terlalu gelap/terang, otomatis fallback ke
+  // putih/hitam supaya judul tetap kebaca di OBS.
   const accentText = useCustomColors ? color1 : autoColor ? (palette.Vibrant || autoAccent) : accent;
-  const resolvedText = useCustomColors ? color1 : colorText ? accentText : '#ffffff';
+  const resolvedText = useCustomColors
+    ? readableOn(resolvedBg, color1)
+    : colorText
+      ? readableOn(resolvedBg, accentText)
+      : contrastText(resolvedBg, '#ffffff', '#111111');
+  // Baris peminta/requester: jangan pakai putih transparan tipis lagi.
+  const requesterText = isLightBg(resolvedBg) ? 'rgba(17,17,17,0.82)' : 'rgba(255,255,255,0.86)';
   const primaryText = swapArtistTrack ? (shownSong?.requestedBy || '') : (shownSong?.title || '');
   const secondaryText = swapArtistTrack ? (shownSong?.title || '') : (shownSong?.requestedBy || '');
   const mediaProps = {
@@ -994,6 +1005,8 @@ function MusicInner() {
     obsMode,
     showTonearm,
     showTextRing,
+    vinylDiscOutline,
+    vinylDiscFollowThumbnail: autoColor && !useCustomColors,
     vinylDiscSpin,
   };
 
@@ -1183,12 +1196,12 @@ function MusicInner() {
                     <span style={{ background: resolvedAccent }} />
                   </span>
                 )}
-                <div className="font-black truncate leading-tight" style={{ fontSize, color: resolvedText }}>
+                <div className="font-black truncate leading-tight" style={{ fontSize, color: resolvedText, textShadow: READABLE_SHADOW }}>
                   {shownSong.title}
                 </div>
               </div>
               {shownSong.requestedBy && (
-                <div className="text-white/50 text-[11px] font-bold truncate mt-0.5">req. {shownSong.requestedBy}</div>
+                <div className="text-[11px] font-bold truncate mt-0.5" style={{ color: requesterText, textShadow: READABLE_SHADOW }}>req. {shownSong.requestedBy}</div>
               )}
               {showProgress && (
                 <div className="mt-1.5 h-[3px] rounded-full bg-white/15 overflow-hidden w-48 max-w-full">
@@ -1236,7 +1249,7 @@ function MusicInner() {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="font-black truncate leading-tight" style={{ fontSize, color: resolvedText }}>{shownSong.title}</div>
-                  <div className="text-white/50 text-[11px] font-bold truncate">
+                  <div className="text-[11px] font-bold truncate" style={{ color: requesterText }}>
                     {shownSong.requestedBy ? `req. ${shownSong.requestedBy}` : shownSong.kind === 'youtube' ? 'YouTube' : 'Audio'}
                     {duration > 0 ? ` • ${fmt(position)} / ${fmt(duration)}` : ''}
                   </div>

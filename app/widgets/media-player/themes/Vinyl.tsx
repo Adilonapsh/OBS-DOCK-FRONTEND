@@ -14,7 +14,7 @@ export default function VinylTheme(props: MediaThemeProps) {
       )}
       <div className={`flex-1 min-w-0 ${textAlignCls}`}>
         {showPrimary && <div className="font-black text-white truncate">{track || '-'}</div>}
-        {showSecondary && <div className="text-sm truncate opacity-80 text-white/70">{artist || '-'}</div>}
+        {showSecondary && <div className="text-sm truncate text-white/90 drop-shadow">{artist || '-'}</div>}
         {showProgressBar && timeline && <div className="mt-2 h-1 bg-white/20 rounded-full overflow-hidden"><div className="h-full" style={{ width: `${progressPercent}%`, background: accent }} /></div>}
       </div>
     </div>

@@ -1,31 +1,36 @@
+import { useRef } from 'react';
 import type { ChatThemeProps } from './types';
 import { chatRoles, chatRoleLabel, chatRolePill, chatNameColor } from './roleUtils';
 import { platformLogo } from './platformLogo';
 import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
+import { useHorizontalShift } from './useHorizontalShift';
 import './Boxed.css';
 
 export const themeMeta = { value: 'boxed', label: 'Boxed - Card dengan Header' } as const;
 
 export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+  const horizontalRef = useRef<HTMLDivElement>(null);
+  useHorizontalShift(horizontalRef, !!horizontal);
   const fallbackBg = bg === 'transparent' ? 'rgba(12,12,12,0.9)' : bg;
   const bgColor = useChatBubbles ? bubbleBg(bubbleColor, bubbleOpacity, fallbackBg) : fallbackBg;
   const bgOp = useChatBubbles ? 1 : bgOpacity / 100;
   const text = textColor || '#fff';
   const sub = textColor || 'rgba(255,255,255,0.85)';
   const hide = hideAnim || 'fadeOut';
-  const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.45s'; return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`; };
+  const getAnim = (id: string) => { const isExiting = exitingIds?.has(id); const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim); const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name); const d = isEleg ? '0.62s' : '0.45s'; const ease = horizontal && name.startsWith('slide') ? 'ease-in-out' : 'cubic-bezier(0.16,1,0.3,1)'; return `${name} ${d} ${ease} both`; };
   const hl = (comment: string) => highlightMentions && isMentionMessage(comment);
   if (horizontal) {
     return (
-      <div className="chat-boxed-theme w-full max-w-none flex flex-row flex-wrap gap-2 items-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+      <div ref={horizontalRef} className="chat-boxed-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, clipPath: 'inset(-120px -40px -120px 0)' }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
           return (
           <div
             key={c.id}
+            data-chat-id={c.id}
             className="boxed-row flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.06] border border-white/10 shrink-0 max-w-[340px]"
             style={{ animation: getAnim(c.id), background: bgColor, opacity: bgOp, borderColor: hl(c.comment) ? accent : undefined, boxShadow: hl(c.comment) ? `0 0 0 1px ${accent}` : undefined }}
           >

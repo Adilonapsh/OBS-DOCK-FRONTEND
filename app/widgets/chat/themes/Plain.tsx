@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { ChatThemeProps } from './types';
 import { platformLogo } from './platformLogo';
 import { bgBrightness } from './colorUtils';
@@ -5,10 +6,13 @@ import { chatRoles, chatRoleLabel, chatRoleColor, chatNameColor } from './roleUt
 import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
+import { useHorizontalShift } from './useHorizontalShift';
 
 export const themeMeta = { value: 'plain', label: 'Plain' } as const;
 
 export default function PlainTheme({ chats, font, accent, bg, maxMessages, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, fontSize, bgOpacity, textColor, exitingIds, horizontal, anim, horizontalAnim, hideAnim, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false, plainTextBorder = false, plainBorderColor = '#000000', plainBorderWidth = 1 }: ChatThemeProps & { plainTextBorder?: boolean; plainBorderColor?: string; plainBorderWidth?: number }) {
+  const horizontalRef = useRef<HTMLDivElement>(null);
+  useHorizontalShift(horizontalRef, !!horizontal);
   const visible = chats.slice(-maxMessages);
   const useBg = bg && bg !== 'transparent';
   // Logo asetnya hitam: background terang -> tampil apa adanya,
@@ -35,15 +39,17 @@ export default function PlainTheme({ chats, font, accent, bg, maxMessages, showA
     if (name === 'plainFadeIn') return `plainFadeIn 0.3s ease both`;
     const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name);
     const d = isEleg ? '0.62s' : '0.4s';
-    return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`;
+    const ease = horizontal && name.startsWith('slide') ? 'ease-in-out' : 'cubic-bezier(0.16,1,0.3,1)';
+    return `${name} ${d} ${ease} both`;
   };
   if (horizontal) {
     return (
       <>
         <style>{`@keyframes plainFadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
         <div
-          className="w-full max-w-none flex flex-row flex-wrap gap-x-3 gap-y-1 items-end"
-          style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}
+          ref={horizontalRef}
+          className="w-full max-w-none flex flex-row flex-nowrap gap-x-3 items-end justify-end"
+          style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', clipPath: 'inset(-120px -40px -120px 0)' }}
         >
           {visible.map((c) => {
             const isExiting = exitingIds?.has(c.id);
@@ -55,6 +61,7 @@ export default function PlainTheme({ chats, font, accent, bg, maxMessages, showA
             return (
               <div
                 key={c.id}
+                data-chat-id={c.id}
                 className="shrink-0 max-w-[320px] truncate"
                 style={{
                   background,

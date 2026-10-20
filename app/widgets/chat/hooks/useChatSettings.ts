@@ -5,7 +5,7 @@ import { createUseWidgetSettings } from '../../_shared/hooks/useWidgetSettings';
 
 const STORAGE_KEY = 'chat-settings';
 
-const FLOAT_KEYS = new Set(['lineSpacing', 'bubbleOpacity', 'charDurationS']);
+const FLOAT_KEYS = new Set(['lineSpacing', 'bubbleOpacity', 'charDurationS', 'plainBorderWidth', 'cleanBorderWidth']);
 
 // Alias nutty.gg -> key internal. Load URL nutty bisa ditempel langsung.
 function applyNuttyAliases(get: (k: string) => string | null, s: Record<string, unknown>): void {

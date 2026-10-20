@@ -1,9 +1,11 @@
+import { useRef } from 'react';
 import type { ChatThemeProps } from './types';
 import { chatRoles, chatRoleLabel, chatRolePill, chatNameColor } from './roleUtils';
 import { platformLogo } from './platformLogo';
 import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
+import { useHorizontalShift } from './useHorizontalShift';
 import './PerChar.css';
 
 export type PerCharThemeProps = ChatThemeProps & {
@@ -63,18 +65,21 @@ export default function PerCharTheme({
   imageEmbedPermissionLevel = '69420',
   showYouTubeLinkPreviews = false,
 }: PerCharThemeProps & { anim?: string; horizontalAnim?: string }) {
+  const horizontalRef = useRef<HTMLDivElement>(null);
+  useHorizontalShift(horizontalRef, !!horizontal);
   const hide = hideAnim || 'fadeOut';
   const getAnim = (id: string) => {
     const isExiting = exitingIds?.has(id);
     const name = isExiting ? hide : (horizontal ? (horizontalAnim || anim) : anim) || 'elegantIn';
     const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(name);
     const d = isEleg ? '0.62s' : '0.4s';
-    return `${name} ${d} cubic-bezier(0.16,1,0.3,1) both`;
+    const ease = horizontal && name.startsWith('slide') ? 'ease-in-out' : 'cubic-bezier(0.16,1,0.3,1)';
+    return `${name} ${d} ${ease} both`;
   };
   // horizontal & inline pakai bubble penuh yang sama - cuma arah alir beda
-  const flowCls = horizontal ? 'flex-row flex-wrap items-end' : 'flex-col';
+  const flowCls = horizontal ? 'flex-row flex-nowrap items-end justify-end' : 'flex-col';
   return (
-    <div className={`chat-perchar-theme w-full ${horizontal ? 'max-w-none' : 'max-w-[480px]'} flex ${flowCls}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+    <div ref={horizontalRef} className={`chat-perchar-theme w-full ${horizontal ? 'max-w-none' : 'max-w-[480px]'} flex ${flowCls}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, ...(horizontal ? { clipPath: 'inset(-120px -40px -120px 0)' } : null) }}>
       {chats.length === 0 ? null : chats.map((c, i) => {
         const color = platformColor(c.platform, accent);
         const isExiting = exitingIds?.has(c.id);
@@ -85,7 +90,7 @@ export default function PerCharTheme({
         const bubbleBackground = useChatBubbles ? bubbleBg(bubbleColor, bubbleOpacity, gradient) : gradient;
         const showMeta = showName || (showTimestamp && !!c.timestamp);
           return (
-            <div key={c.id} className="pc-row" style={{ animation: getAnim(c.id) }}>
+            <div key={c.id} data-chat-id={c.id} className={`pc-row ${horizontal ? 'shrink-0' : ''}`} style={{ animation: getAnim(c.id) }}>
             {showMeta ? (
               <div className="pc-meta">
                 {showName && showPlatform && (

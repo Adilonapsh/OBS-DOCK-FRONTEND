@@ -68,6 +68,9 @@ export type ChatThemeProps = {
   plainTextBorder?: boolean;
   plainBorderColor?: string;
   plainBorderWidth?: number;
+  cleanTextBorder?: boolean;
+  cleanBorderColor?: string;
+  cleanBorderWidth?: number;
   brutalistBg?: string;
   brutalistTextColor?: string;
   brutalistBadgeBg?: string;

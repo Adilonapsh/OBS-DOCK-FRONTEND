@@ -99,7 +99,7 @@ export default function BrutalistTheme(props: MediaThemeProps) {
             </div>
           )}
           {showSecondary && (
-            <div className="text-[12px] font-bold truncate text-black/70 flex items-center gap-1.5">
+            <div className="text-[12px] font-bold truncate text-black/85 flex items-center gap-1.5">
               <span className="w-3 h-[3px] bg-black shrink-0" style={{ background: safeAccent }} />
               {artist || '-'}
             </div>

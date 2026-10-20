@@ -64,7 +64,6 @@ export function ChatSettingsForm({
             <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
               <span className="text-[11px] font-bold text-white flex items-center gap-2">
                 Aktifkan Border Teks
-                <span className="text-[9px] font-normal text-gray-400 block sm:inline ml-1">Kontras untuk OBS</span>
               </span>
               <input
                 type="checkbox"
@@ -107,6 +106,62 @@ export function ChatSettingsForm({
                   </label>
                 </div>
                 <p className="text-[10px] text-gray-500">Border pakai <code className="bg-white/10 px-1 rounded text-white">WebkitTextStroke</code> + shadow, biar teks plain tetap kebaca di video terang/gelap tanpa bubble.</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Clean Text Outline */}
+      {state.theme === 'clean' && (
+        <div className="space-y-3">
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-white" /> Outline Teks - Clean</h2>
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+            <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+              <span className="text-[11px] font-bold text-white flex items-center gap-2">
+                Aktifkan Outline
+              </span>
+              <input
+                type="checkbox"
+                checked={!!(state as unknown as { cleanTextBorder?: boolean }).cleanTextBorder}
+                onChange={(e) => update('cleanTextBorder' as unknown as keyof ChatSettings, e.target.checked)}
+                className="w-4 h-4 accent-white shrink-0"
+              />
+            </label>
+            {(state as unknown as { cleanTextBorder?: boolean }).cleanTextBorder && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="text-[11px] font-bold text-gray-300">Warna Outline</span>
+                    <span className="mt-1 flex gap-2">
+                      <input
+                        type="color"
+                        value={(state as unknown as { cleanBorderColor?: string }).cleanBorderColor || '#000000'}
+                        onChange={(e) => update('cleanBorderColor' as unknown as keyof ChatSettings, e.target.value)}
+                        className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={(state as unknown as { cleanBorderColor?: string }).cleanBorderColor || '#000000'}
+                        onChange={(e) => update('cleanBorderColor' as unknown as keyof ChatSettings, e.target.value)}
+                        className="flex-1 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono"
+                      />
+                    </span>
+                  </label>
+                  <label className="block">
+                    <span className="text-[11px] font-bold text-gray-300">Ketebalan Stroke - {(state as unknown as { cleanBorderWidth?: number }).cleanBorderWidth ?? 1.5}px</span>
+                    <input
+                      type="range"
+                      min={0.5}
+                      max={4}
+                      step={0.5}
+                      value={(state as unknown as { cleanBorderWidth?: number }).cleanBorderWidth ?? 1.5}
+                      onChange={(e) => update('cleanBorderWidth' as unknown as keyof ChatSettings, parseFloat(e.target.value))}
+                      className="mt-1 w-full accent-white cursor-pointer"
+                    />
+                  </label>
+                </div>
+                <p className="text-[10px] text-gray-500">Outline dipasang di nama dan isi pesan. Pakai <code className="bg-white/10 px-1 rounded text-white">WebkitTextStroke</code> supaya tepi teks tetap tajam di atas video terang/gelap.</p>
               </>
             )}
           </div>
@@ -179,7 +234,7 @@ export function ChatSettingsForm({
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Badge Role <span className="text-[9px] font-normal text-gray-400 block">Mod / Sub / VIP / Member (Twitch & YouTube)</span></span><input type="checkbox" checked={state.showBadges} onChange={(e) => update('showBadges', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Emote BetterTTV <span className="text-[9px] font-normal text-gray-400 block">Global BTTV + emote channel dari Streamer.bot</span></span><input type="checkbox" checked={state.bttv} onChange={(e) => update('bttv', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Inline chat <span className="text-[9px] font-normal text-gray-400 block">nickname: pesan sebaris</span></span><input type="checkbox" checked={state.inline} onChange={(e) => update('inline', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
-          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer bg-cyan-500/5"><span className="text-[11px] font-bold text-white">Horizontal layout <span className="text-[9px] font-normal text-gray-400 block">Pills sebaris (inline) untuk bottom bar - set Posisi ke Bottom</span></span><input type="checkbox" checked={state.horizontal} onChange={(e) => update('horizontal', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
+          <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer bg-cyan-500/5"><span className="text-[11px] font-bold text-white">Horizontal layout <span className="text-[9px] font-normal text-gray-400 block">1 baris untuk bottom bar - pesan lama geser halus ke kiri. Set Posisi ke Bottom</span></span><input type="checkbox" checked={state.horizontal} onChange={(e) => update('horizontal', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           {state.horizontal && (
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi Horizontal</span><select value={state.horizontalAnim} onChange={(e) => update('horizontalAnim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{CHAT_HORIZONTAL_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a.label}</option>)}</select></label>
           )}

@@ -87,6 +87,9 @@ export function ChatPreview({ state }: { state: ChatSettings }) {
     highlightMentions: state.highlightMentions,
     imageEmbedPermissionLevel: state.imageEmbedPermissionLevel,
     showYouTubeLinkPreviews: state.showYouTubeLinkPreviews,
+    cleanTextBorder: state.cleanTextBorder,
+    cleanBorderColor: state.cleanBorderColor,
+    cleanBorderWidth: state.cleanBorderWidth,
   } as const;
 
   // auto-register: theme baru di themes/*.tsx langsung kepakai di preview

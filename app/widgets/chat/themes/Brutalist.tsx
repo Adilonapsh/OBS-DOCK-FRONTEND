@@ -1,9 +1,11 @@
+import { useRef } from 'react';
 import type { ChatThemeProps } from './types';
 import { platformLogo } from './platformLogo';
 import { chatRoles, chatRoleLabel, chatRoleColor, chatNameColor } from './roleUtils';
 import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
+import { useHorizontalShift } from './useHorizontalShift';
 import './Brutalist.css';
 
 export const themeMeta = { value: 'brutalist', label: 'Brutalist' } as const;
@@ -59,6 +61,8 @@ export default function BrutalistTheme({
   brutalistItalic?: boolean;
   brutalistUppercase?: boolean;
 }) {
+  const horizontalRef = useRef<HTMLDivElement>(null);
+  useHorizontalShift(horizontalRef, !!horizontal);
   const visible = chats.slice(-maxMessages);
   // Brutalist defaults matching HTML's default preset (Classic White) - prioritize brutalist* props
   const bubbleBg = brutalistBg || (bg && bg !== 'transparent' ? bg : '#FFFFFF');
@@ -83,7 +87,8 @@ export default function BrutalistTheme({
     if (raw === 'brutalistIn' || raw === 'brutalistOut') return `${raw} 0.4s cubic-bezier(0.16,1,0.3,1) both`;
     const isEleg = ['elegantIn','softPopIn','blurIn','luxeIn','elegantOut','softPopOut','blurOut','luxeOut'].includes(raw);
     const d = isEleg ? '0.62s' : '0.4s';
-    return `${raw} ${d} cubic-bezier(0.16,1,0.3,1) both`;
+    const ease = horizontal && raw.startsWith('slide') ? 'ease-in-out' : 'cubic-bezier(0.16,1,0.3,1)';
+    return `${raw} ${d} ${ease} both`;
   };
 
   // Reuse plain text border logic not needed - brutalist already has hard border + shadow
@@ -92,8 +97,9 @@ export default function BrutalistTheme({
     return (
       <>
         <div
-          className="w-full max-w-none flex flex-row flex-wrap gap-4 items-end"
-          style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}
+          ref={horizontalRef}
+          className="w-full max-w-none flex flex-row flex-nowrap gap-4 items-end justify-end"
+          style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2, paddingRight: shadowOffset + 4, clipPath: 'inset(-120px -40px -120px 0)' }}
         >
           {visible.map((c) => {
             const isExiting = exitingIds?.has(c.id);
@@ -102,6 +108,7 @@ export default function BrutalistTheme({
             return (
               <div
                 key={c.id}
+                data-chat-id={c.id}
                 className="brutalist-item shrink-0 max-w-[360px]"
                 style={{
                   opacity: isExiting ? 0 : 1,
@@ -190,7 +197,7 @@ export default function BrutalistTheme({
     <>
       <div
         className="w-full max-w-[420px] flex flex-col gap-6"
-        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}
+        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2 }}
       >
         {visible.map((c, i) => {
           const isExiting = exitingIds?.has(c.id);

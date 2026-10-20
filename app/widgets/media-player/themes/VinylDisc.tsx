@@ -15,14 +15,18 @@ function hexToRgb(hex: string): [number, number, number] {
 // melingkar (judul • artis) putar kiri, cover art putar kanan, tonearm opsional.
 // Warna ring diambil dari palette vibrant (ala extractAlbumColor referensi,
 // tanpa masalah CORS canvas). Shared: dipakai media-player & music request.
-export default function VinylDiscTheme(props: MediaThemeProps & { showTonearm?: boolean; showTextRing?: boolean; vinylDiscSpin?: number }) {
-  const { track, artist, art, palette, playbackStatus, isPausedOverlay, showAlbumArt, showTonearm = true, showTextRing = true, vinylDiscSpin = 35 } = props;
+export default function VinylDiscTheme(props: MediaThemeProps & { showTonearm?: boolean; showTextRing?: boolean; vinylDiscOutline?: boolean; vinylDiscFollowThumbnail?: boolean; vinylDiscSpin?: number }) {
+  const { track, artist, art, palette, accent, playbackStatus, isPausedOverlay, showAlbumArt, showTonearm = true, showTextRing = true, vinylDiscOutline = true, vinylDiscFollowThumbnail = true, vinylDiscSpin = 35 } = props;
   const isPlaying = playbackStatus === 4 && !isPausedOverlay;
   const [artOk, setArtOk] = useState(true);
   useEffect(() => { setArtOk(true); }, [art]);
 
-  const [vr, vg, vb] = hexToRgb(palette?.Vibrant || '#ff758c');
-  const ringBg = `rgba(${vr},${vg},${vb},0.45)`;
+  // Warna ring: saat "warna sesuai thumbnail" aktif, pakai Vibrant dari cover.
+  // Kalau user memakai warna custom / auto color mati, pakai accent dari setting.
+  const vibrant = palette?.Vibrant || palette?.LightVibrant;
+  const ringAccent = (vinylDiscFollowThumbnail ? vibrant : undefined) || accent || vibrant || '#ff758c';
+  const [vr, vg, vb] = hexToRgb(ringAccent);
+  const ringBg = `rgba(${vr},${vg},${vb},0.55)`;
   const playState = isPlaying ? 'running' : 'paused';
   const spin = Math.max(5, Math.min(120, vinylDiscSpin || 35));
   const ringText = `${track || '-'} • ${artist || '-'} • `.repeat(3);
@@ -71,6 +75,21 @@ export default function VinylDiscTheme(props: MediaThemeProps & { showTonearm?: 
               }}
             />
           )}
+          {/* Tint vibrant dari thumbnail di atas blur cover, supaya warna ring
+              benar-benar mengikuti cover (bukan cuma putih/abu). */}
+          {art && artOk && (
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: ringAccent,
+                mixBlendMode: 'color',
+                opacity: 0.55,
+                pointerEvents: 'none',
+              }}
+            />
+          )}
         </div>
         {/* Teks melingkar putar kiri + fade mask */}
         {showTextRing && (
@@ -92,7 +111,15 @@ export default function VinylDiscTheme(props: MediaThemeProps & { showTonearm?: 
                 </mask>
               </defs>
               <g mask="url(#vinyldisc-fademask)">
-                <text style={{ fontSize: 14.5, fill: 'white', fontWeight: 900, letterSpacing: 4.5, textTransform: 'uppercase' }}>
+                <text
+                  {...(vinylDiscOutline ? {
+                    stroke: 'rgba(0,0,0,0.65)',
+                    strokeWidth: 3,
+                    strokeLinejoin: 'round' as const,
+                    paintOrder: 'stroke',
+                  } : {})}
+                  style={{ fontSize: 14.5, fill: 'white', fontWeight: 900, letterSpacing: 4.5, textTransform: 'uppercase' }}
+                >
                   <textPath href="#vinyldisc-circle" startOffset="0%">{ringText}</textPath>
                 </text>
               </g>

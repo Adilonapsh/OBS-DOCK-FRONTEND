@@ -12,13 +12,13 @@ export default function MatteTheme(props: MediaThemeProps) {
       )}
       <div className={`flex-1 min-w-0 flex flex-col justify-center ${textAlignCls}`}>
         {showPrimary && <div className="font-black leading-tight truncate text-zinc-900">{track || '-'}</div>}
-        {showSecondary && <div className="text-sm opacity-60 truncate text-zinc-700">{artist || '-'}</div>}
+        {showSecondary && <div className="text-sm truncate text-zinc-600">{artist || '-'}</div>}
         {showProgressBar && timeline && (
           <div className="mt-2">
             <div className="h-1.5 bg-zinc-200 rounded-full overflow-hidden">
               <div className="h-full" style={{ width: `${progressPercent}%`, background: accent }} />
             </div>
-            <div className="flex justify-between text-[10px] font-mono opacity-60 mt-1">
+            <div className="flex justify-between text-[10px] font-mono text-zinc-500 mt-1">
               <span>{msToTime(currentPos)}</span>
               <span>{msToTime(timeline.EndTime)}</span>
             </div>

@@ -14,13 +14,13 @@ export default function MatteDarkTheme(props: MediaThemeProps) {
       )}
       <div className={`flex-1 min-w-0 flex flex-col justify-center ${textAlignCls}`}>
         {showPrimary && <div className="font-black leading-tight truncate">{track || '-'}</div>}
-        {showSecondary && <div className="text-sm opacity-60 truncate">{artist || '-'}</div>}
+        {showSecondary && <div className="text-sm opacity-80 truncate">{artist || '-'}</div>}
         {showProgressBar && timeline && (
           <div className="mt-2">
             <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full" style={{ width: `${progressPercent}%`, background: accent }} />
             </div>
-            <div className="flex justify-between text-[10px] font-mono opacity-60 mt-1">
+            <div className="flex justify-between text-[10px] font-mono opacity-80 mt-1">
               <span>{msToTime(currentPos)}</span>
               <span>{msToTime(timeline.EndTime)}</span>
             </div>

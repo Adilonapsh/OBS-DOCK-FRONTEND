@@ -1,6 +1,7 @@
 import type { MediaThemeProps } from './types';
 import './LargeAlbumArt.css';
 import { Pause, Play } from 'lucide-react';
+import { readableOn } from '../../_shared/utils/color';
 
 export default function LargeAlbumArtTheme(props: MediaThemeProps) {
     const {
@@ -27,6 +28,10 @@ export default function LargeAlbumArtTheme(props: MediaThemeProps) {
     const themeBgColor = bgColor || palette?.DarkMuted || '#21202b';
     const themeTextColor = textColor || '#ffffff';
     const accentColor = accent || palette?.Vibrant || '#e05561';
+    // Accent dari cover bisa nyaris sama dengan background. Pakai accent hanya
+    // kalau lolos rasio kontras, kalau tidak fallback ke textColor tema.
+    const titleColor = readableOn(themeBgColor, accentColor, 4.5, themeTextColor, '#14141c');
+    const secondaryColor = readableOn(themeBgColor, accentColor, 4.5, themeTextColor, '#14141c');
 
     const currentFormatted = timeline && msToTime ? msToTime(timeline.Position) : '0:00';
     const durationFormatted = timeline && msToTime ? msToTime(timeline.EndTime) : '0:00';
@@ -84,7 +89,7 @@ export default function LargeAlbumArtTheme(props: MediaThemeProps) {
                     {showPrimary && (
                         <h3
                             className="font-bold text-lg leading-snug tracking-wide truncate max-w-full"
-                            style={{ color: accentColor }}
+                            style={{ color: titleColor }}
                         >
                             {track || 'Unknown Track'}
                         </h3>
@@ -92,7 +97,7 @@ export default function LargeAlbumArtTheme(props: MediaThemeProps) {
                     {showSecondary && (
                         <p
                             className="text-xs font-medium truncate max-w-full mt-1"
-                            style={{ color: `${accentColor}ff` }}
+                            style={{ color: secondaryColor }}
                         >
                             {artist || 'Unknown Artist'}
                         </p>
@@ -101,7 +106,7 @@ export default function LargeAlbumArtTheme(props: MediaThemeProps) {
 
                 {showProgressBar && (
                     <div className="w-full flex items-center gap-3 text-[0.65rem] font-semibold tracking-wider px-4">
-                        <span className="shrink-0 transition-colors" style={{ color: accentColor }}>
+                        <span className="shrink-0 transition-colors" style={{ color: secondaryColor }}>
                             {currentFormatted}
                         </span>
 
@@ -114,7 +119,7 @@ export default function LargeAlbumArtTheme(props: MediaThemeProps) {
                                 }}
                             />
                         </div>
-                        <span className="shrink-0 transition-colors" style={{ color: accentColor }}>
+                        <span className="shrink-0 transition-colors" style={{ color: secondaryColor }}>
                             {durationFormatted}
                         </span>
                     </div>

@@ -10,6 +10,7 @@ type Props = {
 export function VinylDiscSettingsSection({ state, update }: Props) {
   const showTonearm = (state.showTonearm as boolean) !== false;
   const showTextRing = (state.showTextRing as boolean) !== false;
+  const outline = (state.vinylDiscOutline as boolean) !== false;
   const spin = (state.vinylDiscSpin as number) ?? 35;
 
   return (
@@ -24,6 +25,10 @@ export function VinylDiscSettingsSection({ state, update }: Props) {
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
             <span className="text-[11px] font-bold text-white">Text Ring <span className="text-[9px] font-normal text-gray-400 block">Teks melingkar</span></span>
             <input type="checkbox" checked={showTextRing} onChange={(e) => update('showTextRing', e.target.checked)} className="w-4 h-4 accent-white shrink-0" />
+          </label>
+          <label className="col-span-2 flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+            <span className="text-[11px] font-bold text-white">Outline Teks <span className="text-[9px] font-normal text-gray-400 block">Garis tepi pada teks melingkar</span></span>
+            <input type="checkbox" checked={outline} onChange={(e) => update('vinylDiscOutline', e.target.checked)} className="w-4 h-4 accent-white shrink-0" />
           </label>
         </div>
         <label className="block">

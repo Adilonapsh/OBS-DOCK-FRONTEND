@@ -72,6 +72,7 @@ export const MUSIC_DEFAULTS = {
   showTonearm: true as boolean,
   // Teks melingkar + kecepatan putaran (tema Vinyl Disc).
   showTextRing: true as boolean,
+  vinylDiscOutline: true as boolean,
   vinylDiscSpin: 35 as number,
 } as const;
 
@@ -109,6 +110,7 @@ export function buildMusicUrl(base: string, s: MusicSettings): string {
   p.set('fadeOutMs', String((s as unknown as { fadeOutMs?: number }).fadeOutMs ?? 800));
   p.set('showTonearm', (s as unknown as { showTonearm?: boolean }).showTonearm === false ? '0' : '1');
   p.set('showTextRing', (s as unknown as { showTextRing?: boolean }).showTextRing === false ? '0' : '1');
+  p.set('vinylDiscOutline', (s as unknown as { vinylDiscOutline?: boolean }).vinylDiscOutline === false ? '0' : '1');
   p.set('vinylDiscSpin', String((s as unknown as { vinylDiscSpin?: number }).vinylDiscSpin ?? 35));
   const q = p.toString();
   return q ? `${base}?${q}` : base;

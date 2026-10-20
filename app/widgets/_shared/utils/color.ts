@@ -53,6 +53,34 @@ export function contrastText(bgHex: string | undefined, light = '#ffffff', dark 
   return isLightBg(bgHex) ? dark : light;
 }
 
+// Rasio kontras WCAG antara warna teks & background (1–21).
+// 4.5 = batas minimum teks normal, 3 = teks besar / elemen non-teks.
+export function contrastRatio(fg: string | undefined, bg: string | undefined): number {
+  const a = luminance(fg);
+  const b = luminance(bg);
+  if (a === null || b === null) return 0;
+  const hi = Math.max(a, b);
+  const lo = Math.min(a, b);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Pakai `preferred` kalau kontrasnya cukup; kalau tidak, jatuh ke putih/hitam
+// yang paling terbaca di atas background. Dipakai judul/artis/requester supaya
+// teks tetap kebaca walau warna aksen dari thumbnail gelap/terang.
+export function readableOn(
+  bgHex: string | undefined,
+  preferred: string | undefined,
+  minRatio = 4.5,
+  light = '#ffffff',
+  dark = '#14141c',
+): string {
+  if (bgHex && bgHex !== 'transparent') {
+    if (preferred && contrastRatio(preferred, bgHex) >= minRatio) return preferred;
+    return contrastText(bgHex, light, dark);
+  }
+  return preferred || light;
+}
+
 // Teks otomatis anti low-contrast: kalau user masih pakai warna default
 // (putih) tapi background-nya terang (aksen kuning/cyan, pill putih, ...),
 // paksa ke warna yang terbaca. Warna custom user selalu dihormati.

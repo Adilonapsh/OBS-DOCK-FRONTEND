@@ -16,13 +16,13 @@ export default function StandardTheme(props: MediaThemeProps) {
       )}
       <div id="song-info-container" className={`flex-1 min-w-0 flex flex-col justify-center ${textAlignCls}`}>
         {showPrimary && <div id="track-label" className="font-black leading-tight truncate">{track || '-'}</div>}
-        {showSecondary && <div id="artist-label" className="text-sm opacity-70 truncate">{artist || '-'}</div>}
+        {showSecondary && <div id="artist-label" className="text-sm opacity-90 truncate">{artist || '-'}</div>}
         {showProgressBar && timeline && (
           <div id="progress-container" className="mt-2">
             <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
               <div id="progress-bar-fill" className="h-full transition-all duration-200" style={{ width: `${progressPercent}%`, background: accent }} />
             </div>
-            <div className="flex justify-between text-[10px] font-mono opacity-60 mt-1">
+            <div className="flex justify-between text-[10px] font-mono opacity-80 mt-1">
               <span id="current-time">{msToTime(currentPos)}</span>
               <span id="duration">{msToTime(timeline.EndTime)}</span>
             </div>

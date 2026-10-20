@@ -15,13 +15,13 @@ export default function ClassicTheme(props: MediaThemeProps) {
       )}
       <div className={`flex-1 min-w-0 flex flex-col justify-center ${textAlignCls}`}>
         {showPrimary && <div className="font-black leading-tight truncate drop-shadow">{track || '-'}</div>}
-        {showSecondary && <div className="text-sm opacity-80 truncate">{artist || '-'}</div>}
+        {showSecondary && <div className="text-sm opacity-90 truncate drop-shadow">{artist || '-'}</div>}
         {showProgressBar && timeline && (
           <div className="mt-2">
             <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full" style={{ width: `${progressPercent}%`, background: accent }} />
             </div>
-            <div className="flex justify-between text-[10px] font-mono opacity-70 mt-1">
+            <div className="flex justify-between text-[10px] font-mono opacity-80 mt-1">
               <span>{msToTime(currentPos)}</span>
               <span>{msToTime(timeline.EndTime)}</span>
             </div>

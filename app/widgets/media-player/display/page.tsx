@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import { getStringParam } from '../../_shared/utils/url';
+import { contrastText, readableOn } from '../../_shared/utils/color';
 import StandardTheme from '../themes/Standard';
 import MatteTheme from '../themes/Matte';
 import MatteDarkTheme from '../themes/MatteDark';
@@ -119,6 +120,7 @@ function MediaPlayerInner() {
   const showSecondary = getBoolParam(params, 'showSecondary', true);
   const showTonearm = getBoolParam(params, 'showTonearm', true);
   const showTextRing = getBoolParam(params, 'showTextRing', true);
+  const vinylDiscOutline = getBoolParam(params, 'vinylDiscOutline', true);
   const vinylDiscSpin = Math.max(5, Math.min(120, getIntParam(params, 'vinylDiscSpin', 35)));
   const displayDuration = getIntParam(params, 'displayDuration', 5);
   const showAnimation = params.get('showAnimation') || 'slide-in-from-bottom';
@@ -292,7 +294,11 @@ function MediaPlayerInner() {
 
   const bgColor = useCustomColors ? color2 : palette.DarkMuted;
   const accent = useCustomColors ? color1 : palette.LightVibrant;
-  const textColor = useCustomColors ? color1 : '#ffffff';
+  // Jangan biarkan judul/artis tenggelam di background: warna custom tetap
+  // dipakai kalau kontrasnya cukup, kalau tidak fallback ke putih/hitam.
+  const textColor = useCustomColors
+    ? readableOn(bgColor, color1, 4.5, '#ffffff', '#14141c')
+    : contrastText(bgColor, '#ffffff', '#14141c');
 
   if (error && !obsMode) {
     // show error splash in non-obs mode for debugging
@@ -365,7 +371,7 @@ function MediaPlayerInner() {
               const themeProps = {
                 track: primaryText, artist: secondaryText, art, bgArt, palette, accent, bgColor, textColor,
                 progressPercent, currentPos, timeline, showAlbumArt, showProgressBar, showPrimary, showSecondary,
-                isPausedOverlay, playbackStatus, textAlignCls, msToTime, error, smtcBridgeAddress, smtcBridgePort, obsMode, showTonearm, showTextRing, vinylDiscSpin,
+                isPausedOverlay, playbackStatus, textAlignCls, msToTime, error, smtcBridgeAddress, smtcBridgePort, obsMode, showTonearm, showTextRing, vinylDiscOutline, vinylDiscFollowThumbnail: !useCustomColors, vinylDiscSpin,
               };
               switch (theme) {
                 case 'matte': return <MatteTheme {...themeProps} />;

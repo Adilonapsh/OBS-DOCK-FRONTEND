@@ -70,7 +70,7 @@
 - `FR-2.1` `tiktok-chat` payload: `{ uniqueId, nickname, comment, profilePictureUrl, platform, timestamp, fromStreamerBot? }` `server.ts:133`.
 - `FR-2.2` `display/page.tsx` join `privateKey||global` + slice `maxMessages` + optional `hideAfter` timeout.
 - `FR-2.3` Tema `chat`: `standard|bubble|clean|boxed|cute` `app/widgets/chat/config.ts:4`, masing-masing ada `themes/[Name].tsx/.css`.
-- `FR-2.4` Mode: `horizontal` (row flex-wrap) + `inline` (nickname: pesan sebaris) terpisah `FR-2.4`.
+- `FR-2.4` Mode: `horizontal` (row nowrap 1 baris, pesan baru mendorong pesan lama ke kiri dengan transisi ease-in-out) + `inline` (nickname: pesan sebaris) terpisah `FR-2.4`.
 - `FR-2.5` Animasi: `elegant/softPop/blur/luxe/slideUp/slideLeft/slideRight/pop/fade/flip` → map ke `elegantIn/...` `ANIM_MAP` `app/widgets/_shared/constants/animations.ts`, dur `0.62s` untuk elegant, `0.45s` lainnya.
 - `FR-2.6` Cute tidak pakai `bg` container (transparent), 7 warna kustom `cuteBubbleBg/cuteResubFrom→To/cuteBadgeBg/Text/cuteNameMod/User` `Cute.tsx:33`.
 - `FR-2.7` Font `loadGoogleFont(font, weights, dataAttr)` `app/widgets/_shared/utils/font.ts`.

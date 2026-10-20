@@ -55,6 +55,7 @@ function buildUrl(base: string, state: any): string {
   p.set('showSecondary', String(state.showSecondary));
   p.set('showTonearm', String(state.showTonearm !== false));
   p.set('showTextRing', String(state.showTextRing !== false));
+  p.set('vinylDiscOutline', String(state.vinylDiscOutline !== false));
   p.set('vinylDiscSpin', String(state.vinylDiscSpin ?? 35));
   p.set('showAnimation', state.showAnimation);
   p.set('hideAnimation', state.hideAnimation);
@@ -87,6 +88,7 @@ const defaults = {
   showSecondary: true,
   showTonearm: true,
   showTextRing: true,
+  vinylDiscOutline: true,
   vinylDiscSpin: 35,
   showAnimation: 'slide-in-from-bottom',
   hideAnimation: 'slide-out-bottom',

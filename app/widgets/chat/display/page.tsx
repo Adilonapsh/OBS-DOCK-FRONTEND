@@ -97,6 +97,9 @@ function ChatInner() {
   const plainTextBorder = getBoolParam(params, 'plainTextBorder', false);
   const plainBorderColor = getStringParam(params, 'plainBorderColor', '#000000');
   const plainBorderWidth = Math.max(0, Math.min(3, getFloatParam(params, 'plainBorderWidth', 1)));
+  const cleanTextBorder = getBoolParam(params, 'cleanTextBorder', false);
+  const cleanBorderColor = getStringParam(params, 'cleanBorderColor', '#000000');
+  const cleanBorderWidth = Math.max(0, Math.min(4, getFloatParam(params, 'cleanBorderWidth', 1.5)));
   const brutalistBg = getStringParam(params, 'brutalistBg', '#FFFFFF');
   const brutalistTextColor = getStringParam(params, 'brutalistTextColor', '#000000');
   const brutalistBadgeBg = getStringParam(params, 'brutalistBadgeBg', '#FFFFFF');
@@ -279,6 +282,9 @@ function ChatInner() {
     plainTextBorder,
     plainBorderColor,
     plainBorderWidth,
+    cleanTextBorder,
+    cleanBorderColor,
+    cleanBorderWidth,
     brutalistBg,
     brutalistTextColor,
     brutalistBadgeBg,

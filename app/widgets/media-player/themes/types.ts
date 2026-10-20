@@ -34,5 +34,7 @@ export type MediaThemeProps = {
   obsMode: boolean;
   showTonearm?: boolean;
   showTextRing?: boolean;
+  vinylDiscOutline?: boolean;
+  vinylDiscFollowThumbnail?: boolean;
   vinylDiscSpin?: number;
 };

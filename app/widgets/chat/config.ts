@@ -99,6 +99,10 @@ export const CHAT_DEFAULTS = {
   plainTextBorder: false as boolean,
   plainBorderColor: '#000000' as string,
   plainBorderWidth: 1 as number,
+  // ---- Clean theme text outline ----
+  cleanTextBorder: false as boolean,
+  cleanBorderColor: '#000000' as string,
+  cleanBorderWidth: 1.5 as number,
   // ---- Brutalist theme (Neo-Brutalist Studio) ----
   brutalistBg: '#FFFFFF' as string,
   brutalistTextColor: '#000000' as string,
@@ -216,6 +220,11 @@ export function buildChatUrl(base: string, s: ChatSettings): string {
   if ((s as unknown as { plainTextBorder?: boolean }).plainTextBorder) {
     p.set('plainBorderColor', (s as unknown as { plainBorderColor?: string }).plainBorderColor || '#000000');
     p.set('plainBorderWidth', String((s as unknown as { plainBorderWidth?: number }).plainBorderWidth ?? 1));
+  }
+  p.set('cleanTextBorder', (s as unknown as { cleanTextBorder?: boolean }).cleanTextBorder ? '1' : '0');
+  if ((s as unknown as { cleanTextBorder?: boolean }).cleanTextBorder) {
+    p.set('cleanBorderColor', (s as unknown as { cleanBorderColor?: string }).cleanBorderColor || '#000000');
+    p.set('cleanBorderWidth', String((s as unknown as { cleanBorderWidth?: number }).cleanBorderWidth ?? 1.5));
   }
   // Brutalist
   p.set('brutalistBg', (s as unknown as { brutalistBg?: string }).brutalistBg || '#FFFFFF');
