@@ -72,7 +72,18 @@ export const GAME_TOPICS: GameTopic[] = [
   { id: 'SEJARAH', icon: '🏛', color: '#ca8a04', label: 'Sejarah', sub: 'Pilihan Ganda', mode: 'multiplechoice' },
   { id: 'DUNIA', icon: '🌍', color: '#15803d', label: 'Dunia', sub: 'Pilihan Ganda', mode: 'multiplechoice' },
   { id: 'MITOS', icon: '❓', color: '#1e40af', label: 'Benar / Mitos', sub: 'Fakta / Mitos', mode: 'truefalse' },
+  { id: 'SAINS', icon: '⚛', color: '#0891b2', label: 'Sains', sub: 'Pengetahuan Alam', mode: 'multiplechoice' },
+  { id: 'TEKNOLOGI', icon: '⌘', color: '#7c3aed', label: 'Teknologi', sub: 'Digital & Inovasi', mode: 'multiplechoice' },
+  { id: 'OLAHRAGA', icon: '🏆', color: '#ea580c', label: 'Olahraga', sub: 'Atlet & Kompetisi', mode: 'multiplechoice' },
+  { id: 'HEWAN', icon: '🐾', color: '#65a30d', label: 'Hewan', sub: 'Dunia Satwa', mode: 'multiplechoice' },
+  { id: 'KULINER', icon: '🍜', color: '#db2777', label: 'Kuliner', sub: 'Makanan Dunia', mode: 'multiplechoice' },
 ];
+
+export function getTopicsForRound(round: number): GameTopic[] {
+  const visibleCount = Math.min(4, GAME_TOPICS.length);
+  const start = (Math.max(1, Math.floor(round)) - 1) * visibleCount % GAME_TOPICS.length;
+  return Array.from({ length: visibleCount }, (_, index) => GAME_TOPICS[(start + index) % GAME_TOPICS.length]);
+}
 
 export const GAME_LANGS = [
   { value: 'auto', label: 'Auto' },
@@ -356,6 +367,46 @@ const DEMO_DUNIA: DemoRow[] = [
   { question: 'Apa ibu kota Kanada?', correct_answer: 'Ottawa', incorrect_answers: ['Toronto', 'Vancouver', 'Montreal'], difficulty: 'medium', category: 'Geografi', facts: 'Ottawa terletak di Provinsi Ontario dan menjadi pusat pemerintahan Kanada.' },
 ];
 
+const DEMO_SAINS: DemoRow[] = [
+  { question: 'Planet terbesar di tata surya adalah?', correct_answer: 'Jupiter', incorrect_answers: ['Saturnus', 'Neptunus', 'Bumi'], difficulty: 'easy', category: 'Sains', facts: 'Jupiter memiliki massa lebih dari dua kali gabungan seluruh planet lainnya.' },
+  { question: 'Gas apa yang paling banyak menyusun atmosfer Bumi?', correct_answer: 'Nitrogen', incorrect_answers: ['Oksigen', 'Karbon dioksida', 'Hidrogen'], difficulty: 'easy', category: 'Sains', facts: 'Sekitar 78% atmosfer Bumi terdiri dari nitrogen.' },
+  { question: 'Bagian sel yang menyimpan sebagian besar materi genetik adalah?', correct_answer: 'Nukleus', incorrect_answers: ['Membran sel', 'Ribosom', 'Sitoplasma'], difficulty: 'medium', category: 'Sains', facts: 'DNA pada sebagian besar sel eukariotik tersimpan di dalam nukleus.' },
+  { question: 'Satuan gaya dalam Sistem Internasional adalah?', correct_answer: 'Newton', incorrect_answers: ['Joule', 'Watt', 'Pascal'], difficulty: 'medium', category: 'Sains', facts: 'Satu newton adalah gaya yang memberi massa satu kilogram percepatan satu meter per detik kuadrat.' },
+  { question: 'Proses tumbuhan mengubah cahaya menjadi energi kimia disebut?', correct_answer: 'Fotosintesis', incorrect_answers: ['Fermentasi', 'Respirasi', 'Transpirasi'], difficulty: 'easy', category: 'Sains', facts: 'Fotosintesis memakai energi cahaya untuk mengubah air dan karbon dioksida menjadi gula.' },
+];
+
+const DEMO_TEKNOLOGI: DemoRow[] = [
+  { question: 'Apa kepanjangan CPU?', correct_answer: 'Central Processing Unit', incorrect_answers: ['Computer Program Utility', 'Core Power Unit', 'Central Peripheral User'], difficulty: 'easy', category: 'Teknologi', facts: 'CPU menjalankan instruksi program dan sering disebut sebagai prosesor komputer.' },
+  { question: 'Bahasa yang umum dipakai untuk memberi struktur halaman web adalah?', correct_answer: 'HTML', incorrect_answers: ['SQL', 'Bash', 'CSV'], difficulty: 'easy', category: 'Teknologi', facts: 'HTML adalah bahasa markup untuk menyusun konten halaman web.' },
+  { question: 'Teknologi apa yang menghubungkan perangkat ke jaringan tanpa kabel?', correct_answer: 'Wi-Fi', incorrect_answers: ['HDMI', 'USB', 'Ethernet'], difficulty: 'easy', category: 'Teknologi', facts: 'Wi-Fi memakai gelombang radio untuk menghubungkan perangkat ke jaringan lokal.' },
+  { question: 'Apa fungsi utama sistem operasi?', correct_answer: 'Mengelola perangkat keras dan perangkat lunak', incorrect_answers: ['Mencetak dokumen saja', 'Menyimpan listrik', 'Mempercepat koneksi internet selalu'], difficulty: 'medium', category: 'Teknologi', facts: 'Sistem operasi mengelola sumber daya perangkat dan menyediakan layanan untuk aplikasi.' },
+  { question: 'Satuan terkecil informasi digital yang bernilai 0 atau 1 adalah?', correct_answer: 'Bit', incorrect_answers: ['Byte', 'Pixel', 'Hertz'], difficulty: 'easy', category: 'Teknologi', facts: 'Satu byte umumnya terdiri dari delapan bit.' },
+];
+
+const DEMO_OLAHRAGA: DemoRow[] = [
+  { question: 'Berapa jumlah pemain satu tim sepak bola di lapangan?', correct_answer: '11', incorrect_answers: ['9', '10', '12'], difficulty: 'easy', category: 'Olahraga', facts: 'Pertandingan sepak bola dimulai dengan maksimal sebelas pemain per tim di lapangan.' },
+  { question: 'Dalam olahraga apa istilah “love” berarti skor nol?', correct_answer: 'Tenis', incorrect_answers: ['Bulu tangkis', 'Bola voli', 'Golf'], difficulty: 'medium', category: 'Olahraga', facts: 'Istilah skor tenis memakai love untuk menyebut nol.' },
+  { question: 'Berapa jumlah cincin pada simbol Olimpiade?', correct_answer: '5', incorrect_answers: ['4', '6', '7'], difficulty: 'easy', category: 'Olahraga', facts: 'Lima cincin melambangkan persatuan lima benua yang berpartisipasi dalam gerakan Olimpiade.' },
+  { question: 'Jarak resmi lomba lari maraton adalah sekitar berapa kilometer?', correct_answer: '42,195 km', incorrect_answers: ['40 km', '45 km', '50 km'], difficulty: 'medium', category: 'Olahraga', facts: 'Jarak maraton modern ditetapkan sepanjang 42,195 kilometer.' },
+  { question: 'Pukulan pembuka untuk memulai reli dalam bulu tangkis disebut?', correct_answer: 'Servis', incorrect_answers: ['Smash', 'Lob', 'Dropshot'], difficulty: 'easy', category: 'Olahraga', facts: 'Servis harus diarahkan secara diagonal ke kotak servis lawan.' },
+];
+
+const DEMO_HEWAN: DemoRow[] = [
+  { question: 'Mamalia terbesar di dunia adalah?', correct_answer: 'Paus biru', incorrect_answers: ['Gajah Afrika', 'Hiu paus', 'Jerapah'], difficulty: 'easy', category: 'Hewan', facts: 'Paus biru dapat tumbuh lebih dari 30 meter dan merupakan hewan terbesar yang diketahui pernah hidup.' },
+  { question: 'Kelompok hewan apa yang dikenal dapat berubah warna untuk kamuflase?', correct_answer: 'Bunglon', incorrect_answers: ['Koala', 'Berang-berang', 'Panda'], difficulty: 'easy', category: 'Hewan', facts: 'Bunglon mengubah warna untuk komunikasi dan mengatur suhu, bukan hanya untuk berkamuflase.' },
+  { question: 'Hewan darat tercepat dalam lari jarak pendek adalah?', correct_answer: 'Cheetah', incorrect_answers: ['Singa', 'Kuda', 'Antelop'], difficulty: 'easy', category: 'Hewan', facts: 'Cheetah mampu berlari sangat cepat dalam akselerasi singkat.' },
+  { question: 'Apa nama kelompok gajah?', correct_answer: 'Kawanan', incorrect_answers: ['Koloni', 'Gerombolan', 'Kawanan kawanan'], difficulty: 'medium', category: 'Hewan', facts: 'Gajah hidup dalam kelompok keluarga yang biasanya dipimpin oleh betina tertua.' },
+  { question: 'Hewan apa yang memiliki sidik jari mirip manusia?', correct_answer: 'Koala', incorrect_answers: ['Panda', 'Kanguru', 'Wombat'], difficulty: 'medium', category: 'Hewan', facts: 'Sidik jari koala sangat mirip dengan sidik jari manusia dan sulit dibedakan sekilas.' },
+];
+
+const DEMO_KULINER: DemoRow[] = [
+  { question: 'Sushi berasal dari negara mana?', correct_answer: 'Jepang', incorrect_answers: ['Korea Selatan', 'Thailand', 'Tiongkok'], difficulty: 'easy', category: 'Kuliner', facts: 'Sushi menggabungkan nasi berbumbu cuka dengan berbagai bahan seperti ikan dan sayuran.' },
+  { question: 'Bahan utama guacamole adalah?', correct_answer: 'Alpukat', incorrect_answers: ['Tomat', 'Kacang merah', 'Kentang'], difficulty: 'easy', category: 'Kuliner', facts: 'Guacamole adalah saus berbahan dasar alpukat yang berasal dari Meksiko.' },
+  { question: 'Rempah apa yang memberi warna kuning khas pada banyak masakan?', correct_answer: 'Kunyit', incorrect_answers: ['Kayu manis', 'Lada hitam', 'Cengkih'], difficulty: 'easy', category: 'Kuliner', facts: 'Kurkumin dalam kunyit memberi warna kuning-oranye yang kuat.' },
+  { question: 'Pasta berbentuk pita lebar yang sering disajikan dengan saus kental disebut?', correct_answer: 'Fettuccine', incorrect_answers: ['Penne', 'Fusilli', 'Orzo'], difficulty: 'medium', category: 'Kuliner', facts: 'Fettuccine berarti “pita kecil” dalam bahasa Italia.' },
+  { question: 'Kimchi adalah makanan fermentasi yang berasal dari?', correct_answer: 'Korea', incorrect_answers: ['Jepang', 'Vietnam', 'India'], difficulty: 'easy', category: 'Kuliner', facts: 'Kimchi biasanya dibuat dari sayuran yang difermentasi dengan bumbu.' },
+];
+
 const DEMO_MITOS: DemoRow[] = [
   { question: 'Air mendidih pada 100°C pada tekanan atmosfer standar.', correct_answer: 'Benar', incorrect_answers: ['Salah'], difficulty: 'easy', category: 'Sains', facts: 'Pada tekanan 1 atmosfer, air memang mendidih tepat di 100°C.' },
   { question: 'Manusia hanya menggunakan 10% dari otaknya.', correct_answer: 'Salah', incorrect_answers: ['Benar'], difficulty: 'easy', category: 'Mitos', facts: 'Pencitraan otak menunjukkan hampir seluruh area otak aktif, meski tidak semuanya sekaligus.' },
@@ -374,6 +425,11 @@ function fallbackData(topic: string, mode: GameMode): DemoRow[] {
   if (key === 'BENDERA' || mode === 'image') return DEMO_FLAGS;
   if (key === 'MITOS' || mode === 'truefalse') return DEMO_MITOS;
   if (key === 'SEJARAH') return DEMO_SEJARAH;
+  if (key === 'SAINS') return DEMO_SAINS;
+  if (key === 'TEKNOLOGI') return DEMO_TEKNOLOGI;
+  if (key === 'OLAHRAGA') return DEMO_OLAHRAGA;
+  if (key === 'HEWAN') return DEMO_HEWAN;
+  if (key === 'KULINER') return DEMO_KULINER;
   return DEMO_DUNIA;
 }
 

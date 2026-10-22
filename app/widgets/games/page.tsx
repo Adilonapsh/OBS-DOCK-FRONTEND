@@ -331,7 +331,7 @@ function GamesSettingsInner() {
 
                   <ToggleRow
                     label="Topik dipilih chat"
-                    hint="Voting topik dimulai saat command chat atau tombol Start ditekan. Topik terbanyak otomatis dimulai setelah timer."
+                    hint="Voting topik dimulai saat command chat atau tombol Start ditekan. Penonton bisa memilih dengan huruf A-D atau nama topik yang tampil; topik terbanyak otomatis dimulai setelah timer."
                     checked={state.topicVote}
                     onChange={(v) => update('topicVote', v)}
                   />

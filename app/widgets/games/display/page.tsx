@@ -13,6 +13,7 @@ import {
   DIFF_LABEL,
   FACTS_MS,
   GAME_TOPICS,
+  getTopicsForRound,
   INTRO_MS,
   LEADERBOARD_MS,
   POINTS,
@@ -1085,18 +1086,18 @@ function GamesInner() {
   const leadingTopicId = useCallback((): string => {
     let best = '';
     let bestCount = 0;
-    for (const topic of GAME_TOPICS) {
+    for (const topic of getTopicsForRound(engineRef.current.round)) {
       const count = topicVotesRef.current[topic.id] || 0;
       if (count > bestCount) {
         best = topic.id;
         bestCount = count;
       }
     }
-    return best || topicRef.current || cfgRef.current.topic;
+    return best || getTopicsForRound(engineRef.current.round)[0]?.id || topicRef.current || cfgRef.current.topic;
   }, []);
 
   const handleTopicVote = useCallback((raw: string, name: string) => {
-    if (engineRef.current.phase !== 'topics' || topicVoteClosed) return;
+    if (engineRef.current.phase !== 'topics' || topicVoteClosed || !topicVoteStarted) return;
     const userKey = keyOf(name);
     if (!userKey) return;
 
@@ -1106,11 +1107,12 @@ function GamesInner() {
     let topicId = '';
     const letter = text.match(/^(?:pilih|vote|v)?\s*([a-d])$/);
     if (letter) {
-      topicId = GAME_TOPICS['abcd'.indexOf(letter[1])]?.id || '';
+      const visibleTopics = getTopicsForRound(engineRef.current.round);
+      topicId = visibleTopics['abcd'.indexOf(letter[1])]?.id || '';
     } else {
       topicId = TOPIC_VOTE_ALIASES[text] || '';
       if (!topicId) {
-        const found = GAME_TOPICS.find((t) => {
+        const found = getTopicsForRound(engineRef.current.round).find((t) => {
           const id = normalizeText(t.id);
           const label = normalizeText(t.label);
           return text === id || text === label;
@@ -1118,6 +1120,7 @@ function GamesInner() {
         if (found) topicId = found.id;
       }
     }
+    if (!getTopicsForRound(engineRef.current.round).some((topic) => topic.id === topicId)) return;
     if (!topicId) return;
 
     const prev = topicVoteMapRef.current.get(userKey);
@@ -1129,7 +1132,7 @@ function GamesInner() {
     topicVoteMapRef.current.set(userKey, topicId);
     topicVotesRef.current = counts;
     setTopicVotes(counts);
-  }, [topicVoteClosed]);
+  }, [topicVoteClosed, topicVoteStarted]);
 
   const hasPrivilege = useCallback((data: ChatPayload) => {
     const badges = Array.isArray(data.badges)
@@ -1404,7 +1407,8 @@ function GamesInner() {
       const voteWindow = Math.max(2500, (seconds - 2) * 1000);
       voters.forEach((name) => {
         const at = 250 + Math.random() * voteWindow;
-        const topicPick = GAME_TOPICS[Math.floor(Math.random() * GAME_TOPICS.length)];
+        const visibleTopics = getTopicsForRound(engineRef.current.round);
+        const topicPick = visibleTopics[Math.floor(Math.random() * visibleTopics.length)];
         demoTimers.push(
           setTimeout(() => {
             if (engineRef.current.phase === 'topics') handleTopicVote(topicPick.id, name);
@@ -1486,7 +1490,8 @@ function GamesInner() {
     : -1;
   const questionVisible = phase === 'question' || phase === 'reveal';
   const topicVoteCount = Object.values(topicVotes).reduce((sum, n) => sum + n, 0);
-  const topicVoteLeader = GAME_TOPICS.reduce(
+  const roundTopics = getTopicsForRound(round);
+  const topicVoteLeader = roundTopics.reduce(
     (best, t) => ((topicVotes[t.id] || 0) > (topicVotes[best] || 0) ? t.id : best),
     '',
   );
@@ -1545,7 +1550,7 @@ function GamesInner() {
               </h1>
               <p className="g-anim-item g-mono text-gray-300 tracking-widest text-sm mb-6 uppercase" style={{ transitionDelay: '.2s' }}>
                 Ronde <span>{round}</span> &nbsp;•&nbsp;{' '}
-                {cfg.topicVote ? (topicVoteStarted ? 'Ketik A/B/C/D atau Nama Topik di Komentar' : `Ketik ${cfg.command} untuk mulai voting`) : 'Klik Kartu untuk Mulai'} &nbsp;•&nbsp; Terbanyak Menang
+                {cfg.topicVote ? (topicVoteStarted ? `Ketik A-D atau Nama Topik di Komentar` : `Ketik ${cfg.command} untuk mulai voting`) : 'Klik Kartu untuk Mulai'} &nbsp;•&nbsp; Terbanyak Menang
               </p>
 
               {cfg.topicVote && (
@@ -1603,8 +1608,8 @@ function GamesInner() {
                 ))}
               </div>
 
-              <div className="g-topic-grid flex gap-8 justify-center w-full max-w-5xl">
-                {GAME_TOPICS.map((t, i) => {
+              <div className="g-topic-grid grid grid-cols-2 gap-4 justify-center w-full max-w-5xl">
+                {roundTopics.map((t, i) => {
                   const count = topicVotes[t.id] || 0;
                   const pct = topicVoteCount > 0 ? Math.round((count / topicVoteCount) * 100) : 0;
                   const isLeader = topicVoteLeader === t.id && topicVoteLeaderCount > 0;
@@ -1613,7 +1618,7 @@ function GamesInner() {
                       <button
                         type="button"
                         onClick={() => selectTopicAndStart(t)}
-                        className={`g-play-card g-topic-card relative w-56 h-[22rem] flex flex-col items-center justify-center ${isLeader ? 'g-play-card-leader' : ''} ${cfg.topicVote ? 'cursor-default' : 'cursor-pointer'}`}
+                        className={`g-play-card g-topic-card relative w-full h-[17rem] flex flex-col items-center justify-center ${isLeader ? 'g-play-card-leader' : ''} ${cfg.topicVote ? 'cursor-default' : 'cursor-pointer'}`}
                         style={{
                           borderColor: isLeader ? t.color : undefined,
                           boxShadow: isLeader ? `0 15px 40px ${t.color}55` : undefined,
@@ -1669,7 +1674,7 @@ function GamesInner() {
                     <>Topik terbanyak otomatis dimulai saat timer habis • voting ditutup dalam {formatClock(topicVoteLeft)}</>
                   )
                 ) : (
-                  <>{GAME_TOPICS.length} topik tersedia • 4 topik acak tiap ronde • <span className="text-gray-300">{cfg.command} mulai</span></>
+                  <>{roundTopics.length} topik ditampilkan untuk ronde ini • <span className="text-gray-300">{cfg.command} mulai</span></>
                 )}
               </p>
             </div>
@@ -2128,7 +2133,9 @@ const GAME_CSS = `
 .g-accent-border{border-color:var(--g-accent-text,var(--g-accent,#ff5500))}
 .g-screen{position:absolute;inset:0;opacity:0;visibility:hidden;z-index:10;display:flex;flex-direction:column;transition:opacity .5s ease, visibility .5s ease}
 .g-screen.active{opacity:1;visibility:visible;z-index:20}
-#g-screen-topics{justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding-top:2rem;padding-bottom:2rem}
+#g-screen-topics{justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;padding-top:2rem;padding-bottom:2rem}
+#g-screen-topics>h1{margin-top:auto}
+#g-screen-topics>p:last-child{margin-bottom:auto}
 .g-anim-item{opacity:0;transform:translateY(30px);transition:opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1)}
 .g-screen.active .g-anim-item{opacity:1;transform:translateY(0)}
 .g-screen:not(.active) .g-anim-item{transition-delay:0s!important}
@@ -2185,7 +2192,7 @@ const GAME_CSS = `
 .g-rank-2 .g-sweep-block{background-color:#b45309}
 @media (max-width:1023px), (max-height:760px){
   .g-stage.g-compact #g-screen-topics{align-items:stretch;justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;padding:20px 14px 18px}
-  .g-stage.g-compact #g-screen-topics>h1{font-size:clamp(2.5rem,10vw,3.5rem);text-align:center;margin-bottom:.25rem}
+  .g-stage.g-compact #g-screen-topics>h1{font-size:clamp(2.5rem,10vw,3.5rem);text-align:center;margin-top:0;margin-bottom:.25rem}
   .g-stage.g-compact #g-screen-topics>p{font-size:9px;line-height:1.6;text-align:center;margin-bottom:1rem}
   .g-stage.g-compact #g-screen-topics>.g-topic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-inline:auto}
   .g-stage.g-compact #g-screen-topics .g-topic-card-wrapper{width:100%;gap:0}
