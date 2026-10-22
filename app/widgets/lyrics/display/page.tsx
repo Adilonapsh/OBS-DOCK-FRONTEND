@@ -1,10 +1,14 @@
 'use client';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { io, type Socket } from 'socket.io-client';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { getStringParam as getStringParamShared } from '../../_shared/utils/url';
+import { getSocketUrl } from '../../_shared/utils/socket';
+import { useLyrics } from '../../_shared/hooks/useLyrics';
+import { findActiveLyricIndex, parseLRC, splitArtistTrack } from '../../_shared/utils/lyrics';
 import StandardTheme from '../themes/Standard';
 import MatteTheme from '../themes/Matte';
 import MatteDarkTheme from '../themes/MatteDark';
@@ -23,6 +27,26 @@ import type { AccentPalette, LyricLine } from '../themes/types';
 const PlaybackStatus = {
   CLOSED: 0, OPENED: 1, CHANGING: 2, STOPPED: 3, PLAYING: 4, PAUSED: 5
 } as const;
+
+type MusicSong = {
+  id: string;
+  url: string;
+  videoId?: string | null;
+  kind?: string;
+  title: string;
+  requestedBy?: string;
+  platform?: string;
+  addedAt?: number;
+};
+
+type MusicSongUpdate = {
+  room?: string;
+  queue?: MusicSong[];
+  currentIndex?: number;
+  isPlaying?: boolean;
+  position?: number;
+  duration?: number;
+};
 
 const vibrantDefaults: AccentPalette = {
   Vibrant: '#FE2C55', Muted: '#6b7280', DarkVibrant: '#1d1d1d', DarkMuted: '#111827', LightVibrant: '#FE2C55', LightMuted: '#e5e7eb'
@@ -63,62 +87,6 @@ async function getVibrantPalette(src: string): Promise<AccentPalette> {
   } catch { return vibrantDefaults; }
 }
 
-function parseLRC(lrc: string): LyricLine[] {
-  if (!lrc) return [];
-  const lines = lrc.split('\n');
-  const result: LyricLine[] = [];
-  const timeRe = /\[(\d+):(\d+)(?:\.(\d+))?\]/g;
-  for (const line of lines) {
-    const times: number[] = [];
-    let m: RegExpExecArray | null;
-    // reset regex
-    timeRe.lastIndex = 0;
-    while ((m = timeRe.exec(line)) !== null) {
-      const min = parseInt(m[1], 10);
-      const sec = parseInt(m[2], 10);
-      const msPart = m[3] ? m[3].padEnd(3, '0').slice(0, 3) : '0';
-      const ms = parseInt(msPart, 10);
-      times.push(min * 60 * 1000 + sec * 1000 + ms);
-    }
-    const text = line.replace(/\[.*?\]/g, '').trim();
-    if (times.length === 0) continue;
-    for (const t of times) result.push({ timeMs: t, text });
-  }
-  result.sort((a, b) => a.timeMs - b.timeMs);
-  return result;
-}
-
-async function fetchLyrics(artist: string, track: string): Promise<{ synced: LyricLine[]; plain: string }> {
-  if (!artist && !track) return { synced: [], plain: '' };
-  // try lrclib get
-  try {
-    const qs = new URLSearchParams({ artist_name: artist || '', track_name: track || '' });
-    // lrclib has CORS enabled
-    const res = await fetch(`https://lrclib.net/api/get?${qs.toString()}`, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && (data.syncedLyrics || data.plainLyrics)) {
-        const synced = parseLRC(data.syncedLyrics || '');
-        return { synced, plain: data.plainLyrics || '' };
-      }
-    }
-  } catch {}
-  // fallback search
-  try {
-    const qs2 = new URLSearchParams({ track_name: track || '', artist_name: artist || '' });
-    const res2 = await fetch(`https://lrclib.net/api/search?${qs2.toString()}`, { cache: 'no-store' });
-    if (res2.ok) {
-      const arr = await res2.json();
-      if (Array.isArray(arr) && arr.length > 0) {
-        const best = arr[0];
-        const synced = parseLRC(best.syncedLyrics || '');
-        return { synced, plain: best.plainLyrics || '' };
-      }
-    }
-  } catch {}
-  return { synced: [], plain: '' };
-}
-
 function LyricsDisplayInner() {
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams.toString());
@@ -156,6 +124,10 @@ function LyricsDisplayInner() {
   const lyricsFontSize = getIntParam(params, 'lyricsFontSize', 16);
   const maxLyricsLines = getIntParam(params, 'maxLyricsLines', 3);
   const lrclibEnabled = getBoolParam(params, 'lrclibEnabled', true);
+  // smtc = Media Player / any SMTC source; music = Song Request room via socket.
+  const source = params.get('source') === 'music' ? 'music' : 'smtc';
+  // Music Request room follows this widget's private key. No global-room fallback.
+  const musicRoomKey = getStringParamShared(params, 'key', getStringParamShared(params, 'privateKey', ''));
   const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const PLACEHOLDER = 'https://via.placeholder.com/300/1d1d1d/ffffff?text=%E2%99%AA';
@@ -171,12 +143,16 @@ function LyricsDisplayInner() {
   const [currentPos, setCurrentPos] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [isPausedOverlay, setIsPausedOverlay] = useState(false);
-  const [lyrics, setLyrics] = useState<LyricLine[]>([]);
-  const [plainLyrics, setPlainLyrics] = useState<string>('');
-  const [activeIndex, setActiveIndex] = useState<number>(-1);
-  const [lyricsStatus, setLyricsStatus] = useState<string>('');
+  // Raw metadata for LRCLIB. Kept separate from the displayed track/artist so
+  // swapArtistTrack only changes labels, not the lyrics query.
+  const [songTitle, setSongTitle] = useState('');
+  const [songArtist, setSongArtist] = useState('');
+  const [demoLyrics, setDemoLyrics] = useState<LyricLine[]>([]);
+  const [musicConnected, setMusicConnected] = useState(false);
 
   const currentSongKeyRef = useRef<string>('');
+  const musicSongKeyRef = useRef<string>('');
+  const musicPlayingRef = useRef(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Demo/simulate punya loop progres sendiri - tick effect di bawah wajib skip saat demo aktif,
   // kalau tidak currentPos ditulis 2 interval bergantian (monotonik vs sawtooth) = glitch highlight.
@@ -194,6 +170,22 @@ function LyricsDisplayInner() {
       setTimeout(() => setVisible(false), 500);
     }
   };
+  // Keep socket callbacks on the latest visibility/settings logic without
+  // reconnecting the socket every time a setting changes.
+  const setVisibilityRef = useRef(setVisibility);
+  useEffect(() => { setVisibilityRef.current = setVisibility; });
+
+  const { lyrics, plainLyrics, activeIndex } = useLyrics({
+    track: songTitle,
+    artist: songArtist,
+    enabled: showLyrics && !simulate,
+    lrclibEnabled,
+    positionMs: currentPos,
+  });
+  const demoActiveIndex = findActiveLyricIndex(demoLyrics, currentPos);
+  const shownLyrics = demoLyrics.length ? demoLyrics : lyrics;
+  const shownPlainLyrics = demoLyrics.length ? '' : plainLyrics;
+  const shownActiveIndex = demoLyrics.length ? demoActiveIndex : activeIndex;
 
   const demoActiveRef = useRef(false);
   const demoPosRef = useRef(0);
@@ -213,25 +205,15 @@ function LyricsDisplayInner() {
       const anchor = Date.parse(timeline.LastUpdatedTime.replace(' ', 'T'));
       const drift = Date.now() - anchor;
       const pos = timeline.EndTime > 0 ? timeline.Position + drift : timeline.Position;
-      setCurrentPos(Math.min(pos, timeline.EndTime));
+      const capped = timeline.EndTime > 0 ? Math.min(pos, timeline.EndTime) : pos;
+      setCurrentPos(Math.max(0, capped));
     }, 200);
     return () => clearInterval(interval);
   }, [timeline, playbackStatus]);
 
-  // update active lyric index based on currentPos
+  // SMTC fetch loop (dilewati saat simulate atau saat source = Music Request).
   useEffect(() => {
-    if (!lyrics.length) { setActiveIndex(-1); return; }
-    let idx = -1;
-    for (let i = 0; i < lyrics.length; i++) {
-      if (lyrics[i].timeMs <= currentPos) idx = i;
-      else break;
-    }
-    setActiveIndex(idx);
-  }, [currentPos, lyrics]);
-
-  // fetch loop (dilewati saat simulate - pakai demo di bawah)
-  useEffect(() => {
-    if (simulate) return;
+    if (simulate || source !== 'smtc') return;
     let cancelled = false;
     const fetchOnce = async () => {
       try {
@@ -291,24 +273,13 @@ function LyricsDisplayInner() {
               setPalette(pal);
               setTrack(swapArtistTrack ? (mProps.Artist || '') : (mProps.Title || ''));
               setArtist(swapArtistTrack ? (mProps.Title || '') : (mProps.Artist || ''));
+              setSongTitle(mProps.Title || '');
+              setSongArtist(mProps.Artist || '');
               setArt(newArt);
               setBgArt(newArt);
               currentSongKeyRef.current = newKey;
               setVisibility(true);
-              // fetch lyrics for new track
-              if (lrclibEnabled && mProps.Title && mProps.Artist) {
-                setLyricsStatus('loading lyrics…');
-                const artName = swapArtistTrack ? (mProps.Title || '') : (mProps.Artist || '');
-                const trName = swapArtistTrack ? (mProps.Artist || '') : (mProps.Title || '');
-                const resLyrics = await fetchLyrics(artName, trName);
-                if (cancelled) return;
-                setLyrics(resLyrics.synced);
-                setPlainLyrics(resLyrics.plain);
-                setActiveIndex(-1);
-                setLyricsStatus(resLyrics.synced.length ? `${resLyrics.synced.length} lines` : resLyrics.plain ? 'plain only' : 'no lyrics');
-              } else {
-                setLyrics([]); setPlainLyrics(''); setLyricsStatus('');
-              }
+
             }
           }
           if (tProps) {
@@ -330,7 +301,85 @@ function LyricsDisplayInner() {
     const id = setInterval(fetchOnce, 1000);
     return () => { cancelled = true; clearInterval(id); if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [simulate, smtcBridgeAddress, smtcBridgePort, includedApplications, excludedApplications, showWhilePaused, swapArtistTrack, autoHide, displayDuration, lrclibEnabled]);
+  }, [simulate, source, smtcBridgeAddress, smtcBridgePort, includedApplications, excludedApplications, showWhilePaused, swapArtistTrack, autoHide, displayDuration]);
+
+  // Music Request socket: follow the current song/position in the room.
+  useEffect(() => {
+    if (simulate || source !== 'music' || !musicRoomKey) return;
+    let cancelled = false;
+    const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
+    const room = musicRoomKey;
+    const auth = { key: musicRoomKey, privateKey: musicRoomKey, room };
+
+    const apply = (data: MusicSongUpdate) => {
+      if (cancelled) return;
+      if (data?.room && data.room !== room) return;
+      const q = Array.isArray(data.queue) ? data.queue : [];
+      const idx = Math.max(0, Math.min(typeof data.currentIndex === 'number' ? data.currentIndex : 0, Math.max(0, q.length - 1)));
+      const song = q.length ? q[idx] : null;
+      if (!song) {
+        musicSongKeyRef.current = '';
+        musicPlayingRef.current = false;
+        setTrack('');
+        setArtist('');
+        setSongTitle('');
+        setSongArtist('');
+        setTimeline(null);
+        setCurrentPos(0);
+        setPlaybackStatus(PlaybackStatus.STOPPED);
+        setIsPausedOverlay(false);
+        setVisibilityRef.current(false);
+        return;
+      }
+      const parsed = splitArtistTrack(song.title || '');
+      const displayTrack = parsed.track || song.title || '';
+      const displayArtist = parsed.artist || '';
+      const playing = !!data.isPlaying;
+      const newArt = song.videoId ? `https://i.ytimg.com/vi/${song.videoId}/mqdefault.jpg` : PLACEHOLDER;
+      const newKey = `${song.id || ''}:${song.title || ''}`;
+      if (newKey !== musicSongKeyRef.current) {
+        musicSongKeyRef.current = newKey;
+        setTrack(swapArtistTrack ? displayArtist : displayTrack);
+        setArtist(swapArtistTrack ? displayTrack : displayArtist);
+        setSongTitle(displayTrack);
+        setSongArtist(displayArtist);
+        setArt(newArt);
+        setBgArt(newArt);
+        getVibrantPalette(newArt).then((pal) => { if (!cancelled) setPalette(pal); });
+        setVisibilityRef.current(playing || showWhilePaused);
+      }
+      if (playing !== musicPlayingRef.current) {
+        musicPlayingRef.current = playing;
+        setPlaybackStatus(playing ? PlaybackStatus.PLAYING : PlaybackStatus.PAUSED);
+        setIsPausedOverlay(!playing);
+        setVisibilityRef.current(playing || showWhilePaused);
+      }
+      const positionMs = Math.round((Number(data.position) || 0) * 1000);
+      const durationSec = Number(data.duration) || 0;
+      setTimeline(durationSec > 0 ? {
+        Position: positionMs,
+        EndTime: Math.round(durationSec * 1000),
+        LastUpdatedTime: new Date().toISOString(),
+      } : null);
+      setCurrentPos(positionMs);
+      setError(null);
+    };
+
+    socket.on('connect', () => {
+      if (cancelled) return;
+      setMusicConnected(true);
+      socket.emit('join-room', room);
+      socket.emit('song-get', auth);
+    });
+    socket.on('disconnect', () => {
+      if (!cancelled) setMusicConnected(false);
+    });
+    socket.on('song-update', apply);
+    return () => {
+      cancelled = true;
+      socket.disconnect();
+    };
+  }, [simulate, source, musicRoomKey, showWhilePaused, swapArtistTrack]);
 
   // Force html/body transparent when obs=1 - fix OBS black bg (globals.css body { background: var(--background:#0a0a0a) })
   useEffect(() => {
@@ -347,7 +396,8 @@ function LyricsDisplayInner() {
   // demo fallback when no SMTC (for preview) - use dummy lyrics
   // saat ?simulate=1 langsung tampil cepat tanpa menunggu SMTC bridge
   useEffect(() => {
-    if (track || artist || lyrics.length || plainLyrics || error) return;
+    if (!simulate) return;
+    if (track || artist || demoLyrics.length || error) return;
     // show demo after 2s if still empty (0.5s saat simulate agar thumbnail langsung hidup)
     const t = setTimeout(() => {
       if (currentSongKeyRef.current || demoActiveRef.current) return;
@@ -357,9 +407,7 @@ function LyricsDisplayInner() {
       setBgArt(PLACEHOLDER);
       const demoLrc = `[00:00.00] ♪ intro ♪\n[00:03.00] Baris pertama lirik demo\n[00:06.50] Baris kedua - highlight akan pindah\n[00:10.00] Baris ketiga synced\n[00:14.00] Baris keempat karaoke style\n[00:18.00] Akhir lirik demo ♪`;
       const parsed = parseLRC(demoLrc);
-      setLyrics(parsed);
-      setPlainLyrics('');
-      setLyricsStatus('demo');
+      setDemoLyrics(parsed);
       // simulate timeline progression for demo - SATU-SATUNYA penulis currentPos saat demo
       setTimeline({ Position: 0, EndTime: 20000, LastUpdatedTime: new Date().toISOString().replace('T',' ').slice(0,19) } as any);
       demoActiveRef.current = true;
@@ -371,7 +419,7 @@ function LyricsDisplayInner() {
       }, 200);
     }, simulate ? 500 : 2000);
     return () => clearTimeout(t);
-  }, [simulate, track, artist, lyrics, plainLyrics, error]);
+  }, [simulate, track, artist, demoLyrics.length, error]);
 
   const progressPercent = (() => {
     if (!timeline || !timeline.EndTime) return 0;
@@ -397,7 +445,8 @@ function LyricsDisplayInner() {
   const accent = useCustomColors ? color1 : palette.LightVibrant;
   const textColor = useCustomColors ? color1 : '#ffffff';
 
-  const wrapperVisible = visible || !autoHide || showWhilePaused;
+  const hasContent = Boolean(track || artist || shownLyrics.length || shownPlainLyrics || error);
+  const wrapperVisible = hasContent && visible;
   const themeWrapper = `theme-${theme}`;
 
   return (
@@ -433,13 +482,13 @@ function LyricsDisplayInner() {
       <div id="lyrics-root" className={`min-h-screen w-screen flex p-6 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined, ...posStyle } as any}>
         <AutoScale defaultBase={560} baseWidth={maxWidth > 0 ? maxWidth : 560}>
           <div id="main-container" className={`flex w-full ${alignmentCls} ${themeWrapper}`} style={{ maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%' }}>
-          <div id="main-wrapper" className={`relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${'anim-' + animClass}`} style={containerStyle}>
+          <div id="main-wrapper" className={`relative w-full overflow-hidden ${wrapperVisible ? '' : 'opacity-0 pointer-events-none'} ${wrapperVisible ? 'anim-' + animClass : ''}`} style={containerStyle}>
             {(() => {
               const themeProps = {
                 track: primaryText, artist: secondaryText, art, bgArt, palette, accent, bgColor, textColor,
                 progressPercent, currentPos, timeline, showAlbumArt, showProgressBar, showPrimary, showSecondary,
                 isPausedOverlay, playbackStatus, textAlignCls, msToTime, error, smtcBridgeAddress, smtcBridgePort, obsMode,
-                lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, showLyrics, maxLyricsLines,
+                lyrics: shownLyrics, activeIndex: shownActiveIndex, plainLyrics: shownPlainLyrics, lyricsAlign, lyricsFontSize, showLyrics, maxLyricsLines,
                 ...brutalist,
               };
               switch (theme) {
@@ -466,9 +515,10 @@ function LyricsDisplayInner() {
                 <div className="mt-1 text-[10px] opacity-60">Pastikan SMTC Bridge running di {smtcBridgeAddress}:{smtcBridgePort} • <a href={`http://${smtcBridgeAddress}:${smtcBridgePort}/now-playing`} target="_blank" className="underline">Test /now-playing</a> • <a href="https://github.com/nuttylmao/smtc-bridge/releases" target="_blank" className="underline">Download</a></div>
               </div>
             )}
-            {!obsMode && !error && lrclibEnabled && lyricsStatus && (
-              <></>
-              // <div className="mt-1 text-[10px] font-mono text-white/30 text-center">LRCLIB: {lyricsStatus} • {lyrics.length ? `${activeIndex+1}/${lyrics.length}` : ''}</div>
+            {!obsMode && source === 'music' && !track && (
+              <div className="mt-2 text-[10px] font-mono text-white/40 text-center">
+                {musicConnected ? 'Menunggu lagu di Music Request...' : 'Menghubungkan ke Music Request...'}
+              </div>
             )}
           </div>
         </div>

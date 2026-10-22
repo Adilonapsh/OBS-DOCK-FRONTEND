@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { io, Socket } from "socket.io-client";
 import {
-    Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2,
+    Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2, Gamepad2,
     RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus, GripVertical,
-    Share2, ListPlus, ListChecks, Check, Clock, Search, Pause, Play, Square, Trash2, EyeOff, Minimize2, Maximize2, Power
+    Share2,     ListPlus, ListChecks, Check, Clock, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -30,6 +30,16 @@ import { gooeyToast } from "goey-toast";
 import ThemeToggle from "../components/ThemeToggle";
 import ConfirmModal from "../components/ConfirmModal";
 import { useTheme } from "../components/ThemeProvider";
+import { getTopicById, TRIVIA_GAME_ID, type GameStatus } from "../widgets/games/shared";
+
+const GAME_PHASE_LABEL: Record<string, string> = {
+    topics: "Pilih topik",
+    rules: "Aturan",
+    intro: "Intro",
+    question: "Pertanyaan",
+    reveal: "Jawaban & fakta",
+    leaderboard: "Leaderboard",
+};
 
 // Fallback key persisten: sessionStorage (per-tab) → localStorage (antar-tab) → ?key= di URL.
 // Dipakai semua getRoom agar socket tetap di room yang benar walau state belum terisi.
@@ -323,6 +333,8 @@ export default function Home() {
         try { const v = localStorage.getItem('dock-pollMinimized'); return v === null ? true : v === 'true'; } catch { return true; }
     });
     const [activeTasks, setActiveTasks] = useState<any>(null);
+    const [gameStatus, setGameStatus] = useState<GameStatus | null>(null);
+    const [activeWidgets, setActiveWidgets] = useState<Array<{ widgetId: string; count: number }>>([]);
     const [taskMinimized, setTaskMinimized] = useState(() => {
         if (typeof window === 'undefined') return true;
         try { const v = localStorage.getItem('dock-taskMinimized'); return v === null ? true : v === 'true'; } catch { return true; }
@@ -877,6 +889,7 @@ export default function Home() {
     // pakai payload basi (stale closure) saat ganti akun / reconnect otomatis.
     const tkWantedRef = useRef<{ username: string; privateKey: string | null }>({ username: "", privateKey: null });
     const pollSocketRef = useRef<Socket | null>(null);
+    const gameSocketRef = useRef<Socket | null>(null);
     // Dedup chat ganda (echo bridge / event dobel Streamer.bot): user+text+platform yang sama dalam 2.5 dtk diabaikan.
     const lastChatRef = useRef<{ key: string; at: number } | null>(null);
     const getSocketUrl = () => {
@@ -1096,6 +1109,28 @@ export default function Home() {
             pollSocketRef.current.emit('task-get', { privateKey: room });
             pollSocketRef.current.emit('timer-get', { privateKey: room });
         }
+    }, [privateKey]);
+
+    useEffect(() => {
+        const room = privateKey || readStoredDockKey() || 'global';
+        setGameStatus(null);
+        const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] as const });
+        gameSocketRef.current = socket;
+        socket.on('connect', () => {
+            socket.emit('join-room', room);
+            socket.emit('game-get', { privateKey: room, gameId: TRIVIA_GAME_ID });
+            socket.emit('widget-presence-get', { privateKey: room });
+        });
+        socket.on('game-status', (data: GameStatus) => {
+            if ((data?.gameId || TRIVIA_GAME_ID) === TRIVIA_GAME_ID) setGameStatus(data || null);
+        });
+        socket.on('widget-presence', (data: { widgets?: Array<{ widgetId: string; count: number }> }) => {
+            setActiveWidgets(Array.isArray(data?.widgets) ? data.widgets : []);
+        });
+        return () => {
+            socket.disconnect();
+            if (gameSocketRef.current === socket) gameSocketRef.current = null;
+        };
     }, [privateKey]);
 
     const headerControlClass = "dock-control-btn flex items-center justify-center gap-2";
@@ -4016,17 +4051,30 @@ export default function Home() {
                 const hasPoll = !!activePoll;
                 const hasTaskItems = (activeTasks as { items?: unknown[] })?.items?.length || 0;
                 const hasTimer = true;
-                const tabs: Array<{ id: 'poll' | 'task' | 'timer' | 'music'; label: string; icon: React.ReactNode; count?: number; show: boolean }> = [
+                const gameActive = activeWidgets.some((widget) => widget.widgetId === 'games');
+                const tabs: Array<{ id: 'poll' | 'task' | 'timer' | 'game' | 'music'; label: string; icon: React.ReactNode; count?: number; show: boolean }> = [
                     { id: 'poll', label: 'POLL', icon: <BarChart2 className="w-3 h-3" />, count: hasPoll ? (activePoll as { total: number }).total : undefined, show: hasPoll },
                     { id: 'task', label: 'TASK', icon: <ListChecks className="w-3 h-3" />, count: hasTaskItems ? hasTaskItems : undefined, show: true },
                     { id: 'timer', label: 'TIMER', icon: <Clock className="w-3 h-3" />, show: hasTimer },
+                    { id: 'game', label: 'GAME', icon: <Gamepad2 className="w-3 h-3" />, show: gameActive },
                     { id: 'music', label: 'MUSIC', icon: <Music className="w-3 h-3" />, show: true },
                 ];
                 const visibleTabs = tabs.filter(t => t.show);
                 const safeIndex = Math.min(dockSwiperIndex, Math.max(0, visibleTabs.length - 1));
                 if (visibleTabs.length === 0) return null;
                 const go = (dir: number) => setDockSwiperIndex((i) => (i + dir + visibleTabs.length) % visibleTabs.length);
-                return (
+                const gameTopic = gameStatus?.topic ? getTopicById(gameStatus.topic) : null;
+                const gamePhase = gameStatus?.phase ? GAME_PHASE_LABEL[gameStatus.phase] || gameStatus.phase : 'Belum berjalan';
+                const gameSettingsHref = `/games/trivia${privateKey ? `?key=${encodeURIComponent(privateKey)}` : ''}`;
+                            const sendGameCommand = (action: 'start' | 'stop' | 'skip' | 'reset') => {
+                                gameSocketRef.current?.emit('game-command', {
+                                    privateKey: privateKey || readStoredDockKey() || 'global',
+                                    gameId: TRIVIA_GAME_ID,
+                                    action,
+                                });
+                                if (action === 'reset') setGameStatus(null);
+                            };
+                            return (
                     <div className={dockSwiperMinimized ? 'fixed z-[110] bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden will-change-transform transform-gpu transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bottom-3 left-1/2 -translate-x-1/2 w-[96%] max-w-[420px] rounded-[20px]' : 'fixed z-[110] bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden will-change-transform transform-gpu transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bottom-4 left-1/2 -translate-x-1/2 w-[96%] max-w-[720px] rounded-2xl'}>
                         <div className="flex items-center justify-between px-2 py-1.5 bg-white/[0.03] border-b border-white/5">
                             <div className="flex items-center gap-1">
@@ -4223,6 +4271,88 @@ export default function Home() {
                                                             <button key={m} onClick={() => handleTimerControl('mode', { mode: m })} className={`flex-1 h-6 rounded-full text-[9px] font-black uppercase border ${activeTimer?.mode === m ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>{m}</button>
                                                         ))}
                                                     </div>
+                                                </div>
+                                            )}
+                                            {tab.id === 'game' && (
+                                                <div className="p-3 space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <Gamepad2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                                            <span className="text-white font-black text-[11px] uppercase tracking-widest">Trivia</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <button
+                                                                onClick={() => gameSocketRef.current?.emit('game-get', { privateKey: privateKey || readStoredDockKey() || 'global', gameId: TRIVIA_GAME_ID })}
+                                                                className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white"
+                                                                title="Refresh status game"
+                                                            >
+                                                                <RefreshCcw className="w-3 h-3" />
+                                                            </button>
+                                                            <a href={gameSettingsHref} className="h-7 px-2.5 rounded-full bg-white text-black text-[9px] font-black uppercase flex items-center">
+                                                                Settings
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 gap-1.5">
+                                                        <button onClick={() => sendGameCommand('start')} className="h-8 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[9px] font-black uppercase flex items-center justify-center gap-1">
+                                                            <Play className="w-3 h-3" /> Start
+                                                        </button>
+                                                        <button onClick={() => sendGameCommand('stop')} className="h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-[9px] font-black uppercase flex items-center justify-center gap-1">
+                                                            <Square className="w-3 h-3" /> Stop
+                                                        </button>
+                                                        <button onClick={() => sendGameCommand('skip')} className="h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-[9px] font-black uppercase flex items-center justify-center gap-1">
+                                                            <SkipForward className="w-3 h-3" /> Skip
+                                                        </button>
+                                                        <button onClick={() => sendGameCommand('reset')} className="h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-[9px] font-black uppercase flex items-center justify-center gap-1">
+                                                            <RotateCcw className="w-3 h-3" /> Reset
+                                                        </button>
+                                                    </div>
+                                                    {gameStatus?.phase ? (
+                                                        <>
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <span className="text-white font-black text-[12px] uppercase truncate">{gamePhase}</span>
+                                                                <span className="shrink-0 px-2 py-1 rounded-md bg-white/10 text-[9px] font-black text-gray-300">{gameTopic?.label || gameStatus.topic || '—'}</span>
+                                                            </div>
+                                                            <div className="grid grid-cols-3 gap-1.5 text-center">
+                                                                <div className="bg-white/5 rounded-lg py-2">
+                                                                    <div className="text-white font-black text-[13px] leading-none">{gameStatus.qIndex || 0}<span className="text-gray-500 text-[9px]">/{gameStatus.total || 0}</span></div>
+                                                                    <div className="text-gray-500 text-[8px] font-bold uppercase mt-1">Soal</div>
+                                                                </div>
+                                                                <div className="bg-white/5 rounded-lg py-2">
+                                                                    <div className="text-white font-black text-[13px] leading-none">{gameStatus.players || 0}</div>
+                                                                    <div className="text-gray-500 text-[8px] font-bold uppercase mt-1">Pemain</div>
+                                                                </div>
+                                                                <div className="bg-white/5 rounded-lg py-2">
+                                                                    <div className="text-white font-black text-[13px] leading-none">{gameStatus.round || 1}</div>
+                                                                    <div className="text-gray-500 text-[8px] font-bold uppercase mt-1">Ronde</div>
+                                                                </div>
+                                                            </div>
+                                                            {gameStatus.question && (
+                                                                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-white text-[15px] font-bold leading-snug line-clamp-3">
+                                                                    {gameStatus.question}
+                                                                </div>
+                                                            )}
+                                                            {gameStatus.leaderboard && gameStatus.leaderboard.length > 0 && (
+                                                                <div className="space-y-1.5">
+                                                                    <div className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Leaderboard</div>
+                                                                    {gameStatus.leaderboard.map((player, index) => (
+                                                                        <div key={`${player.username}-${index}`} className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-1.5">
+                                                                            <span className={`w-5 h-5 rounded-full grid place-items-center text-[9px] font-black ${index === 0 ? 'bg-amber-400 text-black' : 'bg-white/10 text-gray-300'}`}>
+                                                                                {index + 1}
+                                                                            </span>
+                                                                            <span className="flex-1 min-w-0 truncate text-gray-200 text-[11px] font-bold">{player.username}</span>
+                                                                            <span className="text-emerald-300 text-[10px] font-black tabular-nums">{player.score.toLocaleString('id-ID')}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {gameStatus.fallback && <div className="text-amber-400 text-[9px] font-bold">Menggunakan soal demo</div>}
+                                                        </>
+                                                    ) : (
+                                                        <div className="min-h-[72px] flex items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 text-center text-gray-500 text-[10px] leading-relaxed">
+                                                            Belum ada game aktif. Mulai Trivia dari Settings untuk melihat status di sini.
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             {tab.id === 'music' && (

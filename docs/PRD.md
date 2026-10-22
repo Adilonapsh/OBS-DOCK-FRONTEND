@@ -44,7 +44,7 @@
   - `poll` - 6 tema (Bar/Card/Donut/Minimal/Anime/Flower), vote `1-6`, `total/percent/count/timer`, auto-end `duration 10-600s`, pause/resume/visibility `server.ts:205, poll/*`
   - `clock` - 3 baris, `dayjs` format, `Asia/Jakarta`, opacity/size/color per baris `app/widgets/clock/*`
   - `media-player` - 11 tema (Standard/Matte/MatteDark/Compact/.../Vinyl/ColorPalette), SMTC `127.0.0.1:5000/now-playing`, `node-vibrant` palette, `autoHide` `app/widgets/media-player/*`
-  - `lyrics` - 11 tema sama, hanya lirik synced LRCLIB `app/widgets/lyrics/*`
+  - `lyrics` - 11 tema sama, lirik synced LRCLIB + pilih sumber `media-player` (SMTC) atau `music` (Song Request socket) `app/widgets/lyrics/*`
   - `timer` - 4 tema (Focus/Minimal/Glass/Subathon), `focusMinutes 1-120` + `totalSessions`, `subathonMode powerup/sleep/locked/paused`, semua tema respect `accent/bg/bgOpacity/textColor/fontSize` via `resolveBg`/`resolveTextColor`, registry `getTimerTheme` untuk tambah tema 3 langkah `app/widgets/timer/*`
   - `task` - 2 tema (Focus/Minimal), shared timer core `app/widgets/task/*`
   - `display` - legacy full-combined (chat+gift+pinned/like/counter/goal/ticker) `app/widgets/display/page.tsx:699`
@@ -83,6 +83,7 @@
 ### FR-4 Media/Lyrics
 - `FR-4.1` SMTC `fetch 127.0.0.1:5000/now-playing` tiap 1s, filter `included/excluded` apps, `showWhilePaused`, `swapArtistTrack` `app/widgets/media-player/display/page.tsx:168`.
 - `FR-4.2` Palette `node-vibrant` dari `Thumbnail` → `AccentPalette` `Vibrant/Muted/DarkVibrant...` `media-player/display/page.tsx:42`.
+- `FR-4.3` Widget Lyrics punya pemilih sumber `?source=smtc|music`. `smtc` = Media Player / aplikasi apa pun via SMTC `now-playing`; `music` = ikut room Song Request lewat socket (`join-room`, `song-get`, `song-update`) tanpa jadi reporter. Room key Music selalu diambil dari private key widget (`key`/`privateKey`); tidak ada fallback ke room global. Lyrics diambil dari LRCLIB (`lrclibEnabled`, `lyricsFontSize`, `maxLyricsLines`, `lyricsAlign`) dan highlight baris aktif. Query media memakai metadata SMTC mentah; query music mem-parse `Artist - Track` dari judul YouTube. Shared: `_shared/utils/lyrics.ts`, `_shared/hooks/useLyrics.ts`.
 
 ### FR-5 Overlay & Editor (Legacy)
 - `FR-5.1` `display/page.tsx` & `editor/page.tsx` pakai `OverlayTheme` (`queryToTheme/themeToQuery`) dari `app/overlay/components/theme.ts` - jangan hapus folder `app/overlay`.

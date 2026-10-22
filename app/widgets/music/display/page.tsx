@@ -21,6 +21,7 @@ import {
   VinylDiscTheme,
 } from '../../media-player/themes';
 import BrutalistMusicTheme from '../themes/Brutalist';
+import Retro8BitMusicTheme from '../themes/Retro8Bit';
 
 type SongKind = 'youtube' | 'audio';
 
@@ -161,13 +162,14 @@ async function getVibrantPalette(src: string | null, seed = ''): Promise<AccentP
   }
 }
 
-function QueueRotator({ queue, currentIndex, accent, showQueue, maxQueue, className }: {
+function QueueRotator({ queue, currentIndex, accent, showQueue, maxQueue, className, pixel }: {
   queue: Song[];
   currentIndex: number;
   accent: string;
   showQueue: boolean;
   maxQueue: number;
   className?: string;
+  pixel?: boolean;
 }) {
   // Urutan putar: semua kecuali yang sedang main, mulai dari setelah current.
   const upcoming = (() => {
@@ -236,14 +238,20 @@ function QueueRotator({ queue, currentIndex, accent, showQueue, maxQueue, classN
 
   return (
     <div
-      className={`relative w-full rounded-xl overflow-hidden border-0 px-3 py-2 ${className || ''}`}
-      style={{ ...bgOf(thumb), boxShadow: 'none', filter: 'none' }}
+      className={`relative w-full overflow-hidden border-0 px-3 py-2 ${pixel ? '' : 'rounded-xl'} ${className || ''}`}
+      style={{
+        ...bgOf(thumb),
+        boxShadow: 'none',
+        filter: 'none',
+                // Tema Retro 8-Bit: kotak lurus + border pixel ala kotak NES (tanpa clip-path)
+                ...(pixel ? { boxShadow: `inset 0 0 0 2px ${accent}`, borderRadius: 0, fontFamily: "'Press Start 2P', monospace" } : {}),
+      }}
     >
       {bgPrev && bgPrev !== thumb && (
-        <div key={bgPrev} className="absolute inset-0 queue-bg-fadeout" style={{ ...bgOf(bgPrev), boxShadow: 'none' }} />
+        <div key={bgPrev} className="absolute inset-0 queue-bg-fadeout" style={{ ...bgOf(bgPrev), boxShadow: pixel ? `inset 0 0 0 2px ${accent}` : 'none' }} />
       )}
       <div className="relative">
-      <div className="text-[8px] font-black uppercase tracking-widest text-white/40">
+      <div className={`font-black uppercase text-white/40 ${pixel ? '' : 'tracking-widest'}`} style={pixel ? { fontSize: 7, letterSpacing: '0.2em' } : { fontSize: 8, letterSpacing: '0.1em' }}>
         Up Next ({queue.length - 1})
       </div>
       <div
@@ -254,11 +262,19 @@ function QueueRotator({ queue, currentIndex, accent, showQueue, maxQueue, classN
           {origIdx >= 0 ? String(origIdx + 1).padStart(2, '0') : '•'}
         </span>
         {thumb ? (
-          <img src={thumb} alt="" className="w-8 h-[18px] rounded object-cover shrink-0" loading="lazy" />
+          <img src={thumb} alt="" className="w-8 h-[18px] object-cover shrink-0" style={pixel ? { borderRadius: 0 } : { borderRadius: 4 }} loading="lazy" />
         ) : null}
-        <span className="text-[12px] truncate flex-1 text-white font-black" style={{ textShadow: READABLE_SHADOW }}>{item.title}</span>
+        <span
+          className="truncate flex-1 text-white font-black"
+          style={{ fontSize: pixel ? 9 : 12, textShadow: READABLE_SHADOW, fontFamily: pixel ? "'Press Start 2P', monospace" : undefined }}
+        >
+          {item.title}
+        </span>
         {item.requestedBy && (
-          <span className="text-[10px] truncate shrink-0 max-w-[100px]" style={{ color: 'rgba(255,255,255,0.82)', textShadow: READABLE_SHADOW }}>
+          <span
+            className="truncate shrink-0 max-w-[100px]"
+            style={{ fontSize: pixel ? 7 : 10, color: 'rgba(255,255,255,0.82)', textShadow: READABLE_SHADOW, fontFamily: pixel ? "'Press Start 2P', monospace" : undefined }}
+          >
             {item.requestedBy}
           </span>
         )}
@@ -1174,17 +1190,18 @@ function MusicInner() {
       )}
       <div id="music-player-root" className={`w-full h-full flex p-4 ${alignmentCls} ${themeWrapper}`} style={{ ...posStyle, background: obsMode ? 'transparent' : undefined } as React.CSSProperties}>
         {shownSong ? (
-          <AutoScale defaultBase={500} baseWidth={maxWidth > 0 ? maxWidth : theme === 'minimal' ? 420 : 340}>
+          <AutoScale defaultBase={500} baseWidth={theme === 'retro8bit' ? 566 : maxWidth > 0 ? maxWidth : theme === 'minimal' ? 420 : 340}>
           <div
             // Saat fadingOut, class animasi entrance WAJIB dilepas: keyframe-nya pakai
             // fill `forwards` (opacity:1) yang menimpa inline opacity:0 sehingga fade
             // tidak pernah kelihatan dan widget hilang mendadak.
-            className={`${qpRow ? 'flex flex-row items-start gap-2' : 'flex flex-col gap-2'} relative w-full overflow-hidden ${wrapperVisible && !fadingOut ? '' : 'opacity-0 pointer-events-none'} ${fadingOut ? '' : 'anim-' + animClass} theme-${theme}`}
+            className={`flex flex-col gap-2 relative w-full overflow-hidden ${wrapperVisible && !fadingOut ? '' : 'opacity-0 pointer-events-none'} ${fadingOut ? '' : 'anim-' + animClass} theme-${theme}`}
             // Transition selalu dipasang agar fade-in saat resume juga mulus.
             style={{ opacity: fadingOut ? 0 : 1, transition: `opacity ${fadeOutMs}ms ease`, pointerEvents: fadingOut ? 'none' : undefined } as React.CSSProperties}
           >
+          <div className={qpRow ? 'flex flex-row items-start gap-2' : 'flex flex-col gap-2'}>
           {qpFirst && (
-            <QueueRotator queue={queue} currentIndex={currentIndex} accent={resolvedAccent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} />
+            <QueueRotator queue={queue} currentIndex={currentIndex} accent={resolvedAccent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} pixel={theme === 'retro8bit'} />
           )}
           {theme === 'minimal' ? (
             <div className="max-w-[420px]">
@@ -1229,6 +1246,8 @@ function MusicInner() {
             <VinylDiscTheme {...mediaProps} />
           ) : theme === 'brutalist' ? (
             <BrutalistMusicTheme {...mediaProps} />
+          ) : theme === 'retro8bit' ? (
+            <Retro8BitMusicTheme {...mediaProps} />
           ) : (
             <div className="w-full rounded-2xl overflow-hidden border border-white/10 backdrop-blur-md shadow-2xl" style={{ background: autoColor && !useCustomColors ? `${resolvedBg}e6` : 'rgba(0,0,0,0.7)' }}>
               <div className="flex items-center gap-2.5 px-3 py-2.5">
@@ -1266,8 +1285,9 @@ function MusicInner() {
             </div>
           )}
           {qpLast && (
-            <QueueRotator queue={queue} currentIndex={currentIndex} accent={resolvedAccent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} />
+            <QueueRotator queue={queue} currentIndex={currentIndex} accent={resolvedAccent} showQueue={showQueue && theme !== 'minimal'} maxQueue={maxQueue} className={qpNarrow} pixel={theme === 'retro8bit'} />
           )}
+          </div>
           </div>
           </AutoScale>
         ) : (

@@ -20,6 +20,7 @@ import VinylDiscTheme from '../themes/VinylDisc';
 import ColorPaletteTheme from '../themes/ColorPalette';
 import PlainTheme from '../themes/Plain';
 import BrutalistTheme from '../themes/Brutalist';
+import Retro8BitMusicTheme from '../../music/themes/Retro8Bit';
 import type { AccentPalette } from '../themes/types';
 import LargeAlbumArtTheme from '../themes/LargeAlbumArt';
 
@@ -355,7 +356,7 @@ function MediaPlayerInner() {
         .anim-slide-out-right { animation: slide-out-right 0.5s ease forwards }
       `}</style>
       <div id="media-player-root" className={`min-h-screen w-screen flex p-6 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined, ...posStyle } as any}>
-        <AutoScale defaultBase={500} baseWidth={maxWidth > 0 ? maxWidth : 500}>
+        <AutoScale defaultBase={500} baseWidth={theme === 'retro8bit' ? 566 : maxWidth > 0 ? maxWidth : 500}>
           <div
             id="main-container"
             className={`flex w-full ${alignmentCls} ${themeWrapper}`}
@@ -387,6 +388,7 @@ function MediaPlayerInner() {
                 case 'color-palette': return <ColorPaletteTheme {...themeProps} />;
                 case 'plain': return <PlainTheme {...themeProps} />;
                 case 'brutalist': return <BrutalistTheme {...themeProps} />;
+                case 'retro8bit': return <Retro8BitMusicTheme {...themeProps} />;
                 case 'large-album-art': return <LargeAlbumArtTheme {...themeProps} />;
                 case 'standard':
                 default: return <StandardTheme {...themeProps} />;

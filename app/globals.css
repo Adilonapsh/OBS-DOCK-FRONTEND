@@ -410,6 +410,58 @@ html.light .text-gray-600 {
   color: #475569 !important;
 }
 
+html.light .g-stage .text-white {
+  color: #fff !important;
+}
+
+html.light .g-stage .text-white\/90 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+html.light .g-stage .text-white\/80 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+html.light .g-stage .text-white\/70 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+html.light .g-stage .text-white\/60 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+html.light .g-stage .text-white\/50 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+html.light .g-stage .text-white\/40 {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+html.light .g-stage .text-white\/30 {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+html.light .g-stage .text-gray-200 {
+  color: #e5e7eb !important;
+}
+
+html.light .g-stage .text-gray-300 {
+  color: #d1d5db !important;
+}
+
+html.light .g-stage .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+html.light .g-stage .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+html.light .g-stage .text-gray-600 {
+  color: #4b5563 !important;
+}
+
 html.light .text-slate-300,
 html.light .text-slate-400,
 html.light .text-zinc-300,

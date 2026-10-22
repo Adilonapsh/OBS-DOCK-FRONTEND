@@ -28,11 +28,16 @@ const themes = [
   { value: 'brutalist', label: 'Brutalist' },
 ];
 const fontsList = [...WIDGET_FONTS];
+const sources = [
+  { value: 'smtc', label: 'Media Player (SMTC)' },
+  { value: 'music', label: 'Music Request (socket)' },
+];
 const showAnimations = ['fade-in','slide-in-from-top','slide-in-from-bottom','slide-in-from-left','slide-in-from-right'];
 const hideAnimations = ['fade-out','slide-out-top','slide-out-bottom','slide-out-left','slide-out-right'];
 
 function buildUrl(base: string, state: any): string {
   const p = new URLSearchParams();
+  p.set('source', state.source);
   p.set('theme', state.theme);
   if (state.font) p.set('font', state.font);
   p.set('fontSize', String(state.fontSize));
@@ -68,6 +73,7 @@ function buildUrl(base: string, state: any): string {
 }
 
 const defaults = {
+  source: 'smtc',
   theme: 'standard',
   font: 'Outfit',
   fontSize: 20,
@@ -185,8 +191,8 @@ function LyricsSettingsInner() {
             <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><Mic2 className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
-              <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Lyrics <span className="hidden sm:inline px-2 py-0.5 bg-white text-black rounded-full text-[9px]">LRCLIB • SMTC</span></div>
-              <div className="hidden sm:block text-gray-500 text-[10px]">Synced Lyrics • SMTC Bridge 127.0.0.1:5000 • LRCLIB</div>
+              <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Lyrics <span className="hidden sm:inline px-2 py-0.5 bg-white text-black rounded-full text-[9px]">{state.source === 'music' ? 'LRCLIB | Music Request' : 'LRCLIB | SMTC'}</span></div>
+              <div className="hidden sm:block text-gray-500 text-[10px]">{state.source === 'music' ? 'Synced Lyrics | Music Request (socket) | LRCLIB' : 'Synced Lyrics | SMTC Bridge | LRCLIB'}</div>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -266,6 +272,28 @@ function LyricsSettingsInner() {
               </div>
 
               {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
+
+              {/* Source */}
+              <div className="space-y-3">
+                <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Music className="w-4 h-4 text-pink-400" /> Source</h2>
+                <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+                  <label className="block">
+                    <span className="text-[11px] font-bold text-gray-300">Connect To</span>
+                    <select value={state.source} onChange={e => update('source', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+                      {sources.map(s => <option key={s.value} value={s.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{s.label}</option>)}
+                    </select>
+                  </label>
+                  {state.source === 'music' ? (
+                    <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">
+                      Widget ini ikut lagu yang sedang diputar di Music Request. Room key otomatis memakai private key widget ini, bukan room global. Kalau private key kosong, widget tidak connect.
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">
+                      Mengikuti lagu dari Media Player / SMTC Bridge. Atur Address &amp; Port di bagian SMTC Bridge.
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Lyrics */}
               <div className="space-y-3">

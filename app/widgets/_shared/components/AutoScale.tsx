@@ -107,8 +107,10 @@ export function AutoScale({
       let z = availW / base;
       if (fitBoth) {
         // Tinggi natural = tinggi ter-zoom saat ini dibagi zoom saat ini (zoom itu linear).
+        // getBoundingClientRect() ikut ter-zoom, sedangkan offsetHeight tidak di Chromium.
         const cur = zoomRef.current > 0 ? zoomRef.current : 1;
-        const naturalH = inner.offsetHeight > 0 ? inner.offsetHeight / cur : 0;
+        const rectH = inner.getBoundingClientRect().height;
+        const naturalH = rectH > 0 ? rectH / cur : 0;
         if (naturalH > 0 && availH > 0) z = Math.min(z, availH / naturalH);
       }
       if (maxScale != null) z = Math.min(z, maxScale);

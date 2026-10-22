@@ -6,7 +6,7 @@ import {
   Layers, Monitor, Search, Eye, EyeOff, ExternalLink, Sparkles,
   Gift, Heart, UserPlus, Zap, LayoutGrid, Filter,
   Settings2, AlertCircle, Menu, Palette, Pencil,
-  Music, Cog, GripVertical, Volume2, Pin, QrCode, Target, Trophy
+  Music, Cog, GripVertical, Volume2, Pin, QrCode, Target, Trophy, Gamepad2
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
@@ -22,7 +22,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant" | "donation-leaderboard";
+  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant" | "donation-leaderboard" | "games";
   recommended?: boolean;
   w: number;
   h: number;
@@ -100,6 +100,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "poll",
     recommended: true,
     w: 640, h: 320,
+  },
+  {
+    id: "games",
+    title: "Games - Trivia",
+    desc: "Kuis trivia live 4 topik (Bendera, Sejarah, Dunia, Mitos) - topik dipilih lewat voting chat dengan timer, jawab via chat, fakta unik, leaderboard, plus bonus poin dari like/follow/gift/donasi.",
+    category: "progress",
+    tags: ["Games", "Trivia", "Kuis", "Chat", "TikTok"],
+    layout: "games",
+    params: "topic=BENDERA&topicVote=1&topicVoteSec=60&lang=auto&questionSec=15&totalQuestions=10&maxGuesses=3",
+    preview: "games",
+    recommended: true,
+    w: 960, h: 540,
   },
   {
     id: "clock",
@@ -400,6 +412,23 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "games") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col justify-center p-2 gap-1.5">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1 text-[7px] font-black uppercase tracking-widest text-orange-400"><Gamepad2 className="w-2.5 h-2.5" /> Trivia</span>
+          <span className="text-[7px] font-black font-mono text-white/60">3/10 • 00:15</span>
+        </div>
+        <div className="text-white font-black text-[9px] leading-tight">Ibu kota Australia adalah?</div>
+        <div className="grid grid-cols-2 gap-1">
+          <div className="h-5 rounded-md bg-white/10 border border-white/10 flex items-center px-1.5 text-white text-[7px] font-bold">A. Sydney</div>
+          <div className="h-5 rounded-md bg-orange-500 border border-orange-400 flex items-center px-1.5 text-black text-[7px] font-black">B. Canberra ✓</div>
+          <div className="h-5 rounded-md bg-white/10 border border-white/10 flex items-center px-1.5 text-white text-[7px] font-bold">C. Melbourne</div>
+          <div className="h-5 rounded-md bg-white/10 border border-white/10 flex items-center px-1.5 text-white text-[7px] font-bold">D. Brisbane</div>
+        </div>
+      </div>
+    );
+  }
   if (type === "clock") {
     return (
       <div className="w-full h-full bg-black flex flex-col items-center justify-center p-3 gap-0">
@@ -667,6 +696,10 @@ function WidgetsListing() {
       const base = `${window.location.origin}/widgets/poll/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
+    if (item.id === 'games') {
+      const base = `${window.location.origin}/widgets/games/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
     if (item.id === 'pinned') {
       const base = `${window.location.origin}/widgets/pinned/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
@@ -882,6 +915,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/poll${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'games' ? (
+                        <Link href={`/games/trivia${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'pinned' ? (
                         <Link href={`/widgets/pinned${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
@@ -952,7 +989,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'donation-leaderboard' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'games' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'donation-leaderboard' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

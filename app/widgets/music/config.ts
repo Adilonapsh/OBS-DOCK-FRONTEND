@@ -13,6 +13,7 @@ export const MUSIC_THEMES = [
   { value: 'vinyl', label: 'Vinyl' },
   { value: 'vinyl-disc', label: 'Vinyl Disc' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'retro8bit', label: 'Retro 8-Bit' },
 ] as const;
 
 export const MUSIC_FONTS = WIDGET_FONTS;

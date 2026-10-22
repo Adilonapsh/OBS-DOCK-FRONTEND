@@ -94,6 +94,18 @@ export function autoTextOn(bgSolidHex: string | undefined, userColor: string | u
 // Shadow teks agar terbaca di atas video/stream tanpa background.
 export const READABLE_SHADOW = '0 1px 10px rgba(0,0,0,0.85), 0 0 3px rgba(0,0,0,0.9)';
 
+// Turunkan brightness warna hex (ratio 0..1). Dipakai tema yang butuh
+// variasi gelap dari satu warna (mis. shadow berlapis ala cartridge 8-bit).
+export function shadeHex(hex: string | undefined, ratio: number): string {
+  let h = (hex || '').replace('#', '').trim();
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  if (h.length !== 6 || /[^0-9a-f]/i.test(h)) return '#1e1642';
+  const r = Math.round(parseInt(h.slice(0, 2), 16) * ratio);
+  const g = Math.round(parseInt(h.slice(2, 4), 16) * ratio);
+  const b = Math.round(parseInt(h.slice(4, 6), 16) * ratio);
+  return `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+}
+
 // Untuk border/glow yang butuh versi pudar dari accent
 export function accentSoft(accent: string, alpha = 0.15): string {
   return hexToRgba(accent, alpha * 100);
