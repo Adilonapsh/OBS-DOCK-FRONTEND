@@ -432,7 +432,20 @@ function GamesSettingsInner() {
                       <span className="text-[11px] font-bold text-gray-300">Background</span>
                       <div className="mt-1 flex gap-1">
                         <input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" />
-                        <button onClick={() => update('bg', state.bg === 'transparent' ? '#050508' : 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button>
+                        <button
+                          type="button"
+                          aria-pressed={state.bg === 'transparent'}
+                          title={state.bg === 'transparent' ? 'Aktifkan background warna' : 'Buat background transparan'}
+                          onClick={() => update('bg', state.bg === 'transparent' ? '#050508' : 'transparent')}
+                          className={`flex-1 min-w-0 h-9 rounded-xl px-2 text-[10px] font-black uppercase border inline-flex items-center justify-center gap-1.5 transition-colors ${
+                            state.bg === 'transparent'
+                              ? 'bg-emerald-400 text-black border-emerald-300'
+                              : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                          }`}
+                        >
+                          <EyeOff className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{state.bg === 'transparent' ? 'Transparan Aktif' : 'Tanpa Background'}</span>
+                        </button>
                       </div>
                     </label>
                   </div>

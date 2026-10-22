@@ -3,7 +3,7 @@
 
 export type GameMode = 'multiplechoice' | 'truefalse' | 'image';
 export type GameDifficulty = 'easy' | 'medium' | 'hard';
-export type GamePhase = 'topics' | 'rules' | 'intro' | 'question' | 'reveal' | 'leaderboard';
+export type GamePhase = 'topics' | 'rules' | 'intro' | 'question' | 'reveal' | 'leaderboard' | 'champion';
 export type ChatControlMode = 'all' | 'mods' | 'off';
 export const TRIVIA_GAME_ID = 'trivia';
 
@@ -24,6 +24,7 @@ export type GamePlayer = {
   platform?: string;
   total: number;
   round: number;
+  correctAnswers: number;
   streak: number;
   guesses: number;
   extraGuesses: number;

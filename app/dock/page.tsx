@@ -39,6 +39,7 @@ const GAME_PHASE_LABEL: Record<string, string> = {
     question: "Pertanyaan",
     reveal: "Jawaban & fakta",
     leaderboard: "Leaderboard",
+    champion: "Juara ronde",
 };
 
 // Fallback key persisten: sessionStorage (per-tab) → localStorage (antar-tab) → ?key= di URL.

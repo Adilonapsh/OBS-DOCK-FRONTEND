@@ -85,6 +85,7 @@ type LivePlayerProps = {
 };
 
 type SfxKind = 'intro' | 'correct' | 'point' | 'fact';
+const CHAMPION_MS = 8000;
 
 // Semua SFX diambil dari FRONTEND/public/games/trivia.
 const SFX_FILES: Record<SfxKind, string> = {
@@ -379,6 +380,7 @@ function GamesInner() {
   const obsMode = getBoolParam(params, 'obs', false) || getBoolParam(params, 'transparent', false);
   const compactLayout =
     viewport.width < 1024 || viewport.height < 760 || viewport.width / viewport.height < 1.2;
+  const portraitLayout = viewport.height > viewport.width;
   const simulate = getBoolParam(params, 'simulate', false) || getBoolParam(params, 'preview', false);
   const pos = getStringParam(params, 'pos', cfg.pos);
   const posStyle = getPositionStyle(pos);
@@ -555,6 +557,7 @@ function GamesInner() {
           platform: platform || undefined,
           total: 0,
           round: 0,
+          correctAnswers: 0,
           streak: 0,
           guesses: 0,
           extraGuesses: 0,
@@ -583,7 +586,7 @@ function GamesInner() {
 
   const isRoundActive = useCallback(() => {
     const p = engineRef.current.phase;
-    return p !== 'topics' && p !== 'rules';
+    return p !== 'topics' && p !== 'rules' && p !== 'champion';
   }, []);
 
   const awardBonus = useCallback(
@@ -666,6 +669,7 @@ function GamesInner() {
         const base = POINTS[engine.q.difficulty] || 100;
         const points = base + Math.round(50 * left);
         player.correctQ = true;
+        player.correctAnswers += 1;
         player.streak += 1;
         player.total += points;
         player.round += points;
@@ -809,6 +813,7 @@ function GamesInner() {
 
       engine.players.forEach((p) => {
         p.round = 0;
+        p.correctAnswers = 0;
         p.guesses = 0;
         p.extraGuesses = 0;
         p.answeredQ = false;
@@ -979,31 +984,40 @@ function GamesInner() {
     (run: number) => {
       const engine = engineRef.current;
       if (run !== engine.run) return;
-      engine.phase = 'topics';
       engine.open = false;
       engine.q = null;
-      engine.qIndex = 0;
-      engine.questions = [];
-      engine.round += 1;
-      engine.players.forEach((p) => {
-        p.round = 0;
-      });
-      setPhase('topics');
-      setTopicVoteStarted(false);
-      setQIndex(0);
-      setQuestions([]);
-      setResults([]);
-      setVotes([]);
-      setFactsShown(false);
-      setShowPercents(false);
-      setRound(engine.round);
-      setTopicVoteClosed(false);
-      resetTopicVote();
+      engine.phase = 'champion';
+      setPhase('champion');
       syncPlayers();
-      if (simulate && !cfgRef.current.topicVote) schedule(run, () => void startRound(), 2500);
+
+      (async () => {
+        await sleep(CHAMPION_MS);
+        if (run !== engine.run) return;
+        engine.phase = 'topics';
+        engine.qIndex = 0;
+        engine.questions = [];
+        engine.round += 1;
+        engine.players.forEach((p) => {
+          p.round = 0;
+          p.correctAnswers = 0;
+        });
+        setPhase('topics');
+        setTopicVoteStarted(false);
+        setQIndex(0);
+        setQuestions([]);
+        setResults([]);
+        setVotes([]);
+        setFactsShown(false);
+        setShowPercents(false);
+        setRound(engine.round);
+        setTopicVoteClosed(false);
+        resetTopicVote();
+        syncPlayers();
+        if (simulate && !cfgRef.current.topicVote) schedule(run, () => void startRound(), 2500);
+      })();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [resetTopicVote, schedule, startRound, syncPlayers],
+    [resetTopicVote, schedule, sleep, startRound, syncPlayers],
   );
 
   const skip = useCallback(() => {
@@ -1464,14 +1478,12 @@ function GamesInner() {
       players: playerList.length,
       question: questions[qIndex]?.question || '',
       leaderboard: [...playerList]
-        .filter((player) => player.total > 0)
         .sort((a, b) => b.total - a.total)
-        .slice(0, 5)
         .map(({ username, total }) => ({ username, score: total })),
       fallback,
       at: Date.now(),
     });
-  }, [phase, topicKey, round, qIndex, questions, playerList.length, fallback, privateKey, simulate, connected]);
+  }, [phase, topicKey, round, qIndex, questions, playerList, fallback, privateKey, simulate, connected]);
 
   /* ============ DERIVED RENDER VALUES ============ */
   const topic = getTopicById(topicKey);
@@ -1483,7 +1495,24 @@ function GamesInner() {
   const liveTop = [...playerList].filter((p) => p.total > 0).sort((a, b) => b.total - a.total).slice(0, 5);
   const roundTop = [...playerList].filter((p) => p.round > 0).sort((a, b) => b.round - a.round).slice(0, 5);
   const sortedResults = [...results].sort((a, b) => a.time - b.time);
-  const restResults = sortedResults.slice(10);
+  const resultsByPlayer = new Map(sortedResults.map((result) => [result.key, result]));
+  const leaderboardPlayers = playerList
+    .map((player) => ({ player, result: resultsByPlayer.get(keyOf(player.username)) }))
+    .sort((a, b) => {
+      if (a.result && b.result) return a.result.time - b.result.time;
+      if (a.result) return -1;
+      if (b.result) return 1;
+      return b.player.total - a.player.total || a.player.username.localeCompare(b.player.username);
+    });
+  const roundChampions = [...playerList]
+    .filter((player) => player.round > 0)
+    .sort((a, b) => b.round - a.round || b.correctAnswers - a.correctAnswers)
+    .slice(0, 3);
+  const championPodium = [
+    { player: roundChampions[1], rank: 2 },
+    { player: roundChampions[0], rank: 1 },
+    { player: roundChampions[2], rank: 3 },
+  ];
   const pcts = question ? voterPercents(question, votes) : [];
   const correctIndex = question
     ? question.options.findIndex((o) => normalizeText(o) === normalizeText(question.correct))
@@ -1507,7 +1536,7 @@ function GamesInner() {
 
   return (
     <>
-      {obsMode && (
+      {(obsMode || cfg.bg === 'transparent') && (
         <style
           dangerouslySetInnerHTML={{
             __html:
@@ -1522,14 +1551,14 @@ function GamesInner() {
             ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-0'
             : 'w-full min-h-screen bg-[#050508] flex p-4'
         }
-        style={{ ...posStyle, background: obsMode ? 'transparent' : '#050508' } as React.CSSProperties}
+        style={{ ...posStyle, background: obsMode || cfg.bg === 'transparent' ? 'transparent' : '#050508' } as React.CSSProperties}
       >
         <AutoScale
           defaultBase={viewport.width}
           baseWidth={viewport.width}
         >
           <div
-            className={`g-stage ${compactLayout ? 'g-compact' : ''}`}
+            className={`g-stage ${compactLayout ? 'g-compact' : ''} ${portraitLayout ? 'g-portrait' : ''}`}
             style={
               {
                 width: viewport.width,
@@ -1737,6 +1766,71 @@ function GamesInner() {
                   </span>
                 </div>
               </div>
+            </div>
+
+            {/* ================= SCREEN 6: ROUND CHAMPIONS ================= */}
+            <div id="g-screen-champion" className={`g-screen ${phase === 'champion' ? 'active' : ''} p-10 pt-14`}>
+                <div className="g-champion-content w-full max-w-5xl mx-auto flex flex-col h-full items-center justify-center">
+                  <div className="g-anim-item text-center mb-8" style={{ transitionDelay: '.1s' }}>
+                    <p className="g-mono text-gray-300 text-sm mb-2 uppercase tracking-[.25em]">
+                      RONDE {round} • PENGHARGAAN AKHIR
+                    </p>
+                    <h1 className="g-heading text-7xl uppercase tracking-tight">
+                      JUARA <span className="g-accent-on-dark">RONDE {round}</span>
+                    </h1>
+                    <p className="g-mono text-xs text-gray-300 mt-3 uppercase tracking-widest">
+                      {totalQuestions} SOAL SELESAI • SKOR DIRESET DI RONDE BERIKUTNYA
+                    </p>
+                  </div>
+
+                  {roundChampions.length > 0 ? (
+                    <div className="g-champion-podium grid grid-cols-3 items-end gap-6 w-full">
+                      {championPodium.map(({ player, rank }, index) => (
+                        <div
+                          key={rank}
+                          className={`g-anim-item g-champion-card flex min-w-0 flex-col items-center justify-end text-center ${rank === 1 ? 'g-champion-first' : ''}`}
+                          style={{ transitionDelay: `${.2 + index * .15}s` }}
+                        >
+                          {player ? (
+                            <>
+                              <div className="g-champion-avatar-wrap relative mb-4 rounded-full border-4 p-1" style={{ borderColor: rank === 1 ? 'var(--g-accent)' : 'rgba(255,255,255,.24)' }}>
+                                {rank === 1 && (
+                                  <span className="absolute -top-4 left-1/2 z-10 -translate-x-1/2 g-accent-bg g-mono text-xs font-black uppercase tracking-widest px-3 py-1">
+                                    JUARA
+                                  </span>
+                                )}
+                                <div className="h-full w-full overflow-hidden rounded-full">
+                                  <Avatar name={player.username} url={cfg.showAvatar ? player.avatar : undefined} size={120} fill />
+                                </div>
+                              </div>
+                              <span className="g-heading g-champion-name max-w-full truncate text-3xl font-bold">{player.username}</span>
+                              <span className="g-mono g-champion-score mt-2 text-sm text-gray-300 uppercase">
+                                {player.round.toLocaleString('id-ID')} POIN • {player.correctAnswers} BENAR
+                              </span>
+                              <div className={`g-champion-block g-champion-block-${rank} mt-5 flex w-full items-center justify-center border border-white/20 bg-gradient-to-b from-white/[.08] to-black/60`}>
+                                <span className={`g-heading font-black ${rank === 1 ? 'text-8xl text-white' : 'text-7xl text-white/50'}`}>
+                                  {rank}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="g-champion-avatar-wrap mb-4 grid place-items-center rounded-full border-4 border-dashed border-white/10 text-4xl text-white/20">?</div>
+                              <span className="g-mono text-xs uppercase text-gray-500">Belum ada juara</span>
+                              <div className={`g-champion-block g-champion-block-${rank} mt-5 flex w-full items-center justify-center border border-white/10 bg-white/[.02]`}>
+                                <span className="g-heading text-7xl font-black text-white/15">{rank}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="g-anim-item flex flex-1 items-center justify-center g-mono text-center text-gray-300 uppercase tracking-widest">
+                      Belum ada pemain yang mendapatkan poin di ronde ini
+                    </div>
+                  )}
+                </div>
             </div>
 
             {/* ================= SCREEN 4: SOAL ================= */}
@@ -2008,46 +2102,49 @@ function GamesInner() {
                   </div>
                 </div>
 
-                <div className="g-leaderboard-list flex flex-col gap-2">
-                  {sortedResults.length === 0 && (
+                <div className="g-leaderboard-list flex flex-1 min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pr-2">
+                  {leaderboardPlayers.length === 0 && (
                     <div className="g-anim-item g-mono text-gray-300 uppercase p-6 border border-gray-800" style={{ transitionDelay: '.3s' }}>
                       Belum ada yang menjawab benar
                     </div>
                   )}
-                  {sortedResults.slice(0, 10).map((r, i) => (
+                  {leaderboardPlayers.map(({ player, result }, i) => (
                     <div
-                      key={`${r.key}-${i}`}
-                      className={`g-lb-row-wrapper g-rank-${i} relative flex w-full h-[60px] bg-gray-900 border border-gray-800 overflow-hidden shadow-lg`}
-                      style={{ '--delay': `${0.1 + i * 0.12}s` } as React.CSSProperties}
+                      key={keyOf(player.username)}
+                      className={`g-lb-row-wrapper g-rank-${i} relative flex w-full h-[60px] shrink-0 bg-gray-900 border border-gray-800 overflow-hidden shadow-lg`}
+                      style={{ '--delay': `${0.1 + Math.min(i, 8) * 0.12}s` } as React.CSSProperties}
                     >
                       <div className="absolute left-0 top-0 bottom-0 w-[25%] bg-white z-10 g-anim-white-base" />
                       <div className="absolute top-0 bottom-0 z-20 g-sweep-block" />
                       <div className="relative z-30 flex w-full h-full g-content-reveal">
                         <div className="w-[25%] relative overflow-hidden bg-gray-800">
-                          {cfg.showAvatar && <Avatar name={r.username} url={r.avatar} size={48} fill />}
+                          {cfg.showAvatar && <Avatar name={player.username} url={player.avatar} size={48} fill />}
                           <span className="g-lb-rank g-mono">
                             {String(i + 1).padStart(2, '0')}
                           </span>
                         </div>
                         <div className="w-[55%] flex flex-col justify-center px-6">
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl font-bold text-white truncate max-w-[200px]">{r.username}</span>
-                            <PlatformBadge platform={r.platform} size={20} />
-                            {r.streak >= 3 && (
+                            <span className="text-2xl font-bold text-white truncate max-w-[200px]">{player.username}</span>
+                            <PlatformBadge platform={player.platform} size={20} />
+                            {result && player.streak >= 3 && (
                               <span className="g-accent-bg g-mono text-[9px] font-bold px-1 rounded uppercase">
-                                {r.streak}X BERUNTUN
+                                {player.streak}X BERUNTUN
                               </span>
                             )}
                           </div>
                           <span className="g-mono text-xs text-gray-300 mt-1">
-                            {(r.time / 1000).toFixed(1).replace('.', ',')} DTK
+                            {result
+                              ? `${(result.time / 1000).toFixed(1).replace('.', ',')} DTK • +${result.points} SOAL INI`
+                              : player.answeredQ ? 'BELUM BENAR' : 'BELUM MENJAWAB SOAL INI'}
                           </span>
                         </div>
                         <div
-                          className="w-[20%] flex items-center justify-center"
+                          className="w-[20%] flex flex-col items-center justify-center"
                           style={{ color: i === 0 ? accentFg : i === 1 ? '#111111' : '#ffffff' }}
                         >
-                          <CountUp value={r.points} prefix="+" delay={(0.1 + i * 0.12 + 0.4) * 1000} className="text-3xl g-heading font-bold" />
+                          <CountUp value={player.total} delay={(0.1 + Math.min(i, 8) * 0.12 + 0.4) * 1000} className="text-3xl g-heading font-bold" />
+                          <span className="g-mono text-[8px] uppercase">TOTAL POIN</span>
                         </div>
                       </div>
                     </div>
@@ -2056,29 +2153,8 @@ function GamesInner() {
 
                 <div className="g-anim-item mt-auto border-t border-gray-800 pt-6 flex justify-between items-end" style={{ transitionDelay: '.7s' }}>
                   <div className="flex flex-col gap-3">
-                    <span className="g-heading text-sm tracking-widest uppercase text-gray-300 font-bold">JUGA BENAR</span>
-                    <div className="flex gap-4">
-                      {restResults.slice(0, 5).map((r) => (
-                        cfg.showAvatar ? (
-                          <span key={`rest-${r.key}`} className="relative inline-flex">
-                            <Avatar name={r.username} url={r.avatar} size={40} />
-                            <PlatformBadge platform={r.platform} size={12} className="absolute -bottom-1 -right-1" />
-                          </span>
-                        ) : (
-                          <span key={`rest-${r.key}`} className="g-mono text-[10px] text-gray-300 bg-white/5 border border-white/10 rounded-full px-2 py-1 max-w-[90px] inline-flex items-center gap-1">
-                            <PlatformBadge platform={r.platform} size={11} />
-                            <span className="truncate">{r.username}</span>
-                          </span>
-                        )
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="g-mono text-xs text-gray-300">{sortedResults.length} ORANG</span>
-                    <div className="w-12 h-12 rounded-full border border-gray-600 flex items-center justify-center g-mono font-bold text-sm bg-[#0c0c11]">
-                      +{Math.max(0, restResults.length - 5)}
-                    </div>
-                    <span className="g-mono text-[9px] text-gray-300 uppercase">LAINNYA</span>
+                    <span className="g-heading text-sm tracking-widest uppercase text-gray-300 font-bold">PESERTA BABAK INI</span>
+                    <span className="g-mono text-xs text-gray-300">{leaderboardPlayers.length} ORANG • SKOR TOTAL TERMASUK BABAK SEBELUMNYA</span>
                   </div>
                 </div>
               </div>
@@ -2190,6 +2266,15 @@ const GAME_CSS = `
 .g-rank-0 .g-sweep-block{background-color:var(--g-accent,#ff5500)}
 .g-rank-1 .g-sweep-block{background-color:#94a3b8}
 .g-rank-2 .g-sweep-block{background-color:#b45309}
+.g-champion-podium{width:min(100%,760px);height:580px;flex:none;margin-inline:auto}
+.g-champion-avatar-wrap{width:144px;height:144px}
+.g-champion-block-1{height:260px;border-top:5px solid var(--g-accent,#ff5500)}
+.g-champion-block-2{height:170px}
+.g-champion-block-3{height:130px}
+@keyframes gPodiumRise{from{clip-path:inset(100% 0 0);opacity:.35}to{clip-path:inset(0);opacity:1}}
+.g-screen.active .g-champion-block-2{animation:gPodiumRise .8s cubic-bezier(.16,1,.3,1) .2s both}
+.g-screen.active .g-champion-block-3{animation:gPodiumRise .8s cubic-bezier(.16,1,.3,1) .38s both}
+.g-screen.active .g-champion-block-1{animation:gPodiumRise 1s cubic-bezier(.16,1,.3,1) .56s both}
 @media (max-width:1023px), (max-height:760px){
   .g-stage.g-compact #g-screen-topics{align-items:stretch;justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;padding:20px 14px 18px}
   .g-stage.g-compact #g-screen-topics>h1{font-size:clamp(2.5rem,10vw,3.5rem);text-align:center;margin-top:0;margin-bottom:.25rem}
@@ -2241,5 +2326,41 @@ const GAME_CSS = `
   .g-stage.g-compact #g-screen-leaderboard .g-lb-row-wrapper>div>div:nth-child(2)>div>span:first-child{font-size:1rem;max-width:100px}
   .g-stage.g-compact #g-screen-leaderboard .g-lb-row-wrapper>div>div:nth-child(3){width:20%}
   .g-stage.g-compact #g-screen-leaderboard .g-lb-row-wrapper>div>div:nth-child(3) span{font-size:1.5rem}
+
+  .g-stage.g-compact #g-screen-champion{overflow-y:auto;overscroll-behavior:contain;padding:24px 16px}
+  .g-stage.g-compact #g-screen-champion h1{font-size:clamp(2.75rem,12vw,4rem)}
+  .g-stage.g-compact #g-screen-champion .g-champion-podium{height:clamp(360px,58vh,500px);gap:8px}
+  .g-stage.g-compact #g-screen-champion .g-champion-avatar-wrap{width:84px;height:84px}
+  .g-stage.g-compact #g-screen-champion .g-champion-name{font-size:1.15rem}
+  .g-stage.g-compact #g-screen-champion .g-champion-score{font-size:8px;line-height:1.4}
+  .g-stage.g-compact #g-screen-champion .g-champion-block-1{height:150px}
+  .g-stage.g-compact #g-screen-champion .g-champion-block-2{height:100px}
+  .g-stage.g-compact #g-screen-champion .g-champion-block-3{height:75px}
 }
+@media (prefers-reduced-motion:reduce){
+  .g-screen.active .g-champion-block-1,.g-screen.active .g-champion-block-2,.g-screen.active .g-champion-block-3{animation:none;clip-path:none}
+}
+.g-stage.g-portrait [class~="text-xs"]{font-size:calc(var(--text-xs,.75rem)*1.35)!important}
+.g-stage.g-portrait [class~="text-sm"]{font-size:calc(var(--text-sm,.875rem)*1.3)!important}
+.g-stage.g-portrait [class~="text-base"]{font-size:calc(var(--text-base,1rem)*1.25)!important}
+.g-stage.g-portrait [class~="text-lg"]{font-size:calc(var(--text-lg,1.125rem)*1.2)!important}
+.g-stage.g-portrait [class~="text-xl"]{font-size:calc(var(--text-xl,1.25rem)*1.15)!important}
+.g-stage.g-portrait [class~="text-2xl"]{font-size:calc(var(--text-2xl,1.5rem)*1.15)!important}
+.g-stage.g-portrait [class~="text-3xl"]{font-size:calc(var(--text-3xl,1.875rem)*1.12)!important}
+.g-stage.g-portrait [class~="text-4xl"]{font-size:calc(var(--text-4xl,2.25rem)*1.1)!important}
+.g-stage.g-portrait [class~="text-5xl"]{font-size:calc(var(--text-5xl,3rem)*1.08)!important}
+.g-stage.g-portrait [class~="text-6xl"]{font-size:calc(var(--text-6xl,3.75rem)*1.06)!important}
+.g-stage.g-portrait [class~="text-7xl"]{font-size:calc(var(--text-7xl,4.5rem)*1.05)!important}
+.g-stage.g-portrait [class~="text-8xl"]{font-size:calc(var(--text-8xl,6rem)*1.05)!important}
+.g-stage.g-portrait [class~="text-[8px]"]{font-size:12px!important}
+.g-stage.g-portrait [class~="text-[9px]"]{font-size:13.5px!important}
+.g-stage.g-portrait [class~="text-[10px]"]{font-size:15px!important}
+.g-stage.g-portrait [class~="text-[11px]"]{font-size:16.5px!important}
+.g-stage.g-portrait [class~="text-[2.5rem]"]{font-size:3rem!important}
+.g-stage.g-portrait [class~="text-[7rem]"]{font-size:7.35rem!important}
+.g-stage.g-portrait .g-option-label{font-size:2.1rem!important}
+.g-stage.g-portrait .g-option-percent{font-size:1.2rem!important}
+.g-stage.g-portrait .g-option-correct{font-size:13px!important}
+.g-stage.g-portrait .g-lb-rank{font-size:1.5rem!important}
+.g-stage.g-portrait .g-lang-chip,.g-stage.g-portrait .g-setting-chip{font-size:15px!important}
 `;
