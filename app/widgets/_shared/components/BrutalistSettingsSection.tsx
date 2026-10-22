@@ -55,21 +55,41 @@ export function BrutalistSettingsSection({ state, update }: Props) {
         <div>
           <span className="text-[11px] font-bold text-gray-300">Preset Cepat</span>
           <div className="mt-1 grid grid-cols-3 gap-2">
-            {BRUTALIST_PRESETS.map((preset) => (
-              <button
-                key={preset.label}
-                onClick={() => {
-                  update('brutalistBg', preset.bg);
-                  update('brutalistTextColor', preset.text);
-                  update('brutalistBadgeBg', preset.badge);
-                  update('brutalistBorderColor', preset.border);
-                }}
-                className="p-2 text-[10px] font-black border-2 border-black hover:opacity-90"
-                style={{ background: preset.bg, color: preset.text }}
-              >
-                {preset.label}
-              </button>
-            ))}
+            {BRUTALIST_PRESETS.map((preset) => {
+              const active =
+                bg.toLowerCase() === preset.bg.toLowerCase() &&
+                textColor.toLowerCase() === preset.text.toLowerCase() &&
+                badgeBg.toLowerCase() === preset.badge.toLowerCase() &&
+                borderColor.toLowerCase() === preset.border.toLowerCase();
+              return (
+                <button
+                  type="button"
+                  key={preset.label}
+                  onClick={() => {
+                    update('brutalistBg', preset.bg);
+                    update('brutalistTextColor', preset.text);
+                    update('brutalistBadgeBg', preset.badge);
+                    update('brutalistBorderColor', preset.border);
+                  }}
+                  title={`Bubble ${preset.bg} • Text ${preset.text} • Badge ${preset.badge} • Border ${preset.border}`}
+                  className="p-2 text-[10px] font-black border-2 hover:opacity-90 transition-transform hover:-translate-y-0.5"
+                  style={{
+                    background: preset.bg,
+                    color: preset.text,
+                    borderColor: preset.border,
+                    boxShadow: active
+                      ? `0 0 0 2px #ffffff, 0 0 0 4px ${preset.border}`
+                      : `2px 2px 0px 0px ${preset.border}`,
+                  }}
+                >
+                  <span className="block truncate">{preset.label}</span>
+                  <span className="mt-1 flex items-center justify-center gap-1">
+                    <span className="w-2.5 h-2.5 border" style={{ background: preset.badge, borderColor: preset.border }} />
+                    <span className="w-2.5 h-2.5 border" style={{ background: preset.border, borderColor: preset.border }} />
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3">

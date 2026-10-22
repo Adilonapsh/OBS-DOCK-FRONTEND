@@ -18,6 +18,10 @@ export function DonationLeaderboardSettingsForm({
   privateKey: string;
   onCopy: () => void;
 }) {
+  const textColorKey: keyof DonationLeaderboardSettings =
+    state.theme === 'brutalist' ? 'brutalistTextColor' : 'textColor';
+  const textColor = state[textColorKey] as string;
+
   return (
     <>
       <div className="space-y-3">
@@ -70,7 +74,7 @@ export function DonationLeaderboardSettingsForm({
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Accent</span><input type="color" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Trans</button></div></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks</span><div className="mt-1 flex gap-1"><input type="color" value={state.textColor || '#ffffff'} onChange={(e) => update('textColor', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('textColor', '')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${!state.textColor ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Auto</button></div></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks</span><div className="mt-1 flex gap-1"><input type="color" value={textColor || (state.theme === 'brutalist' ? '#000000' : '#ffffff')} onChange={(e) => update(textColorKey, e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update(textColorKey, '')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${!textColor ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Auto</button></div></label>
         </div>
       </div>
 

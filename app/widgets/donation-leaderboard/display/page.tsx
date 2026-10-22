@@ -7,6 +7,7 @@ import { getSocketUrl } from '../../_shared/utils/socket';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
+import { parseBrutalistParams } from '../../_shared/constants/brutalist';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import { donationLeaderboardThemeComponents } from '../themes/registry';
 import type { DonationEntry } from '../themes/types';
@@ -106,6 +107,7 @@ function DonationLeaderboardInner() {
   const period = getStringParam(params, 'period', 'all') as 'today' | 'yesterday' | 'week' | 'month' | 'all';
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
+  const brutalist = parseBrutalistParams((k) => params.get(k));
 
   const [donations, setDonations] = useState<Record<string, unknown>[]>([]);
   const [connected, setConnected] = useState(simulate);
@@ -242,6 +244,7 @@ function DonationLeaderboardInner() {
             showAmount={showAmount}
             showPlatform={showPlatform}
             showAvatar={showAvatar}
+            {...brutalist}
           />
         </AutoScale>
       </div>
