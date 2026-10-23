@@ -1,0 +1,12 @@
+.task-glass-card {
+  background: rgba(147, 158, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 36px;
+  box-shadow: 0 12px 32px rgba(100, 110, 210, 0.25);
+}
+.task-glass-item {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}

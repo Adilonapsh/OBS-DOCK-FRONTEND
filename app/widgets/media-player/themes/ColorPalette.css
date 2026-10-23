@@ -1,0 +1,9 @@
+.color-palette-theme {
+  transition: background 0.5s ease;
+}
+.color-palette-theme .rounded-full {
+  transition: transform 0.2s ease;
+}
+.color-palette-theme .rounded-full:hover {
+  transform: scale(1.15);
+}
