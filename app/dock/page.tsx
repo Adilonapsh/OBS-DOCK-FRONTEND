@@ -7,7 +7,7 @@ import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2, Gamepad2,
     RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus, GripVertical,
-    Share2,     ListPlus, ListChecks, Check, Clock, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power
+    Share2,     ListPlus, ListChecks, Check, Clock, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -284,6 +284,10 @@ export default function Home() {
     const [pinnedChat, setPinnedChat] = useState<{ user: string; text: string; platform: string; avatar?: string } | null>(null);
     const [pinnedExiting, setPinnedExiting] = useState(false);
     const pinnedExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [speakingChat, setSpeakingChat] = useState<{ user: string; text: string; platform: string; avatar?: string } | null>(null);
+    const [speakingExiting, setSpeakingExiting] = useState(false);
+    const speakingExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const speakingAutoClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [viewerData, setViewerData] = useState<Record<string, { platform: string; avatar?: string; initials: string }>>({});
     const [chatSearch, setChatSearch] = useState("");
     const [activityLogs, setActivityLogs] = useState<Array<{ id: number; text: string; platform?: string; time?: string }>>([]);
@@ -336,6 +340,7 @@ export default function Home() {
     const [activeTasks, setActiveTasks] = useState<any>(null);
     const [gameStatus, setGameStatus] = useState<GameStatus | null>(null);
     const [activeWidgets, setActiveWidgets] = useState<Array<{ widgetId: string; count: number }>>([]);
+    const gamePresenceSeenRef = useRef(false);
     const [taskMinimized, setTaskMinimized] = useState(() => {
         if (typeof window === 'undefined') return true;
         try { const v = localStorage.getItem('dock-taskMinimized'); return v === null ? true : v === 'true'; } catch { return true; }
@@ -362,7 +367,7 @@ export default function Home() {
         if (typeof window === 'undefined') return true;
         try { const v = localStorage.getItem('dock-timerMinimized'); return v === null ? true : v === 'true'; } catch { return true; }
     });
-    const [dockSwiperIndex, setDockSwiperIndex] = useState(0);
+    const [dockSwiperTab, setDockSwiperTab] = useState<'poll' | 'task' | 'timer' | 'game' | 'music' | null>(null);
     const [dockTouchStart, setDockTouchStart] = useState<number | null>(null);
     const [dockSwiperMinimized, setDockSwiperMinimized] = useState(() => {
         if (typeof window === 'undefined') return true;
@@ -829,7 +834,7 @@ export default function Home() {
 
     // Helper Widget → SB: cek enabled + kirim DoAction. Key sesuai useWidgetSbMap.
     // Params custom (template {variabel}) di-resolve dari args aktual lalu digabung.
-    const fireWidgetSb = (key: "poll_started" | "poll_ended" | "task_added" | "task_done" | "task_cleared" | "timer_started" | "timer_finished" | "timer_extended" | "timer_reduced" | "song_requested" | "song_next" | "chat_pinned" | "chat_unpinned", args: Record<string, unknown>) => {
+    const fireWidgetSb = (key: "poll_started" | "poll_ended" | "task_added" | "task_done" | "task_cleared" | "timer_started" | "timer_finished" | "timer_extended" | "timer_reduced" | "song_requested" | "song_next" | "chat_pinned" | "chat_unpinned" | "speak_started" | "speak_stopped", args: Record<string, unknown>) => {
         try {
             const entry = widgetSbMapRef.current?.[key];
             if (!entry?.enabled) return false;
@@ -1115,6 +1120,8 @@ export default function Home() {
     useEffect(() => {
         const room = privateKey || readStoredDockKey() || 'global';
         setGameStatus(null);
+        setActiveWidgets([]);
+        gamePresenceSeenRef.current = false;
         const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] as const });
         gameSocketRef.current = socket;
         socket.on('connect', () => {
@@ -1128,11 +1135,23 @@ export default function Home() {
         socket.on('widget-presence', (data: { widgets?: Array<{ widgetId: string; count: number }> }) => {
             setActiveWidgets(Array.isArray(data?.widgets) ? data.widgets : []);
         });
+        const presenceRefresh = window.setInterval(() => {
+            if (socket.connected) socket.emit('widget-presence-get', { privateKey: room });
+        }, 3000);
         return () => {
+            window.clearInterval(presenceRefresh);
             socket.disconnect();
             if (gameSocketRef.current === socket) gameSocketRef.current = null;
         };
     }, [privateKey]);
+
+    useEffect(() => {
+        const gameActive = activeWidgets.some((widget) => widget.widgetId === 'games');
+        if (gameActive && !gamePresenceSeenRef.current) {
+            setDockSwiperMinimized(false);
+        }
+        gamePresenceSeenRef.current = gameActive;
+    }, [activeWidgets]);
 
     const headerControlClass = "dock-control-btn flex items-center justify-center gap-2";
     const connectButtonClass = "system-connect-btn flex items-center justify-center rounded-lg text-white shadow-[0_0_10px_rgba(59,130,246,0.2)]";
@@ -1555,6 +1574,56 @@ export default function Home() {
         try {
             if (tkSocketRef.current?.connected) tkSocketRef.current.emit("pin-chat", payload);
         } catch { }
+    }
+
+    const stopSpeaking = () => {
+        if (!speakingChat || speakingExiting) return;
+        setSpeakingExiting(true);
+        if (speakingExitTimer.current) clearTimeout(speakingExitTimer.current);
+        if (speakingAutoClearTimer.current) clearTimeout(speakingAutoClearTimer.current);
+        speakingExitTimer.current = setTimeout(() => {
+            setSpeakingChat(null);
+            setSpeakingExiting(false);
+        }, 300);
+        // Stop audio + fadeout di widget Speak.
+        const payload = { privateKey: getTimerRoom() };
+        try {
+            if (pollSocketRef.current?.connected) pollSocketRef.current.emit("speak-stop", payload);
+        } catch { }
+        try {
+            if (tkSocketRef.current?.connected) tkSocketRef.current.emit("speak-stop", payload);
+        } catch { }
+        fireWidgetSb('speak_stopped', { nickname: speakingChat.user, comment: speakingChat.text, platform: speakingChat.platform });
+    }
+
+    const speakMessage = (user: string, text: string, platform: string, avatar?: string) => {
+        if (speakingExitTimer.current) clearTimeout(speakingExitTimer.current);
+        if (speakingAutoClearTimer.current) clearTimeout(speakingAutoClearTimer.current);
+        setSpeakingExiting(false);
+        setSpeakingChat({ user, text, platform, avatar });
+        fireWidgetSb('speak_started', { nickname: user, comment: text, profilePictureUrl: avatar || '', platform });
+
+        // Sama seperti pin: pollSocket selalu konek, tkSocket sebagai fallback.
+        const payload = {
+            username: tiktokConfig.username || "global",
+            privateKey: getTimerRoom(),
+            chat: { nickname: user, comment: text, profilePictureUrl: avatar, platform: platform }
+        };
+        try {
+            if (pollSocketRef.current?.connected) pollSocketRef.current.emit("speak-chat", payload);
+        } catch { }
+        try {
+            if (tkSocketRef.current?.connected) tkSocketRef.current.emit("speak-chat", payload);
+        } catch { }
+
+        // Bersihkan bar di dock setelah 45s (audio yang lebih panjang tetap jalan di widget).
+        speakingAutoClearTimer.current = setTimeout(() => {
+            setSpeakingExiting(true);
+            speakingExitTimer.current = setTimeout(() => {
+                setSpeakingChat(null);
+                setSpeakingExiting(false);
+            }, 300);
+        }, 45000);
     }
 
     // Ambil payload connect terakhir (tanpa alert) untuk dipakai auto-retry
@@ -3275,6 +3344,27 @@ export default function Home() {
                                     </button>
                                 </div>
                             )}
+                            {speakingChat && (
+                                <div
+                                    className="px-4 py-3 bg-emerald-500/10 border-b border-emerald-500/10 relative shadow-lg"
+                                    style={{ opacity: speakingExiting ? 0 : 1, transition: "opacity 0.3s ease" }}
+                                >
+                                    <div className="flex gap-2 items-start">
+                                        <Volume2 className="w-3 h-3 text-emerald-400 mt-1 flex-none drop-shadow" />
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <div className="font-bold text-[10px] text-white flex items-center gap-1">
+                                                <span className="truncate max-w-25">{speakingChat.user}</span>
+                                                <span className="text-[8px] text-gray-400 uppercase flex-none">({speakingChat.platform})</span>
+                                                <span className="text-[8px] text-emerald-400 font-black uppercase tracking-widest flex-none">speaking</span>
+                                            </div>
+                                            <div className="text-[11px] text-gray-300 italic line-clamp-3">{speakingChat.text}</div>
+                                        </div>
+                                    </div>
+                                    <button onClick={stopSpeaking} className="absolute top-2 right-2 text-gray-400 hover:text-emerald-400 p-1 hover:bg-white/10 rounded transition-colors" title="Stop Speak">
+                                        <VolumeX className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            )}
                             <div className="flex-1 overflow-y-auto p-4 text-[12px] space-y-3 custom-scrollbar">
                                 {chatMessages.length === 0 ? null : null}
                                 {chatMessages.length > 0 && filteredChatMessages.length === 0 && <div className="text-gray-500 italic">Tidak ada hasil untuk &quot;{chatSearch}&quot;</div>}
@@ -3302,7 +3392,7 @@ export default function Home() {
                                             <div className={`w-8 h-8 flex-none rounded-full flex items-center justify-center font-bold text-[10px] text-white shadow-lg ${message.platform === "twitch" ? "bg-purple-600" : message.platform === "tiktok" ? "bg-[#FE2C55]" : message.platform === "youtube" ? "bg-red-600" : ["tiptap", "saweria", "trakteer", "bagibagi", "socialbuzz", "tako", "sibagi", "donation"].includes(message.platform) ? "bg-amber-500" : "bg-zinc-600"}`}>
                                                 {message.avatar ? <img src={message.avatar} alt={message.user} className="w-8 h-8 rounded-full object-cover" /> : avatarInitials}
                                             </div>
-                                            <div className="flex-1 min-w-0 pr-6">
+                                            <div className="flex-1 min-w-0 pr-16">
                                                 <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                                                     <Image src={logoSrc} alt={message.platform} width={10} height={10} className="w-2.5 h-2.5 object-contain dark:invert" />
                                                     {(message.badges || []).map((b) => (
@@ -3316,9 +3406,14 @@ export default function Home() {
                                                         : message.text}
                                                 </div>
                                             </div>
-                                            <button onClick={() => pinMessage(message.user, message.text, message.platform, message.avatar)} className="opacity-0 group-hover:opacity-100 absolute top-0 right-0 p-1.5 bg-white/10 hover:bg-white/20 rounded text-gray-400 hover:text-white transition-all shadow-md" title="Pin Chat">
-                                                <Pin className="w-3 h-3" />
-                                            </button>
+                                            <div className="opacity-0 group-hover:opacity-100 absolute top-0 right-0 flex items-center gap-1 transition-opacity">
+                                                <button onClick={() => speakMessage(message.user, message.text, message.platform, message.avatar)} className="p-1.5 bg-white/10 hover:bg-emerald-500/25 rounded text-gray-400 hover:text-emerald-300 transition-all shadow-md" title="Speak Chat (AI/TTS)">
+                                                    <Volume2 className="w-3 h-3" />
+                                                </button>
+                                                <button onClick={() => pinMessage(message.user, message.text, message.platform, message.avatar)} className="p-1.5 bg-white/10 hover:bg-white/20 rounded text-gray-400 hover:text-white transition-all shadow-md" title="Pin Chat">
+                                                    <Pin className="w-3 h-3" />
+                                                </button>
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -4061,9 +4156,10 @@ export default function Home() {
                     { id: 'music', label: 'MUSIC', icon: <Music className="w-3 h-3" />, show: true },
                 ];
                 const visibleTabs = tabs.filter(t => t.show);
-                const safeIndex = Math.min(dockSwiperIndex, Math.max(0, visibleTabs.length - 1));
+                const selectedIndex = visibleTabs.findIndex((tab) => tab.id === dockSwiperTab);
+                const safeIndex = selectedIndex >= 0 ? selectedIndex : 0;
                 if (visibleTabs.length === 0) return null;
-                const go = (dir: number) => setDockSwiperIndex((i) => (i + dir + visibleTabs.length) % visibleTabs.length);
+                const go = (dir: number) => setDockSwiperTab(visibleTabs[(safeIndex + dir + visibleTabs.length) % visibleTabs.length].id);
                 const gameTopic = gameStatus?.topic ? getTopicById(gameStatus.topic) : null;
                 const gamePhase = gameStatus?.phase ? GAME_PHASE_LABEL[gameStatus.phase] || gameStatus.phase : 'Belum berjalan';
                 const gameSettingsHref = `/games/trivia${privateKey ? `?key=${encodeURIComponent(privateKey)}` : ''}`;
@@ -4080,7 +4176,7 @@ export default function Home() {
                         <div className="flex items-center justify-between px-2 py-1.5 bg-white/[0.03] border-b border-white/5">
                             <div className="flex items-center gap-1">
                                 {visibleTabs.map((t, i) => (
-                                    <button key={t.id} onClick={() => setDockSwiperIndex(i)} className={`h-7 px-3 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5 border transition-all ${i === safeIndex ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                                    <button key={t.id} onClick={() => setDockSwiperTab(t.id)} className={`h-7 px-3 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5 border transition-all ${i === safeIndex ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
                                         {t.icon} {t.label} {t.count !== undefined && <span className={`px-1 py-0.5 rounded-full text-[9px] ${i === safeIndex ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>{t.count}</span>}
                                     </button>
                                 ))}

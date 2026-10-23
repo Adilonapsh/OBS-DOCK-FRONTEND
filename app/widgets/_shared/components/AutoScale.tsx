@@ -47,6 +47,7 @@ export function AutoScale({
   defaultBase,
   baseWidth,
   defaultEnabled = true,
+  defaultFitBoth = false,
   children,
   className,
   style,
@@ -54,6 +55,8 @@ export function AutoScale({
   defaultBase: number;
   baseWidth?: number;
   defaultEnabled?: boolean;
+  // Default fit tinggi+lebar (bisa dimatikan via ?fit=width).
+  defaultFitBoth?: boolean;
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -78,7 +81,7 @@ export function AutoScale({
         : autoRaw === '0' || autoRaw === 'off' || autoRaw === 'false'
           ? false
           : defaultEnabled;
-  const fitBoth = fitParam === 'both';
+  const fitBoth = fitParam === 'both' || (fitParam === '' && defaultFitBoth);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -132,7 +135,7 @@ export function AutoScale({
       window.removeEventListener('resize', compute);
       window.removeEventListener('orientationchange', compute);
     };
-  }, [base, enabled, manual, maxScale, fitBoth]);
+  }, [base, enabled, manual, maxScale, fitBoth, defaultFitBoth]);
 
   if (!enabled && manual == null) return <>{children}</>;
 
@@ -140,7 +143,7 @@ export function AutoScale({
     <div
       ref={wrapRef}
       className={className}
-      style={{ width: '100%', maxHeight: '100vh', overflow: 'hidden', display: 'flex', justifyContent: posJustify(posParam), ...style }}
+      style={{ width: '100%', maxHeight: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'flex-start', justifyContent: posJustify(posParam), ...style }}
     >
       <div
         ref={innerRef}

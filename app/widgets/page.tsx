@@ -22,7 +22,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant" | "donation-leaderboard" | "games";
+  preview: "chat" | "gift" | "pinned" | "speak" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant" | "donation-leaderboard" | "games";
   recommended?: boolean;
   w: number;
   h: number;
@@ -196,6 +196,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "pinned",
     recommended: true,
     w: 400, h: 200,
+  },
+  {
+    id: "speak",
+    title: "Speak AI",
+    desc: "Pesan chat yang di-Speak dari dock dibuatkan balasan AI/TTS oleh backend. Tampil dengan tema yang sama seperti Pinned Chat, efek ketik, avatar user dengan visualizer audio, lalu auto-hide.",
+    category: "chat",
+    tags: ["Speak", "AI", "TTS", "Chat", "Sync"],
+    layout: "speak",
+    params: "theme=standard&font=Outfit&pos=center",
+    preview: "speak",
+    recommended: true,
+    w: 420, h: 300,
   },
   {
     id: "view-counter",
@@ -494,6 +506,30 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "speak") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-2 gap-1">
+        <div className="w-[150px] rounded-xl overflow-hidden border border-white/10 bg-black/70">
+          <div className="flex items-center gap-1 px-1.5 py-1 border-b border-white/10" style={{ background: '#8b5cf622' }}>
+            <div className="w-4 h-4 rounded-full bg-white/80 shrink-0" />
+            <div className="text-white font-black text-[6px] truncate">Terminal_User</div>
+            <span className="ml-auto px-1 py-px rounded-full bg-[#8b5cf6] text-white text-[5px] font-black">USER</span>
+          </div>
+          <div className="px-1.5 py-1 text-white text-[6px] font-bold">Halo! Ada yang bisa dibantu?</div>
+        </div>
+        <div className="w-[150px] rounded-xl overflow-hidden border border-white/10 bg-black/70">
+          <div className="flex items-center gap-1 px-1.5 py-1 border-b border-white/10" style={{ background: '#8b5cf622' }}>
+            <div className="w-4 h-4 rounded-full bg-white/80 shrink-0" />
+            <div className="text-white font-black text-[6px] truncate">AI</div>
+            <span className="ml-auto px-1 py-px rounded-full bg-[#8b5cf6] text-white text-[5px] font-black">AI</span>
+          </div>
+          <div className="px-1.5 py-1 text-white/90 text-[6px] font-bold flex items-center gap-1">
+            Mode OBS aktif<span className="w-px h-2 bg-[#8b5cf6] animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (type === "counter") {
     return (
       <div className="w-full h-full bg-black flex flex-col items-center justify-center p-2">
@@ -702,6 +738,10 @@ function WidgetsListing() {
     }
     if (item.id === 'pinned') {
       const base = `${window.location.origin}/widgets/pinned/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'speak') {
+      const base = `${window.location.origin}/widgets/speak/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
     }
     if (item.id === 'view-counter') {
@@ -923,6 +963,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/pinned${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'speak' ? (
+                        <Link href={`/widgets/speak${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'view-counter' ? (
                         <Link href={`/widgets/view-counter${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
@@ -989,7 +1033,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'games' || item.id === 'pinned' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'donation-leaderboard' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'games' || item.id === 'pinned' || item.id === 'speak' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'donation-leaderboard' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable

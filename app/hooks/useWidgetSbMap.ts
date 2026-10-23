@@ -20,7 +20,9 @@ export type WidgetSbEventKey =
   | 'song_requested'
   | 'song_next'
   | 'chat_pinned'
-  | 'chat_unpinned';
+  | 'chat_unpinned'
+  | 'speak_started'
+  | 'speak_stopped';
 
 export type WidgetSbEntry = { enabled: boolean; action: string; params: Record<string, string> };
 export type WidgetSbMap = Record<WidgetSbEventKey, WidgetSbEntry>;
@@ -79,6 +81,15 @@ export const WIDGET_SB_GROUPS: Array<{
       { key: 'chat_unpinned', label: 'Chat Unpinned', hint: 'platform' },
     ],
   },
+  {
+    widget: 'speak',
+    title: 'Speak AI',
+    desc: 'Chat yang di-Speak dari dock (webhook AI/TTS)',
+    events: [
+      { key: 'speak_started', label: 'Speak Started', hint: 'nickname, comment, profilePictureUrl, platform' },
+      { key: 'speak_stopped', label: 'Speak Stopped', hint: 'nickname, comment, platform' },
+    ],
+  },
 ];
 
 export const WIDGET_SB_KEYS: WidgetSbEventKey[] = WIDGET_SB_GROUPS.flatMap((g) =>
@@ -106,6 +117,8 @@ export const WIDGET_SB_TEST_ARGS: Record<WidgetSbEventKey, Record<string, unknow
   song_next: { type: 'song_next', songId: '2', title: 'Test Song (next)', url: 'https://youtu.be/dQw4w9WgXcQ', videoId: 'dQw4w9WgXcQ', kind: 'youtube', requestedBy: 'TestUser', platform: 'tiktok', queueLength: 1 },
   chat_pinned: { type: 'chat_pinned', nickname: 'TestUser', comment: 'Gass keun bang! (tes)', profilePictureUrl: '', platform: 'tiktok' },
   chat_unpinned: { type: 'chat_unpinned', platform: 'tiktok' },
+  speak_started: { type: 'speak_started', nickname: 'TestUser', comment: 'Halo AI, perkenalkan diri dong! (tes)', profilePictureUrl: '', platform: 'tiktok' },
+  speak_stopped: { type: 'speak_stopped', nickname: 'TestUser', comment: 'Halo AI, perkenalkan diri dong! (tes)', platform: 'tiktok' },
 };
 
 // Variabel yang tersedia per event widget (kunci TEST_ARGS minus `type`).
