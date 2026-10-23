@@ -290,6 +290,8 @@ export default function Home() {
     const speakingAutoClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [viewerData, setViewerData] = useState<Record<string, { platform: string; avatar?: string; initials: string }>>({});
     const [chatSearch, setChatSearch] = useState("");
+    const [testChatUsername, setTestChatUsername] = useState("");
+    const [testChatText, setTestChatText] = useState("");
     const [activityLogs, setActivityLogs] = useState<Array<{ id: number; text: string; platform?: string; time?: string }>>([]);
     const [giftLogs, setGiftLogs] = useState<Array<{ id: number; user: string; text: string; platform: string; amount?: string; giftName?: string; count?: number; avatar?: string; time?: string }>>([]);
     // Ringkasan sesi (tidak kepotong limit 50 seperti logs) - tahan refresh, reset saat sesi/live baru.
@@ -340,7 +342,6 @@ export default function Home() {
     const [activeTasks, setActiveTasks] = useState<any>(null);
     const [gameStatus, setGameStatus] = useState<GameStatus | null>(null);
     const [activeWidgets, setActiveWidgets] = useState<Array<{ widgetId: string; count: number }>>([]);
-    const gamePresenceSeenRef = useRef(false);
     const [taskMinimized, setTaskMinimized] = useState(() => {
         if (typeof window === 'undefined') return true;
         try { const v = localStorage.getItem('dock-taskMinimized'); return v === null ? true : v === 'true'; } catch { return true; }
@@ -413,10 +414,6 @@ export default function Home() {
         }, 1000);
         return () => clearInterval(id);
     }, [autoMinimizeEnabled, autoMinimizeDelay, lastActivity, pollMinimized, taskMinimized, timerMinimized, dockSwiperMinimized]);
-    // aktivitas baru (poll/task/timer) -> expand dulu + reset timer
-    useEffect(() => { if (!autoMinimizeEnabled || !activePoll || activePoll.ended) return; setPollMinimized(false); setLastActivity(Date.now()); }, [activePoll?.id, activePoll?.ended]);
-    useEffect(() => { if (!autoMinimizeEnabled || !activeTasks) return; setTaskMinimized(false); setLastActivity(Date.now()); }, [activeTasks?.items?.length]);
-    useEffect(() => { if (!autoMinimizeEnabled || !activeTimer) return; setTimerMinimized(false); setLastActivity(Date.now()); }, [activeTimer?.totalSeconds]);
     // sync custom input dengan timer yang ada (biar 1d 2j 50m 0d → d/j/m/s), hanya saat tidak running biar tidak ganggu ketikan
     useEffect(() => {
         if (activeTimer?.totalSeconds == null || activeTimer?.isRunning) return;
@@ -1121,7 +1118,6 @@ export default function Home() {
         const room = privateKey || readStoredDockKey() || 'global';
         setGameStatus(null);
         setActiveWidgets([]);
-        gamePresenceSeenRef.current = false;
         const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] as const });
         gameSocketRef.current = socket;
         socket.on('connect', () => {
@@ -1144,14 +1140,6 @@ export default function Home() {
             if (gameSocketRef.current === socket) gameSocketRef.current = null;
         };
     }, [privateKey]);
-
-    useEffect(() => {
-        const gameActive = activeWidgets.some((widget) => widget.widgetId === 'games');
-        if (gameActive && !gamePresenceSeenRef.current) {
-            setDockSwiperMinimized(false);
-        }
-        gamePresenceSeenRef.current = gameActive;
-    }, [activeWidgets]);
 
     const headerControlClass = "dock-control-btn flex items-center justify-center gap-2";
     const connectButtonClass = "system-connect-btn flex items-center justify-center rounded-lg text-white shadow-[0_0_10px_rgba(59,130,246,0.2)]";
@@ -1576,6 +1564,28 @@ export default function Home() {
         } catch { }
     }
 
+    const emitSpeakEvent = (event: "speak-chat" | "speak-stop", payload: Record<string, unknown>) => {
+        const socket =
+            (pollSocketRef.current?.connected && pollSocketRef.current) ||
+            (tkSocketRef.current?.connected && tkSocketRef.current) ||
+            pollSocketRef.current ||
+            tkSocketRef.current;
+
+        if (!socket) {
+            gooeyToast.error("Koneksi backend belum tersedia. Speak tidak dapat dikirim.");
+            return;
+        }
+
+        if (socket.connected) {
+            socket.emit(event, payload);
+            return;
+        }
+
+        socket.once("connect", () => socket.emit(event, payload));
+        socket.connect();
+        gooeyToast.warning("Backend sedang menghubungkan ulang. Speak dikirim setelah koneksi pulih.");
+    }
+
     const stopSpeaking = () => {
         if (!speakingChat || speakingExiting) return;
         setSpeakingExiting(true);
@@ -1587,12 +1597,7 @@ export default function Home() {
         }, 300);
         // Stop audio + fadeout di widget Speak.
         const payload = { privateKey: getTimerRoom() };
-        try {
-            if (pollSocketRef.current?.connected) pollSocketRef.current.emit("speak-stop", payload);
-        } catch { }
-        try {
-            if (tkSocketRef.current?.connected) tkSocketRef.current.emit("speak-stop", payload);
-        } catch { }
+        emitSpeakEvent("speak-stop", payload);
         fireWidgetSb('speak_stopped', { nickname: speakingChat.user, comment: speakingChat.text, platform: speakingChat.platform });
     }
 
@@ -1609,12 +1614,7 @@ export default function Home() {
             privateKey: getTimerRoom(),
             chat: { nickname: user, comment: text, profilePictureUrl: avatar, platform: platform }
         };
-        try {
-            if (pollSocketRef.current?.connected) pollSocketRef.current.emit("speak-chat", payload);
-        } catch { }
-        try {
-            if (tkSocketRef.current?.connected) tkSocketRef.current.emit("speak-chat", payload);
-        } catch { }
+        emitSpeakEvent("speak-chat", payload);
 
         // Bersihkan bar di dock setelah 45s (audio yang lebih panjang tetap jalan di widget).
         speakingAutoClearTimer.current = setTimeout(() => {
@@ -3324,6 +3324,47 @@ export default function Home() {
                                     </button>
                                 </div>
                             </div>
+                            {process.env.NODE_ENV === "development" && (
+                                <form
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        const username = testChatUsername.trim();
+                                        const text = testChatText.trim();
+                                        if (!username || !text) {
+                                            gooeyToast.error("Isi username dan pesan untuk chat tes.");
+                                            return;
+                                        }
+                                        setChatSearch("");
+                                        handleIncomingMessage(username, text, "tiktok");
+                                        setTestChatText("");
+                                    }}
+                                    className="flex items-center gap-2 px-3 py-2 border-b border-white/5 bg-emerald-500/[0.03]"
+                                >
+                                    <input
+                                        type="text"
+                                        value={testChatUsername}
+                                        onChange={(e) => setTestChatUsername(e.target.value)}
+                                        placeholder="Username tes"
+                                        aria-label="Username chat tes"
+                                        className="h-8 w-28 shrink-0 bg-black/30 border border-white/10 rounded-lg px-2 text-[10px] text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={testChatText}
+                                        onChange={(e) => setTestChatText(e.target.value)}
+                                        placeholder="Tulis pesan chat tes..."
+                                        aria-label="Pesan chat tes"
+                                        className="h-8 flex-1 min-w-0 bg-black/30 border border-white/10 rounded-lg px-2 text-[10px] text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50"
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="h-8 shrink-0 px-2.5 text-[9px] font-bold text-emerald-300 hover:text-white hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg transition-colors"
+                                        title="Tambahkan chat tes"
+                                    >
+                                        Chat Tes
+                                    </button>
+                                </form>
+                            )}
                             {pinnedChat && (
                                 <div
                                     className="px-4 py-3 bg-white/10 border-b border-white/5 relative shadow-lg"
@@ -4058,7 +4099,7 @@ export default function Home() {
                                             <span className="text-white font-black text-[11px] w-8 text-center">{autoMinimizeDelay}s</span>
                                         </div>
                                     </div>
-                                    <p className="text-[9px] text-gray-600 leading-relaxed">Default minimize sudah aktif. Jika Auto Minimize ON, panel yang di-expand akan minimize otomatis setelah {autoMinimizeDelay}s. Poll/task/timer baru akan expand dulu lalu minimize lagi.</p>
+                                    <p className="text-[9px] text-gray-600 leading-relaxed">Jika Auto Minimize ON, panel yang dibuka manual akan minimize setelah {autoMinimizeDelay}s tanpa aktivitas. Chat, game, poll, task, atau timer baru tidak akan membuka panel secara otomatis.</p>
                                 </div>
 
                                 <div className="flex-1 bg-black border border-white/5 rounded-xl p-4 flex flex-col overflow-hidden">

@@ -8,7 +8,7 @@ import { getBoolParam, getIntParam, getStringParam } from '../../_shared/utils/u
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
-import { ANIM_MAP, KEYFRAMES_CSS } from '../../_shared/constants/animations';
+import { KEYFRAMES_CSS } from '../../_shared/constants/animations';
 import { PinnedChatCard, PINNED_CHAT_CSS, pinnedBaseWidth, type PinnedCardItem } from '../../_shared/components/PinnedChatCard';
 import { SPEAK_THEMES } from '../config';
 
@@ -44,7 +44,6 @@ function SpeakInner() {
   const bg = getStringParam(params, 'bg', 'transparent');
   const bgOpacity = Math.max(10, Math.min(100, getIntParam(params, 'bgOpacity', 100)));
   const pos = getStringParam(params, 'pos', 'center');
-  const anim = getStringParam(params, 'anim', 'elegant');
   const borderFx = getStringParam(params, 'borderFx', 'none');
   const fxColor = getStringParam(params, 'borderFxColor', '') || accent;
   const kbTheme = getStringParam(params, 'kbTheme', 'dark');
@@ -67,11 +66,11 @@ function SpeakInner() {
   const hideDelayMs = Math.max(0, Math.min(60000, getIntParam(params, 'hideDelayMs', 3000)));
   const showUser = getBoolParam(params, 'showUser', true);
   const showAvatar = getBoolParam(params, 'showAvatar', true);
+  const avatarReaction = getStringParam(params, 'avatarReaction', 'light') === 'scale' ? 'scale' : 'light';
   const showPlatform = getBoolParam(params, 'showPlatform', true);
   const showTimestamp = getBoolParam(params, 'showTimestamp', false);
 
   const posStyle = getPositionStyle(pos);
-  const animName = ANIM_MAP[anim] || 'elegantIn';
   const cardBg = bg === 'transparent' ? undefined : `${bg}${Math.round((bgOpacity / 100) * 255).toString(16).padStart(2, '0')}`;
   const spinActive = borderFx === 'spin';
   const base = pinnedBaseWidth(theme);
@@ -97,6 +96,7 @@ function SpeakInner() {
   const audioPlayedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const avatarRef = useRef<HTMLElement | null>(null);
+  const avatarFrameRef = useRef<HTMLDivElement | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataRef = useRef<Uint8Array | null>(null);
@@ -112,7 +112,8 @@ function SpeakInner() {
 
   const stopVisualizer = useCallback(() => {
     if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-    if (avatarRef.current) avatarRef.current.style.transform = '';
+    if (avatarRef.current) avatarRef.current.style.opacity = '0';
+    if (avatarFrameRef.current) avatarFrameRef.current.style.transform = '';
   }, []);
 
   const setAvatarEl = useCallback((el: HTMLElement | null) => {
@@ -254,15 +255,19 @@ function SpeakInner() {
           let sum = 0;
           for (let i = 0; i < 8; i++) sum += data[i] || 0;
           const avg = sum / 8;
-          const scale = 1 + (avg / 255) * 0.15;
-          if (avatarRef.current) avatarRef.current.style.transform = `scale(${scale})`;
+          const intensity = Math.min(1, avg / 160);
+          if (avatarReaction === 'scale') {
+            if (avatarFrameRef.current) avatarFrameRef.current.style.transform = `scale(${1 + intensity * 0.2})`;
+          } else if (avatarRef.current) {
+            avatarRef.current.style.opacity = String(intensity);
+          }
         };
         render();
       }
     } catch (err) {
       console.warn('Speak visualizer failed:', err);
     }
-  }, []);
+  }, [avatarReaction]);
 
   // Setelah teks selesai diketik → putar audio, lalu auto-hide.
   useEffect(() => {
@@ -330,7 +335,6 @@ function SpeakInner() {
     : theme === 'perchar'
       ? 'items-end'
       : 'items-center';
-  const enterAnim = `${animName} 0.45s cubic-bezier(0.16,1,0.3,1) both`;
   const avatarFrameStyle: React.CSSProperties = theme === 'brutalist'
     ? {
         width: avatarSize,
@@ -353,6 +357,11 @@ function SpeakInner() {
     <div className="w-screen h-screen overflow-hidden bg-transparent" style={{ fontFamily }}>
       <style>{`${KEYFRAMES_CSS}${PINNED_CHAT_CSS}
         .pinned-font { font-family: '${font}', sans-serif; }
+        @keyframes speakFadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes speakScaleDemo { from { transform: scale(1); } to { transform: scale(1.2); } }
+        @keyframes speakVisualizerPulse { from { opacity: 0.12; box-shadow: inset 0 0 4px ${accent}; } to { opacity: 0.95; box-shadow: inset 0 0 22px ${accent}; } }
+        .speak-visualizer-demo { animation: speakVisualizerPulse 0.72s ease-in-out infinite alternate; }
+        .speak-visualizer-demo-scale { animation: speakScaleDemo 0.72s ease-in-out infinite alternate; }
         .speak-stack { transition: opacity 1.1s cubic-bezier(0.4,0,0.2,1), transform 1.1s cubic-bezier(0.4,0,0.2,1), filter 1.1s cubic-bezier(0.4,0,0.2,1); }
         .speak-exit { opacity: 0; transform: scale(0.95); filter: blur(10px); pointer-events: none; }
       `}</style>
@@ -368,7 +377,7 @@ function SpeakInner() {
               {/* Layout ala neon: pesan user full-width, lalu avatar user + panel balasan AI berdampingan. */}
               <div className="flex w-full flex-col items-stretch" style={{ gap: stackGap }}>
                 {showUser && (
-                  <div key={`user-${nonce}`} style={{ animation: enterAnim }}>
+                  <div key={`user-${nonce}`} style={{ animation: 'speakFadeUp 0.5s ease-out both' }}>
                     <PinnedChatCard
                       item={item}
                       {...cardProps}
@@ -385,11 +394,33 @@ function SpeakInner() {
                   <div
                     key={`ai-${nonce}-${error ? 'e' : loading ? 'l' : 'r'}`}
                     className={`flex w-full ${aiRowAlign} gap-6`}
-                    style={{ animation: enterAnim }}
+                    style={{ animation: 'speakFadeUp 0.5s ease-out 0.5s both' }}
                   >
                     {showAvatar && (
-                      <div ref={setAvatarEl} className="shrink-0 overflow-hidden" style={avatarFrameStyle}>
-                        <img src={userAvatar} alt={item.nickname} className="w-full h-full object-cover grayscale" />
+                      <div
+                        className="grid shrink-0 place-items-center"
+                        style={avatarReaction === 'scale'
+                          ? { width: avatarSize * 1.25, height: avatarSize * 1.25 }
+                          : { width: avatarSize, height: avatarSize }}
+                      >
+                        <div
+                          ref={avatarFrameRef}
+                          className={`relative overflow-hidden${simulate && avatarReaction === 'scale' ? ' speak-visualizer-demo-scale' : ''}`}
+                          style={avatarFrameStyle}
+                        >
+                          <img src={userAvatar} alt={item.nickname} className="w-full h-full object-cover grayscale" />
+                          <div
+                            ref={setAvatarEl}
+                            aria-hidden="true"
+                            className={`pointer-events-none absolute inset-0${simulate && avatarReaction === 'light' ? ' speak-visualizer-demo' : ''}`}
+                            style={{
+                              borderRadius: theme === 'island' ? 16 : theme === 'brutalist' ? 0 : 10,
+                              border: `3px solid ${accent}`,
+                              boxShadow: `inset 0 0 18px ${accent}`,
+                              opacity: simulate && avatarReaction === 'light' ? undefined : 0,
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
                     <div className="min-w-0 flex-1">

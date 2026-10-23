@@ -33,6 +33,7 @@ export const SPEAK_DEFAULTS = {
   hideDelayMs: 3000,
   showUser: true,
   showAvatar: true,
+  avatarReaction: 'light' as 'light' | 'scale',
   showPlatform: true,
   showTimestamp: false,
   borderFx: 'none' as string,
@@ -65,6 +66,7 @@ export function buildSpeakUrl(base: string, s: SpeakSettings): string {
   p.set('bgOpacity', String(s.bgOpacity));
   p.set('showUser', s.showUser ? '1' : '0');
   p.set('showAvatar', s.showAvatar ? '1' : '0');
+  p.set('avatarReaction', s.avatarReaction);
   p.set('showPlatform', s.showPlatform ? '1' : '0');
   p.set('showTimestamp', s.showTimestamp ? '1' : '0');
   p.set('anim', s.anim);

@@ -140,6 +140,13 @@ export function SpeakSettingsForm({ state, update }: Props) {
             <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Timestamp</span><input type="checkbox" checked={state.showTimestamp} onChange={(e) => update('showTimestamp', e.target.checked)} className="w-4 h-4 accent-white" /></label>
             <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pesan User</span><input type="checkbox" checked={state.showUser} onChange={(e) => update('showUser', e.target.checked)} className="w-4 h-4 accent-white" /></label>
           </div>
+          <label className="block">
+            <span className="text-[11px] font-bold text-gray-300">Reaksi Avatar ke Suara</span>
+            <select value={state.avatarReaction} onChange={(e) => update('avatarReaction', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+              <option value="light" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Cahaya</option>
+              <option value="scale" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Scale</option>
+            </select>
+          </label>
         </div>
       </div>
 
