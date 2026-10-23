@@ -1,11 +1,9 @@
 'use client';
 
-import { SPEAK_DEFAULTS, SPEAK_THEMES } from '../config';
+import { SPEAK_DEFAULTS, SPEAK_SETTINGS_STORAGE_KEY, SPEAK_THEMES } from '../config';
 import { createUseWidgetSettings } from '../../_shared/hooks/useWidgetSettings';
 
-const STORAGE_KEY = 'speak-settings';
-
-export const useSpeakSettings = createUseWidgetSettings(STORAGE_KEY, SPEAK_DEFAULTS, {
+export const useSpeakSettings = createUseWidgetSettings(SPEAK_SETTINGS_STORAGE_KEY, SPEAK_DEFAULTS, {
   parseValue: (key, raw) => {
     // Migrasi URL lama (tema neon red/blue/...) ke tema Pinned.
     if (key === 'theme' && !SPEAK_THEMES.some((t) => t.value === raw)) return { value: 'standard' };
@@ -13,7 +11,12 @@ export const useSpeakSettings = createUseWidgetSettings(STORAGE_KEY, SPEAK_DEFAU
   },
   validateLoaded: (loaded) => {
     const value = loaded as typeof SPEAK_DEFAULTS;
-    if (SPEAK_THEMES.some((t) => t.value === value.theme)) return loaded;
-    return { ...value, theme: 'standard' } as typeof loaded;
+    return {
+      ...value,
+      theme: SPEAK_THEMES.some((t) => t.value === value.theme) ? value.theme : 'standard',
+      voiceId: typeof value.voiceId === 'string' ? value.voiceId : '',
+      voiceTitle: typeof value.voiceTitle === 'string' ? value.voiceTitle : '',
+      voiceAuthor: typeof value.voiceAuthor === 'string' ? value.voiceAuthor : '',
+    } as typeof loaded;
   },
 });

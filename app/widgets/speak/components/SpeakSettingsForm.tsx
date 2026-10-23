@@ -16,9 +16,10 @@ import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSett
 type Props = {
   state: SpeakSettings;
   update: (k: keyof SpeakSettings, v: unknown) => void;
+  onOpenVoicePicker: () => void;
 };
 
-export function SpeakSettingsForm({ state, update }: Props) {
+export function SpeakSettingsForm({ state, update, onOpenVoicePicker }: Props) {
   return (
     <>
       {/* Tema & Font */}
@@ -147,6 +148,19 @@ export function SpeakSettingsForm({ state, update }: Props) {
               <option value="scale" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Scale</option>
             </select>
           </label>
+          <div className="rounded-xl border border-white/5 bg-black/30 p-3">
+            <div className="text-[11px] font-bold text-white">Voice AI</div>
+            <div className="mt-1 text-[10px] text-gray-400 truncate">
+              {state.voiceId ? `${state.voiceTitle || 'Fish Audio voice'}${state.voiceAuthor ? ` • ${state.voiceAuthor}` : ''}` : 'Default voice dari webhook'}
+            </div>
+            <button
+              type="button"
+              onClick={onOpenVoicePicker}
+              className="mt-3 h-8 w-full rounded-lg border border-white/10 bg-white/5 text-[10px] font-bold uppercase text-white hover:bg-white/10"
+            >
+              Pilih Voice
+            </button>
+          </div>
         </div>
       </div>
 

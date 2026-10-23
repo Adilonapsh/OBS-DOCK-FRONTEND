@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, Suspense } from 'react';
+import { useMemo, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { ExternalLink, Monitor, Volume2 } from 'lucide-react';
 import { useSpeakSettings } from './hooks/useSpeakSettings';
@@ -10,12 +10,14 @@ import { buildSpeakUrl } from './config';
 import { WidgetShell } from '../_shared/components/WidgetShell';
 import { UrlBar } from '../_shared/components/UrlBar';
 import { SpeakSettingsForm } from './components/SpeakSettingsForm';
+import { SpeakVoicePickerModal, type FishVoice } from './components/SpeakVoicePickerModal';
 import { KEYFRAMES_CSS } from '../_shared/constants/animations';
 import { normalizePosition } from '../_shared/constants/positions';
 
 function SpeakSettingsInner() {
   const { state, update, reset, privateKey, loadFromUrl } = useSpeakSettings();
   const shell = useWidgetPageShell(loadFromUrl);
+  const [voicePickerOpen, setVoicePickerOpen] = useState(false);
 
   const widgetUrl = useMemo(() => buildSpeakUrl(typeof window !== 'undefined' ? `${window.location.origin}/widgets/speak/display` : '', state) + (privateKey ? `&key=${privateKey}` : ''), [state, privateKey]);
   const obsUrl = useMemo(() => `${widgetUrl}&obs=1`, [widgetUrl]);
@@ -44,7 +46,7 @@ function SpeakSettingsInner() {
           </>
         }
         urlBar={<UrlBar obsUrl={obsUrl} showKey={shell.showKey} onToggleKey={() => toggleShowKey(shell, obsUrl)} copied={shell.copied} onCopy={handleCopy} />}
-        settingsPanel={<SpeakSettingsForm state={state} update={update} />}
+        settingsPanel={<SpeakSettingsForm state={state} update={update} onOpenVoicePicker={() => setVoicePickerOpen(true)} />}
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
@@ -64,6 +66,17 @@ function SpeakSettingsInner() {
         }
       />
       <WidgetPageModals shell={shell} onReset={reset} />
+      <SpeakVoicePickerModal
+        open={voicePickerOpen}
+        selectedVoiceId={state.voiceId}
+        onClose={() => setVoicePickerOpen(false)}
+        onSelect={(voice: FishVoice) => {
+          update('voiceId', voice.id);
+          update('voiceTitle', voice.title);
+          update('voiceAuthor', voice.author);
+          setVoicePickerOpen(false);
+        }}
+      />
     </>
   );
 }

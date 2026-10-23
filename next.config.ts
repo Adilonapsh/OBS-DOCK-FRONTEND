@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
         destination: `${backend}/api/valo/:path*`,
       },
       {
+        source: "/api/fish-audio/:path*",
+        destination: `${backend}/api/fish-audio/:path*`,
+      },
+      {
         source: "/api/donation/:path*",
         destination: `${backend}/api/donation/:path*`,
       },

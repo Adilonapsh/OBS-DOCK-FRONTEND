@@ -17,6 +17,7 @@ export const SPEAK_ANIMS = PINNED_ANIMS;
 export const SPEAK_BORDER_FX = PINNED_BORDER_FX;
 export const SPEAK_KB_THEMES = PINNED_KB_THEMES;
 export const SPEAK_KB_CAPS = PINNED_KB_CAPS;
+export const SPEAK_SETTINGS_STORAGE_KEY = 'speak-settings';
 
 export const SPEAK_DEFAULTS = {
   theme: 'standard' as string,
@@ -34,6 +35,9 @@ export const SPEAK_DEFAULTS = {
   showUser: true,
   showAvatar: true,
   avatarReaction: 'light' as 'light' | 'scale',
+  voiceId: '',
+  voiceTitle: '',
+  voiceAuthor: '',
   showPlatform: true,
   showTimestamp: false,
   borderFx: 'none' as string,
@@ -67,6 +71,7 @@ export function buildSpeakUrl(base: string, s: SpeakSettings): string {
   p.set('showUser', s.showUser ? '1' : '0');
   p.set('showAvatar', s.showAvatar ? '1' : '0');
   p.set('avatarReaction', s.avatarReaction);
+  if (s.voiceId) p.set('voiceId', s.voiceId);
   p.set('showPlatform', s.showPlatform ? '1' : '0');
   p.set('showTimestamp', s.showTimestamp ? '1' : '0');
   p.set('anim', s.anim);

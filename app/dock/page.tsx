@@ -31,6 +31,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import ConfirmModal from "../components/ConfirmModal";
 import { useTheme } from "../components/ThemeProvider";
 import { getTopicById, TRIVIA_GAME_ID, type GameStatus } from "../widgets/games/shared";
+import { SPEAK_SETTINGS_STORAGE_KEY } from "../widgets/speak/config";
 
 const GAME_PHASE_LABEL: Record<string, string> = {
     topics: "Pilih topik",
@@ -57,6 +58,16 @@ function readStoredDockKey(includeUrl = false): string {
         if (includeUrl) return new URLSearchParams(window.location.search).get("key") || "";
     } catch { }
     return "";
+}
+
+function readSpeakVoiceId(): string {
+    if (typeof window === "undefined") return "";
+    try {
+        const settings = JSON.parse(localStorage.getItem(SPEAK_SETTINGS_STORAGE_KEY) || "{}") as { voiceId?: unknown };
+        return typeof settings.voiceId === "string" ? settings.voiceId : "";
+    } catch {
+        return "";
+    }
 }
 
 function TwitchIcon({ className }: { className?: string }) {
@@ -1554,6 +1565,7 @@ export default function Home() {
         const payload = {
             username: tiktokConfig.username || "global",
             privateKey: getTimerRoom(),
+            voiceId: readSpeakVoiceId(),
             chat: { nickname: user, comment: text, profilePictureUrl: avatar, platform: platform }
         };
         try {
