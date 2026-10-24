@@ -1,5 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import {
+  AUTH_ENTRY_PATHS,
+  DEFAULT_ROLE,
+  defaultWidgetAccess,
+  getFallbackRoute,
+  getRoutePermission,
+  getWidgetSettingsKey,
+  hasPermission,
+  normalizeRole,
+  type Role,
+} from '@/lib/auth'
 
 export async function proxy(request: NextRequest) {
   const supabaseResponse = NextResponse.next({ request })
@@ -22,42 +33,114 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Penting: jangan hapus - ini akan refresh session jika expired
-  // getUser lebih aman daripada getSession karena validasi ke server
+  // Penting: jangan hapus - ini akan refresh session jika expired.
+  // getUser lebih aman daripada getSession karena validasi ke server.
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Proteksi halaman yang butuh login - redirect ke /login jika belum auth
-  // Kecuali allow guest untuk /dock dan /overlay/display & /widgets/display (browser source)
-  const protectedPaths = ['/dashboard', '/dock', '/account', '/connection', '/config', '/monitor', '/integrations']
-  const isProtected = protectedPaths.some(p => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + '/'))
-  const isGuestAllowed = request.nextUrl.pathname.startsWith('/dock') // dock boleh guest via privateKey
-    || request.nextUrl.pathname.startsWith('/overlay/display')
-    || request.nextUrl.pathname.startsWith('/widgets/display')
-    || request.nextUrl.pathname.startsWith('/designer/display')
-    || (request.nextUrl.pathname.startsWith('/monitor/fullscreen') && request.nextUrl.searchParams.has('key'))
+  // Role selalu dibaca dari DB (profiles.role), bukan user_metadata.
+  // Guest = tidak ada user, atau role tidak dikenal / migration belum jalan.
+  let role: Role = 'guest'
+  let isActive = true
+  if (user) {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role, is_active')
+      .eq('id', user.id)
+      .maybeSingle()
 
-  // Jika akses protected tapi tidak ada user dan tidak ada guest key, redirect ke login
-  // Untuk /dock kita izinkan guest jika ada privateKey di query atau cookie session guest
-  if (isProtected && !user) {
-    // cek apakah ada guest_private_key di cookie/sessionStorage tidak bisa diakses di middleware
-    // jadi untuk /dock kita tidak paksa redirect - biarkan client yang handle privateKey verification
-    if (isGuestAllowed) {
-      return supabaseResponse
-    }
+    const profileRow = profile as {
+      role?: unknown
+      is_active?: unknown
+    } | null
+
+    role = error
+      ? DEFAULT_ROLE
+      : normalizeRole(profileRow?.role, DEFAULT_ROLE)
+
+    // Kalau kolom is_active belum ada / query error, jangan kunci user.
+    isActive = error ? true : profileRow?.is_active !== false
+  }
+
+  const pathname = request.nextUrl.pathname
+
+  // Akun diblokir/nonaktif hanya boleh melihat halaman /blocked.
+  if (user && !isActive) {
+    if (pathname === '/blocked') return supabaseResponse
+
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    // simpan next param biar bisa balik setelah login
-    url.searchParams.set('next', request.nextUrl.pathname)
+    url.pathname = '/blocked'
+    url.search = ''
     return NextResponse.redirect(url)
   }
 
-  // Jika sudah login tapi akses /login, /register, atau /forgot-password, redirect ke dashboard
-  // Catatan: /reset-password TIDAK dimasukkan - user yang klik link recovery
-  // memang punya session sementara dan harus bisa buka halaman itu.
-  if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register' || request.nextUrl.pathname === '/forgot-password') && user) {
-    const next = request.nextUrl.searchParams.get('next') || '/dashboard'
+  // Akun aktif yang membuka /blocked diarahkan kembali ke workspace.
+  if (user && isActive && pathname === '/blocked') {
     const url = request.nextUrl.clone()
-    url.pathname = next
+    url.pathname = getFallbackRoute(role)
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
+  const requiredPermission = getRoutePermission(pathname)
+
+  // Lapisan 1: route guard berbasis permission.
+  if (requiredPermission && !hasPermission(role, requiredPermission)) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.search = ''
+      url.searchParams.set('next', pathname + (request.nextUrl.search || ''))
+      return NextResponse.redirect(url)
+    }
+
+    // User login tapi rolenya tidak cukup (mis. guest mengakses /account).
+    // Redirect ke route yang aman untuk role tsb, hindari loop.
+    const fallback = getFallbackRoute(role)
+    if (pathname !== fallback) {
+      const url = request.nextUrl.clone()
+      url.pathname = fallback
+      url.search = ''
+      url.searchParams.set('denied', requiredPermission)
+      return NextResponse.redirect(url)
+    }
+
+    return supabaseResponse
+  }
+
+  // Lapisan 2: akses widget per user (override dari panel admin).
+  // Hanya untuk halaman settings `/widgets/<key>`, bukan `/widgets/<key>/display`.
+  const widgetKey = getWidgetSettingsKey(pathname)
+  if (widgetKey && user && role !== 'admin') {
+    const { data: override, error } = await supabase
+      .from('user_widget_permissions')
+      .select('allowed')
+      .eq('user_id', user.id)
+      .eq('widget_key', widgetKey)
+      .maybeSingle()
+
+    const allowed = error
+      ? defaultWidgetAccess(role)
+      : override
+        ? (override as { allowed?: unknown }).allowed === true
+        : defaultWidgetAccess(role)
+
+    if (!allowed) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/widgets'
+      url.search = ''
+      url.searchParams.set('denied', `widget.${widgetKey}`)
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Jika sudah login tapi membuka /login, /register, /forgot-password,
+  // redirect ke workspace. /reset-password tetap boleh (session recovery).
+  if (user && AUTH_ENTRY_PATHS.includes(pathname)) {
+    const next = request.nextUrl.searchParams.get('next')
+    const fallback = getFallbackRoute(role)
+    const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : fallback
+    const url = request.nextUrl.clone()
+    url.pathname = safeNext
     url.search = ''
     return NextResponse.redirect(url)
   }
@@ -71,6 +154,7 @@ export const config = {
   // Hanya jalankan middleware di route yang butuh auth - jangan di _next/static/chunks
   // Matcher lama pakai negative lookahead kadang kelewat di Windows/turbopack dan bikin 403
   matcher: [
+    '/admin/:path*',
     '/dashboard/:path*',
     '/dock/:path*',
     '/account/:path*',
@@ -78,13 +162,15 @@ export const config = {
     '/config/:path*',
     '/monitor/:path*',
     '/integrations/:path*',
+    '/donations/:path*',
     '/overlay/:path*',
     '/widgets/:path*',
-    '/designer/display',
+    '/designer/:path*',
     '/login',
     '/register',
     '/forgot-password',
     '/reset-password',
+    '/blocked',
     '/auth/:path*',
   ],
 }

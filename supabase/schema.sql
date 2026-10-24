@@ -19,26 +19,41 @@ create table if not exists public.profiles (
   updated_at timestamptz default now()
 );
 
--- auto-create profile saat signUp (private_key auto-generated, tahan banting)
+create table if not exists public.user_private_keys (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  private_key text unique not null default encode(gen_random_bytes(32), 'hex'),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+insert into public.user_private_keys (user_id, private_key)
+select id, private_key
+from public.profiles
+where private_key is not null
+on conflict (user_id) do nothing;
+
+-- auto-create profile saat signUp with the same key in both key stores.
 create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer as $$
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_private_key text := encode(gen_random_bytes(32), 'hex');
 begin
-  begin
-    insert into public.profiles (id, username, email, avatar_url, private_key)
-    values (
-      new.id,
-      new.raw_user_meta_data->>'username',
-      new.email,
-      new.raw_user_meta_data->>'avatar_url',
-      encode(gen_random_bytes(32), 'hex')
-    );
-  exception
-    when undefined_column then
-      insert into public.profiles (id, username, email, avatar_url)
-      values (new.id, new.raw_user_meta_data->>'username', new.email, new.raw_user_meta_data->>'avatar_url');
-    when others then
-      raise warning 'handle_new_user failed: %', SQLERRM;
-  end;
+  insert into public.profiles (id, username, email, avatar_url, private_key)
+  values (
+    new.id,
+    new.raw_user_meta_data->>'username',
+    new.email,
+    new.raw_user_meta_data->>'avatar_url',
+    v_private_key
+  );
+
+  insert into public.user_private_keys (user_id, private_key)
+  values (new.id, v_private_key);
+
   return new;
 end;
 $$;
@@ -168,6 +183,7 @@ create index if not exists idx_highlights_user_started on public.highlights(user
 -- RLS (Row Level Security) - aktif + policy per user
 -- ============================================
 alter table public.profiles enable row level security;
+alter table public.user_private_keys enable row level security;
 alter table public.stream_briefings enable row level security;
 alter table public.chat_messages enable row level security;
 alter table public.activity_logs enable row level security;
@@ -187,6 +203,9 @@ drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id);
 drop policy if exists "profiles_insert_own" on public.profiles;
 create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id);
+drop policy if exists "private_keys_owner" on public.user_private_keys;
+create policy "private_keys_owner" on public.user_private_keys
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- briefings: hanya owner
 drop policy if exists "briefings_owner" on public.stream_briefings;

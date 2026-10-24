@@ -59,36 +59,13 @@ export default function RegisterPage() {
             return;
         }
 
-        // langsung tambahkan private key (trigger handle_new_user sudah buat, tapi pastikan ada)
-        if (data.user) {
-            // tunggu trigger selesai
-            await new Promise(r => setTimeout(r, 600));
-            let privateKey: string | null = null;
-            try {
-                const { data: prof } = await supabase.from("profiles").select("private_key").eq("id", data.user.id).single();
-                privateKey = (prof as any)?.private_key || null;
-            } catch {}
-            if (!privateKey && data.session) {
-                // fallback generate client-side jika trigger belum jalan / RLS block
-                try {
-                    const newKey = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
-                    await supabase.from("profiles").update({ private_key: newKey } as any).eq("id", data.user.id);
-                    await supabase.from("user_private_keys").upsert({ user_id: data.user.id, private_key: newKey } as any);
-                    privateKey = newKey;
-                } catch {}
-            }
-            if (privateKey) {
-                localStorage.setItem("user_private_key", privateKey);
-            }
-        }
-
         // jika verifikasi email aktif, session bisa null
         if (data.user && !data.session) {
-            setSuccess("Akun dibuat! Private key sudah dibuat. Cek email untuk konfirmasi, lalu masuk.");
+            setSuccess("Akun berhasil dibuat. Cek email untuk konfirmasi, lalu masuk.");
         } else {
             localStorage.setItem("obs-login", JSON.stringify({ email: form.email.trim(), username: form.username.trim(), userId: data.user?.id, loginAt: new Date().toISOString() }));
             localStorage.setItem("isLoggedIn", "true");
-            setSuccess("Registrasi berhasil! Private key dibuat. Mengalihkan ke Dashboard...");
+            setSuccess("Registrasi berhasil! Mengalihkan ke Dashboard...");
             setTimeout(() => router.push("/dashboard"), 800);
         }
         setLoading(false);

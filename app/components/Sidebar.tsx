@@ -2,9 +2,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Layers, Grid2x2, Plug, Wallet2 } from "lucide-react";
+import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Layers, Grid2x2, Plug, Wallet2, Shield } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { logoutToLogin } from "@/utils/logout";
+import { PERMISSIONS, type Permission } from "@/lib/auth";
+import { usePermissions } from "./auth/RoleProvider";
+import RoleBadge from "./auth/RoleBadge";
 
 type NavItem = { href: string; label: string; icon: React.ElementType; active?: boolean };
 
@@ -129,19 +132,38 @@ const NAV: Record<string, NavItem[]> = {
   ],
 };
 
+// Permission minimum untuk tiap menu. Menu tanpa entri = selalu tampil.
+const NAV_PERMISSIONS: Record<string, Permission> = {
+  "/dashboard": PERMISSIONS.WORKSPACE_VIEW,
+  "/dock": PERMISSIONS.DOCK_CONTROL,
+  "/monitor": PERMISSIONS.WORKSPACE_VIEW,
+  "/widgets": PERMISSIONS.WIDGET_READ,
+  "/donations": PERMISSIONS.DONATION_READ,
+  "/integrations": PERMISSIONS.INTEGRATION_MANAGE,
+  "/account": PERMISSIONS.ACCOUNT_MANAGE,
+  "/connection": PERMISSIONS.CONNECTION_MANAGE,
+  "/admin": PERMISSIONS.ADMIN_ACCESS,
+};
+
 export default function Sidebar({
   active = "dashboard",
   open,
   onClose,
   user,
 }: {
-  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "integrations" | "designer" | "donations";
+  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "integrations" | "designer" | "donations" | "admin";
   open: boolean;
   onClose: () => void;
   user?: any;
 }) {
   const supabase = createClient();
-  const items = NAV[active] || NAV.dashboard;
+  const { can, isAdmin, role, loading } = usePermissions();
+  const items = (NAV[active] || NAV.dashboard)
+    .map((item) => ({ ...item, active: active === "admin" ? false : item.active }))
+    .filter((item) => {
+      const required = NAV_PERMISSIONS[item.href];
+      return !required || loading || can(required);
+    });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Grouping: Tools (Dock/Monitor/Widgets), Setup (Connection), Integrasi (Streamer.bot)
@@ -271,6 +293,21 @@ export default function Sidebar({
             </div>
           )}
 
+          {isAdmin && !loading && (
+            <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
+              <p className="px-3 mb-1.5 text-[9px] font-black tracking-[0.18em] text-gray-500 uppercase">Administrasi</p>
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                  active === "admin" ? "bg-amber-400 text-black" : "text-amber-300 hover:text-amber-200 hover:bg-amber-500/10"
+                }`}
+              >
+                <Shield className="w-4 h-4" /> Role & Permission
+              </Link>
+            </div>
+          )}
+
           {accountItems.length > 0 && (
             <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
               {accountItems.map((item) => (
@@ -308,8 +345,11 @@ export default function Sidebar({
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <div className="text-white font-bold text-[11px] truncate">
-                {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "User"}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="text-white font-bold text-[11px] truncate">
+                  {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "User"}
+                </div>
+                {!loading && <RoleBadge role={role} />}
               </div>
               <div className="text-gray-500 text-[9px] truncate">{user?.email || "guest"}</div>
             </div>

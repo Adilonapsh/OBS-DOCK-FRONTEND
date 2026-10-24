@@ -4,6 +4,7 @@ import "./globals.css";
 import Toaster from "./components/Toaster";
 import ThemeProvider from "./components/ThemeProvider";
 import GoogleAnalytics from "./components/GoogleAnalytics";
+import RoleProvider from "./components/auth/RoleProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -44,8 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col">
         <GoogleAnalytics />
         <ThemeProvider>
-          <Toaster />
-          {children}
+          <RoleProvider>
+            <Toaster />
+            {children}
+          </RoleProvider>
         </ThemeProvider>
       </body>
     </html>

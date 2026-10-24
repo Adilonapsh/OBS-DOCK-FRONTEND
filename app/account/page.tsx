@@ -7,9 +7,11 @@ import { User, Mail, Lock, Globe, Key, Copy, RefreshCw, Save, LogOut, LayoutDash
 import { createClient } from "@/utils/supabase/client";
 import { logoutToLogin } from "@/utils/logout";
 import { getOrCreatePrivateKey, regeneratePrivateKey } from "@/utils/privateKey";
+import { DEFAULT_ROLE, normalizeRole, type Role } from "@/lib/auth";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
 import ConfirmModal from "../components/ConfirmModal";
+import RoleBadge from "../components/auth/RoleBadge";
 
 const TIMEZONES = [
     "Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura",
@@ -31,6 +33,7 @@ export default function AccountPage() {
     const [pass, setPass] = useState({ current: "", next: "", confirm: "", show: false });
     const [uploading, setUploading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [role, setRole] = useState<Role>(DEFAULT_ROLE);
 
     useEffect(() => {
         const init = async () => {
@@ -39,6 +42,10 @@ export default function AccountPage() {
             setUser(session.user);
             const { data: prof } = await supabase.from("profiles").select("username, email, avatar_url, timezone, private_key").eq("id", session.user.id).single();
             const p = prof as any;
+            // Role dibaca terpisah supaya halaman tetap jalan walau migration 021
+            // belum dijalankan (kolom role belum ada).
+            const { data: roleRow } = await supabase.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
+            setRole(normalizeRole((roleRow as any)?.role, DEFAULT_ROLE));
             // fallback ke user_private_keys jika profiles.private_key null,
             // buatkan otomatis bila kosong sekalian (tahan baris user yang belum ada)
             let pk = p?.private_key;
@@ -182,7 +189,7 @@ export default function AccountPage() {
                         <div className="lg:col-span-2 space-y-4">
                             <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-blue-600/10">
-                                    <h3 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><User className="w-3.5 h-3.5 text-blue-400" /> Profil</h3>
+                                    <h3 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><User className="w-3.5 h-3.5 text-blue-400" /> Profil <RoleBadge role={role} /></h3>
                                     <span className="text-[9px] font-bold text-gray-500">Supabase</span>
                                 </div>
                                 <div className="p-5 space-y-4">

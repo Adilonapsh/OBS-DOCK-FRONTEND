@@ -2,20 +2,23 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import {
   Layers, Monitor, Search, Eye, EyeOff, ExternalLink, Sparkles,
   Gift, Heart, UserPlus, Zap, LayoutGrid, Filter,
   Settings2, AlertCircle, Menu, Palette, Pencil,
-  Music, Cog, GripVertical, Volume2, Pin, QrCode, Target, Trophy, Gamepad2
+  Music, Cog, GripVertical, Volume2, Target, Trophy, Gamepad2
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
+import { usePermissions } from "../components/auth/RoleProvider";
 import { createClient } from "@/utils/supabase/client";
 import { Suspense } from "react";
+import type { WidgetKey } from "@/lib/auth";
 import { themeToQuery, themeStorageKey, cssStorageKey, encodeCss } from "../overlay/components/theme";
 
 type WidgetItem = {
-  id: string;
+  id: WidgetKey;
   title: string;
   desc: string;
   category: "chat" | "alert" | "counter" | "progress" | "info" | "minimal";
@@ -651,8 +654,9 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
 
 function WidgetsListing() {
   const searchParams = useSearchParams();
+  const { canWidget, loading: roleLoading } = usePermissions();
   const supabase = createClient();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [privateKey, setPrivateKey] = useState<string>(searchParams.get("key") || "");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | WidgetItem["category"]>("all");
@@ -685,12 +689,12 @@ function WidgetsListing() {
         setUser(session.user);
         try {
           const { data: p } = await supabase.from("profiles").select("private_key").eq("id", session.user.id).single();
-          const k = (p as any)?.private_key;
+          const k = (p as { private_key?: string } | null)?.private_key;
           if (k) { setPrivateKey(k); setLoadingKey(false); return; }
         } catch { }
         try {
           const { data: s } = await supabase.from("user_private_keys").select("private_key").eq("user_id", session.user.id).single();
-          const k = (s as any)?.private_key;
+          const k = (s as { private_key?: string } | null)?.private_key;
           if (k) { setPrivateKey(k); setLoadingKey(false); return; }
         } catch { }
         const stored = sessionStorage.getItem("dock_private_verified") || sessionStorage.getItem("bypass_private_key");
@@ -704,11 +708,18 @@ function WidgetsListing() {
     init();
   }, []);
 
+  // Sembunyikan widget yang tidak diizinkan admin untuk user ini.
+  // Saat role masih dimuat, tampilkan semua dulu agar tidak berkedip.
   const filtered = WIDGETS.filter(o => {
+    if (!roleLoading && !canWidget(o.id)) return false;
     const matchSearch = !search || o.title.toLowerCase().includes(search.toLowerCase()) || o.desc.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "all" || o.category === filter;
     return matchSearch && matchFilter;
   });
+
+  const hiddenWidgetCount = roleLoading
+    ? 0
+    : WIDGETS.filter(o => !canWidget(o.id)).length;
 
   const getWidgetUrl = (item: WidgetItem, transparent = true) => {
     if (typeof window === "undefined") return "";
@@ -911,6 +922,16 @@ function WidgetsListing() {
             </div>
           </div>
 
+          {hiddenWidgetCount > 0 && (
+            <div className="flex items-start gap-2.5 bg-amber-500/10 border border-amber-500/25 rounded-2xl px-4 py-3">
+              <AlertCircle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                <span className="font-black text-amber-200">{hiddenWidgetCount} widget disembunyikan</span> oleh admin untuk akun ini.
+                Hubungi admin jika butuh akses.
+              </p>
+            </div>
+          )}
+
           {/* Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map(item => {
@@ -1079,7 +1100,11 @@ function WidgetsListing() {
             <div className="bg-[#161616] border border-white/10 rounded-2xl p-10 text-center">
               <AlertCircle className="w-8 h-8 text-gray-600 mx-auto" />
               <div className="text-white font-black uppercase text-[12px] mt-2">Tidak ada widget</div>
-              <div className="text-gray-500 text-[11px] mt-1">Coba ganti filter atau kata kunci pencarian.</div>
+              <div className="text-gray-500 text-[11px] mt-1">
+                {hiddenWidgetCount > 0 && !search && filter === "all"
+                  ? "Semua widget untuk akun ini diblokir admin. Hubungi admin untuk mendapatkan akses."
+                  : "Coba ganti filter atau kata kunci pencarian."}
+              </div>
             </div>
           )}
 

@@ -788,6 +788,28 @@ html.light .bg-amber-500\/20 {
   background: #fde68a !important;
 }
 
+/* Admin action buttons need readable colors against light surfaces. */
+html.light .admin-page .text-red-300 {
+  color: #b91c1c !important;
+}
+
+html.light .admin-page .text-emerald-300 {
+  color: #047857 !important;
+}
+
+html.light .admin-page .text-emerald-400 {
+  color: #059669 !important;
+}
+
+html.light .admin-page button:disabled {
+  opacity: 0.65 !important;
+}
+
+html.light .admin-page button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 /* ===== Landing light/dark mode (scoped .landing-root, base = light) ===== */
 /* Landing memakai hardcode warna light; blok ini memetakan ke dark saat
    <html class="dark"> aktif (di-toggle via ThemeProvider, tersimpan di obs-theme). */
