@@ -801,6 +801,21 @@ html.light .admin-page .text-emerald-400 {
   color: #059669 !important;
 }
 
+html.light .admin-page .admin-block-warning {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #991b1b !important;
+}
+
+html.light .admin-page .admin-confirm-danger {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+html.light .admin-page .admin-confirm-danger:hover {
+  background: #b91c1c !important;
+}
+
 html.light .admin-page button:disabled {
   opacity: 0.65 !important;
 }
@@ -808,6 +823,47 @@ html.light .admin-page button:disabled {
 html.light .admin-page button:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
+}
+
+html.light .account-delete-section p {
+  color: #475569 !important;
+}
+
+html.light .account-delete-modal .account-delete-prompt,
+html.light .account-delete-modal .account-delete-prompt p {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #991b1b !important;
+}
+
+html.light .account-delete-modal .account-delete-prompt span {
+  color: #7f1d1d !important;
+}
+
+html.light .account-delete-modal input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #fca5a5 !important;
+}
+
+html.light .account-delete-modal input::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+html.light .account-delete-confirm {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+html.light .account-delete-confirm:hover:not(:disabled) {
+  background: #b91c1c !important;
+}
+
+html.light .account-delete-confirm:disabled {
+  background: #fecaca !important;
+  color: #7f1d1d !important;
+  opacity: 1 !important;
 }
 
 /* ===== Landing light/dark mode (scoped .landing-root, base = light) ===== */

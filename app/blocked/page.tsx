@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Ban, LogOut } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { logoutToLogin } from '@/utils/logout';
@@ -8,6 +8,31 @@ import { logoutToLogin } from '@/utils/logout';
 export default function BlockedPage() {
   const supabase = useMemo(() => createClient(), []);
   const [leaving, setLeaving] = useState(false);
+  const [reason, setReason] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadReason = async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('block_reason')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+
+      if (!cancelled) {
+        setReason((data as { block_reason?: string | null } | null)?.block_reason ?? null);
+      }
+    };
+
+    loadReason();
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   const handleLogout = async () => {
     setLeaving(true);
@@ -30,6 +55,17 @@ export default function BlockedPage() {
         <p className="text-gray-600 text-[10px] leading-relaxed mt-3">
           Hubungi admin jika menurutmu ini sebuah kesalahan.
         </p>
+
+        {reason && (
+          <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/[0.04] px-3 py-2.5 text-left">
+            <p className="text-[9px] font-black uppercase tracking-widest text-red-300/70">
+              Alasan
+            </p>
+            <p className="text-[11px] text-red-200/80 mt-1 leading-relaxed whitespace-pre-wrap">
+              {reason}
+            </p>
+          </div>
+        )}
 
         <button
           type="button"

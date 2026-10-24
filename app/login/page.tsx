@@ -13,8 +13,14 @@ function LoginContent() {
     const next = searchParams.get("next") || "/dashboard";
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [info, setInfo] = useState("");
+    const [error, setError] = useState(() =>
+        searchParams.get("error") === "oauth"
+            ? "Login Google dibatalkan atau gagal. Pastikan provider Google aktif di Supabase Dashboard → Authentication → Providers, lalu coba lagi."
+            : ""
+    );
+    const [info, setInfo] = useState(() =>
+        searchParams.get("deleted") === "1" ? "Akun kamu sudah dihapus. Sampai jumpa!" : ""
+    );
     const [form, setForm] = useState({ email: "", password: "", remember: true });
     const supabase = createClient();
 
@@ -29,13 +35,6 @@ function LoginContent() {
         });
         return () => subscription.unsubscribe();
     }, []);
-
-    useEffect(() => {
-        // pesan error dari OAuth Google yang dibatalkan/gagal (redirect /auth/confirm → /login?error=oauth)
-        if (searchParams.get("error") === "oauth") {
-            setError("Login Google dibatalkan atau gagal. Pastikan provider Google aktif di Supabase Dashboard → Authentication → Providers, lalu coba lagi.");
-        }
-    }, [searchParams]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -1,8 +1,9 @@
 'use client';
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Layers, Grid2x2, Plug, Wallet2, Shield } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
+import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Grid2x2, Plug, Wallet2, Shield, ScrollText } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { logoutToLogin } from "@/utils/logout";
 import { PERMISSIONS, type Permission } from "@/lib/auth";
@@ -151,15 +152,19 @@ export default function Sidebar({
   onClose,
   user,
 }: {
-  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "integrations" | "designer" | "donations" | "admin";
+  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "integrations" | "designer" | "donations" | "admin" | "admin-audit";
   open: boolean;
   onClose: () => void;
-  user?: any;
+  user?: Pick<User, "id" | "email" | "user_metadata"> | null;
 }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const userMeta = user?.user_metadata as
+    | { avatar_url?: string; username?: string }
+    | undefined;
   const { can, isAdmin, role, loading } = usePermissions();
+  const isAdminSection = active === "admin" || active === "admin-audit";
   const items = (NAV[active] || NAV.dashboard)
-    .map((item) => ({ ...item, active: active === "admin" ? false : item.active }))
+    .map((item) => ({ ...item, active: isAdminSection ? false : item.active }))
     .filter((item) => {
       const required = NAV_PERMISSIONS[item.href];
       return !required || loading || can(required);
@@ -189,18 +194,17 @@ export default function Sidebar({
   useEffect(() => {
     const loadAvatar = async () => {
       if (!user?.id) {
-        const metaAv = (user as any)?.user_metadata?.avatar_url;
-        if (metaAv) setAvatarUrl(metaAv);
+        if (userMeta?.avatar_url) setAvatarUrl(userMeta.avatar_url);
         return;
       }
       try {
         const { data } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).single();
-        const url = (data as any)?.avatar_url || (user as any)?.user_metadata?.avatar_url || null;
+        const url = data?.avatar_url || userMeta?.avatar_url || null;
         if (url) setAvatarUrl(url);
       } catch {}
     };
     loadAvatar();
-  }, [user?.id]);
+  }, [supabase, user?.id, userMeta?.avatar_url]);
 
   const handleLogout = async () => {
     await logoutToLogin(supabase);
@@ -305,6 +309,15 @@ export default function Sidebar({
               >
                 <Shield className="w-4 h-4" /> Role & Permission
               </Link>
+              <Link
+                href="/admin/audit"
+                onClick={onClose}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                  active === "admin-audit" ? "bg-amber-400 text-black" : "text-amber-300 hover:text-amber-200 hover:bg-amber-500/10"
+                }`}
+              >
+                <ScrollText className="w-4 h-4" /> Audit Log
+              </Link>
             </div>
           )}
 
@@ -338,6 +351,7 @@ export default function Sidebar({
         <div className="p-3 border-t border-white/5">
           <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center gap-3">
             {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={avatarUrl} alt="avatar" className="w-8 h-8 rounded-full object-cover border border-white/10 shrink-0" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black font-black text-[10px] shrink-0">
@@ -347,7 +361,7 @@ export default function Sidebar({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
                 <div className="text-white font-bold text-[11px] truncate">
-                  {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "User"}
+                  {userMeta?.username || user?.email?.split("@")[0] || "User"}
                 </div>
                 {!loading && <RoleBadge role={role} />}
               </div>

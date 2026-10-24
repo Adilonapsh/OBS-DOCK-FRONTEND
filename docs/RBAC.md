@@ -64,8 +64,18 @@ Urutannya dari yang paling kuat:
      bisa ditulis lewat RPC `admin_set_user_widget_permissions()`.
    - Status akun disimpan di `profiles.is_active`. `auth_role()` mengembalikan
      `guest` untuk akun nonaktif, sehingga RPC admin otomatis menolaknya.
+   - Migration `024` menambahkan `public.is_active_user()` dan memakainya di
+     policy RLS owner-based (config, log, widget override, storage avatar).
+     Akun nonaktif tidak bisa membaca/menulis data workspace lewat anon key.
+     `profiles_select_own` sengaja tetap terbuka agar status blokir bisa dibaca
+     oleh `getAuthContext()` dan halaman `/blocked`.
+   - Trigger `trg_profiles_status_guard` menolak user biasa yang mencoba
+     mengubah `is_active`, `blocked_at`, `blocked_by`, atau `block_reason`.
    - Tabel `profiles` tetap **owner-only** untuk SELECT, karena berisi
      `private_key`. Admin tidak diberi SELECT langsung ke tabel itu.
+   - Setiap aksi admin dicatat ke `public.admin_audit_log` lewat helper
+     `log_admin_action()`; tabel ini tidak punya policy SELECT langsung dan
+     hanya bisa dibaca lewat RPC admin.
 2. **`proxy.ts` (middleware)** — menolak akses route sebelum halaman render.
    Guest yang belum login diarahkan ke `/login`; user yang rolenya tidak cukup
    diarahkan ke route aman (`/dashboard` atau `/dock`). Akun nonaktif selalu
@@ -90,6 +100,8 @@ Jalankan migration:
 -- 1) FRONTEND/supabase/migrations/021_roles_permissions.sql
 -- 2) FRONTEND/supabase/migrations/022_user_widget_permissions.sql
 -- 3) FRONTEND/supabase/migrations/023_user_status_bulk.sql
+-- 4) FRONTEND/supabase/migrations/024_admin_hardening_audit.sql
+-- 5) FRONTEND/supabase/migrations/025_account_deletion.sql
 ```
 
 Atau via Supabase CLI:
@@ -110,7 +122,10 @@ where email = 'email-kamu@example.com';
 
 Buka **Role & Permission** (`/admin`). Admin bisa mengubah role user lain,
 mengatur widget yang boleh dipakai tiap user lewat tombol **Atur** di kolom
-**Widget**, serta memblokir/mengaktifkan akun.
+**Widget**, serta memblokir/mengaktifkan akun. Daftar user punya pencarian,
+filter role/status, dan pagination 50 user per halaman. Aksi destruktif
+(blokir, aktifkan, ubah role massal) memakai modal konfirmasi; blokir bisa
+disertai alasan. Riwayat aksi tersedia di **Audit Log** (`/admin/audit`).
 
 ### Blokir login di level Supabase Auth (opsional)
 
@@ -184,7 +199,8 @@ widget semua user role `user` yang dicentang; admin/guest otomatis dilewati.
 | Halaman blokir | `/blocked` (hanya logout yang tersedia) |
 | Enforcement web | `proxy.ts` mengarahkan akun nonaktif ke `/blocked` |
 | Enforcement server | `getAuthContext()` mengembalikan `null` |
-| Enforcement DB | `auth_role()` mengembalikan `guest` untuk akun nonaktif |
+| Enforcement DB | `auth_role()` mengembalikan `guest` untuk akun nonaktif; RLS memakai `is_active_user()` |
+| Metadata blokir | `blocked_at`, `blocked_by`, `block_reason` |
 | Private key / overlay | `get_user_id_by_private_key()` & `verify_private_key()` menolak akun nonaktif |
 | Blokir login | Opsional via Supabase Admin API (`NEXT_SUPABASE_SECRET_KEY`) |
 
@@ -193,19 +209,29 @@ Aturan pengaman:
 - Admin tidak bisa memblokir akun sendiri.
 - Admin aktif terakhir tidak bisa diblokir.
 - Admin tidak bisa menurunkan role sendiri lewat aksi massal.
-- Admin terakhir tidak bisa diturunkan (single maupun massal).
+- Admin aktif terakhir tidak bisa diturunkan (single maupun massal).
+- RPC role/status memakai `pg_advisory_xact_lock` agar dua admin yang
+  mengubah role/status bersamaan tidak bisa saling mengunci di luar sistem.
+- User biasa tidak bisa mengubah status akunnya sendiri (trigger database).
 
 ### RPC aksi massal
 
 | RPC | Fungsi |
 | --- | --- |
-| `admin_set_user_active(id, is_active)` | Blokir/aktifkan satu user |
-| `admin_bulk_set_user_active(ids, is_active)` | Blokir/aktifkan banyak user |
+| `admin_set_user_active(id, is_active, reason)` | Blokir/aktifkan satu user + alasan |
+| `admin_bulk_set_user_active(ids, is_active, reason)` | Blokir/aktifkan banyak user + alasan |
+| `admin_set_user_role(id, role)` | Ubah role satu user |
 | `admin_bulk_set_user_role(ids, role)` | Ubah role banyak user |
+| `admin_set_user_widget_permissions(id, permissions)` | Simpan akses widget satu user |
 | `admin_bulk_set_user_widget_permissions(ids, permissions)` | Terapkan akses widget ke banyak user role `user` |
+| `admin_reset_user_widget_permissions(id)` | Hapus override widget satu user |
+| `admin_bulk_reset_user_widget_permissions(ids)` | Hapus override widget banyak user |
+| `admin_list_audit_log(limit, offset, action, target_id)` | Baca audit log (admin) |
 
 Semua RPC memeriksa `public.is_admin()`, membatasi maksimal 200 user per aksi,
-dan mengembalikan ringkasan `updated` / `skipped` / `unchanged`.
+dan mengembalikan ringkasan `updated` / `skipped` / `unchanged`. Aksi massal
+juga mengembalikan `skipped_details` berisi `{ id, label, reason }` agar UI bisa
+menjelaskan user mana yang dilewati dan alasannya.
 
 ### Alur di panel
 
@@ -218,7 +244,79 @@ dan mengembalikan ringkasan `updated` / `skipped` / `unchanged`.
 3. Status per user juga bisa diubah lewat tombol **Blokir/Aktifkan** di kolom
    **Status**.
 
-## 7. Pemakaian di Kode
+### Filter, pagination, dan statistik
+
+`admin_list_users(p_search, p_limit, p_offset, p_role, p_status)` mengembalikan:
+
+- `total` — jumlah user yang cocok dengan search/filter (untuk pagination).
+- `global_total` — jumlah seluruh user (untuk kartu statistik).
+- `counts` dan `status_counts` — statistik global per role/status.
+- `filters` — echo filter yang dipakai.
+
+UI memakai `total` untuk footer pagination dan `global_total` untuk kartu
+**Total user**, sehingga angka statistik tidak berubah saat mencari/memfilter.
+Pilihan checkbox berlaku untuk halaman yang sedang tampil.
+
+### Reset akses widget
+
+Di modal **Atur Widget** ada tombol **Reset ke default**. Tombol ini menghapus
+semua baris override user tersebut, sehingga akses kembali mengikuti default
+role. Reset juga tersedia untuk aksi massal lewat `admin_bulk_reset_*`.
+Semua reset dicatat di audit log.
+
+### Audit log
+
+Halaman `/admin/audit` menampilkan riwayat aksi admin:
+
+| Kolom | Isi |
+| --- | --- |
+| Waktu | Timestamp aksi |
+| Aktor | Email admin yang melakukan aksi |
+| Aksi | `role.set`, `role.bulk`, `status.block`, `status.activate`, `status.bulk_*`, `widget.set`, `widget.bulk`, `widget.reset`, `widget.bulk_reset` |
+| Target | Label user (username/email) |
+| Detail | Nilai lama → nilai baru |
+| Alasan | Alasan blokir (jika diisi) |
+
+Aksi massal menyimpan `batch_id` yang sama untuk setiap target, sehingga bisa
+ditelusuri sebagai satu operasi. Audit log tidak bisa dihapus/diubah lewat RLS
+langsung; hanya RPC admin yang bisa membacanya.
+
+## 7. Hapus Akun Sendiri
+
+Halaman `/account` punya **danger zone** untuk menghapus akun secara permanen.
+Alurnya:
+
+1. User membuka modal dan mengetik email akunnya (fallback `HAPUS` jika akun
+   tidak punya email) sebagai konfirmasi.
+2. Server action [`app/actions/account.ts`](../app/actions/account.ts)
+   memverifikasi sesi lewat `getAuthContext()` dan mencocokkan konfirmasi di
+   server — bukan hanya di UI.
+3. `NEXT_SUPABASE_SECRET_KEY` dipakai untuk memanggil Supabase Admin API
+   `auth.admin.deleteUser(userId, false)` (hard delete).
+4. FK `ON DELETE CASCADE` menghapus profil, config workspace, widget
+   permission, private key, dan log stream. Migration `025` mengubah
+   `chat_messages`, `activity_logs`, dan `gift_logs` dari `SET NULL` menjadi
+   `CASCADE`.
+5. File avatar di bucket `avatars` dibersihkan best-effort setelah auth user
+   dihapus.
+6. Identifier PII di `admin_audit_log` (`actor_email`, `target_label`)
+   dikosongkan lebih dulu. Baris audit tetap disimpan untuk keamanan dan
+   `actor_id`/`target_id` otomatis menjadi `NULL` lewat FK `SET NULL`.
+
+Pengaman admin:
+
+- Admin yang menghapus akunnya sendiri wajib memanggil RPC
+  `prepare_admin_self_deletion()`.
+- RPC memakai `pg_advisory_xact_lock` yang sama dengan aksi admin lain,
+  menghitung admin aktif lain, lalu menandai akun nonaktif. Jika dua admin
+  menghapus akun bersamaan, yang kedua ditolak sehingga tidak mungkin
+  menyisakan nol admin aktif.
+- Jika `deleteUser` gagal setelah RPC menandai nonaktif, server action
+  mengaktifkan kembali profil admin lewat service role.
+- Tanpa secret key, tombol hapus akun mengembalikan error yang jelas dan tidak
+  menghapus apa pun.
+
+## 8. Pemakaian di Kode
 
 ### Client Component — sembunyikan UI
 
@@ -266,7 +364,7 @@ if (!context?.can(PERMISSIONS.ADMIN_USERS_MANAGE)) {
 }
 ```
 
-## 8. Menambah Permission / Route Baru
+## 9. Menambah Permission / Route Baru
 
 1. Tambahkan konstanta di `PERMISSIONS`
    ([`lib/auth/permissions.ts`](../lib/auth/permissions.ts)).
@@ -284,7 +382,7 @@ if (!context?.can(PERMISSIONS.ADMIN_USERS_MANAGE)) {
    panel Role & Permission dan mengikuti default role. Pastikan folder
    `app/widgets/<key>` dan `id` di halaman daftar widget memakai key yang sama.
 
-## 9. Catatan Keamanan
+## 10. Catatan Keamanan
 
 - Jangan menaruh role di `user_metadata`, localStorage, atau JWT custom tanpa
   validasi server. Sumber kebenaran tetap `profiles.role`.
@@ -295,6 +393,15 @@ if (!context?.can(PERMISSIONS.ADMIN_USERS_MANAGE)) {
 - Blokir akun punya dua lapisan: `profiles.is_active` (proxy + server) dan
   opsional ban lewat Supabase Admin API. Kalau secret key tidak diisi, akun
   tetap tidak bisa memakai aplikasi, tetapi masih bisa login ke Supabase.
+- Jangan menambahkan `is_active_user()` ke `profiles_select_own`. Kalau profil
+  sendiri tidak terbaca, `getAuthContext()` tidak bisa membedakan akun aktif
+  dan nonaktif, sehingga enforcement server bisa gagal.
+- RPC donasi (`insert_donation_by_private_key`,
+  `get_donations_by_private_key`, `get_donation_total_by_private_key`) memakai
+  `get_user_id_by_private_key()` yang menolak akun nonaktif. Jangan
+  mengembalikan query langsung ke `profiles.private_key` di RPC baru.
+- Audit log bersifat append-only dari RPC admin. Jangan memberi grant SELECT
+  langsung ke `authenticated`; gunakan `admin_list_audit_log()`.
 - Backend Socket.IO saat ini masih memakai isolasi **private key per room**,
   bukan RBAC. RBAC di dokumen ini mengatur akses aplikasi web & panel admin.
   Kalau nanti backend butuh otorisasi role, tambahkan verifikasi JWT Supabase

@@ -1,23 +1,29 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type ElementType, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ElementType, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  AlertTriangle,
   ArrowLeft,
+  Ban,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Ghost,
+  LayoutGrid,
+  LogOut,
   Menu,
   RefreshCw,
+  RotateCcw,
+  ScrollText,
   Search,
   Shield,
   ShieldCheck,
   UserRound,
   Users,
-  Ghost,
-  LogOut,
-  LayoutGrid,
   X,
-  Check,
-  Ban,
 } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/client';
@@ -35,12 +41,20 @@ import {
   type WidgetKey,
   type WidgetOverrides,
 } from '@/lib/auth';
-import type { AdminUser, AdminUsersPayload } from '@/lib/auth/admin-types';
+import type {
+  ActiveUpdateResult,
+  AdminUser,
+  AdminUsersPayload,
+  BulkSkippedDetail,
+  BulkUpdateResult,
+} from '@/lib/auth/admin-types';
 import {
   bulkSetUserActiveAction,
   bulkUpdateUserRoleAction,
   getUserWidgetPermissionsAction,
   listUsersAction,
+  resetUsersWidgetPermissionsAction,
+  resetUserWidgetPermissionsAction,
   setUserActiveAction,
   updateUserRoleAction,
   updateUsersWidgetPermissionsAction,
@@ -51,6 +65,19 @@ import ThemeToggle from '../components/ThemeToggle';
 import RoleBadge from '../components/auth/RoleBadge';
 
 type Notice = { type: 'success' | 'error'; text: string } | null;
+type StatusFilter = '' | 'active' | 'blocked';
+type ConfirmAction =
+  | { type: 'bulk-role'; ids: string[]; role: Role }
+  | { type: 'block'; ids: string[]; bulk: boolean }
+  | { type: 'activate'; ids: string[]; bulk: boolean };
+type BulkResult = {
+  title: string;
+  summary: string;
+  skipped: BulkSkippedDetail[];
+  warning?: string | null;
+} | null;
+
+const PAGE_SIZE = 50;
 
 const ROLE_ICONS: Record<Role, ElementType> = {
   admin: ShieldCheck,
@@ -134,6 +161,9 @@ export default function AdminClient({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [data, setData] = useState<AdminUsersPayload | null>(initialData);
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<Role | ''>('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [statusSavingId, setStatusSavingId] = useState<string | null>(null);
@@ -143,6 +173,9 @@ export default function AdminClient({
   const [notice, setNotice] = useState<Notice>(
     initialError ? { type: 'error', text: initialError } : null
   );
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [confirmReason, setConfirmReason] = useState('');
+  const [bulkResult, setBulkResult] = useState<BulkResult>(null);
   const [widgetTarget, setWidgetTarget] = useState<AdminUser | null>(null);
   const [widgetBulkIds, setWidgetBulkIds] = useState<string[] | null>(null);
   const [widgetAllowed, setWidgetAllowed] = useState<Record<WidgetKey, boolean>>(
@@ -151,17 +184,49 @@ export default function AdminClient({
   const [widgetLoading, setWidgetLoading] = useState(false);
   const [widgetSaving, setWidgetSaving] = useState(false);
   const [widgetError, setWidgetError] = useState<string | null>(null);
+  const [widgetResetConfirm, setWidgetResetConfirm] = useState(false);
+  const requestSeq = useRef(0);
 
-  const reload = useCallback(async (term: string) => {
-    setLoading(true);
-    const result = await listUsersAction({ search: term });
-    if (result.ok) {
-      setData(result.data);
-    } else {
-      setNotice({ type: 'error', text: result.error });
-    }
-    setLoading(false);
-  }, []);
+  const loadUsers = useCallback(
+    async (params: {
+      search: string;
+      role: Role | '';
+      status: StatusFilter;
+      page: number;
+    }) => {
+      const seq = ++requestSeq.current;
+      setLoading(true);
+      const result = await listUsersAction({
+        search: params.search,
+        role: params.role,
+        status: params.status,
+        limit: PAGE_SIZE,
+        offset: params.page * PAGE_SIZE,
+      });
+
+      // Abaikan respons lama kalau filter/halaman sudah berubah lagi.
+      if (seq !== requestSeq.current) return;
+
+      if (result.ok) {
+        setData(result.data);
+      } else {
+        setNotice({ type: 'error', text: result.error });
+      }
+      setLoading(false);
+    },
+    []
+  );
+
+  const reload = useCallback(
+    (nextPage = page) =>
+      loadUsers({
+        search,
+        role: roleFilter,
+        status: statusFilter,
+        page: nextPage,
+      }),
+    [loadUsers, page, roleFilter, search, statusFilter]
+  );
 
   // Hilangkan notice otomatis.
   useEffect(() => {
@@ -181,7 +246,44 @@ export default function AdminClient({
   const handleSearch = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSelectedIds([]);
-    await reload(search);
+    setBulkRole('');
+    setPage(0);
+    await loadUsers({
+      search,
+      role: roleFilter,
+      status: statusFilter,
+      page: 0,
+    });
+  };
+
+  const handleFilterChange = async (
+    nextRole: Role | '',
+    nextStatus: StatusFilter
+  ) => {
+    setRoleFilter(nextRole);
+    setStatusFilter(nextStatus);
+    setPage(0);
+    setSelectedIds([]);
+    setBulkRole('');
+    await loadUsers({
+      search,
+      role: nextRole,
+      status: nextStatus,
+      page: 0,
+    });
+  };
+
+  const goToPage = async (nextPage: number) => {
+    if (nextPage < 0 || loading) return;
+    setPage(nextPage);
+    setSelectedIds([]);
+    setBulkRole('');
+    await loadUsers({
+      search,
+      role: roleFilter,
+      status: statusFilter,
+      page: nextPage,
+    });
   };
 
   const toggleSelect = (id: string) => {
@@ -206,7 +308,59 @@ export default function AdminClient({
     }
   };
 
-  const applyBulkRole = async () => {
+  const presentBulkResult = (
+    title: string,
+    summary: string,
+    skipped: BulkSkippedDetail[] | undefined,
+    warning: string | null | undefined,
+    success: boolean
+  ) => {
+    setNotice({
+      type: success ? 'success' : 'error',
+      text: `${summary}${warning ? ` Peringatan: ${warning}` : ''}`,
+    });
+
+    if ((skipped?.length ?? 0) > 0 || warning) {
+      setBulkResult({
+        title,
+        summary,
+        skipped: skipped ?? [],
+        warning,
+      });
+    }
+  };
+
+  const executeBulkRole = async (ids: string[], role: Role) => {
+    setBulkBusy(true);
+    const result = await bulkUpdateUserRoleAction(ids, role);
+
+    if (!result.ok) {
+      setNotice({ type: 'error', text: result.error });
+      setBulkBusy(false);
+      setConfirmAction(null);
+      return;
+    }
+
+    const { updated, skipped, unchanged, skipped_details } = result.data;
+    const summary = `${updated} user diubah ke ${ROLE_LABELS[role]}. ${unchanged} tidak berubah, ${skipped} dilewati.${
+      updated === 0 ? ' Tidak ada role yang berubah.' : ''
+    }`;
+
+    setBulkBusy(false);
+    setConfirmAction(null);
+    setSelectedIds([]);
+    setBulkRole('');
+    await reload();
+    presentBulkResult(
+      'Hasil ubah role massal',
+      summary,
+      skipped_details,
+      null,
+      updated > 0
+    );
+  };
+
+  const requestBulkRole = () => {
     if (!bulkRole) return;
 
     const ids = selectedIds.filter((id) => id !== currentUserId);
@@ -215,80 +369,120 @@ export default function AdminClient({
       return;
     }
 
-    setBulkBusy(true);
-    const result = await bulkUpdateUserRoleAction(ids, bulkRole);
-
-    if (!result.ok) {
-      setNotice({ type: 'error', text: result.error });
-      setBulkBusy(false);
-      return;
-    }
-
-    const { updated, skipped, unchanged } = result.data;
-    setNotice({
-      type: updated > 0 ? 'success' : 'error',
-      text: `${updated} user diubah ke ${ROLE_LABELS[bulkRole]}. ${unchanged} tidak berubah, ${skipped} dilewati.${
-        updated === 0 ? ' Tidak ada role yang berubah.' : ''
-      }`,
-    });
-    setBulkBusy(false);
-    setSelectedIds([]);
-    setBulkRole('');
-    await reload(search);
+    setConfirmReason('');
+    setConfirmAction({ type: 'bulk-role', ids, role: bulkRole });
   };
 
-  const applyBulkActive = async (isActive: boolean) => {
+  const requestBulkActive = (isActive: boolean) => {
     const ids = selectedIds.filter((id) => id !== currentUserId);
     if (ids.length === 0) {
       setNotice({ type: 'error', text: 'Tidak ada user yang bisa diubah.' });
       return;
     }
 
-    setBulkBusy(true);
-    const result = await bulkSetUserActiveAction(ids, isActive);
+    setConfirmReason('');
+    setConfirmAction({
+      type: isActive ? 'activate' : 'block',
+      ids,
+      bulk: true,
+    });
+  };
+
+  const requestStatusChange = (target: AdminUser, isActive: boolean) => {
+    setConfirmReason('');
+    setConfirmAction({
+      type: isActive ? 'activate' : 'block',
+      ids: [target.id],
+      bulk: false,
+    });
+  };
+
+  const executeStatusChange = async (
+    ids: string[],
+    isActive: boolean,
+    reason: string,
+    bulk: boolean
+  ) => {
+    const target = (data?.users ?? []).find((item) => item.id === ids[0]);
+    const label = target?.username || target?.email || 'User';
+
+    if (bulk) {
+      setBulkBusy(true);
+    } else if (ids[0]) {
+      setStatusSavingId(ids[0]);
+    }
+
+    const result = bulk
+      ? await bulkSetUserActiveAction(ids, isActive, reason)
+      : await setUserActiveAction(ids[0], isActive, reason);
 
     if (!result.ok) {
       setNotice({ type: 'error', text: result.error });
       setBulkBusy(false);
-      return;
-    }
-
-    const { updated, skipped, unchanged, auth_warning } = result.data;
-    setNotice({
-      type: updated > 0 ? 'success' : 'error',
-      text: `${updated} user ${isActive ? 'diaktifkan' : 'diblokir'}. ${unchanged} tidak berubah, ${skipped} dilewati.${
-        auth_warning ? ` Peringatan: ${auth_warning}` : ''
-      }`,
-    });
-    setBulkBusy(false);
-    setSelectedIds([]);
-    await reload(search);
-  };
-
-  const handleStatusChange = async (target: AdminUser, isActive: boolean) => {
-    setStatusSavingId(target.id);
-    const result = await setUserActiveAction(target.id, isActive);
-
-    if (!result.ok) {
-      setNotice({ type: 'error', text: result.error });
       setStatusSavingId(null);
+      setConfirmAction(null);
       return;
     }
 
-    const warning = result.data.auth_warning;
+    if (bulk) {
+      const {
+        updated,
+        skipped,
+        unchanged,
+        auth_warning,
+        skipped_details,
+      } = result.data as BulkUpdateResult;
+      const summary = `${updated} user ${
+        isActive ? 'diaktifkan' : 'diblokir'
+      }. ${unchanged} tidak berubah, ${skipped} dilewati.`;
+
+      setBulkBusy(false);
+      setSelectedIds([]);
+      setConfirmAction(null);
+      setConfirmReason('');
+      await reload();
+      presentBulkResult(
+        isActive ? 'Hasil aktivasi massal' : 'Hasil blokir massal',
+        summary,
+        skipped_details,
+        auth_warning,
+        updated > 0
+      );
+      return;
+    }
+
+    const warning = (result.data as ActiveUpdateResult).auth_warning;
     setNotice({
       type: 'success',
-      text: `${target.username || target.email || 'User'} ${
-        isActive ? 'diaktifkan' : 'diblokir'
-      }.${warning ? ` Peringatan: ${warning}` : ''}`,
+      text: `${label} ${isActive ? 'diaktifkan' : 'diblokir'}.${
+        warning ? ` Peringatan: ${warning}` : ''
+      }`,
     });
 
     if (!isActive) {
-      setSelectedIds((prev) => prev.filter((id) => id !== target.id));
+      setSelectedIds((prev) => prev.filter((id) => id !== ids[0]));
     }
 
     setStatusSavingId(null);
-    await reload(search);
+    setConfirmAction(null);
+    setConfirmReason('');
+    await reload();
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmAction) return;
+
+    if (confirmAction.type === 'bulk-role') {
+      await executeBulkRole(confirmAction.ids, confirmAction.role);
+      return;
+    }
+
+    await executeStatusChange(
+      confirmAction.ids,
+      confirmAction.type === 'activate',
+      confirmReason,
+      confirmAction.bulk
+    );
   };
 
   const handleRoleChange = async (target: AdminUsersPayload['users'][number], role: Role) => {
@@ -308,7 +502,7 @@ export default function AdminClient({
     });
     setSavingId(null);
     router.refresh();
-    await reload(search);
+    await reload();
   };
 
   const openWidgetModal = async (target: AdminUser) => {
@@ -331,6 +525,7 @@ export default function AdminClient({
     setWidgetBulkIds(null);
     setWidgetTarget(target);
     setWidgetError(null);
+    setWidgetResetConfirm(false);
     setWidgetAllowed(resolveWidgetAccess(target.role));
     setWidgetLoading(true);
 
@@ -375,6 +570,7 @@ export default function AdminClient({
     setWidgetBulkIds(targets.map((item) => item.id));
     setWidgetAllowed(resolveWidgetAccess('user'));
     setWidgetError(null);
+    setWidgetResetConfirm(false);
     setWidgetLoading(false);
   };
 
@@ -382,6 +578,7 @@ export default function AdminClient({
     if (widgetSaving) return;
     setWidgetTarget(null);
     setWidgetBulkIds(null);
+    setWidgetResetConfirm(false);
   };
 
   const saveWidgetModal = async () => {
@@ -406,15 +603,19 @@ export default function AdminClient({
     const allowedCount = WIDGET_KEYS.filter((key) => widgetAllowed[key]).length;
 
     if (bulkIds) {
-      const { updated, skipped } = result.data as {
+      const { updated, skipped, skipped_details } = result.data as {
         updated: number;
         skipped: number;
+        skipped_details?: BulkSkippedDetail[];
       };
-      setNotice({
-        type: 'success',
-        text: `Akses widget ${updated} user disimpan (${allowedCount}/${WIDGET_KEYS.length} aktif). ${skipped} user dilewati karena bukan role User.`,
-      });
       setSelectedIds([]);
+      presentBulkResult(
+        'Hasil atur widget massal',
+        `Akses widget ${updated} user disimpan (${allowedCount}/${WIDGET_KEYS.length} aktif). ${skipped} user dilewati.`,
+        skipped_details,
+        null,
+        updated > 0
+      );
     } else {
       setNotice({
         type: 'success',
@@ -423,9 +624,56 @@ export default function AdminClient({
     }
 
     setWidgetSaving(false);
+    setWidgetResetConfirm(false);
     setWidgetTarget(null);
     setWidgetBulkIds(null);
-    await reload(search);
+    await reload();
+  };
+
+  const handleResetWidget = async () => {
+    const bulkIds = widgetBulkIds;
+    const target = widgetTarget;
+    if (!bulkIds && !target) return;
+
+    setWidgetSaving(true);
+    setWidgetError(null);
+
+    const result = bulkIds
+      ? await resetUsersWidgetPermissionsAction(bulkIds)
+      : await resetUserWidgetPermissionsAction(target!.id);
+
+    if (!result.ok) {
+      setWidgetError(result.error);
+      setWidgetSaving(false);
+      return;
+    }
+
+    if (bulkIds) {
+      const { updated, skipped, skipped_details } = result.data as {
+        updated: number;
+        skipped: number;
+        skipped_details?: BulkSkippedDetail[];
+      };
+      setSelectedIds([]);
+      presentBulkResult(
+        'Hasil reset widget massal',
+        `Akses widget ${updated} user direset ke default role. ${skipped} user dilewati.`,
+        skipped_details,
+        null,
+        updated > 0
+      );
+    } else {
+      setNotice({
+        type: 'success',
+        text: `Akses widget ${target!.username || target!.email || 'user'} direset ke default role.`,
+      });
+    }
+
+    setWidgetSaving(false);
+    setWidgetResetConfirm(false);
+    setWidgetTarget(null);
+    setWidgetBulkIds(null);
+    await reload();
   };
 
   const setAllWidgets = (allowed: boolean) => {
@@ -445,10 +693,38 @@ export default function AdminClient({
   const counts = data?.counts ?? { admin: 0, user: 0, guest: 0 };
   const statusCounts = data?.status_counts ?? { active: 0, blocked: 0 };
   const total = data?.total ?? 0;
+  const globalTotal =
+    data?.global_total ?? counts.admin + counts.user + counts.guest;
+  const offset = data?.offset ?? 0;
+  const pageUsers = data?.users ?? [];
+  const rangeStart = pageUsers.length > 0 ? offset + 1 : 0;
+  const rangeEnd = offset + pageUsers.length;
+  const canPrev = page > 0 && !loading;
+  const canNext = offset + pageUsers.length < total && !loading;
+  const confirmBusy = bulkBusy || statusSavingId !== null;
+  const confirmTargets = (confirmAction?.ids ?? [])
+    .map((id) => pageUsers.find((item) => item.id === id))
+    .filter((item): item is AdminUser => Boolean(item));
+  const confirmLabel =
+    confirmTargets.length === 1
+      ? confirmTargets[0].username || confirmTargets[0].email || 'User'
+      : `${confirmTargets.length || confirmAction?.ids.length || 0} user`;
+  const confirmTitle =
+    confirmAction?.type === 'bulk-role'
+      ? 'Konfirmasi ubah role massal'
+      : confirmAction?.type === 'block'
+        ? confirmAction.bulk
+          ? 'Konfirmasi blokir massal'
+          : 'Konfirmasi blokir akun'
+        : 'Konfirmasi aktifkan akun';
+  const confirmDescription =
+    confirmAction?.type === 'bulk-role'
+      ? `Ubah ${confirmAction.ids.length} user menjadi ${ROLE_LABELS[confirmAction.role]}?`
+      : confirmAction?.type === 'block'
+        ? `Blokir ${confirmLabel}? Akun tidak bisa mengakses aplikasi sampai diaktifkan kembali.`
+        : `Aktifkan kembali ${confirmLabel}?`;
   const allowedWidgetCount = WIDGET_KEYS.filter((key) => widgetAllowed[key]).length;
-  const selectableUsers = (data?.users ?? []).filter(
-    (item) => item.id !== currentUserId
-  );
+  const selectableUsers = pageUsers.filter((item) => item.id !== currentUserId);
   const allSelected =
     selectableUsers.length > 0 &&
     selectableUsers.every((item) => selectedIds.includes(item.id));
@@ -481,6 +757,12 @@ export default function AdminClient({
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Link
+              href="/admin/audit"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300"
+            >
+              <ScrollText className="w-3 h-3" /> Audit
+            </Link>
+            <Link
               href="/dashboard"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300"
             >
@@ -510,7 +792,7 @@ export default function AdminClient({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <StatCard label="Total user" value={total} icon={Users} />
+            <StatCard label="Total user" value={globalTotal} icon={Users} />
             {ROLES.map((role) => {
               const Icon = ROLE_ICONS[role];
               return (
@@ -541,8 +823,11 @@ export default function AdminClient({
 
           <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
             <div className="p-4 md:p-5 border-b border-white/5 flex flex-col sm:flex-row sm:items-center gap-3">
-              <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
-                <div className="relative flex-1">
+              <form
+                onSubmit={handleSearch}
+                className="flex-1 flex flex-wrap items-center gap-2"
+              >
+                <div className="relative flex-1 min-w-[180px]">
                   <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     value={search}
@@ -550,6 +835,44 @@ export default function AdminClient({
                     placeholder="Cari username atau email..."
                     className="w-full h-10 pl-9 pr-3 bg-white/5 border border-white/10 rounded-xl text-[12px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-amber-500/50"
                   />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-gray-500" />
+                  <select
+                    value={roleFilter}
+                    onChange={(event) =>
+                      handleFilterChange(
+                        event.target.value as Role | '',
+                        statusFilter
+                      )
+                    }
+                    disabled={loading}
+                    aria-label="Filter role"
+                    className="h-10 px-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white focus:outline-none focus:border-amber-500/50 disabled:opacity-50"
+                  >
+                    <option value="" className="bg-[#161616]">Semua role</option>
+                    {ROLES.map((role) => (
+                      <option key={role} value={role} className="bg-[#161616]">
+                        {ROLE_LABELS[role]}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={statusFilter}
+                    onChange={(event) =>
+                      handleFilterChange(
+                        roleFilter,
+                        event.target.value as StatusFilter
+                      )
+                    }
+                    disabled={loading}
+                    aria-label="Filter status"
+                    className="h-10 px-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white focus:outline-none focus:border-amber-500/50 disabled:opacity-50"
+                  >
+                    <option value="" className="bg-[#161616]">Semua status</option>
+                    <option value="active" className="bg-[#161616]">Aktif</option>
+                    <option value="blocked" className="bg-[#161616]">Nonaktif</option>
+                  </select>
                 </div>
                 <button
                   type="submit"
@@ -564,7 +887,8 @@ export default function AdminClient({
                 onClick={() => {
                   setSelectedIds([]);
                   setBulkRole('');
-                  reload(search);
+                  setConfirmAction(null);
+                  reload();
                 }}
                 disabled={loading}
                 className="h-10 px-4 inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300 disabled:opacity-60"
@@ -615,7 +939,7 @@ export default function AdminClient({
                   </select>
                   <button
                     type="button"
-                    onClick={applyBulkRole}
+                    onClick={requestBulkRole}
                     disabled={!bulkRole || bulkBusy}
                     className="h-8 px-3 bg-white text-black rounded-lg text-[9px] font-black uppercase tracking-wider disabled:opacity-40"
                   >
@@ -633,7 +957,7 @@ export default function AdminClient({
 
                   <button
                     type="button"
-                    onClick={() => applyBulkActive(false)}
+                    onClick={() => requestBulkActive(false)}
                     disabled={bulkBusy}
                     className="h-8 px-3 inline-flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 rounded-lg text-[9px] font-black uppercase tracking-wider text-red-300 disabled:opacity-40"
                   >
@@ -641,7 +965,7 @@ export default function AdminClient({
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyBulkActive(true)}
+                    onClick={() => requestBulkActive(true)}
                     disabled={bulkBusy}
                     className="h-8 px-3 inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 rounded-lg text-[9px] font-black uppercase tracking-wider text-emerald-300 disabled:opacity-40"
                   >
@@ -718,6 +1042,7 @@ export default function AdminClient({
                         <td className="px-4 md:px-5 py-3">
                           <div className="flex items-center gap-3 min-w-0">
                             {target.avatar_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={target.avatar_url}
                                 alt=""
@@ -789,6 +1114,15 @@ export default function AdminClient({
                         <td className="px-4 md:px-5 py-3">
                           <div className="flex items-center gap-2">
                             <span
+                              title={
+                                !isActive
+                                  ? `Diblokir ${formatDateTime(target.blocked_at)}${
+                                      target.block_reason
+                                        ? ` — ${target.block_reason}`
+                                        : ''
+                                    }`
+                                  : undefined
+                              }
                               className={`inline-flex items-center gap-1 h-6 px-2 rounded-md border text-[8px] font-black uppercase tracking-widest ${
                                 isActive
                                   ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
@@ -806,7 +1140,7 @@ export default function AdminClient({
                             <button
                               type="button"
                               onClick={() =>
-                                handleStatusChange(target, !isActive)
+                                requestStatusChange(target, !isActive)
                               }
                               disabled={isSelf || statusSaving}
                               title={
@@ -831,6 +1165,14 @@ export default function AdminClient({
                               )}
                             </button>
                           </div>
+                          {!isActive && target.block_reason && (
+                            <p
+                              className="text-[9px] text-red-300/70 mt-1 max-w-[190px] truncate"
+                              title={target.block_reason}
+                            >
+                              {target.block_reason}
+                            </p>
+                          )}
                         </td>
                         <td className="px-4 md:px-5 py-3 text-[10px] text-gray-400 hidden md:table-cell">
                           {target.last_sign_in_at ? (
@@ -873,13 +1215,34 @@ export default function AdminClient({
               </table>
             </div>
 
-            <div className="px-4 md:px-5 py-3 border-t border-white/5 flex items-center justify-between">
+            <div className="px-4 md:px-5 py-3 border-t border-white/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
               <span className="text-[9px] font-bold uppercase tracking-widest text-gray-600">
-                Menampilkan {data?.users.length ?? 0} dari {total} user
+                Menampilkan {rangeStart}–{rangeEnd} dari {total} user
+                {total !== globalTotal ? ` (total ${globalTotal})` : ''}
               </span>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-600">
-                Role disimpan di database, bukan metadata
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => goToPage(page - 1)}
+                  disabled={!canPrev}
+                  className="w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Halaman sebelumnya"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 min-w-[70px] text-center">
+                  {page + 1} / {Math.max(1, Math.ceil(total / PAGE_SIZE))}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => goToPage(page + 1)}
+                  disabled={!canNext}
+                  className="w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Halaman berikutnya"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </main>
@@ -1027,22 +1390,218 @@ export default function AdminClient({
               )}
             </div>
 
-            <div className="px-5 py-4 border-t border-white/5 flex items-center justify-end gap-2">
+            <div className="px-5 py-4 border-t border-white/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+              <div className="min-h-9 flex items-center">
+                {widgetResetConfirm ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-bold text-red-300">
+                      Hapus semua override dan kembali ke default role?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleResetWidget}
+                      disabled={widgetSaving}
+                      className="h-8 px-3 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 rounded-lg text-[9px] font-black uppercase tracking-wider text-red-200 disabled:opacity-50"
+                    >
+                      {widgetSaving ? 'Mereset...' : 'Ya, reset'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWidgetResetConfirm(false)}
+                      disabled={widgetSaving}
+                      className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 disabled:opacity-50"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setWidgetResetConfirm(true)}
+                    disabled={widgetLoading || widgetSaving}
+                    title="Hapus semua override widget user ini"
+                    className="h-9 px-3 inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider text-gray-300 disabled:opacity-50"
+                  >
+                    <RotateCcw className="w-3 h-3" /> Reset ke default
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeWidgetModal}
+                  disabled={widgetSaving}
+                  className="h-9 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider text-gray-300 disabled:opacity-50"
+                >
+                  Tutup
+                </button>
+                <button
+                  type="button"
+                  onClick={saveWidgetModal}
+                  disabled={widgetLoading || widgetSaving}
+                  className="h-9 px-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-50"
+                >
+                  {widgetSaving ? 'Menyimpan...' : 'Simpan Akses'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-[120] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => {
+            if (!confirmBusy) setConfirmAction(null);
+          }}
+        >
+          <div
+            className="bg-[#121212] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl shadow-black/60"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-white/5 flex items-start gap-3">
+              <span className="w-9 h-9 grid place-items-center rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 shrink-0">
+                <AlertTriangle className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-white font-black text-[14px]">{confirmTitle}</h2>
+                <p className="text-gray-400 text-[11px] mt-1 leading-relaxed">
+                  {confirmDescription}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-3">
+              {confirmAction.type === 'block' && (
+                <div>
+                  <label
+                    htmlFor="block-reason"
+                    className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5"
+                  >
+                    Alasan blokir (opsional)
+                  </label>
+                  <textarea
+                    id="block-reason"
+                    value={confirmReason}
+                    onChange={(event) => setConfirmReason(event.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Contoh: melanggar aturan, akun duplikat, permintaan user..."
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-[11px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-amber-500/50 resize-none"
+                  />
+                  <p className="text-[9px] text-gray-600 mt-1 text-right">
+                    {confirmReason.length}/500
+                  </p>
+                </div>
+              )}
+
+              {confirmAction.type === 'block' && (
+                <div className="admin-block-warning rounded-xl border border-red-500/20 bg-red-500/[0.04] px-3 py-2.5 text-[10px] text-red-200/80 leading-relaxed">
+                  Akun akan diblokir dan tidak bisa mengakses aplikasi sampai
+                  diaktifkan kembali.
+                </div>
+              )}
+
+              {confirmAction.type === 'bulk-role' && (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] px-3 py-2.5 text-[10px] text-amber-200/80 leading-relaxed">
+                  Role disimpan di database. Admin/Guest yang dipilih tetap
+                  mengikuti aturan akses masing-masing.
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction(null)}
+                  disabled={confirmBusy}
+                  className="h-9 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider text-gray-300 disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirm}
+                  disabled={confirmBusy}
+                  className={`h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-50 ${
+                    confirmAction.type === 'block' ||
+                    (confirmAction.type === 'bulk-role' &&
+                      confirmAction.role !== 'admin')
+                      ? 'admin-confirm-danger bg-red-500 text-white hover:bg-red-400'
+                      : 'bg-emerald-500 text-black hover:bg-emerald-400'
+                  }`}
+                >
+                  {confirmBusy ? 'Memproses...' : 'Ya, lanjutkan'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bulkResult && (
+        <div
+          className="fixed inset-0 z-[110] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setBulkResult(null)}
+        >
+          <div
+            className="bg-[#121212] border border-white/10 rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl shadow-black/60"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-white/5 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-white font-black text-[14px]">
+                  {bulkResult.title}
+                </h2>
+                <p className="text-gray-400 text-[11px] mt-1">
+                  {bulkResult.summary}
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={closeWidgetModal}
-                disabled={widgetSaving}
-                className="h-9 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider text-gray-300 disabled:opacity-50"
+                onClick={() => setBulkResult(null)}
+                className="w-8 h-8 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white"
+                aria-label="Tutup"
               >
-                Batal
+                <X className="w-4 h-4" />
               </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-2">
+              {bulkResult.warning && (
+                <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] px-3 py-2.5 text-[10px] text-amber-200 leading-relaxed">
+                  {bulkResult.warning}
+                </div>
+              )}
+
+              {bulkResult.skipped.length === 0 ? (
+                <p className="text-[11px] text-gray-500">
+                  Tidak ada user yang dilewati.
+                </p>
+              ) : (
+                bulkResult.skipped.map((item) => (
+                  <div
+                    key={`${item.id}-${item.reason}`}
+                    className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5"
+                  >
+                    <p className="text-white font-bold text-[11px]">
+                      {item.label || item.id}
+                    </p>
+                    <p className="text-red-300/80 text-[10px] mt-0.5">
+                      {item.reason}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="px-5 py-4 border-t border-white/5 flex justify-end">
               <button
                 type="button"
-                onClick={saveWidgetModal}
-                disabled={widgetLoading || widgetSaving}
-                className="h-9 px-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-50"
+                onClick={() => setBulkResult(null)}
+                className="h-9 px-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-wider"
               >
-                {widgetSaving ? 'Menyimpan...' : 'Simpan Akses'}
+                Tutup
               </button>
             </div>
           </div>

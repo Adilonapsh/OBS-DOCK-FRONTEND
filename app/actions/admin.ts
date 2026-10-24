@@ -14,17 +14,19 @@ import {
 import type {
   ActionResult,
   ActiveUpdateResult,
+  AdminAuditPayload,
   AdminUsersPayload,
   BulkUpdateResult,
   BulkWidgetUpdateResult,
   RoleUpdateResult,
   UserWidgetPermissions,
+  WidgetResetResult,
 } from '@/lib/auth/admin-types';
 
 function friendlyDbError(message: string): string {
   const lower = message.toLowerCase();
   if (lower.includes('could not find') || lower.includes('does not exist')) {
-    return 'Fitur role/permission belum aktif di database. Jalankan migration 021, 022, dan 023 dulu.';
+    return 'Fitur role/permission belum aktif di database. Jalankan migration 021, 022, 023, dan 024 dulu.';
   }
   if (lower.includes('akses ditolak') || lower.includes('forbidden')) {
     return 'Akses ditolak. Hanya admin yang bisa melakukan aksi ini.';
@@ -128,6 +130,8 @@ async function syncAuthBans(
 
 export async function listUsersAction(input?: {
   search?: string;
+  role?: Role | '';
+  status?: 'active' | 'blocked' | '';
   limit?: number;
   offset?: number;
 }): Promise<ActionResult<AdminUsersPayload>> {
@@ -141,11 +145,24 @@ export async function listUsersAction(input?: {
     return { ok: false, error: 'Akses ditolak.' };
   }
 
+  const role = input?.role || null;
+  const status = input?.status || null;
+
+  if (role !== null && !isRole(role)) {
+    return { ok: false, error: 'Filter role tidak valid.' };
+  }
+
+  if (status !== null && status !== 'active' && status !== 'blocked') {
+    return { ok: false, error: 'Filter status tidak valid.' };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('admin_list_users', {
     p_search: input?.search?.trim() ?? '',
-    p_limit: input?.limit ?? 200,
+    p_limit: input?.limit ?? 50,
     p_offset: input?.offset ?? 0,
+    p_role: role,
+    p_status: status,
   });
 
   if (error) {
@@ -267,7 +284,8 @@ export async function updateUserWidgetPermissionsAction(
 
 export async function setUserActiveAction(
   userId: string,
-  isActive: boolean
+  isActive: boolean,
+  reason?: string
 ): Promise<ActionResult<ActiveUpdateResult>> {
   const context = await getAuthContext();
 
@@ -295,6 +313,7 @@ export async function setUserActiveAction(
   const { data, error } = await supabase.rpc('admin_set_user_active', {
     p_user_id: userId,
     p_is_active: isActive,
+    p_reason: reason?.trim().slice(0, 500) || null,
   });
 
   if (error) {
@@ -352,7 +371,8 @@ export async function bulkUpdateUserRoleAction(
 
 export async function bulkSetUserActiveAction(
   userIds: string[],
-  isActive: boolean
+  isActive: boolean,
+  reason?: string
 ): Promise<ActionResult<BulkUpdateResult>> {
   const context = await getAuthContext();
 
@@ -381,6 +401,7 @@ export async function bulkSetUserActiveAction(
   const { data, error } = await supabase.rpc('admin_bulk_set_user_active', {
     p_user_ids: ids,
     p_is_active: isActive,
+    p_reason: reason?.trim().slice(0, 500) || null,
   });
 
   if (error) {
@@ -433,4 +454,98 @@ export async function updateUsersWidgetPermissionsAction(
 
   revalidatePath('/admin');
   return { ok: true, data: data as BulkWidgetUpdateResult };
+}
+
+export async function resetUserWidgetPermissionsAction(
+  userId: string
+): Promise<ActionResult<WidgetResetResult>> {
+  const context = await getAuthContext();
+
+  if (!context) {
+    return { ok: false, error: 'Sesi berakhir. Silakan login ulang.' };
+  }
+
+  if (!hasPermission(context.role, PERMISSIONS.ADMIN_USERS_MANAGE)) {
+    return { ok: false, error: 'Akses ditolak.' };
+  }
+
+  if (!userId || typeof userId !== 'string') {
+    return { ok: false, error: 'User ID tidak valid.' };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc(
+    'admin_reset_user_widget_permissions',
+    { p_user_id: userId }
+  );
+
+  if (error) {
+    return { ok: false, error: friendlyDbError(error.message) };
+  }
+
+  revalidatePath('/admin');
+  return { ok: true, data: data as WidgetResetResult };
+}
+
+export async function resetUsersWidgetPermissionsAction(
+  userIds: string[]
+): Promise<ActionResult<BulkWidgetUpdateResult>> {
+  const context = await getAuthContext();
+
+  if (!context) {
+    return { ok: false, error: 'Sesi berakhir. Silakan login ulang.' };
+  }
+
+  if (!hasPermission(context.role, PERMISSIONS.ADMIN_USERS_MANAGE)) {
+    return { ok: false, error: 'Akses ditolak.' };
+  }
+
+  const ids = normalizeUserIds(userIds);
+  if (!ids) {
+    return { ok: false, error: 'Pilih 1–200 user yang valid.' };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc(
+    'admin_bulk_reset_user_widget_permissions',
+    { p_user_ids: ids }
+  );
+
+  if (error) {
+    return { ok: false, error: friendlyDbError(error.message) };
+  }
+
+  revalidatePath('/admin');
+  return { ok: true, data: data as BulkWidgetUpdateResult };
+}
+
+export async function listAuditLogAction(input?: {
+  limit?: number;
+  offset?: number;
+  action?: string;
+  targetId?: string;
+}): Promise<ActionResult<AdminAuditPayload>> {
+  const context = await getAuthContext();
+
+  if (!context) {
+    return { ok: false, error: 'Sesi berakhir. Silakan login ulang.' };
+  }
+
+  if (!hasPermission(context.role, PERMISSIONS.ADMIN_USERS_READ)) {
+    return { ok: false, error: 'Akses ditolak.' };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('admin_list_audit_log', {
+    p_limit: input?.limit ?? 50,
+    p_offset: input?.offset ?? 0,
+    p_action: input?.action?.trim() || null,
+    p_target_id: input?.targetId || null,
+  });
+
+  if (error) {
+    return { ok: false, error: friendlyDbError(error.message) };
+  }
+
+  return { ok: true, data: data as AdminAuditPayload };
 }

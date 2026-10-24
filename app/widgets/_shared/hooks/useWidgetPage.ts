@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/client';
 import { useCopy } from './useCopy';
 import { gooeyToast } from "goey-toast";
@@ -9,7 +10,7 @@ import { gooeyToast } from "goey-toast";
 export function useWidgetPageShell(loadFromUrl: (url: string) => void) {
   const supabase = createClient();
   const { copied, copy } = useCopy();
-  const [user, setUser] = useState<unknown>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLoadPopup, setShowLoadPopup] = useState(false);
   const [loadUrl, setLoadUrl] = useState('');

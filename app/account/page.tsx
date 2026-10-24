@@ -2,12 +2,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { User, Mail, Lock, Globe, Key, Copy, RefreshCw, Save, LogOut, LayoutDashboard, Monitor, Eye, EyeOff, Camera, CheckCircle2, Menu } from "lucide-react";
+import { User, Mail, Lock, Globe, Key, Copy, RefreshCw, Save, LogOut, LayoutDashboard, Monitor, Eye, EyeOff, Camera, CheckCircle2, Menu, Trash2, AlertTriangle, X } from "lucide-react";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/client";
 import { logoutToLogin } from "@/utils/logout";
 import { getOrCreatePrivateKey, regeneratePrivateKey } from "@/utils/privateKey";
 import { DEFAULT_ROLE, normalizeRole, type Role } from "@/lib/auth";
+import { deleteAccountAction } from "../actions/account";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
 import ConfirmModal from "../components/ConfirmModal";
@@ -19,11 +20,23 @@ const TIMEZONES = [
     "UTC", "Europe/London", "Europe/Berlin", "America/New_York", "America/Los_Angeles",
 ];
 
+type ProfileRow = {
+    username: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    timezone: string | null;
+    private_key: string | null;
+};
+
+type UserMetadata = {
+    username?: string;
+    avatar_url?: string;
+};
+
 export default function AccountPage() {
     const router = useRouter();
     const supabase = createClient();
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<SupabaseUser | null>(null);
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
     const [showPrivate, setShowPrivate] = useState(false);
@@ -34,6 +47,13 @@ export default function AccountPage() {
     const [uploading, setUploading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [role, setRole] = useState<Role>(DEFAULT_ROLE);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const deleteExpected = (user?.email || "HAPUS").trim();
+    const deleteConfirmed = deleteConfirmText.trim().toLowerCase() === deleteExpected.toLowerCase();
 
     useEffect(() => {
         const init = async () => {
@@ -41,29 +61,29 @@ export default function AccountPage() {
             if (!session) { router.replace("/login"); return; }
             setUser(session.user);
             const { data: prof } = await supabase.from("profiles").select("username, email, avatar_url, timezone, private_key").eq("id", session.user.id).single();
-            const p = prof as any;
+            const p = prof as ProfileRow | null;
             // Role dibaca terpisah supaya halaman tetap jalan walau migration 021
             // belum dijalankan (kolom role belum ada).
             const { data: roleRow } = await supabase.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
-            setRole(normalizeRole((roleRow as any)?.role, DEFAULT_ROLE));
+            setRole(normalizeRole((roleRow as { role?: unknown } | null)?.role, DEFAULT_ROLE));
             // fallback ke user_private_keys jika profiles.private_key null,
             // buatkan otomatis bila kosong sekalian (tahan baris user yang belum ada)
             let pk = p?.private_key;
             if (!pk) {
                 const { data: sec } = await supabase.from("user_private_keys").select("private_key").eq("user_id", session.user.id).single();
-                pk = (sec as any)?.private_key || null;
+                pk = (sec as { private_key?: string | null } | null)?.private_key || null;
             }
             if (!pk) {
                 pk = await getOrCreatePrivateKey(supabase, session.user.id);
             }
+            const metadata = session.user.user_metadata as UserMetadata;
             setForm({
-                username: p?.username || (session.user.user_metadata as any)?.username || "",
+                username: p?.username || metadata.username || "",
                 email: p?.email || session.user.email || "",
-                avatar_url: p?.avatar_url || (session.user.user_metadata as any)?.avatar_url || "",
+                avatar_url: p?.avatar_url || metadata.avatar_url || "",
                 timezone: p?.timezone || "Asia/Jakarta",
                 private_key: pk || "",
             });
-            setLoading(false);
         };
         init();
     }, []);
@@ -78,7 +98,7 @@ export default function AccountPage() {
             email: form.email.trim(),
             avatar_url: form.avatar_url.trim(),
             timezone: form.timezone,
-        } as any, { onConflict: "id" });
+        }, { onConflict: "id" });
         if (error) {
             setMsg({ type: "error", text: error.message });
         } else {
@@ -127,18 +147,10 @@ export default function AccountPage() {
         const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
         const publicUrl = urlData.publicUrl;
         setForm(prev => ({ ...prev, avatar_url: publicUrl }));
-        await supabase.from("profiles").update({ avatar_url: publicUrl } as any).eq("id", user.id);
+        await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
         setMsg({ type: "success", text: "Avatar diupload." });
         setUploading(false);
         e.target.value = "";
-    };
-
-    const handleCopyPrivate = async () => {
-        if (form.private_key) { await navigator.clipboard.writeText(form.private_key); setMsg({ type: "success", text: "Private key dicopy." }); }
-    };
-
-    const handleRegenerate = () => {
-        setShowRegenerateConfirm(true);
     };
 
     const handleConfirmRegenerate = async () => {
@@ -157,8 +169,26 @@ export default function AccountPage() {
         await logoutToLogin(supabase);
     };
 
-    // jangan block full page - tampilkan layout, data load background
-    const isInitialLoading = loading && !user;
+    const handleDeleteAccount = async () => {
+        if (!user || deleting) return;
+
+        setDeleteError(null);
+        if (!deleteConfirmed) {
+            setDeleteError(`Ketik "${deleteExpected}" untuk konfirmasi.`);
+            return;
+        }
+
+        setDeleting(true);
+        const result = await deleteAccountAction(deleteConfirmText);
+
+        if (!result.ok) {
+            setDeleteError(result.error);
+            setDeleting(false);
+            return;
+        }
+
+        await logoutToLogin(supabase, "/login?deleted=1");
+    };
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex">
@@ -325,10 +355,134 @@ export default function AccountPage() {
                                 <button onClick={handleLogout} className="w-full mt-4 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-400 font-black text-[10px] uppercase flex items-center justify-center gap-2"><LogOut className="w-3.5 h-3.5" /> Logout</button>
                                 </div>
                             </div>
+
+                            <div className="account-delete-section bg-[#161616] border border-red-500/20 rounded-2xl overflow-hidden">
+                                <div className="px-5 py-4 border-b border-red-500/10 flex items-center justify-between bg-red-500/5">
+                                    <h3 className="text-red-400 font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Trash2 className="w-3.5 h-3.5" /> Hapus Akun</h3>
+                                    <span className="text-[9px] font-bold text-gray-500">Permanen</span>
+                                </div>
+                                <div className="p-5 space-y-3">
+                                    <p className="text-[10px] text-gray-500 leading-relaxed">
+                                        Menghapus akun akan menghapus profil, konfigurasi, widget, private key, dan data terkait secara permanen. Tindakan ini tidak bisa dibatalkan.
+                                    </p>
+                                    <p className="text-[9px] text-gray-600 leading-relaxed">
+                                        Catatan audit keamanan tetap disimpan untuk kepentingan audit, tanpa identifier akun.
+                                    </p>
+                                    {role === "admin" && (
+                                        <p className="text-[9px] text-amber-300/80 leading-relaxed">
+                                            Admin aktif terakhir tidak bisa menghapus akunnya sendiri.
+                                        </p>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setDeleteError(null);
+                                            setDeleteConfirmText("");
+                                            setShowDeleteConfirm(true);
+                                        }}
+                                        disabled={!user || deleting}
+                                        className="w-full h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-400 font-black text-[10px] uppercase flex items-center justify-center gap-2 disabled:opacity-60"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" /> Hapus Akun Saya
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </main>
             </div>
+            {showDeleteConfirm && (
+                <div
+                    className="fixed inset-0 z-[110] bg-black/70 backdrop-blur-sm grid place-items-center p-4"
+                    onClick={() => {
+                        if (!deleting) setShowDeleteConfirm(false);
+                    }}
+                >
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            void handleDeleteAccount();
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="account-delete-modal bg-[#161616] border border-red-500/25 rounded-2xl w-full max-w-[420px] overflow-hidden shadow-2xl"
+                    >
+                        <div className="p-6 space-y-4">
+                            <div className="flex gap-3">
+                                <div className="w-10 h-10 rounded-full bg-red-500/15 text-red-400 grid place-items-center shrink-0">
+                                    <AlertTriangle className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-white font-black text-[14px] uppercase tracking-wide">Hapus Akun Permanen?</h2>
+                                    <p className="text-[11px] text-gray-400 leading-relaxed mt-1">
+                                        Profil, konfigurasi, widget, private key, dan data terkait akan dihapus. Tindakan ini tidak bisa dibatalkan.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!deleting) setShowDeleteConfirm(false);
+                                    }}
+                                    disabled={deleting}
+                                    className="self-start text-gray-500 hover:text-white disabled:opacity-50"
+                                    aria-label="Tutup"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="account-delete-prompt rounded-xl border border-red-500/20 bg-red-500/[0.04] px-3 py-2.5">
+                                <p className="text-[10px] text-red-200/80 leading-relaxed">
+                                    Ketik <span className="font-mono font-bold text-red-100">{deleteExpected}</span> untuk konfirmasi.
+                                </p>
+                            </div>
+
+                            <input
+                                autoFocus
+                                value={deleteConfirmText}
+                                onChange={(e) => {
+                                    setDeleteConfirmText(e.target.value);
+                                    if (deleteError) setDeleteError(null);
+                                }}
+                                disabled={deleting}
+                                placeholder={deleteExpected}
+                                autoComplete="off"
+                                spellCheck={false}
+                                className="w-full h-10 px-3 bg-white/5 border border-red-500/20 rounded-xl text-[12px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-red-500/50 disabled:opacity-60"
+                            />
+
+                            {deleteError && (
+                                <p className="text-[10px] text-red-400 font-bold leading-relaxed">{deleteError}</p>
+                            )}
+                        </div>
+
+                        <div className="px-6 py-4 bg-black/20 border-t border-white/5 flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowDeleteConfirm(false)}
+                                disabled={deleting}
+                                className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300 disabled:opacity-50"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={deleting || !deleteConfirmed || !user}
+                                className="account-delete-confirm flex-1 h-9 bg-red-600 hover:bg-red-500 rounded-xl text-[11px] font-black uppercase text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {deleting ? (
+                                    <>
+                                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Menghapus...
+                                    </>
+                                ) : (
+                                    "Hapus Permanen"
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
             <ConfirmModal
                 open={showRegenerateConfirm}
                 onClose={() => setShowRegenerateConfirm(false)}

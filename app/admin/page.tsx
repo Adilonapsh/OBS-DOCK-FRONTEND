@@ -18,8 +18,10 @@ export default async function AdminPage() {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('admin_list_users', {
     p_search: '',
-    p_limit: 200,
+    p_limit: 50,
     p_offset: 0,
+    p_role: null,
+    p_status: null,
   });
 
   const initialData = error ? null : (data as AdminUsersPayload);

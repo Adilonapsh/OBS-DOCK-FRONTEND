@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { User } from '@supabase/supabase-js';
 import Sidebar from '../../../components/Sidebar';
 import { Menu, ArrowLeft } from 'lucide-react';
 import React from 'react';
@@ -21,7 +22,7 @@ export function WidgetShell({
 }: {
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
-  user: unknown;
+  user: User | null;
   headerIcon: React.ReactNode;
   title: React.ReactNode;
   subtitle?: string;
@@ -32,7 +33,7 @@ export function WidgetShell({
 }) {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
-      <Sidebar active="widgets" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user as never} />
+      <Sidebar active="widgets" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
       <div className="flex-1 flex flex-col min-w-0 lg:pl-[240px]">
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
