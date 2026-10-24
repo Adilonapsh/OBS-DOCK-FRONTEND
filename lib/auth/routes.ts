@@ -65,6 +65,11 @@ export function isPublicPath(pathname: string): boolean {
  * Prefix terpanjang menang, jadi `/widgets/display` tidak terkena `/widgets`.
  */
 export function getRoutePermission(pathname: string): Permission | null {
+  // Browser source widget bisa diakses tanpa login; private key membatasi data live.
+  if (/^\/widgets\/[^/]+\/display(?:\/|$)/.test(pathname)) {
+    return PERMISSIONS.OVERLAY_READ;
+  }
+
   const match = [...ROUTE_PERMISSIONS]
     .filter((route) => matchesPrefix(pathname, route.path))
     .sort((a, b) => b.path.length - a.path.length)[0];
