@@ -88,6 +88,16 @@ body {
   background: transparent;
 }
 
+/* Scroll horizontal tanpa scrollbar terlihat (dipakai tab strip dock control). */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Scrollbar body khusus route /designer (diaktifkan via layout). */
 html.designer-scroll {
   scrollbar-width: thin;

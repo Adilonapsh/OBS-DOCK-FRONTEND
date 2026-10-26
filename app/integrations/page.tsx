@@ -142,12 +142,12 @@ function ParamsEditor({ vars, params, onChange, preview }: {
   };
 
   return (
-    <div className="rounded-xl border border-white/10 overflow-hidden">
-      <div className="flex items-center gap-1 p-1 bg-white/[0.02]">
+    <div className="rounded-xl border border-zinc-200 dark:border-white/10 overflow-hidden">
+      <div className="flex items-center gap-1 p-1 bg-zinc-50 dark:bg-white/[0.02]">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex-1 h-8 px-3 flex items-center justify-between rounded-lg hover:bg-white/5 text-[10px] font-black uppercase tracking-wider text-gray-400 hover:text-white transition-colors"
+          className="flex-1 h-8 px-3 flex items-center justify-between rounded-lg hover:bg-zinc-200 dark:hover:bg-white/5 text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-gray-400 hover:text-zinc-950 dark:hover:text-white transition-colors"
         >
           <span>Parameter {entries.length > 0 && <span className="ml-1 px-1.5 py-px bg-emerald-500/20 text-emerald-300 rounded-full">{entries.length}</span>}</span>
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -155,7 +155,7 @@ function ParamsEditor({ vars, params, onChange, preview }: {
         <button
           type="button"
           onClick={() => setShowPreview((v) => !v)}
-          className={`h-8 px-3 flex items-center gap-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${showPreview ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+          className={`h-8 px-3 flex items-center gap-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${showPreview ? "bg-white text-black" : "text-zinc-700 dark:text-gray-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-white/5"}`}
           title="Lihat args final yang dikirim ke Streamer.bot"
         >
           {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />} Preview
@@ -163,34 +163,34 @@ function ParamsEditor({ vars, params, onChange, preview }: {
       </div>
 
       {showPreview && (
-        <div className="border-t border-white/10 bg-black/40 p-3">
+        <div className="border-t border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-black/40 p-3">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Args Streamer.bot</span>
-            <button type="button" onClick={copyPreview} className="flex items-center gap-1 text-[9px] font-bold text-gray-400 hover:text-white">
+            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 dark:text-gray-500">Args Streamer.bot</span>
+            <button type="button" onClick={copyPreview} className="flex items-center gap-1 text-[9px] font-bold text-zinc-600 dark:text-gray-400 hover:text-zinc-950 dark:hover:text-white">
               {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />} {copied ? "Disalin!" : "Salin"}
             </button>
           </div>
-          <pre className="max-h-40 overflow-auto text-[10px] leading-relaxed  font-sans text-emerald-200/90 whitespace-pre-wrap break-all">
+          <pre className="max-h-40 overflow-auto text-[10px] leading-relaxed font-sans text-emerald-800 dark:text-emerald-200/90 whitespace-pre-wrap break-all">
             {JSON.stringify(preview, null, 2)}
           </pre>
         </div>
       )}
 
       {open && (
-        <div className="border-t border-white/10 p-3 space-y-2.5 bg-black/20">
-          <p className="text-[10px] text-gray-500 leading-relaxed">
-            Args bawaan selalu dikirim. Tambahkan parameter custom - nilai boleh pakai template <code className="bg-white/10 px-1 rounded text-gray-300 font-sans">{"{variabel}"}</code> yang diisi otomatis saat event terjadi.
+        <div className="border-t border-zinc-200 dark:border-white/10 p-3 space-y-2.5 bg-zinc-50 dark:bg-black/20">
+          <p className="text-[10px] text-zinc-600 dark:text-gray-500 leading-relaxed">
+            Args bawaan selalu dikirim. Tambahkan parameter custom - nilai boleh pakai template <code className="bg-zinc-200 dark:bg-white/10 px-1 rounded text-zinc-800 dark:text-gray-300 font-sans">{"{variabel}"}</code> yang diisi otomatis saat event terjadi.
           </p>
           {vars.length > 0 && (
             <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-600 mb-1.5">Klik untuk sisip variabel:</div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-zinc-700 dark:text-gray-400 mb-1.5">Klik untuk sisip variabel:</div>
               <div className="flex flex-wrap gap-1.5">
                 {vars.map((v) => (
                   <button
                     key={v}
                     type="button"
                     onClick={() => setNewVal((prev) => `${prev}{${v}}`)}
-                    className="px-2 py-1 bg-violet-500/10 hover:bg-violet-500/25 border border-violet-500/20 hover:border-violet-500/40 rounded-lg text-[10px]  font-sans text-violet-200 transition-colors"
+                    className="px-2 py-1 bg-violet-100 dark:bg-violet-500/10 hover:bg-violet-200 dark:hover:bg-violet-500/25 border border-violet-300 dark:border-violet-500/20 hover:border-violet-400 dark:hover:border-violet-500/40 rounded-lg text-[10px] font-sans text-violet-800 dark:text-violet-200 transition-colors"
                   >
                     {`{${v}}`}
                   </button>
@@ -200,12 +200,12 @@ function ParamsEditor({ vars, params, onChange, preview }: {
           )}
           {entries.map(([k, v]) => (
             <div key={k} className="flex gap-1.5 items-center">
-              <span className="shrink-0 h-9 px-2.5 flex items-center bg-violet-500/10 border border-violet-500/20 rounded-lg text-[10px]  font-sans font-bold text-violet-200 max-w-[38%] truncate">{k}</span>
+              <span className="shrink-0 h-9 px-2.5 flex items-center bg-violet-100 dark:bg-violet-500/10 border border-violet-300 dark:border-violet-500/20 rounded-lg text-[10px] font-sans font-bold text-violet-800 dark:text-violet-200 max-w-[38%] truncate">{k}</span>
               <input
                 value={v}
                 onChange={(e) => onChange({ ...(params || {}), [k]: e.target.value.slice(0, 300) })}
                 placeholder="nilai / template {variabel}"
-                className="flex-1 min-w-0 h-9 bg-white/5 border border-white/10 rounded-lg px-2.5 text-[11px]  font-sans text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30"
+                className="flex-1 min-w-0 h-9 bg-white dark:bg-white/5 border border-zinc-300 dark:border-white/10 rounded-lg px-2.5 text-[11px] font-sans text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-gray-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30"
               />
               <button
                 type="button"
@@ -214,7 +214,7 @@ function ParamsEditor({ vars, params, onChange, preview }: {
                   delete next[k];
                   onChange(next);
                 }}
-                className="shrink-0 h-9 w-9 grid place-items-center bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/40 rounded-lg text-gray-500 hover:text-red-400 transition-colors"
+                className="shrink-0 h-9 w-9 grid place-items-center bg-zinc-100 dark:bg-white/5 hover:bg-red-100 dark:hover:bg-red-500/20 border border-zinc-300 dark:border-white/10 hover:border-red-400 dark:hover:border-red-500/40 rounded-lg text-zinc-600 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                 title="Hapus parameter"
               >
                 <X className="w-3.5 h-3.5" />
@@ -227,14 +227,14 @@ function ParamsEditor({ vars, params, onChange, preview }: {
               onChange={(e) => setNewKey(e.target.value.replace(/[^\w]/g, "").slice(0, 40))}
               onKeyDown={(e) => { if (e.key === "Enter") addParam(); }}
               placeholder="nama_param"
-              className="w-[34%] min-w-0 h-9 bg-white/5 border border-dashed border-white/15 rounded-lg px-2.5 text-[11px]  font-sans text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50"
+              className="w-[34%] min-w-0 h-9 bg-white dark:bg-white/5 border border-dashed border-zinc-300 dark:border-white/15 rounded-lg px-2.5 text-[11px] font-sans text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-gray-500 focus:outline-none focus:border-violet-500/50"
             />
             <input
               value={newVal}
               onChange={(e) => setNewVal(e.target.value.slice(0, 300))}
               onKeyDown={(e) => { if (e.key === "Enter") addParam(); }}
               placeholder="nilai, mis. Halo {nickname}!"
-              className="flex-1 min-w-0 h-9 bg-white/5 border border-dashed border-white/15 rounded-lg px-2.5 text-[11px]  font-sans text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50"
+              className="flex-1 min-w-0 h-9 bg-white dark:bg-white/5 border border-dashed border-zinc-300 dark:border-white/15 rounded-lg px-2.5 text-[11px] font-sans text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-gray-500 focus:outline-none focus:border-violet-500/50"
             />
             <button
               type="button"

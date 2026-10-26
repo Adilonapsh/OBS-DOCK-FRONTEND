@@ -7,7 +7,7 @@ import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2, Gamepad2,
     RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus, GripVertical,
-    Share2,     ListPlus, ListChecks, Check, Clock, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX
+    Share2, ListPlus, ListChecks, Check, Clock, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -295,6 +295,19 @@ export default function Home() {
     const [pinnedChat, setPinnedChat] = useState<{ user: string; text: string; platform: string; avatar?: string } | null>(null);
     const [pinnedExiting, setPinnedExiting] = useState(false);
     const pinnedExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Auto Pin: chat terbaru otomatis masuk ke pinned chat + widget Pinned Chat.
+    const [autoPinChat, setAutoPinChat] = useState(() => {
+        if (typeof window === "undefined") return false;
+        try { return localStorage.getItem("dock-autoPinChat") === "true"; } catch { return false; }
+    });
+    // ID chat terakhir yang sudah auto-pin - history saat mount tidak ikut di-pin.
+    const autoPinnedIdRef = useRef<number | null>(chatMessages[0]?.id ?? null);
+    const pinMessageRef = useRef<(user: string, text: string, platform: string, avatar?: string, fromAuto?: boolean) => void>(() => { });
+    // Ref untuk listener socket (didaftarkan sekali) agar selalu baca state terbaru.
+    const autoPinChatRef = useRef(autoPinChat);
+    const pinnedChatRef = useRef(pinnedChat);
+    const chatMessagesRef = useRef(chatMessages);
+    const pinNextChatRef = useRef<() => { ok: boolean; user?: string }>(() => ({ ok: false }));
     const [speakingChat, setSpeakingChat] = useState<{ user: string; text: string; platform: string; avatar?: string } | null>(null);
     const [speakingExiting, setSpeakingExiting] = useState(false);
     const speakingExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -396,6 +409,10 @@ export default function Home() {
     const [lastActivity, setLastActivity] = useState(() => Date.now());
     const bumpActivity = () => setLastActivity(Date.now());
     useEffect(() => { try { localStorage.setItem('dock-autoMinimizeEnabled', String(autoMinimizeEnabled)); } catch { } }, [autoMinimizeEnabled]);
+    useEffect(() => { try { localStorage.setItem('dock-autoPinChat', String(autoPinChat)); } catch { } }, [autoPinChat]);
+    useEffect(() => { autoPinChatRef.current = autoPinChat; }, [autoPinChat]);
+    useEffect(() => { pinnedChatRef.current = pinnedChat; }, [pinnedChat]);
+    useEffect(() => { chatMessagesRef.current = chatMessages; }, [chatMessages]);
     useEffect(() => { try { localStorage.setItem('dock-autoMinimizeDelay', String(autoMinimizeDelay)); } catch { } }, [autoMinimizeDelay]);
     useEffect(() => { try { localStorage.setItem('dock-showPoll', String(showPoll)); } catch { } }, [showPoll]);
     useEffect(() => { try { localStorage.setItem('dock-pollMinimized', String(pollMinimized)); } catch { } }, [pollMinimized]);
@@ -937,6 +954,26 @@ export default function Home() {
             s.emit('poll-get', { privateKey: room });
             s.emit('task-get', { privateKey: room });
             s.emit('timer-get', { privateKey: room });
+            // Kabari plugin Stream Deck state Auto Pin saat dock (re)connect.
+            s.emit('auto-pin-state', { privateKey: room, enabled: autoPinChatRef.current });
+        });
+        // Kontrol chat dari Stream Deck plugin (relay backend, room privateKey).
+        s.on('auto-pin-get', (p: any) => {
+            s.emit('auto-pin-state', { privateKey: getRoom(), enabled: autoPinChatRef.current, requestId: p?.requestId });
+        });
+        s.on('auto-pin-toggle', () => {
+            const next = !autoPinChatRef.current;
+            autoPinChatRef.current = next;
+            setAutoPinChat(next);
+        });
+        s.on('chat-next', (p: any) => {
+            const result = pinNextChatRef.current();
+            s.emit('chat-next-result', {
+                privateKey: getRoom(),
+                requestId: p?.requestId,
+                ok: result.ok,
+                chat: result.user ? { nickname: result.user } : undefined,
+            });
         });
         s.on('poll-update', (p: any) => {
             setActivePoll(p);
@@ -1329,6 +1366,12 @@ export default function Home() {
         return;
     }
     const getTimerRoom = () => privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
+    // Sinkron Auto Pin ke Stream Deck plugin via relay backend (room privateKey).
+    useEffect(() => {
+        const s = pollSocketRef.current;
+        if (!s?.connected) return;
+        s.emit("auto-pin-state", { privateKey: getTimerRoom(), enabled: autoPinChat });
+    }, [autoPinChat]);
     // Bridge Streamer.bot -> backend -> widget. Pakai pollSocket (selalu konek),
     // fallback ke tkSocket (hanya ada kalau TikTok pernah di-connect).
     // Sebelumnya semua emit sb-* pakai tkSocket saja -> chat/gift/follow/viewer
@@ -1553,7 +1596,13 @@ export default function Home() {
         fireWidgetSb('chat_unpinned', { platform: pinnedChat?.platform || '' });
     }
 
-    const pinMessage = (user: string, text: string, platform: string, avatar?: string) => {
+    const pinMessage = (user: string, text: string, platform: string, avatar?: string, fromAuto = false) => {
+        // Pin manual = user ambil alih. Matikan Auto Pin agar pilihan manual
+        // tidak langsung tertimpa chat berikutnya.
+        if (!fromAuto && autoPinChat) {
+            setAutoPinChat(false);
+            gooeyToast.warning("Auto Pin Chat dimatikan karena pin manual.");
+        }
         if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
         setPinnedExiting(false);
         setPinnedChat({ user, text, platform, avatar });
@@ -1575,6 +1624,40 @@ export default function Home() {
             if (tkSocketRef.current?.connected) tkSocketRef.current.emit("pin-chat", payload);
         } catch { }
     }
+
+    // Simpan versi terbaru pinMessage agar listener/effect tidak memakai closure lama.
+    useEffect(() => { pinMessageRef.current = pinMessage; });
+
+    // Auto Pin Chat: setiap chat baru otomatis menggantikan pinned chat.
+    // History yang dipulihkan saat mount tidak ikut di-pin (hanya chat baru).
+    useEffect(() => {
+        if (!autoPinChat) {
+            autoPinnedIdRef.current = null;
+            return;
+        }
+        const latest = chatMessages[0];
+        if (!latest || autoPinnedIdRef.current === latest.id) return;
+        autoPinnedIdRef.current = latest.id;
+        pinMessageRef.current(latest.user, latest.text, latest.platform, latest.avatar, true);
+    }, [autoPinChat, chatMessages]);
+
+    // Pin chat berikutnya (lebih lama) dari daftar. Dipakai tombol "Next Chat"
+    // di Stream Deck via relay socket. Setelah chat terlama, kembali ke terbaru.
+    const pinNextChat = () => {
+        const list = chatMessagesRef.current;
+        if (list.length === 0) return { ok: false };
+        const cur = pinnedChatRef.current;
+        let index = 0;
+        if (cur) {
+            const found = list.findIndex((m) => m.user === cur.user && m.text === cur.text && m.platform === cur.platform);
+            if (found >= 0) index = (found + 1) % list.length;
+        }
+        const next = list[index];
+        if (!next) return { ok: false };
+        pinMessage(next.user, next.text, next.platform, next.avatar);
+        return { ok: true, user: next.user };
+    };
+    useEffect(() => { pinNextChatRef.current = pinNextChat; });
 
     const emitSpeakEvent = (event: "speak-chat" | "speak-stop", payload: Record<string, unknown>) => {
         const socket =
@@ -3331,6 +3414,16 @@ export default function Home() {
                                         )}
                                     </div>
                                     <span className="text-[8px] font-mono-custom text-gray-500 shrink-0">{filteredChatMessages.length}/{chatMessages.length}</span>
+                                    <button
+                                        onClick={() => setAutoPinChat(v => !v)}
+                                        className={`shrink-0 relative p-1.5 rounded transition-colors ${autoPinChat ? "text-yellow-300 bg-yellow-500/15 hover:bg-yellow-500/25" : "text-gray-500 hover:text-white hover:bg-white/10"}`}
+                                        title={autoPinChat ? "Auto Pin Chat: ON — chat terbaru otomatis di-pin" : "Auto Pin Chat: OFF — klik untuk mengaktifkan"}
+                                        aria-label="Toggle auto pin chat"
+                                        aria-pressed={autoPinChat}
+                                    >
+                                        <Pin className="w-3.5 h-3.5" />
+                                        {autoPinChat && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-yellow-400 shadow" />}
+                                    </button>
                                     <button onClick={() => { if (chatMessages.length === 0) setChatMessages([]); else showConfirm({ title: "Bersihkan chat sesi ini?", description: "Semua chat sesi ini akan dihapus.", variant: "danger", onConfirm: () => setChatMessages([]) }); }} className="shrink-0 p-1.5 text-gray-500 hover:text-red-400 hover:bg-white/10 rounded transition-colors" title="Bersihkan chat sesi ini">
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -4216,28 +4309,31 @@ export default function Home() {
                 const gameTopic = gameStatus?.topic ? getTopicById(gameStatus.topic) : null;
                 const gamePhase = gameStatus?.phase ? GAME_PHASE_LABEL[gameStatus.phase] || gameStatus.phase : 'Belum berjalan';
                 const gameSettingsHref = `/games/trivia${privateKey ? `?key=${encodeURIComponent(privateKey)}` : ''}`;
-                            const sendGameCommand = (action: 'start' | 'stop' | 'skip' | 'reset') => {
-                                gameSocketRef.current?.emit('game-command', {
-                                    privateKey: privateKey || readStoredDockKey() || 'global',
-                                    gameId: TRIVIA_GAME_ID,
-                                    action,
-                                });
-                                if (action === 'reset') setGameStatus(null);
-                            };
-                            return (
-                    <div className={dockSwiperMinimized ? 'fixed z-[110] bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden will-change-transform transform-gpu transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bottom-3 left-1/2 -translate-x-1/2 w-[96%] max-w-[420px] rounded-[20px]' : 'fixed z-[110] bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden will-change-transform transform-gpu transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bottom-4 left-1/2 -translate-x-1/2 w-[96%] max-w-[720px] rounded-2xl'}>
-                        <div className="flex items-center justify-between px-2 py-1.5 bg-white/[0.03] border-b border-white/5">
-                            <div className="flex items-center gap-1">
-                                {visibleTabs.map((t, i) => (
-                                    <button key={t.id} onClick={() => setDockSwiperTab(t.id)} className={`h-7 px-3 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5 border transition-all ${i === safeIndex ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
-                                        {t.icon} {t.label} {t.count !== undefined && <span className={`px-1 py-0.5 rounded-full text-[9px] ${i === safeIndex ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>{t.count}</span>}
-                                    </button>
-                                ))}
+                const sendGameCommand = (action: 'start' | 'stop' | 'skip' | 'reset') => {
+                    gameSocketRef.current?.emit('game-command', {
+                        privateKey: privateKey || readStoredDockKey() || 'global',
+                        gameId: TRIVIA_GAME_ID,
+                        action,
+                    });
+                    if (action === 'reset') setGameStatus(null);
+                };
+                return (
+                    <div className={dockSwiperMinimized ? 'fixed z-[110] backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden will-change-transform transform-gpu transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bottom-3 left-1/2 -translate-x-1/2 w-fit max-w-[min(680px,96vw)] rounded-[20px]' : 'fixed z-[110] bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden will-change-transform transform-gpu transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bottom-4 left-1/2 -translate-x-1/2 w-[96%] max-w-[720px] rounded-2xl'}>
+                        <div className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 bg-white/[0.03] border-b border-white/5 w-full">
+                            {/* Tab strip: scrollable horizontal bila viewport sempit, tidak pernah mendorong tombol kontrol di kanan */}
+                            <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth">
+                                <div className="flex items-center gap-1 w-max pr-1">
+                                    {visibleTabs.map((t, i) => (
+                                        <button key={t.id} onClick={() => setDockSwiperTab(t.id)} className={`h-7 px-3 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5 border transition-all shrink-0 ${i === safeIndex ? 'bg-white text-black border-white shadow-sm' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200'}`}>
+                                            {t.icon} {t.label} {t.count !== undefined && <span className={`px-1 py-0.5 rounded-full text-[9px] ${i === safeIndex ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>{t.count}</span>}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <button onClick={() => setDockSwiperMinimized(!dockSwiperMinimized)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white" title={dockSwiperMinimized ? 'Expand' : 'Minimize'}>{dockSwiperMinimized ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}</button>
-                                <button onClick={() => go(-1)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400"><ChevronDown className="w-3 h-3 rotate-90" /></button>
-                                <button onClick={() => go(1)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400"><ChevronDown className="w-3 h-3 -rotate-90" /></button>
+                            <div className="flex items-center gap-1 shrink-0 z-10 pl-1.5 border-l border-white/10 ml-auto backdrop-blur-sm">
+                                <button onClick={() => setDockSwiperMinimized(!dockSwiperMinimized)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white shrink-0 transition-colors" title={dockSwiperMinimized ? 'Expand' : 'Minimize'}>{dockSwiperMinimized ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}</button>
+                                <button onClick={() => go(-1)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white shrink-0 transition-colors" title="Page sebelumnya"><ChevronDown className="w-3 h-3 rotate-90" /></button>
+                                <button onClick={() => go(1)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white shrink-0 transition-colors" title="Page berikutnya"><ChevronDown className="w-3 h-3 -rotate-90" /></button>
                             </div>
                         </div>
                         <div className={dockSwiperMinimized ? 'overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform max-h-0 opacity-0 -translate-y-1 scale-[0.98]' : 'overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform max-h-[500px] opacity-100 translate-y-0 scale-100'}>
