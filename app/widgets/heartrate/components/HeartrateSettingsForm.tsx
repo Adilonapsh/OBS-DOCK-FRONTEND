@@ -75,7 +75,17 @@ export function HeartrateSettingsForm({
         </div>
       </div>
 
-      {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
+      {state.theme === 'brutalist' && (
+        <>
+          <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />
+          <div className="space-y-3">
+            <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer">
+              <span className="text-[11px] font-bold text-white">Compact - heart + BPM tanpa panel</span>
+              <input type="checkbox" checked={state.brutalistCompact} onChange={(e) => update('brutalistCompact', e.target.checked)} className="w-4 h-4 accent-white" />
+            </label>
+          </div>
+        </>
+      )}
 
       {/* Label & Layout */}
       <div className="space-y-3">
