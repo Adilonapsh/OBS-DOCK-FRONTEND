@@ -94,6 +94,8 @@ function OverlayContent() {
       const room = privateKey || "global";
       // join room isolasi - server expects connect-tiktok with privateKey, but for overlay we join room manually
       socket.emit("join-room", room);
+      // Sinkronkan pin terakhir setelah (re)connect.
+      socket.emit("pin-get", { privateKey: room });
       if (privateKey) {
         // also try to ensure we receive tiktok events for this key
         // no explicit join for tiktok room aside from connect-tiktok, but pinned events use privateKey

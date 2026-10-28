@@ -295,6 +295,9 @@ export default function Home() {
     const [pinnedChat, setPinnedChat] = useState<{ user: string; text: string; platform: string; avatar?: string } | null>(null);
     const [pinnedExiting, setPinnedExiting] = useState(false);
     const pinnedExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // True saat dock sendiri sedang animasi unpin - abaikan echo unpin dari server
+    // agar animasinya tidak kepotong.
+    const localUnpinRef = useRef(false);
     // Auto Pin: chat terbaru otomatis masuk ke pinned chat + widget Pinned Chat.
     const [autoPinChat, setAutoPinChat] = useState(() => {
         if (typeof window === "undefined") return false;
@@ -921,6 +924,9 @@ export default function Home() {
     const tkWantedRef = useRef<{ username: string; privateKey: string | null }>({ username: "", privateKey: null });
     const pollSocketRef = useRef<Socket | null>(null);
     const gameSocketRef = useRef<Socket | null>(null);
+    // Aksi pin terakhir (pin/unpin) yang perlu dikirim ulang setelah socket
+    // reconnect, supaya overlay tetap sinkron walau sempat putus.
+    const lastPinActionRef = useRef<{ type: 'pin'; payload: any } | { type: 'unpin'; payload: any } | null>(null);
     // Dedup chat ganda (echo bridge / event dobel Streamer.bot): user+text+platform yang sama dalam 2.5 dtk diabaikan.
     const lastChatRef = useRef<{ key: string; at: number } | null>(null);
     const getSocketUrl = () => {
@@ -932,6 +938,8 @@ export default function Home() {
         return window.location.origin;
     };
 
+    // Status koneksi Socket.IO ke backend (bukan OBS/Streamer.bot).
+    const [serverConnected, setServerConnected] = useState(false);
     const [tiktokStatus, setTiktokStatus] = useState<"DISCONNECTED" | "CONNECTING" | "CONNECTED" | "ERROR">("DISCONNECTED");
     const [tiktokError, setTiktokError] = useState<string | null>(null);
     const router = useRouter();
@@ -945,10 +953,22 @@ export default function Home() {
     const showConfirm = (opts: { title: string, description?: string, onConfirm: () => void, variant?: "danger" | "default" }) => setConfirmState({ open: true, title: opts.title, description: opts.description || "", onConfirm: opts.onConfirm, variant: opts.variant });
 
     useEffect(() => {
-        const s = io(getSocketUrl(), { transports: ['websocket', 'polling'] as const });
+        const s = io(getSocketUrl(), {
+            transports: ['websocket', 'polling'] as const,
+            // Reconnect agresif: dock OBS harus cepat pulih setelah putus.
+            reconnection: true,
+            reconnectionAttempts: Infinity,
+            reconnectionDelay: 800,
+            reconnectionDelayMax: 5000,
+            randomizationFactor: 0.5,
+            timeout: 15000,
+        });
         pollSocketRef.current = s;
+        let lastConnectedAt = Date.now();
         const getRoom = () => privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
         s.on('connect', () => {
+            lastConnectedAt = Date.now();
+            setServerConnected(true);
             const room = getRoom();
             s.emit('join-room', room);
             s.emit('poll-get', { privateKey: room });
@@ -956,7 +976,14 @@ export default function Home() {
             s.emit('timer-get', { privateKey: room });
             // Kabari plugin Stream Deck state Auto Pin saat dock (re)connect.
             s.emit('auto-pin-state', { privateKey: room, enabled: autoPinChatRef.current });
+            // Kirim ulang aksi pin terakhir setelah reconnect: emit saat socket
+            // mati tidak pernah sampai, jadi overlay harus disinkronkan lagi.
+            const pendingPin = lastPinActionRef.current;
+            if (pendingPin?.type === 'pin') s.emit('pin-chat', pendingPin.payload);
+            else if (pendingPin?.type === 'unpin') s.emit('unpin-chat', pendingPin.payload);
         });
+        s.on('disconnect', () => setServerConnected(false));
+        s.on('connect_error', () => setServerConnected(false));
         // Kontrol chat dari Stream Deck plugin (relay backend, room privateKey).
         s.on('auto-pin-get', (p: any) => {
             s.emit('auto-pin-state', { privateKey: getRoom(), enabled: autoPinChatRef.current, requestId: p?.requestId });
@@ -974,6 +1001,32 @@ export default function Home() {
                 ok: result.ok,
                 chat: result.user ? { nickname: result.user } : undefined,
             });
+        });
+        // Sinkronkan pin dari server (echo pin sendiri, pin dari dock lain, atau
+        // pin terakhir yang dipulihkan setelah refresh/reconnect).
+        s.on('pinned-chat', (data: any) => {
+            const chat = data?.chat || data;
+            const text = String(chat?.comment || chat?.text || chat?.message || '');
+            if (!text) return;
+            const user = String(chat?.nickname || chat?.user || chat?.uniqueId || 'Pinned');
+            const cur = pinnedChatRef.current;
+            if (cur && cur.user === user && cur.text === text) return;
+            if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
+            localUnpinRef.current = false;
+            setPinnedExiting(false);
+            setPinnedChat({
+                user,
+                text,
+                platform: String(chat?.platform || 'tiktok'),
+                avatar: chat?.profilePictureUrl || chat?.avatar,
+            });
+        });
+        s.on('unpin-chat', () => {
+            if (localUnpinRef.current) return;
+            if (!pinnedChatRef.current) return;
+            if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
+            setPinnedExiting(false);
+            setPinnedChat(null);
         });
         s.on('poll-update', (p: any) => {
             setActivePoll(p);
@@ -1150,7 +1203,61 @@ export default function Home() {
         });
         // also join when privateKey changes
         const t = setInterval(() => { if (s.connected) { const room = getRoom(); s.emit('poll-get', { privateKey: room }); s.emit('task-get', { privateKey: room }); s.emit('timer-get', { privateKey: room }); } }, 3000);
-        return () => { clearInterval(t); s.disconnect(); pollSocketRef.current = null; };
+
+        // Watchdog koneksi: di OBS/CEF socket kadang "nyangkut" (connected=true
+        // tapi paket tidak sampai) dan tidak pernah reconnect sendiri. Akibatnya
+        // klik Pin/Chat diam-diam tidak terkirim sampai halaman di-refresh.
+        let pingTimeout: ReturnType<typeof setTimeout> | null = null;
+        let pingAcks = 0;
+        let pingMisses = 0;
+        const reconnectNow = () => {
+            try { s.disconnect(); s.connect(); } catch { }
+        };
+        const watchdog = setInterval(() => {
+            if (pollSocketRef.current !== s || s.connected) return;
+            if (Date.now() - lastConnectedAt < 8000) return;
+            reconnectNow();
+        }, 5000);
+        // Heartbeat aplikasi (bukan ping engine.io) untuk mendeteksi zombie.
+        const heartbeat = setInterval(() => {
+            if (pollSocketRef.current !== s || !s.connected) return;
+            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+            if (pingTimeout) clearTimeout(pingTimeout);
+            pingTimeout = setTimeout(() => {
+                pingTimeout = null;
+                if (!s.connected) return;
+                pingMisses += 1;
+                // Kalau backend lama belum punya handler app-ping, jangan
+                // memaksa reconnect terus-menerus.
+                if (pingAcks === 0 && pingMisses >= 3) { clearInterval(heartbeat); return; }
+                reconnectNow();
+            }, 8000);
+            s.emit('app-ping', null, () => {
+                pingAcks += 1;
+                pingMisses = 0;
+                if (pingTimeout) { clearTimeout(pingTimeout); pingTimeout = null; }
+            });
+        }, 12000);
+        const tryResume = () => {
+            if (pollSocketRef.current !== s || s.connected) return;
+            lastConnectedAt = 0;
+            try { s.connect(); } catch { }
+        };
+        const onVisibility = () => { if (document.visibilityState === 'visible') tryResume(); };
+        window.addEventListener('online', tryResume);
+        window.addEventListener('focus', tryResume);
+        document.addEventListener('visibilitychange', onVisibility);
+        return () => {
+            clearInterval(t);
+            clearInterval(watchdog);
+            clearInterval(heartbeat);
+            if (pingTimeout) clearTimeout(pingTimeout);
+            window.removeEventListener('online', tryResume);
+            window.removeEventListener('focus', tryResume);
+            document.removeEventListener('visibilitychange', onVisibility);
+            s.disconnect();
+            pollSocketRef.current = null;
+        };
     }, []);
     useEffect(() => {
         if (pollSocketRef.current?.connected) {
@@ -1577,16 +1684,19 @@ export default function Home() {
 
     const unpinMessage = () => {
         if (!pinnedChat || pinnedExiting) return;
+        localUnpinRef.current = true;
         setPinnedExiting(true);
         if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
         pinnedExitTimer.current = setTimeout(() => {
             setPinnedChat(null);
             setPinnedExiting(false);
+            localUnpinRef.current = false;
         }, 300);
         // Pakai pollSocket (selalu konek) + fallback tkSocket.
         // Sebelumnya hanya tkSocket → unpin tidak sampai ke widget kalau TikTok tidak konek (mis. hanya YouTube/Twitch).
         // Room pakai getTimerRoom() (ada fallback sessionStorage) agar sama dengan chat/event lain.
         const payload = { privateKey: getTimerRoom() };
+        lastPinActionRef.current = { type: 'unpin', payload };
         try {
             if (pollSocketRef.current?.connected) pollSocketRef.current.emit("unpin-chat", payload);
         } catch { }
@@ -1604,6 +1714,7 @@ export default function Home() {
             gooeyToast.warning("Auto Pin Chat dimatikan karena pin manual.");
         }
         if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
+        localUnpinRef.current = false;
         setPinnedExiting(false);
         setPinnedChat({ user, text, platform, avatar });
         fireWidgetSb('chat_pinned', { nickname: user, comment: text, profilePictureUrl: avatar || '', platform });
@@ -1617,6 +1728,8 @@ export default function Home() {
             voiceId: readSpeakVoiceId(),
             chat: { nickname: user, comment: text, profilePictureUrl: avatar, platform: platform }
         };
+        // Simpan untuk dikirim ulang otomatis saat socket reconnect.
+        lastPinActionRef.current = { type: 'pin', payload };
         try {
             if (pollSocketRef.current?.connected) pollSocketRef.current.emit("pin-chat", payload);
         } catch { }
@@ -3162,6 +3275,13 @@ export default function Home() {
                                                 <span className="text-[10px] font-bold text-white">TIKTOK</span>
                                             </div>
                                             <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${isTiktokOk ? "bg-green-500/20 text-green-400" : tiktokStatus === "CONNECTING" ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>{tiktokStatus}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/5">
+                                            <div className="flex items-center gap-2">
+                                                <Terminal className="w-3.5 h-3.5 text-gray-400" />
+                                                <span className="text-[10px] font-bold text-white">SERVER</span>
+                                            </div>
+                                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${serverConnected ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>{serverConnected ? "CONNECTED" : "DISCONNECTED"}</span>
                                         </div>
                                         <div className="border-t border-white/5 mt-1 pt-1 px-2">
                                             <span className="text-[8px] font-bold text-gray-500 uppercase">{allConnected ? "✓ Semua terhubung" : noneConnected ? "✗ Tidak ada yang terhubung" : "◐ Sebagian terhubung"}</span>

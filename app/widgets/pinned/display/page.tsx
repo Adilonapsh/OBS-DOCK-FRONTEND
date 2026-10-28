@@ -106,7 +106,13 @@ function PinnedInner() {
     }
     const socket: Socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     const room = privateKey || 'global';
-    socket.on('connect', () => { setConnected(true); socket.emit('join-room', room); });
+    socket.on('connect', () => {
+      setConnected(true);
+      socket.emit('join-room', room);
+      // Sinkronkan pin terakhir setelah (re)connect - kalau tidak ada,
+      // backend balas unpin-chat supaya state lama tidak nyangkut.
+      socket.emit('pin-get', { privateKey: room });
+    });
     socket.on('disconnect', () => setConnected(false));
     socket.on('pinned-chat', (data: Record<string, unknown>) => {
       const d = (data as { chat?: Record<string, unknown> }).chat || data;

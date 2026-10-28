@@ -177,6 +177,7 @@ function WidgetDisplayContent() {
       setConnected(true);
       const room = privateKey || "global";
       socket.emit("join-room", room);
+      socket.emit("pin-get", { privateKey: room });
     });
     socket.on("disconnect", () => setConnected(false));
     socket.on("tiktok-connected", () => setTiktokConnected(true));
