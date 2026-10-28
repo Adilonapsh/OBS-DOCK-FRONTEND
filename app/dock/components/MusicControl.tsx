@@ -95,6 +95,8 @@ export default function MusicControl({
   const [searchWarning, setSearchWarning] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSearchedRef = useRef('');
+  const SEARCH_DEBOUNCE_MS = 600;
   const [lyrics, setLyrics] = useState<{ synced: LyricLine[]; plain: string }>({ synced: [], plain: '' });
   const [lyricsFor, setLyricsFor] = useState('');
   // Posisi drag slider (seek) - dikirim ke server saat dilepas agar tidak spam.
@@ -134,6 +136,9 @@ export default function MusicControl({
     s.on('song-update', onUpdate);
     const onSearchResult = (res: { q?: string; results?: Array<{ videoId: string; title: string; channel: string; thumbnail: string; url: string }>; source?: string; warning?: string }) => {
       setSearching(false);
+      if (res?.q) {
+        lastSearchedRef.current = String(res.q).trim();
+      }
       setSearchResults(Array.isArray(res?.results) ? res.results : []);
       setSearchSource(String(res?.source || ''));
       setSearchWarning(typeof res?.warning === 'string' ? res.warning : null);
@@ -207,27 +212,37 @@ export default function MusicControl({
 
   // Search debounce 500ms ke backend (pakai YouTube API resmi bila YOUTUBE_API_KEY di-set).
   const handleSearchChange = (v: string) => {
-    setSearchQuery(v);
+    const next = v;
+    setSearchQuery(next);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    if (!v.trim()) {
+    const cleaned = next.trim();
+    if (!cleaned) {
+      lastSearchedRef.current = '';
       setSearchResults([]);
       setSearchWarning(null);
       setSearching(false);
       return;
     }
+    if (cleaned === lastSearchedRef.current) {
+      setSearching(true);
+      return;
+    }
     setSearching(true);
     searchTimer.current = setTimeout(() => {
-      getSocket()?.emit('song-search', { q: v.trim(), maxResults: 6 });
-    }, 500);
+      const q = cleaned;
+      if (!q || q === lastSearchedRef.current) return;
+      lastSearchedRef.current = q;
+      getSocket()?.emit('song-search', { q, maxResults: 6 });
+    }, SEARCH_DEBOUNCE_MS);
   };
 
   const handlePickResult = (r: { videoId: string; title: string; channel: string; thumbnail: string; url: string }) => {
     const s = getSocket();
     if (!s) return;
     s.emit('song-add', { privateKey: getRoom(), url: r.url, title: r.title, requestedBy: dockWho(), platform: 'dock' });
-    setSearchQuery('');
-    setSearchResults([]);
-    setSearchWarning(null);
+    // Jangan reset query pencarian setelah user pilih hasil; biarkan opsi tetap terlihat
+    // agar tidak perlu mengetik ulang untuk mencari lagu berikutnya.
+    setSearching(false);
   };
 
   const dur = song?.duration || 0;
@@ -335,6 +350,16 @@ export default function MusicControl({
               {searching ? '…' : searchSource === 'youtube-api' ? 'API' : searchSource === 'scrape' ? 'Cad.' : 'YT'}
             </span>
           </div>
+          {searching && (
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/5 px-2.5 py-1.5">
+              <div className="flex gap-1">
+                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.2s]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.1s]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400" />
+              </div>
+              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300/90">Mencari lagu…</span>
+            </div>
+          )}
           {searchWarning && (
             <div className="text-[9px] font-bold text-yellow-300/90">{searchWarning}</div>
           )}

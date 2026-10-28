@@ -844,7 +844,7 @@ export default function Home() {
     const prevPollRef = useRef<{ id?: string; ended?: boolean } | null>(null);
     const prevTasksRef = useRef<{ len: number; done: number } | null>(null);
     const prevTimerRef = useRef<{ isRunning?: boolean; totalSeconds?: number } | null>(null);
-    const prevSongRef = useRef<{ len: number; index: number } | null>(null);
+    const prevSongRef = useRef<{ len: number; index: number; currentId: string | null } | null>(null);
 
     // Kirim DoAction ke Streamer.bot. Diam jika action kosong / SB tidak konek.
     const fireSbAction = (actionName: string, args: Record<string, unknown>) => {
@@ -1033,10 +1033,11 @@ export default function Home() {
             if (typeof p.visible === 'boolean') setShowPoll(p.visible);
             try {
                 const prev = prevPollRef.current;
-                const isNew = p?.id && p.id !== prev?.id && !p?.ended;
-                const justEnded = p?.id && prev?.id === p.id && !prev?.ended && !!p?.ended;
-                if (isNew) fireWidgetSb('poll_started', {
-                    pollId: String(p?.id || ''),
+                const pollId = String(p?.id || '');
+                const started = !p?.ended && (!prev || prev.id !== pollId || !!prev.ended);
+                const ended = !!p?.ended && !!prev && prev.id === pollId && !prev.ended;
+                if (started && pollId) fireWidgetSb('poll_started', {
+                    pollId,
                     question: p?.question || '',
                     options: Array.isArray(p?.options) ? p.options.join(',') : '',
                     optionsCount: Array.isArray(p?.options) ? p.options.length : 0,
@@ -1044,7 +1045,7 @@ export default function Home() {
                     total: p?.total || 0,
                     platforms: '',
                 });
-                if (justEnded) {
+                if (ended) {
                     const votes: number[] = Array.isArray(p?.votes) ? p.votes : [];
                     const opts: string[] = Array.isArray(p?.options) ? p.options : [];
                     let winner = '';
@@ -1055,7 +1056,6 @@ export default function Home() {
                         winner = opts[bi] || '';
                         winnerVotes = votes[bi] || 0;
                     }
-                    // Ringkasan platform asal voter (tiktok/twitch/youtube/kick).
                     const vp: Record<string, string> = (p?.voterPlatform && typeof p.voterPlatform === 'object') ? p.voterPlatform : {};
                     const pfCounts: Record<string, number> = {};
                     for (const pf of Object.values(vp)) {
@@ -1065,7 +1065,7 @@ export default function Home() {
                     const platforms = Object.keys(pfCounts).join(',');
                     const platformVotes = Object.entries(pfCounts).map(([k, v]) => `${k}: ${v}`).join(', ');
                     fireWidgetSb('poll_ended', {
-                        pollId: String(p?.id || ''),
+                        pollId,
                         question: p?.question || '',
                         options: opts.join(','),
                         optionsCount: opts.length,
@@ -1079,7 +1079,7 @@ export default function Home() {
                         platformVotes,
                     });
                 }
-                prevPollRef.current = { id: p?.id, ended: !!p?.ended };
+                prevPollRef.current = { id: pollId || undefined, ended: !!p?.ended };
             } catch { }
         });
         s.on('poll-clear', () => {
@@ -1159,6 +1159,9 @@ export default function Home() {
                 const len = Array.isArray(st?.queue) ? st.queue.length : 0;
                 const idx = typeof st?.currentIndex === 'number' ? st.currentIndex : 0;
                 const prev = prevSongRef.current;
+                const current = len > 0 ? st.queue[Math.min(idx, len - 1)] : null;
+                const currentId = current?.id ?? null;
+                const prevCurrentId = prev?.currentId ?? null;
                 const songInfo = (s: any) => ({
                     songId: String(s?.id || ''),
                     title: String(s?.title || ''),
@@ -1173,11 +1176,10 @@ export default function Home() {
                     const last = st.queue[st.queue.length - 1];
                     fireWidgetSb('song_requested', songInfo(last));
                 }
-                if (prev && len === prev.len && idx !== prev.index) {
-                    const cur = st.queue[Math.min(idx, len - 1)];
-                    fireWidgetSb('song_next', songInfo(cur));
+                if (prev && currentId && currentId !== prevCurrentId && prev.len > 0) {
+                    fireWidgetSb('song_next', songInfo(current));
                 }
-                prevSongRef.current = { len, index: idx };
+                prevSongRef.current = { len, index: idx, currentId };
             } catch { }
         });
         // Donasi webhook -> tampil di dock (gift & chat & log), siap untuk timer/song/goal
@@ -2041,10 +2043,19 @@ export default function Home() {
             });
 
             tkSocketRef.current.on("tiktok-roomUser", (data: any) => {
-                const viewerCount = data?.viewerCount ?? null;
-                const totalUser = data?.totalUser ?? data?.totalUsers ?? null;
-                if (typeof viewerCount === "number") setTiktokRoomViewerCount(viewerCount);
-                if (typeof totalUser === "number") setTiktokTotalUser(totalUser);
+                const rawViewerCount = Number(data?.viewerCount ?? data?.totalUser ?? data?.totalUsers ?? data?.userCount ?? data?.count ?? 0);
+                const rawTotalUser = Number(data?.totalUser ?? data?.totalUsers ?? data?.viewerCount ?? data?.userCount ?? data?.count ?? 0);
+                const viewerCount = Number.isFinite(rawViewerCount) && rawViewerCount >= 0 ? rawViewerCount : null;
+                const totalUser = Number.isFinite(rawTotalUser) && rawTotalUser >= 0 ? rawTotalUser : null;
+                if (viewerCount !== null) {
+                    setTiktokRoomViewerCount(prev => {
+                        const prevNum = typeof prev === 'number' ? prev : 0;
+                        const ratio = prevNum > 0 ? viewerCount / prevNum : 1;
+                        if (ratio > 3) return prevNum;
+                        return viewerCount;
+                    });
+                }
+                if (totalUser !== null) setTiktokTotalUser(totalUser);
             });
         } else {
             // socket sudah ada - langsung emit (isolasi per privateKey)
