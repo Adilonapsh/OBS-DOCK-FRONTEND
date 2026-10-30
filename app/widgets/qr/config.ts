@@ -32,7 +32,7 @@ export const QR_DEFAULTS = {
   size: 200,
   fg: '#000000' as string,
   qrBg: '#ffffff' as string,
-  bg: '#000000' as string,
+  bg: 'transparent' as string,
   accent: '#8b5cf6',
   level: 'M' as string,
   logo: '' as string,

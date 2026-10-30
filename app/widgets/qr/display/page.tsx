@@ -33,7 +33,8 @@ function QrInner() {
   const size = Math.max(64, Math.min(512, getIntParam(params, 'size', 200)));
   const fg = getStringParam(params, 'fg', '#000000');
   const qrBg = getStringParam(params, 'qrBg', '#ffffff');
-  const bg = getStringParam(params, 'bg', '#000000');
+  // Di OBS / Custom Overlay tidak perlu kartu background: QR tampil transparan.
+  const bg = obsMode ? 'transparent' : getStringParam(params, 'bg', 'transparent');
   const accent = getStringParam(params, 'accent', '#8b5cf6');
   const levelRaw = getStringParam(params, 'level', 'M').toUpperCase();
   const level = (LEVELS as readonly string[]).includes(levelRaw) ? (levelRaw as 'L' | 'M' | 'Q' | 'H') : 'M';
@@ -49,7 +50,7 @@ function QrInner() {
 
   useEffect(() => loadGoogleFont(font, '400;700;900', 'qr-font'), [font]);
 
-  const themeProps = { value, label, showLabel, size, fg, qrBg, bg, accent, font, fontSize, level, logo, ...brutalist };
+  const themeProps = { value, label, showLabel, size, fg, qrBg, bg, bare: obsMode, accent, font, fontSize, level, logo, ...brutalist };
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-transparent" style={{ fontFamily: `'${font}', sans-serif` }}>

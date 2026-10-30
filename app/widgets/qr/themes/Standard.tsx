@@ -1,11 +1,12 @@
 import { QrCodeImg } from './QrCode';
 import type { QrThemeProps } from './types';
 
-export default function StandardTheme({ value, label, showLabel, size, fg, qrBg, bg, accent, font, fontSize, level, logo }: QrThemeProps) {
+export default function StandardTheme({ value, label, showLabel, size, fg, qrBg, bg, bare, accent, font, fontSize, level, logo }: QrThemeProps) {
+  const transparent = bare || bg === 'transparent';
   return (
     <div
-      className="qr-font flex flex-col items-center gap-3 px-5 py-5 rounded-2xl border border-white/10 shadow-xl w-full max-w-[320px]"
-      style={{ fontFamily: `'${font}', sans-serif`, background: bg === 'transparent' ? 'transparent' : bg }}
+      className={`qr-font flex flex-col items-center gap-3 px-5 py-5 w-full max-w-[320px] ${transparent ? '' : 'rounded-2xl border border-white/10 shadow-xl'}`}
+      style={{ fontFamily: `'${font}', sans-serif`, background: transparent ? 'transparent' : bg }}
     >
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: accent }} />

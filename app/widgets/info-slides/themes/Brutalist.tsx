@@ -73,7 +73,6 @@ export default function BrutalistTheme({
           <span className="w-2 h-2 bg-white border border-black" style={{ borderColor }} />
           <span className="w-2 h-2 bg-white border border-black" style={{ borderColor }} />
           <span className="w-2 h-2 bg-white border border-black" style={{ borderColor }} />
-          <span className="ml-auto font-mono font-black text-[8px] tracking-[0.18em] text-white uppercase">INFO // BRUTALIST • {slides.length} SLIDES</span>
         </div>
 
         {/* accent bar */}
@@ -137,9 +136,8 @@ export default function BrutalistTheme({
         {/* footer progressive */}
         <div className="relative text-white border-t-[4px] flex items-center justify-between px-3 py-1.5" style={{ backgroundColor: borderColor, borderColor, color: '#FFFFFF' }}>
           <span className={`font-mono font-black text-[9px] tracking-[0.14em] flex items-center gap-1.5 ${isUppercase ? 'uppercase' : ''}`} style={{ fontStyle: isItalic ? 'italic' : 'normal' }}>
-            <span className="w-1.5 h-1.5 bg-white border border-black" style={{ borderColor: '#fff' }} /> {String(index + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')} • BRUTAL
+            <span className="w-1.5 h-1.5 bg-white border border-black" style={{ borderColor: '#fff' }} /> {String(index + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
           </span>
-          <span className={`font-black text-[8px] tracking-[0.14em] px-2 py-0.5 border ${isUppercase ? 'uppercase' : ''}`} style={{ backgroundColor: badgeBg, color: txtColor, borderColor: '#fff', fontStyle: isItalic ? 'italic' : 'normal' }}>HARD SHADOW {shadowOffset}PX</span>
         </div>
 
         {/* diagonal stamp - tail toggle */}

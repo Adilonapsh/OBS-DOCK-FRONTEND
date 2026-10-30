@@ -6,6 +6,8 @@ export type QrThemeProps = {
   fg: string;
   qrBg: string;
   bg: string;
+  /** `true` = mode OBS/overlay: jangan gambar kartu background. */
+  bare?: boolean;
   accent: string;
   font: string;
   fontSize: number;

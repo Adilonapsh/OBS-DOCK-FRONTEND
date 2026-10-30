@@ -88,18 +88,15 @@ export function AutoScale({
   const zoomRef = useRef<number>(1);
   const [zoom, setZoom] = useState<number>(1);
 
-  const applyZoom = (next: number) => {
-    zoomRef.current = next;
-    queueMicrotask(() => setZoom(next));
-  };
-
   useEffect(() => {
     if (manual != null) {
-      applyZoom(manual);
+      zoomRef.current = manual;
+      setZoom(manual);
       return;
     }
     if (!enabled || !(base > 0)) {
-      applyZoom(1);
+      zoomRef.current = 1;
+      setZoom(1);
       return;
     }
     const wrap = wrapRef.current;
@@ -123,7 +120,8 @@ export function AutoScale({
       if (!Number.isFinite(z) || z <= 0) return;
       z = Math.max(0.05, z);
       if (Math.abs(z - zoomRef.current) > 0.001) {
-        applyZoom(z);
+        zoomRef.current = z;
+        setZoom(z);
       }
     };
 
@@ -149,15 +147,7 @@ export function AutoScale({
     >
       <div
         ref={innerRef}
-        style={{
-          width: base,
-          maxWidth: base,
-          flexShrink: 0,
-          transform: `scale(${zoom})`,
-          transformOrigin: 'top left',
-          willChange: 'transform',
-          display: 'inline-block',
-        } as CSSProperties}
+        style={{ width: base, maxWidth: base, flexShrink: 0, zoom: `${zoom}` } as CSSProperties}
       >
         {children}
       </div>
