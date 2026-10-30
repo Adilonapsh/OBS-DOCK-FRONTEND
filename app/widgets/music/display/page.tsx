@@ -19,6 +19,7 @@ import {
   CardTheme,
   VinylTheme,
   VinylDiscTheme,
+  ColorPaletteTheme,
 } from '../../media-player/themes';
 import BrutalistMusicTheme from '../themes/Brutalist';
 import Retro8BitMusicTheme from '../themes/Retro8Bit';
@@ -426,6 +427,8 @@ function MusicInner() {
   const showTextRing = getBoolParam(params, 'showTextRing', true);
   const vinylDiscOutline = getBoolParam(params, 'vinylDiscOutline', true);
   const vinylDiscSpin = Math.max(5, Math.min(120, getIntParam(params, 'vinylDiscSpin', 35)));
+  // Label nama + hex di tema Color Palette. ?paletteLabels=0 untuk sembunyikan.
+  const paletteLabels = getBoolParam(params, 'paletteLabels', true);
   // ?muted=1 → tab ini bisu permanen dan TIDAK pernah jadi reporter.
   // Pakai untuk preview browser agar tidak rebutan posisi dengan OBS.
   const forceMuted = getBoolParam(params, 'muted', false) || getBoolParam(params, 'mute', false);
@@ -1024,6 +1027,7 @@ function MusicInner() {
     vinylDiscOutline,
     vinylDiscFollowThumbnail: autoColor && !useCustomColors,
     vinylDiscSpin,
+    showPaletteLabels: paletteLabels,
   };
 
   const wrapperVisible = visible || !autoHide || showWhilePaused;
@@ -1190,7 +1194,7 @@ function MusicInner() {
       )}
       <div id="music-player-root" className={`w-full h-full flex p-4 ${alignmentCls} ${themeWrapper}`} style={{ ...posStyle, background: obsMode ? 'transparent' : undefined } as React.CSSProperties}>
         {shownSong ? (
-          <AutoScale defaultBase={500} baseWidth={theme === 'retro8bit' ? 566 : maxWidth > 0 ? maxWidth : theme === 'minimal' ? 420 : 340}>
+          <AutoScale defaultBase={500} baseWidth={theme === 'retro8bit' ? 566 : maxWidth > 0 ? maxWidth : theme === 'color-palette' ? 500 : theme === 'minimal' ? 420 : 340}>
           <div
             // Saat fadingOut, class animasi entrance WAJIB dilepas: keyframe-nya pakai
             // fill `forwards` (opacity:1) yang menimpa inline opacity:0 sehingga fade
@@ -1244,6 +1248,8 @@ function MusicInner() {
             <VinylTheme {...mediaProps} />
           ) : theme === 'vinyl-disc' ? (
             <VinylDiscTheme {...mediaProps} />
+          ) : theme === 'color-palette' ? (
+            <ColorPaletteTheme {...mediaProps} />
           ) : theme === 'brutalist' ? (
             <BrutalistMusicTheme {...mediaProps} />
           ) : theme === 'retro8bit' ? (

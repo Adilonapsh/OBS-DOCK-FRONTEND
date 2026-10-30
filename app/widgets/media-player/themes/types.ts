@@ -37,4 +37,6 @@ export type MediaThemeProps = {
   vinylDiscOutline?: boolean;
   vinylDiscFollowThumbnail?: boolean;
   vinylDiscSpin?: number;
+  // Tampilkan nama swatch + kode hex di atas tiap balok (tema Color Palette).
+  showPaletteLabels?: boolean;
 };

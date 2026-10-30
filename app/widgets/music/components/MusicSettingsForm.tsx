@@ -45,6 +45,12 @@ export function MusicSettingsForm({ state, update }: Props) {
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Auto Color (dari thumbnail)</span><input type="checkbox" checked={(state as unknown as { autoColor?: boolean }).autoColor !== false} onChange={(e) => update('autoColor' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Judul ikut warna aksen</span><input type="checkbox" checked={(state as unknown as { colorText?: boolean }).colorText !== false} onChange={(e) => update('colorText' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
           <p className="text-[10px] text-gray-500">Ambil warna palette dari thumbnail YouTube / cover art.</p>
+          {state.theme === 'color-palette' && (
+            <>
+              <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Label palette (nama + hex)</span><input type="checkbox" checked={(state as unknown as { paletteLabels?: boolean }).paletteLabels !== false} onChange={(e) => update('paletteLabels' as keyof MusicSettings, e.target.checked)} className="w-4 h-4 accent-white" /></label>
+              <p className="text-[10px] text-gray-500">Tema Color Palette menampilkan 5 balok warna dari palette thumbnail (Vibrant, Muted, Dark Vibrant, Dark Muted, Light Vibrant); lebar tiap balok mengikuti progress lagu. Matikan label agar tampilan OBS bersih.</p>
+            </>
+          )}
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Aksen (dipakai bila Auto Color mati)</span>
             <span className="mt-1 flex gap-2">
               <input type="color" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 cursor-pointer shrink-0" />

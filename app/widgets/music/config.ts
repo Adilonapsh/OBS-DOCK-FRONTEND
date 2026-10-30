@@ -12,6 +12,7 @@ export const MUSIC_THEMES = [
   { value: 'card', label: 'Card' },
   { value: 'vinyl', label: 'Vinyl' },
   { value: 'vinyl-disc', label: 'Vinyl Disc' },
+  { value: 'color-palette', label: 'Color Palette' },
   { value: 'brutalist', label: 'Brutalist' },
   { value: 'retro8bit', label: 'Retro 8-Bit' },
 ] as const;
@@ -75,6 +76,8 @@ export const MUSIC_DEFAULTS = {
   showTextRing: true as boolean,
   vinylDiscOutline: true as boolean,
   vinylDiscSpin: 35 as number,
+  // Label nama swatch + hex di tema Color Palette.
+  paletteLabels: true as boolean,
 } as const;
 
 export type MusicSettings = typeof MUSIC_DEFAULTS;
@@ -113,6 +116,7 @@ export function buildMusicUrl(base: string, s: MusicSettings): string {
   p.set('showTextRing', (s as unknown as { showTextRing?: boolean }).showTextRing === false ? '0' : '1');
   p.set('vinylDiscOutline', (s as unknown as { vinylDiscOutline?: boolean }).vinylDiscOutline === false ? '0' : '1');
   p.set('vinylDiscSpin', String((s as unknown as { vinylDiscSpin?: number }).vinylDiscSpin ?? 35));
+  p.set('paletteLabels', (s as unknown as { paletteLabels?: boolean }).paletteLabels === false ? '0' : '1');
   const q = p.toString();
   return q ? `${base}?${q}` : base;
 }
