@@ -274,7 +274,7 @@ const WIDGETS: WidgetItem[] = [
   },
   {
     id: "custom",
-    title: "Custom Overlay",    desc: "StreamElements-like - canvas 1920×1080, drag-drop layers (chat {{username}}/{{message}}, timer {{timer}}, clock {{clock}}, polls {{polls}}, social {{handle}}), template {{date}} + custom CSS per layer, 1 URL obs.",
+    title: "Custom Overlay",    desc: "Semua widget dalam 1 canvas - panel kiri tambah layer (chat, poll, music, song request, timer, clock, alert, dll), panel kanan setting widget yang dipilih. Drag-resize bebas, 1 URL OBS.",
     category: "minimal",
     tags: ["Custom", "StreamElements", "DragDrop", "Template"],
     layout: "full",

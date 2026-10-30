@@ -71,6 +71,9 @@ function buildUrl(base: string, s: any, privateKey: string) {
 
 function ClockEditorInner() {
   const searchParams = useSearchParams();
+  // Namespace per layer Custom Overlay: 2 clock layer bisa beda setting.
+  const settingsId = searchParams.get('settingsId') || '';
+  const storeKey = settingsId ? `clock-settings::${settingsId}` : 'clock-settings';
   const [privateKey, setPrivateKey] = useState(searchParams.get('key') || '');
   const [state, setState] = useState<any>({ ...defaults });
   const [tzSearch, setTzSearch] = useState('');
@@ -114,12 +117,12 @@ function ClockEditorInner() {
       }
       setState(s);
     } else {
-      const saved = typeof window !== 'undefined' ? localStorage.getItem('clock-settings') : null;
+      const saved = typeof window !== 'undefined' ? localStorage.getItem(storeKey) : null;
       if (saved) try { setState({ ...defaults, ...JSON.parse(saved) }); } catch {}
     }
   }, []);
 
-  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('clock-settings', JSON.stringify(state)); }, [state]);
+  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem(storeKey, JSON.stringify(state)); }, [state, storeKey]);
 
   const widgetUrl = useMemo(() => buildUrl(typeof window !== 'undefined' ? `${window.location.origin}/widgets/clock/display` : '', state, privateKey), [state, privateKey]);
   const obsUrl = useMemo(() => `${widgetUrl}${widgetUrl.includes('?') ? '&' : '?'}obs=1`, [widgetUrl]);

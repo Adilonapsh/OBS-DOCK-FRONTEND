@@ -101,6 +101,9 @@ const defaults = {
 function MediaPlayerSettingsInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Namespace per layer Custom Overlay.
+  const settingsId = searchParams.get('settingsId') || '';
+  const storeKey = settingsId ? `media-player-settings::${settingsId}` : 'media-player-settings';
   const [privateKey, setPrivateKey] = useState<string>('');
   const [state, setState] = useState<any>({...defaults});
   const loadFromUrl = (urlStr: string) => {
@@ -139,12 +142,12 @@ function MediaPlayerSettingsInner() {
       }
       setState(s);
     } else {
-      const saved = localStorage.getItem('media-player-settings');
+      const saved = localStorage.getItem(storeKey);
       if (saved) try { setState({ ...defaults, ...JSON.parse(saved) }); } catch {}
     }
   }, []);
 
-  useEffect(() => { localStorage.setItem('media-player-settings', JSON.stringify(state)); }, [state]);
+  useEffect(() => { localStorage.setItem(storeKey, JSON.stringify(state)); }, [state, storeKey]);
 
   const baseDisplayUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';

@@ -52,6 +52,10 @@ export function createUseWidgetSettings<T extends Record<string, unknown>>(
   const defaultsRecord = defaults as unknown as Record<string, unknown>;
   return function useWidgetSettings() {
     const searchParams = useSearchParams();
+    // `settingsId` = namespace per layer Custom Overlay. Contoh: dua Song Request
+    // bisa punya tema berbeda karena key localStorage-nya dipisah.
+    const settingsId = searchParams.get('settingsId') || '';
+    const storageKeyWithNs = settingsId ? `${storageKey}::${settingsId}` : storageKey;
     const [privateKey, setPrivateKey] = useState('');
     const [state, setState] = useState<T>({ ...defaults } as T);
 
@@ -62,12 +66,12 @@ export function createUseWidgetSettings<T extends Record<string, unknown>>(
       if (has) {
         setState(applyParams(searchParams, defaultsRecord, options.parseValue, options.extraParams) as T);
       } else {
-        const loaded = loadSettings(storageKey, { ...defaults } as T);
+        const loaded = loadSettings(storageKeyWithNs, { ...defaults } as T);
         setState(options.validateLoaded ? options.validateLoaded(loaded) : loaded);
       }
     }, [searchParams]);
 
-    useEffect(() => { saveSettings(storageKey, state); }, [state]);
+    useEffect(() => { saveSettings(storageKeyWithNs, state); }, [state, storageKeyWithNs]);
 
     const update = useCallback((k: keyof T, v: unknown) => setState((p) => ({ ...p, [k]: v } as T)), []);
     const reset = useCallback(() => setState({ ...defaults } as T), []);

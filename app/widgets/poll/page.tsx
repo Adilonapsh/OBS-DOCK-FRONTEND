@@ -55,6 +55,9 @@ function buildUrl(base:string, s:any){
 
 function PollSettingsInner(){
   const searchParams=useSearchParams();
+  // Namespace per layer Custom Overlay.
+  const settingsId = searchParams.get('settingsId') || '';
+  const storeKey = settingsId ? `poll-settings::${settingsId}` : 'poll-settings';
   const [privateKey,setPrivateKey]=useState(searchParams.get('key')||'');
   const [state,setState]=useState<any>({...defaults});
   const [activePoll,setActivePoll]=useState<any>(null);
@@ -81,11 +84,11 @@ function PollSettingsInner(){
       }
       setState(s);
     } else {
-      const saved= typeof window!=='undefined'? localStorage.getItem('poll-settings'):null;
+      const saved= typeof window!=='undefined'? localStorage.getItem(storeKey):null;
       if(saved) try{ setState({...defaults, ...JSON.parse(saved)});}catch{}
     }
   },[]);
-  useEffect(()=>{ if(typeof window!=='undefined') localStorage.setItem('poll-settings', JSON.stringify(state)); },[state]);
+  useEffect(()=>{ if(typeof window!=='undefined') localStorage.setItem(storeKey, JSON.stringify(state)); },[state, storeKey]);
 
   // socket for live poll preview (read-only)
   useEffect(()=>{

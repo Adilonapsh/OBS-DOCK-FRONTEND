@@ -4,8 +4,10 @@ import { useSearchParams } from 'next/navigation';
 import { getBoolParam, getStringParam } from '../../_shared/utils/url';
 import { renderTemplate, buildTemplateData } from '../../_shared/utils/template';
 import { useLiveTemplateData } from '../../_shared/hooks/useLiveTemplateData';
+import { buildWidgetLayerSrc } from '../../_shared/constants/widgetLayerPresets';
+import { decodeLayersParam } from '../../_shared/utils/layersCodec';
 
-type Layer = { id: string; type: string; x:number; y:number; w:number; h:number; template:string; css:string; visible:boolean; js?: string; anim?: string; opacity?: number; rotate?: number; scale?: number; zIndex?: number; radius?: number; shadow?: boolean; bg?: string };
+type Layer = { id: string; type: string; x:number; y:number; w:number; h:number; template:string; css:string; visible:boolean; js?: string; anim?: string; opacity?: number; rotate?: number; scale?: number; zIndex?: number; radius?: number; shadow?: boolean; bg?: string; widget?: string; params?: Record<string, string> };
 
 function CustomInner() {
   const searchParams = useSearchParams();
@@ -40,21 +42,34 @@ function CustomInner() {
   }, [params, live]);
 
   useEffect(() => {
-    if (layersParam) {
-      try { const arr = JSON.parse(decodeURIComponent(layersParam)); if (Array.isArray(arr)) setLayers(arr); } catch { try { setLayers(JSON.parse(layersParam)); } catch {} }
-    } else {
-      try { const raw = localStorage.getItem('custom-overlay-layers'); if (raw) setLayers(JSON.parse(raw)); } catch {}
-    }
+    let alive = true;
+    const load = async () => {
+      if (layersParam) {
+        try {
+          const arr = await decodeLayersParam(layersParam);
+          if (alive && Array.isArray(arr)) setLayers(arr);
+        } catch {}
+      } else {
+        try { const raw = localStorage.getItem('custom-overlay-layers'); if (raw && alive) setLayers(JSON.parse(raw)); } catch {}
+      }
+    };
+    void load();
+    return () => { alive = false; };
   }, [layersParam]);
 
   return (
     <>
       {obsMode && <style dangerouslySetInnerHTML={{ __html: `html,body{margin:0!important;padding:0!important;overflow:hidden!important;width:100vw!important;height:100vh!important;background:transparent!important} *{box-sizing:border-box}` }} />}
       <div className={`${obsMode ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden' : 'w-full min-h-screen bg-[#0a0a0a] p-4'}`} style={{ background: obsMode ? 'transparent' : '#0a0a0a' }}>
-        <div className="relative w-full h-full min-h-[540px] bg-black/20 border border-white/5 rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
-          {layers.filter(l=>l.visible).map(l => (
+        <div
+          className={`relative w-full h-full min-h-[540px] overflow-hidden ${obsMode ? 'bg-transparent border-0 rounded-none' : 'bg-black/20 border border-white/5 rounded-2xl'}`}
+          style={{ aspectRatio: '16/9' }}
+        >
+          {layers.filter(l=>l.visible).map(l => {
+            const isWidget = l.type === 'widget';
+            return (
             <div
-              key={`${l.id}-${(l as any).js}-${(l as any).anim}-${(l as any).opacity}-${(l as any).rotate}`}
+              key={isWidget ? `${l.id}-${l.widget}-${JSON.stringify(l.params)}` : `${l.id}-${(l as any).js}-${(l as any).anim}-${(l as any).opacity}-${(l as any).rotate}`}
               className="absolute overflow-hidden"
               style={{
                 left: `${l.x}%`, top: `${l.y}%`, width: `${l.w}%`, height: `${l.h}%`,
@@ -66,12 +81,26 @@ function CustomInner() {
                 boxShadow: (l as any).shadow ? '0 8px 24px rgba(0,0,0,0.4)' : undefined,
                 animation: !(l as any).js && (l as any).anim ? `${(l as any).anim} 0.52s cubic-bezier(0.16,1,0.3,1) both` : undefined
               } as any}
-              ref={el => { if (el && (l as any).js) { try { const fn = new Function('el', (l as any).js); const target = el.querySelector('.layer-content') as HTMLElement | null; if (target) fn(target); else fn(el); } catch {} } }}
+              ref={el => { if (el && !isWidget && (l as any).js) { try { const fn = new Function('el', (l as any).js); const target = el.querySelector('.layer-content') as HTMLElement | null; if (target) fn(target); else fn(el); } catch {} } }}
             >
-              <style dangerouslySetInnerHTML={{ __html: l.css }} />
-              <div className="layer-content w-full h-full text-white text-sm" dangerouslySetInnerHTML={{ __html: renderTemplate(l.template, data) }} />
+              {isWidget ? (
+                l.widget ? (
+                  <iframe
+                    title={l.widget}
+                    src={buildWidgetLayerSrc(l.widget, l.params, { privateKey, obs: true, simulate })}
+                    className="w-full h-full border-0 bg-transparent"
+                    allow="autoplay"
+                  />
+                ) : null
+              ) : (
+                <>
+                  <style dangerouslySetInnerHTML={{ __html: l.css }} />
+                  <div className="layer-content w-full h-full text-white text-sm" dangerouslySetInnerHTML={{ __html: renderTemplate(l.template, data) }} />
+                </>
+              )}
             </div>
-          ))}
+            );
+          })}
           {layers.length===0 && <div className="absolute inset-0 grid place-items-center text-white/40 text-sm">No layers - add di /widgets/editor</div>}
         </div>
       </div>

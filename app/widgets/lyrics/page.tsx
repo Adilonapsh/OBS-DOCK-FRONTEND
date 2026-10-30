@@ -110,6 +110,9 @@ const defaults = {
 
 function LyricsSettingsInner() {
   const searchParams = useSearchParams();
+  // Namespace per layer Custom Overlay.
+  const settingsId = searchParams.get('settingsId') || '';
+  const storeKey = settingsId ? `lyrics-settings::${settingsId}` : 'lyrics-settings';
   const [privateKey, setPrivateKey] = useState<string>('');
   const [state, setState] = useState<any>({...defaults});
   const loadFromUrl = (urlStr: string) => {
@@ -149,12 +152,12 @@ function LyricsSettingsInner() {
       if (!searchParams.get('lyricsAlign')) s.lyricsAlign = s.textAlignment;
       setState(s);
     } else {
-      const saved = localStorage.getItem('lyrics-settings');
+      const saved = localStorage.getItem(storeKey);
       if (saved) try { setState({ ...defaults, ...JSON.parse(saved) }); } catch {}
     }
   }, []);
 
-  useEffect(() => { localStorage.setItem('lyrics-settings', JSON.stringify(state)); }, [state]);
+  useEffect(() => { localStorage.setItem(storeKey, JSON.stringify(state)); }, [state, storeKey]);
 
   const widgetUrl = useMemo(() => buildUrl(typeof window !== 'undefined' ? `${window.location.origin}/widgets/lyrics/display` : '', state) + (privateKey ? `&key=${privateKey}` : ''), [state, privateKey]);
   const obsUrl = useMemo(() => `${widgetUrl}&obs=1`, [widgetUrl]);

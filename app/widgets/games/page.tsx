@@ -107,6 +107,9 @@ function SelectField({ label, hint, value, onChange, children }: {
 
 function GamesSettingsInner() {
   const searchParams = useSearchParams();
+  // Namespace per layer Custom Overlay.
+  const settingsId = searchParams.get('settingsId') || '';
+  const storeKey = settingsId ? `${GAME_SETTINGS_KEY}::${settingsId}` : GAME_SETTINGS_KEY;
   const [privateKey, setPrivateKey] = useState(searchParams.get('key') || '');
   const [state, setState] = useState<GameSettings>({ ...DEFAULT_GAME_SETTINGS });
   const [loaded, setLoaded] = useState(false);
@@ -141,7 +144,7 @@ function GamesSettingsInner() {
       setState(parseGameSettings(searchParams));
     } else {
       try {
-        const saved = typeof window !== 'undefined' ? localStorage.getItem(GAME_SETTINGS_KEY) : null;
+        const saved = typeof window !== 'undefined' ? localStorage.getItem(storeKey) : null;
         if (saved) setState({ ...DEFAULT_GAME_SETTINGS, ...JSON.parse(saved) });
       } catch { /* ignore corrupt storage */ }
     }
@@ -152,8 +155,8 @@ function GamesSettingsInner() {
 
   useEffect(() => {
     if (!loaded || typeof window === 'undefined') return;
-    try { localStorage.setItem(GAME_SETTINGS_KEY, JSON.stringify(state)); } catch { /* ignore quota */ }
-  }, [state, loaded]);
+    try { localStorage.setItem(storeKey, JSON.stringify(state)); } catch { /* ignore quota */ }
+  }, [state, loaded, storeKey]);
 
   /* ============ SOCKET: CONTROL + LIVE STATUS ============ */
   useEffect(() => {
