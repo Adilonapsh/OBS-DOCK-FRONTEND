@@ -3230,7 +3230,7 @@ export default function Home() {
     return (
         <div className="h-screen p-3 max-w-[100vw] overflow-x-hidden flex flex-col">
             {!privateKeyVerified ? (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-[#161616] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
                         <div className="px-6 py-5 border-b border-white/5 bg-gradient-to-r from-blue-900/15 via-transparent to-cyan-900/10">
                             <h2 className="text-white font-black uppercase text-[13px] tracking-wide">Akses Dock Butuh Private Key</h2>
@@ -4366,7 +4366,7 @@ export default function Home() {
 
             {/* Update Title Modal */}
             <div
-                className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${layout.updateTitle ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-all duration-300 ${layout.updateTitle ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                     }`}
             >
                 <div
@@ -4763,7 +4763,7 @@ export default function Home() {
 
             {/* Create Poll Modal */}
             <div
-                className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${layout.createPoll ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-all duration-300 ${layout.createPoll ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                     }`}
             >
                 <div

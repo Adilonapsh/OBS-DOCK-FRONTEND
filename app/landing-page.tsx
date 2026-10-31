@@ -129,7 +129,7 @@ const GALLERY: GalleryItem[] = [
   { id: 'music-request', title: 'Song Request Brutalist', desc: 'Viewer request lagu via chat, antrean lagu tampil langsung di layar.', category: 'media', size: '420×220', href: '/widgets/music?theme=brutalist', badge: 'brutalist', embed: '/widgets/music/display?theme=brutalist&simulate=1&obs=1' },
   { id: 'timer-brutalist', title: 'Timer Brutalist', desc: 'Hitung mundur untuk giveaway, subathon & fokus sesi stream.', category: 'utility', size: '360×340', href: '/widgets/timer?theme=brutalist', badge: '7 tema', embed: '/widgets/timer/display?theme=brutalist&simulate=1&obs=1' },
   { id: 'ticker-brutalist', title: 'Ticker Brutalist', desc: 'Teks berjalan untuk pengumuman, sponsor & info penting di stream.', category: 'utility', size: '640×120', href: '/widgets/ticker?theme=brutalist', badge: 'brutalist', embed: '/widgets/ticker/display?theme=brutalist&simulate=1&obs=1' },
-  { id: 'dock', title: 'Dock Control + Mobile', desc: 'Studio Mode & scene switcher dari browser / HP.', category: 'dock', size: '1280×720', href: '/dock', badge: 'OBS WS', embed: '' },
+  { id: 'clock', title: 'Clock', desc: 'Jam digital yang menampilkan waktu saat ini.', category: 'dock', size: '1280×720', href: '/widgets/clock?theme=brutalist', badge: 'Clock', embed: '/widgets/clock/display?theme=brutalist&brutalistCompact=1&simulate=1&obs=1&autoscale=0' },
 ];
 
 /* Preview gallery = page widget aslinya via iframe ?simulate=1&obs=1 (transparan
@@ -427,32 +427,8 @@ export default function LandingPage() {
               <a href="#inside" className="inline-flex items-center gap-2 bg-white text-[#1e293b] border border-[#e2e8f0] px-5 py-[11px] rounded-full text-[14px] font-bold hover:border-[#94a3b8] hover:text-[#005ea6] transition-all whitespace-nowrap"><Sliders size={16} />Jelajahi Fitur</a>
             </div>
             <div className="flex items-center justify-center gap-2 text-xs text-[#64748b] mb-2 flex-wrap"><span className="text-[#f59e0b] tracking-[2px] text-[13px]">★★★★★</span><span className="text-[#0f172a] font-bold">500+ streamer aktif</span><span>·</span><span>Tanpa kartu kredit</span><span>·</span><span>Setup instan 60 detik</span></div>
-            {/* QR-only preview: Dock Control + Mobile diganti QR */}
-            <div className="mt-10 w-full max-w-[490px] mx-auto">
-              <div className="bg-white border border-[#e2e8f0] rounded-[26px] shadow-[0_24px_60px_-18px_rgba(15,23,42,0.25)] p-4 sm:p-5 text-left">
-                <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#e2e8f0] mb-4">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#64748b]">OBS Dock</p>
-                    <p className="text-[18px] font-extrabold tracking-[-0.04em] text-[#0a0e1a]">Scan & masuk</p>
-                  </div>
-                  <div className="px-2.5 py-1 rounded-full bg-[#e0f2fe] text-[#0369a1] text-[10px] font-black uppercase tracking-[0.14em]">QR</div>
-                </div>
-
-                <div className="flex items-center gap-4 sm:gap-5">
-                  <div className="bg-[#ffffff] p-2.5 rounded-[18px] border-2 border-[#0a0e1a] shadow-[0_8px_18px_rgba(15,23,42,0.08)]">
-                    <QRCodeSVG value="https://obsdock.app/register" size={128} fgColor="#0a0e1a" bgColor="#ffffff" level="M" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#64748b] mb-1">Private room</p>
-                    <p className="text-[20px] sm:text-[24px] font-extrabold tracking-[-0.05em] text-[#0a0e1a] leading-none">OBS Dock</p>
-                    <p className="mt-2 text-[13px] text-[#475569]">Scan QR untuk buka dashboard, akses dock control, dan widget stream langsung dari browser.</p>
-                    <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-[#0a0e1a]">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#f8fafc] border border-[#e2e8f0]">Live scene</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#f8fafc] border border-[#e2e8f0]">Widget</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="mt-10 w-full max-w-[1020px] bg-[#0b0f19] rounded-[18px] border border-[#1e293b] shadow-[0_32px_70px_-12px_rgba(0,0,0,0.4)] overflow-hidden text-left">
+              <div className="w-full relative bg-black overflow-hidden block"><img src="/assets/dock-preview.png" alt="OBS Dock Controller Interface (/dock)" className="w-full h-auto block object-cover object-top max-h-[600px]" /></div>
             </div>
           </div>
 
@@ -639,9 +615,8 @@ export default function LandingPage() {
               <div className="col-span-12 lg:col-span-5 lg:row-span-2 bg-white border border-[#e2e8f0] rounded-[20px] overflow-hidden flex flex-col shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] transition-all min-h-0">
                 <div className="h-[340px] max-[1024px]:h-[260px] bg-[#eff6ff] border-b border-[#e2e8f0] flex items-center justify-center relative overflow-hidden p-4 shrink-0 skeleton-shimmer">
                   <div style={{ width: '88%', height: '84%', background: '#fff', borderRadius: 16, border: '1.5px solid #93c5fd', boxShadow: '0 10px 25px rgba(59,130,246,0.12)', position: 'relative', padding: 16 }}>
-                    <div style={{ position: 'absolute', top: 12, right: 12, width: 90, height: 20, background: '#e0f2fe', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px' }}>
-                      <span className="w-2 h-2 rounded-full bg-[#10b981] animate-ping" />
-                      <span style={{ fontSize: 9, fontWeight: 'bold', color: '#0369a1' }}>STUDIO MODE</span>
+                    <div style={{ position: 'absolute', top: 12, right: 12, width: 90, height: 20, background: '#e0f2fe', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 8px' }}>
+                      <span style={{ fontSize: 7, fontWeight: 'bold', color: '#0369a1' }}>STUDIO MODE</span>
                     </div>
                     <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 11, fontWeight: 'bold', color: '#0f172a' }}>
                       OBS Scene Switcher

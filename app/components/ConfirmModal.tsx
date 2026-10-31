@@ -24,7 +24,7 @@ export default function ConfirmModal({
 }: Props) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
         className="bg-[#161616] border border-white/10 rounded-2xl w-full max-w-[400px] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95"
