@@ -1,0 +1,42 @@
+export type AccentPalette = {
+  Vibrant: string; Muted: string; DarkVibrant: string; DarkMuted: string; LightVibrant: string; LightMuted: string;
+};
+
+export type Timeline = {
+  Position: number;
+  EndTime: number;
+  LastUpdatedTime: string;
+} | null;
+
+export type MediaThemeProps = {
+  track: string;
+  artist: string;
+  art: string;
+  bgArt: string;
+  palette: AccentPalette;
+  accent: string;
+  bgColor: string;
+  textColor: string;
+  progressPercent: number;
+  currentPos: number;
+  timeline: Timeline;
+  showAlbumArt: boolean;
+  showProgressBar: boolean;
+  showPrimary: boolean;
+  showSecondary: boolean;
+  isPausedOverlay: boolean;
+  playbackStatus: number;
+  textAlignCls: string;
+  msToTime: (ms: number) => string;
+  error: string | null;
+  smtcBridgeAddress: string;
+  smtcBridgePort: string;
+  obsMode: boolean;
+  showTonearm?: boolean;
+  showTextRing?: boolean;
+  vinylDiscOutline?: boolean;
+  vinylDiscFollowThumbnail?: boolean;
+  vinylDiscSpin?: number;
+  // Tampilkan nama swatch + kode hex di atas tiap balok (tema Color Palette).
+  showPaletteLabels?: boolean;
+};

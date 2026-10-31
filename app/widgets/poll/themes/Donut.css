@@ -1,0 +1,6 @@
+.poll-donut-theme { backdrop-filter: blur(12px); animation: pollIn 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+.poll-donut-theme svg circle { filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); }
+.poll-donut-legend { animation: fadeUp 0.45s ease both; }
+.poll-donut-legend.poll-winner { animation: fadeUp 0.45s ease both, winnerPulse 0.9s ease 0.5s both; background: rgba(255,255,255,0.06); border-radius: 8px; padding: 4px 6px; margin: -4px -6px; border: 1px solid rgba(255,255,255,0.12); }
+@keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+@keyframes winnerPulse { 0%{ transform: scale(1); } 40%{ transform: scale(1.03); } 100%{ transform: scale(1); } }

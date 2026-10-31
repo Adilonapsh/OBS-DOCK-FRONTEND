@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3001",
+    "gen:themes": "node scripts/gen-theme-presets.mjs && node scripts/gen-widget-themes.mjs --dir=app/widgets/chat/themes --props=ChatThemeProps --map=chatThemeComponents --options=CHAT_THEME_OPTIONS --default=CHAT_THEME_DEFAULT && node scripts/gen-widget-themes.mjs --dir=app/widgets/ticker/themes --props=TickerThemeProps --map=tickerThemeComponents --options=TICKER_THEME_OPTIONS --default=TICKER_THEME_DEFAULT",
+    "predev": "npm run gen:themes",
+    "prebuild": "npm run gen:themes",
+    "dev": "next dev -H 0.0.0.0 --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -11,12 +14,25 @@
   "dependencies": {
     "@heroui/react": "^3.2.4",
     "@heroui/styles": "^3.2.4",
+    "@monaco-editor/react": "^4.7.0",
+    "@sentry/nextjs": "^11.4.0",
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.112.4",
+    "ag-psd": "^31.0.2",
+    "clsx": "^2.1.1",
+    "goey-toast": "^0.5.0",
+    "hls.js": "^1.7.3",
     "lucide-react": "^1.38.0",
-    "next": "16.3.3",
+    "monaco-editor": "^0.57.0",
+    "next": "^16.3.8",
+    "node-vibrant": "^3.1.6",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-icons": "^5.7.0",
     "recharts": "^3.10.1",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -24,7 +40,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.3",
+    "eslint-config-next": "^16.3.8",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
