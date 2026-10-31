@@ -304,7 +304,7 @@ export default function Home() {
         try { return localStorage.getItem("dock-autoPinChat") === "true"; } catch { return false; }
     });
     // ID chat terakhir yang sudah auto-pin - history saat mount tidak ikut di-pin.
-    const autoPinnedIdRef = useRef<number | null>(chatMessages[0]?.id ?? null);
+    const autoPinnedIdRef = useRef<number | null>(null);
     const pinMessageRef = useRef<(user: string, text: string, platform: string, avatar?: string, fromAuto?: boolean) => void>(() => { });
     // Ref untuk listener socket (didaftarkan sekali) agar selalu baca state terbaru.
     const autoPinChatRef = useRef(autoPinChat);
@@ -1743,17 +1743,26 @@ export default function Home() {
     // Simpan versi terbaru pinMessage agar listener/effect tidak memakai closure lama.
     useEffect(() => { pinMessageRef.current = pinMessage; });
 
-    // Auto Pin Chat: setiap chat baru otomatis menggantikan pinned chat.
+    const getNextAutoPinnedChat = (list: Array<ChatMessage>, currentId: number | null) => {
+        if (!list.length) return null;
+        if (currentId == null) return list[list.length - 1];
+        const currentIndex = list.findIndex((m) => m.id === currentId);
+        if (currentIndex === -1) return list[list.length - 1];
+        if (currentIndex === 0) return list[0];
+        return list[currentIndex - 1];
+    };
+
+    // Auto Pin Chat: pindah dari chat lama ke chat baru agar urutannya tidak terbalik.
     // History yang dipulihkan saat mount tidak ikut di-pin (hanya chat baru).
     useEffect(() => {
         if (!autoPinChat) {
             autoPinnedIdRef.current = null;
             return;
         }
-        const latest = chatMessages[0];
-        if (!latest || autoPinnedIdRef.current === latest.id) return;
-        autoPinnedIdRef.current = latest.id;
-        pinMessageRef.current(latest.user, latest.text, latest.platform, latest.avatar, true);
+        const nextChat = getNextAutoPinnedChat(chatMessages, autoPinnedIdRef.current);
+        if (!nextChat || autoPinnedIdRef.current === nextChat.id) return;
+        autoPinnedIdRef.current = nextChat.id;
+        pinMessageRef.current(nextChat.user, nextChat.text, nextChat.platform, nextChat.avatar, true);
     }, [autoPinChat, chatMessages]);
 
     // Pin chat berikutnya (lebih lama) dari daftar. Dipakai tombol "Next Chat"
@@ -3548,7 +3557,7 @@ export default function Home() {
                                     <button
                                         onClick={() => setAutoPinChat(v => !v)}
                                         className={`shrink-0 relative p-1.5 rounded transition-colors ${autoPinChat ? "text-yellow-300 bg-yellow-500/15 hover:bg-yellow-500/25" : "text-gray-500 hover:text-white hover:bg-white/10"}`}
-                                        title={autoPinChat ? "Auto Pin Chat: ON — chat terbaru otomatis di-pin" : "Auto Pin Chat: OFF — klik untuk mengaktifkan"}
+                                        title={autoPinChat ? "Auto Pin Chat: ON — urut dari lama ke baru" : "Auto Pin Chat: OFF — klik untuk mengaktifkan"}
                                         aria-label="Toggle auto pin chat"
                                         aria-pressed={autoPinChat}
                                     >
