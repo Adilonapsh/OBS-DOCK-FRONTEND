@@ -919,6 +919,10 @@ export default function Home() {
     const hasInitialTkConnectRef = useRef(false);
     const tkManualDisconnectRef = useRef(false);
     const tkRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Batas auto-reconnect TikTok. Tanpa batas, streamEnd / putus berulang bikin
+    // loop reconnect tiap ~5 dtk; tiap reconnect TikTok kirim ulang chat terakhir.
+    const tkRetryCountRef = useRef(0);
+    const tkConnectedAtRef = useRef<number | null>(null);
     // Username + privateKey terakhir yang diminta - dipakai handler socket agar tidak
     // pakai payload basi (stale closure) saat ganti akun / reconnect otomatis.
     const tkWantedRef = useRef<{ username: string; privateKey: string | null }>({ username: "", privateKey: null });
@@ -927,8 +931,13 @@ export default function Home() {
     // Aksi pin terakhir (pin/unpin) yang perlu dikirim ulang setelah socket
     // reconnect, supaya overlay tetap sinkron walau sempat putus.
     const lastPinActionRef = useRef<{ type: 'pin'; payload: any } | { type: 'unpin'; payload: any } | null>(null);
-    // Dedup chat ganda (echo bridge / event dobel Streamer.bot): user+text+platform yang sama dalam 2.5 dtk diabaikan.
-    const lastChatRef = useRef<{ key: string; at: number } | null>(null);
+    // Dedup chat ganda: echo bridge, event dobel Streamer.bot, atau replay TikTok
+    // saat reconnect (TikTok mengirim ulang pesan beberapa menit terakhir).
+    // Simpan beberapa pesan terakhir (bukan 1 slot) dengan window lebih panjang
+    // dari jeda auto-reconnect, agar chat replay tidak muncul lagi.
+    const recentChatRef = useRef<Map<string, number>>(new Map());
+    const CHAT_DEDUP_MS = 30000;
+    const CHAT_DEDUP_MAX = 200;
     const getSocketUrl = () => {
         const fromEnv = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
         if (fromEnv) return fromEnv.replace(/\/$/, '');
@@ -942,6 +951,8 @@ export default function Home() {
     const [serverConnected, setServerConnected] = useState(false);
     const [tiktokStatus, setTiktokStatus] = useState<"DISCONNECTED" | "CONNECTING" | "CONNECTED" | "ERROR">("DISCONNECTED");
     const [tiktokError, setTiktokError] = useState<string | null>(null);
+    // Judul live TikTok (dari roomInfo saat connect) untuk ditampilkan di header kartu.
+    const [tiktokLiveTitle, setTiktokLiveTitle] = useState<string | null>(null);
     const router = useRouter();
     const supabase = createClient();
     const [privateKey, setPrivateKey] = useState<string | null>(null);
@@ -1647,13 +1658,26 @@ export default function Home() {
     };
 
     const handleIncomingMessage = (user: string, text: string, platform: ChatMessage["platform"], avatar?: string, emotes?: Array<{ name: string; imageUrl: string }>, opts?: { badges?: ChatBadge[]; color?: string }) => {
-        // Abaikan duplikat: pesan sama (user+text+platform) dalam 2.5 dtk hanya tampil 1x.
-        // Menangani echo bridge (pollSocket→tkSocket) & event dobel Streamer.bot.
+        // Abaikan duplikat: pesan sama (user+text+platform) dalam window dedup hanya tampil 1x.
+        // Menangani echo bridge (pollSocket→tkSocket), event dobel Streamer.bot,
+        // dan replay TikTok saat reconnect (pesan beberapa menit terakhir dikirim ulang).
         const now = Date.now();
         const key = `${String(user || '').toLowerCase()}|${platform}|${String(text || '')}`;
-        const last = lastChatRef.current;
-        if (last && last.key === key && now - last.at < 2500) return;
-        lastChatRef.current = { key, at: now };
+        const recent = recentChatRef.current;
+        const seenAt = recent.get(key);
+        if (seenAt && now - seenAt < CHAT_DEDUP_MS) return;
+        recent.set(key, now);
+        // Bersihkan entri kedaluwarsa agar map tidak tumbuh tanpa batas.
+        if (recent.size > CHAT_DEDUP_MAX) {
+            for (const [k, t] of recent) {
+                if (now - t >= CHAT_DEDUP_MS) recent.delete(k);
+            }
+            while (recent.size > CHAT_DEDUP_MAX) {
+                const oldest = recent.keys().next().value;
+                if (oldest === undefined) break;
+                recent.delete(oldest);
+            }
+        }
         bumpSessionStat("chats", 1);
         setChatMessages(prev => [{
             id: Date.now() + Math.random(),
@@ -1860,15 +1884,29 @@ export default function Home() {
         }
     };
 
-    // Auto-reconnect ala OBS/SB: putus tak disengaja → coba lagi sekali jalan
+    // Auto-reconnect ala OBS/SB: putus tak disengaja → coba lagi.
+    // Dibatasi (MAX_TIKTOK_RETRY) + jeda bertambah, supaya streamEnd / putus
+    // berulang tidak jadi loop reconnect tanpa henti (tiap reconnect TikTok
+    // mengirim ulang chat terakhir → chat tampak muncul lagi berulang).
+    const MAX_TIKTOK_RETRY = 3;
     const scheduleTikTokRetry = (why: string, delayMs = 3000) => {
         if (tkManualDisconnectRef.current) return;
         const payload = getTikTokRetryPayload();
         if (!payload) return;
         clearTikTokRetry();
+        // Sesi sebelumnya sempat stabil (>60 dtk) → anggap ini insiden baru, reset hitungan.
+        const connectedAt = tkConnectedAtRef.current;
+        tkConnectedAtRef.current = null;
+        if (connectedAt && Date.now() - connectedAt >= 60000) tkRetryCountRef.current = 0;
+        if (tkRetryCountRef.current >= MAX_TIKTOK_RETRY) {
+            addSystemLog(`TikTok ${why}. Reconnect dihentikan setelah ${MAX_TIKTOK_RETRY}x percobaan gagal - live kemungkinan benar-benar berakhir. Tekan Connect untuk mencoba lagi.`, "error");
+            return;
+        }
+        tkRetryCountRef.current += 1;
+        const delay = Math.min(delayMs * 2 ** (tkRetryCountRef.current - 1), 30000);
         // Sinkronkan wantedRef agar handler tiktok-connected tidak anggap ini sesi baru dan hapus chat
         tkWantedRef.current = { username: payload.username, privateKey: payload.privateKey };
-        addSystemLog(`TikTok ${why}. Mencoba reconnect...`, "warn");
+        addSystemLog(`TikTok ${why}. Mencoba reconnect (${tkRetryCountRef.current}/${MAX_TIKTOK_RETRY})...`, "warn");
         tkRetryTimerRef.current = setTimeout(() => {
             tkRetryTimerRef.current = null;
             if (tkManualDisconnectRef.current) return;
@@ -1880,11 +1918,13 @@ export default function Home() {
                     tkSocketRef.current?.emit("connect-tiktok", payload);
                 });
             }
-        }, delayMs);
+        }, delay);
     };
 
     const connectTikTok = () => {
         tkManualDisconnectRef.current = false;
+        tkRetryCountRef.current = 0;
+        tkConnectedAtRef.current = null;
         clearTikTokRetry();
         const username = tiktokConfig.username.trim();
         if (!username) {
@@ -1950,6 +1990,9 @@ export default function Home() {
             tkSocketRef.current.on("tiktok-connected", () => {
                 setTiktokStatus("CONNECTED");
                 setTiktokError(null);
+                // Catat waktu connect stabil - dipakai auto-retry untuk reset hitungan
+                // percobaan kalau koneksi sebelumnya bertahan lama.
+                tkConnectedAtRef.current = Date.now();
                 // Reconnect TikTok jangan hapus chat. Hanya ganti akun (@username beda) yang reset.
                 // Sebelumnya `sess.ended` juga memicu reset sehingga reconnect setelah live
                 // berakhir / auto-retry menghapus history- sekarang chat dipertahankan.
@@ -1958,6 +2001,7 @@ export default function Home() {
                 const sess = readChatSession();
                 const uname = wantUser.trim().toLowerCase();
                 if (!sess || sess.username !== uname) {
+                    recentChatRef.current.clear();
                     startNewChatSession(wantUser);
                 } else {
                     // Reconnect akun sama → pertahankan chat + statistik, hanya update flag ended
@@ -1974,6 +2018,7 @@ export default function Home() {
                 const title = String(data?.title ?? "").trim();
                 const uname = String(data?.username ?? tkWantedRef.current.username ?? "").trim();
                 if (!title) return;
+                setTiktokLiveTitle(title);
                 addSystemLog(`📺 Judul live TikTok @${uname}: "${title}"`, "success");
                 // Update highlight hari ini dengan judul asli dari roomInfo
                 logHighlightForToday("tiktok", title, null, `https://www.tiktok.com/@${uname}/live`, "tiktok_live", { username: uname, live: true, titleFromRoomInfo: true });
@@ -1991,6 +2036,7 @@ export default function Home() {
                 setTiktokError(null);
                 setTiktokRoomViewerCount(null);
                 setTiktokTotalUser(null);
+                setTiktokLiveTitle(null);
                 addSystemLog("TikTok terputus.", "warn");
                 scheduleTikTokRetry("terputus dari live");
             });
@@ -2000,6 +2046,7 @@ export default function Home() {
                 setTiktokError(null);
                 setTiktokRoomViewerCount(null);
                 setTiktokTotalUser(null);
+                setTiktokLiveTitle(null);
                 addSystemLog("Live TikTok berakhir.", "warn");
                 // Tandai sesi berakhir - chat dibersihkan saat live berikutnya connect.
                 const sess = readChatSession();
@@ -3812,6 +3859,11 @@ export default function Home() {
                                                 </div>
                                                 <span className={`text-[7px] font-bold uppercase ${tiktokStatus === "CONNECTED" ? "text-green-500 pulse-live" : "text-gray-500"}`}>{tiktokStatus === "CONNECTED" ? "LIVE" : "Offline"}</span>
                                             </div>
+                                            {tiktokLiveTitle && (
+                                                <div className="relative z-10 mb-1 text-[9px] font-semibold text-gray-300 truncate" title={tiktokLiveTitle}>
+                                                    {tiktokLiveTitle}
+                                                </div>
+                                            )}
                                             <div className="flex items-end justify-between relative z-10">
                                                 <div>
                                                     <span className="text-xl font-bold font-mono-custom tracking-tighter leading-none">{tiktokRoomViewerCount ?? tiktokViewerCount}</span>
