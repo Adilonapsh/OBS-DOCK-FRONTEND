@@ -8,6 +8,7 @@ export const VALORANT_THEMES = [
   { value: 'custom', label: 'Custom - pakai accent' },
   { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
   { value: 'pastel', label: 'Pastel - Cute Card' },
+  { value: 'valorantui', label: 'Valorant UI' },
 ] as const;
 
 export const VALORANT_DEFAULTS = {
@@ -23,6 +24,8 @@ export const VALORANT_DEFAULTS = {
   accent: '#ff4655',
   pastelMode: 'tier' as string, // tier = pastel otomatis ngikut rank | custom = pakai pastelBg
   pastelBg: '#c9bcf0',
+  trackerTextMode: 'auto' as string,  // auto = ikut warna tier | custom = pakai trackerTextColor
+  trackerTextColor: '#ffffff',
   showStreak: true,
   showWinrate: true,
   showSeason: true,
@@ -52,6 +55,8 @@ export function buildValorantUrl(base: string, s: ValorantSettings): string {
   p.set('showSeason', s.showSeason ? '1' : '0');
   p.set('showUsername', s.showUsername ? '1' : '0');
   p.set('showTag', s.showTag ? '1' : '0');
+  p.set('trackerTextMode', s.trackerTextMode);
+  p.set('trackerTextColor', s.trackerTextColor);
   appendBrutalistParams(p, s as unknown as Record<string, unknown>);
   const q = p.toString();
   return q ? `${base}?${q}` : base;

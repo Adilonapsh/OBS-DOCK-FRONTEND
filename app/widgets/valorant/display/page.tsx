@@ -26,6 +26,8 @@ function ValorantInner() {
   const pastelMode = getStringParam(params, 'pastelMode', VALORANT_DEFAULTS.pastelMode);
   const pastelBg = getStringParam(params, 'pastelBg', VALORANT_DEFAULTS.pastelBg);
   const font = getStringParam(params, 'font', VALORANT_DEFAULTS.font);
+  const trackerTextMode = getStringParam(params, 'trackerTextMode', VALORANT_DEFAULTS.trackerTextMode);
+  const trackerTextColor = getStringParam(params, 'trackerTextColor', VALORANT_DEFAULTS.trackerTextColor);
   const accent = getStringParam(params, 'accent', VALORANT_DEFAULTS.accent);
   const showStreak = getBoolParam(params, 'showStreak', VALORANT_DEFAULTS.showStreak);
   const showWinrate = getBoolParam(params, 'showWinrate', VALORANT_DEFAULTS.showWinrate);
@@ -273,6 +275,8 @@ function ValorantInner() {
           showSeason={showSeason}
           updatedAt={updatedAt}
           promo={promo}
+          trackerTextMode={trackerTextMode}
+          trackerTextColor={trackerTextColor}
         />
       </div>
     </>

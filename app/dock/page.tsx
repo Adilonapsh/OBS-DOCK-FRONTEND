@@ -7,7 +7,7 @@ import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2, Gamepad2,
     RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus, GripVertical,
-    Share2, ListPlus, ListChecks, Check, Clock, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX
+    Share2, ListPlus, ListChecks, Check, Clock, Calendar, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -303,6 +303,14 @@ export default function Home() {
         if (typeof window === "undefined") return false;
         try { return localStorage.getItem("dock-autoPinChat") === "true"; } catch { return false; }
     });
+    // Interval rotasi Auto Pin (dalam detik, default 60 detik / 1 menit)
+    const [autoPinInterval, setAutoPinInterval] = useState(() => {
+        if (typeof window === "undefined") return 60;
+        try {
+            const v = localStorage.getItem("dock-autoPinInterval");
+            return v ? Number(v) || 60 : 60;
+        } catch { return 60; }
+    });
     // ID chat terakhir yang sudah auto-pin - history saat mount tidak ikut di-pin.
     const autoPinnedIdRef = useRef<number | null>(null);
     const pinMessageRef = useRef<(user: string, text: string, platform: string, avatar?: string, fromAuto?: boolean) => void>(() => { });
@@ -391,6 +399,14 @@ export default function Home() {
     const [timerSubSec, setTimerSubSec] = useState<string>("0");
     const [timerSubHours, setTimerSubHours] = useState<string>("0");
     const [timerSubDays, setTimerSubDays] = useState<string>("0");
+    const [timerFromDate, setTimerFromDate] = useState<string>(() => {
+        if (typeof window === "undefined") return "";
+        try { return localStorage.getItem("dock-timerFromDate") || ""; } catch { return ""; }
+    });
+    const [timerToDate, setTimerToDate] = useState<string>(() => {
+        if (typeof window === "undefined") return "";
+        try { return localStorage.getItem("dock-timerToDate") || ""; } catch { return ""; }
+    });
     const [timerMinimized, setTimerMinimized] = useState(() => {
         if (typeof window === 'undefined') return true;
         try { const v = localStorage.getItem('dock-timerMinimized'); return v === null ? true : v === 'true'; } catch { return true; }
@@ -413,6 +429,9 @@ export default function Home() {
     const bumpActivity = () => setLastActivity(Date.now());
     useEffect(() => { try { localStorage.setItem('dock-autoMinimizeEnabled', String(autoMinimizeEnabled)); } catch { } }, [autoMinimizeEnabled]);
     useEffect(() => { try { localStorage.setItem('dock-autoPinChat', String(autoPinChat)); } catch { } }, [autoPinChat]);
+    useEffect(() => { try { localStorage.setItem('dock-autoPinInterval', String(autoPinInterval)); } catch { } }, [autoPinInterval]);
+    useEffect(() => { try { localStorage.setItem('dock-timerFromDate', timerFromDate); } catch { } }, [timerFromDate]);
+    useEffect(() => { try { localStorage.setItem('dock-timerToDate', timerToDate); } catch { } }, [timerToDate]);
     useEffect(() => { autoPinChatRef.current = autoPinChat; }, [autoPinChat]);
     useEffect(() => { pinnedChatRef.current = pinnedChat; }, [pinnedChat]);
     useEffect(() => { chatMessagesRef.current = chatMessages; }, [chatMessages]);
@@ -918,6 +937,7 @@ export default function Home() {
     const tkSocketRef = useRef<Socket | null>(null);
     const hasInitialTkConnectRef = useRef(false);
     const tkManualDisconnectRef = useRef(false);
+    const tkStreamEndedRef = useRef(false);
     const tkRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Batas auto-reconnect TikTok. Tanpa batas, streamEnd / putus berulang bikin
     // loop reconnect tiap ~5 dtk; tiap reconnect TikTok kirim ulang chat terakhir.
@@ -1523,6 +1543,55 @@ export default function Home() {
         handleTimerControl('set', { totalSeconds: total });
     };
 
+    const toDatetimeLocalString = (date: Date = new Date()): string => {
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const y = date.getFullYear();
+        const m = pad(date.getMonth() + 1);
+        const d = pad(date.getDate());
+        const h = pad(date.getHours());
+        const min = pad(date.getMinutes());
+        return `${y}-${m}-${d}T${h}:${min}`;
+    };
+
+    const getTimerDateDiffSec = (fromStr: string, toStr: string): number => {
+        if (!toStr) return 0;
+        const fromTime = fromStr ? new Date(fromStr).getTime() : Date.now();
+        const toTime = new Date(toStr).getTime();
+        if (isNaN(fromTime) || isNaN(toTime)) return 0;
+        const diff = Math.floor((toTime - fromTime) / 1000);
+        return Math.max(0, diff);
+    };
+
+    const handleTimerSetFromDates = () => {
+        const fromVal = timerFromDate.trim();
+        const toVal = timerToDate.trim();
+        if (!toVal) {
+            gooeyToast.error("Silakan tentukan To Date (tanggal tujuan)!");
+            return;
+        }
+        const fromMs = fromVal ? new Date(fromVal).getTime() : Date.now();
+        const toMs = new Date(toVal).getTime();
+        if (isNaN(fromMs) || isNaN(toMs)) {
+            gooeyToast.error("Format tanggal tidak valid!");
+            return;
+        }
+        const diffSec = Math.floor((toMs - fromMs) / 1000);
+        if (diffSec <= 0) {
+            gooeyToast.error("To Date harus lebih besar dari From Date!");
+            return;
+        }
+        const d = Math.floor(diffSec / 86400);
+        const h = Math.floor((diffSec % 86400) / 3600);
+        const m = Math.floor((diffSec % 3600) / 60);
+        const s = diffSec % 60;
+        setTimerCustomDays(String(d));
+        setTimerCustomHours(String(h));
+        setTimerCustomMin(String(m));
+        setTimerCustomSec(String(s));
+        handleTimerControl('set', { totalSeconds: diffSec });
+        gooeyToast.success(`Timer diset ke ${d > 0 ? `${d}h ` : ''}${h > 0 ? `${h}j ` : ''}${m}m ${s}d (${diffSec.toLocaleString('id-ID')} detik)`);
+    };
+
     const toggleStream = () => {
         showConfirm({
             title: "Toggle Streaming?", description: "Apakah Anda yakin ingin memulai/menghentikan Streaming?", onConfirm: () => {
@@ -1710,6 +1779,7 @@ export default function Home() {
 
     const unpinMessage = () => {
         if (!pinnedChat || pinnedExiting) return;
+        autoPinnedIdRef.current = null;
         localUnpinRef.current = true;
         setPinnedExiting(true);
         if (pinnedExitTimer.current) clearTimeout(pinnedExitTimer.current);
@@ -1743,6 +1813,8 @@ export default function Home() {
         localUnpinRef.current = false;
         setPinnedExiting(false);
         setPinnedChat({ user, text, platform, avatar });
+        const foundMsg = chatMessagesRef.current.find(m => m.user === user && m.text === text && m.platform === platform);
+        if (foundMsg) autoPinnedIdRef.current = foundMsg.id;
         fireWidgetSb('chat_pinned', { nickname: user, comment: text, profilePictureUrl: avatar || '', platform });
 
         // Pakai pollSocket (selalu konek) + fallback tkSocket.
@@ -1767,42 +1839,83 @@ export default function Home() {
     // Simpan versi terbaru pinMessage agar listener/effect tidak memakai closure lama.
     useEffect(() => { pinMessageRef.current = pinMessage; });
 
-    const getNextAutoPinnedChat = (list: Array<ChatMessage>, currentId: number | null) => {
+    const getNextAutoPinnedChat = (
+        list: Array<ChatMessage>,
+        currentId: number | null,
+        currentPinned?: { user: string; text: string; platform: string } | null
+    ) => {
         if (!list.length) return null;
-        if (currentId == null) return list[list.length - 1];
-        const currentIndex = list.findIndex((m) => m.id === currentId);
-        if (currentIndex === -1) return list[list.length - 1];
-        if (currentIndex === 0) return list[0];
-        return list[currentIndex - 1];
+        let currentIndex = currentId != null ? list.findIndex((m) => m.id === currentId) : -1;
+        if (currentIndex === -1 && currentPinned) {
+            currentIndex = list.findIndex(
+                (m) => m.user === currentPinned.user && m.text === currentPinned.text && m.platform === currentPinned.platform
+            );
+        }
+        if (currentIndex !== -1) {
+            // Di array chatMessages: index 0 = TERBARU, index list.length - 1 = TERLAMA.
+            // Maka chat berikutnya yang lebih baru (menuju terbaru) adalah currentIndex - 1.
+            if (currentIndex > 0) return list[currentIndex - 1];
+            return list[0];
+        }
+        return list[list.length - 1];
     };
 
     // Auto Pin Chat: pindah dari chat lama ke chat baru agar urutannya tidak terbalik.
-    // History yang dipulihkan saat mount tidak ikut di-pin (hanya chat baru).
+    // Jika user pin manual (misal chat #15), saat auto pin aktif akan lanjut ke chat berikutnya (#16/terbaru).
     useEffect(() => {
-        if (!autoPinChat) {
-            autoPinnedIdRef.current = null;
-            return;
-        }
-        const nextChat = getNextAutoPinnedChat(chatMessages, autoPinnedIdRef.current);
+        if (!autoPinChat) return;
+        const nextChat = getNextAutoPinnedChat(chatMessages, autoPinnedIdRef.current, pinnedChatRef.current);
         if (!nextChat || autoPinnedIdRef.current === nextChat.id) return;
         autoPinnedIdRef.current = nextChat.id;
         pinMessageRef.current(nextChat.user, nextChat.text, nextChat.platform, nextChat.avatar, true);
     }, [autoPinChat, chatMessages]);
 
-    // Pin chat berikutnya (lebih lama) dari daftar. Dipakai tombol "Next Chat"
-    // di Stream Deck via relay socket. Setelah chat terlama, kembali ke terbaru.
+    // Timer berkala untuk Auto Pin: setiap beberapa menit/detik otomatis lanjut ke chat berikutnya (terbaru)
+    useEffect(() => {
+        if (!autoPinChat) return;
+        const intervalMs = Math.max(10, autoPinInterval) * 1000;
+        const timer = setInterval(() => {
+            const list = chatMessagesRef.current;
+            if (list.length === 0) return;
+            const cur = pinnedChatRef.current;
+            let index = list.length - 1;
+            if (cur) {
+                const found = list.findIndex((m) => m.user === cur.user && m.text === cur.text && m.platform === cur.platform);
+                if (found >= 0) {
+                    if (found > 0) {
+                        index = found - 1; // Maju ke nomor berikutnya yang lebih baru
+                    } else {
+                        // Sudah sampai di chat paling baru (index 0) - tetap di posisi ini sampai ada chat baru
+                        return;
+                    }
+                }
+            }
+            const next = list[index];
+            if (!next) return;
+            pinMessageRef.current(next.user, next.text, next.platform, next.avatar, true);
+            autoPinnedIdRef.current = next.id;
+        }, intervalMs);
+
+        return () => clearInterval(timer);
+    }, [autoPinChat, autoPinInterval]);
+
+    // Pin chat berikutnya (terbaru) dari daftar. Dipakai tombol "Next Chat"
+    // di Stream Deck & dock UI. Urut dari chat yang dipin saat ini menuju terbaru.
     const pinNextChat = () => {
         const list = chatMessagesRef.current;
         if (list.length === 0) return { ok: false };
         const cur = pinnedChatRef.current;
-        let index = 0;
+        let index = list.length - 1;
         if (cur) {
             const found = list.findIndex((m) => m.user === cur.user && m.text === cur.text && m.platform === cur.platform);
-            if (found >= 0) index = (found + 1) % list.length;
+            if (found >= 0) {
+                index = found > 0 ? found - 1 : list.length - 1;
+            }
         }
         const next = list[index];
         if (!next) return { ok: false };
-        pinMessage(next.user, next.text, next.platform, next.avatar);
+        pinMessage(next.user, next.text, next.platform, next.avatar, true);
+        autoPinnedIdRef.current = next.id;
         return { ok: true, user: next.user };
     };
     useEffect(() => { pinNextChatRef.current = pinNextChat; });
@@ -1923,6 +2036,7 @@ export default function Home() {
 
     const connectTikTok = () => {
         tkManualDisconnectRef.current = false;
+        tkStreamEndedRef.current = false;
         tkRetryCountRef.current = 0;
         tkConnectedAtRef.current = null;
         clearTikTokRetry();
@@ -2038,6 +2152,10 @@ export default function Home() {
                 setTiktokTotalUser(null);
                 setTiktokLiveTitle(null);
                 addSystemLog("TikTok terputus.", "warn");
+                if (tkStreamEndedRef.current) {
+                    clearTikTokRetry();
+                    return;
+                }
                 scheduleTikTokRetry("terputus dari live");
             });
 
@@ -2051,7 +2169,8 @@ export default function Home() {
                 // Tandai sesi berakhir - chat dibersihkan saat live berikutnya connect.
                 const sess = readChatSession();
                 if (sess) writeChatSession({ ...sess, ended: true });
-                scheduleTikTokRetry("live berakhir, cek apakah live lagi", 5000);
+                clearTikTokRetry();
+                tkStreamEndedRef.current = true;
             });
 
             tkSocketRef.current.on("tiktok-chat", (data: { nickname: string; comment: string; profilePictureUrl?: string; platform?: string }) => {
@@ -2128,6 +2247,7 @@ export default function Home() {
 
     const disconnectTikTok = () => {
         tkManualDisconnectRef.current = true;
+        tkStreamEndedRef.current = false;
         clearTikTokRetry();
         const username = tiktokConfig.username.trim() || (typeof window !== "undefined" ? localStorage.getItem("tiktokUsername") || "" : "");
         const payload: any = privateKey ? { username, privateKey } : username;
@@ -3604,12 +3724,34 @@ export default function Home() {
                                     <button
                                         onClick={() => setAutoPinChat(v => !v)}
                                         className={`shrink-0 relative p-1.5 rounded transition-colors ${autoPinChat ? "text-yellow-300 bg-yellow-500/15 hover:bg-yellow-500/25" : "text-gray-500 hover:text-white hover:bg-white/10"}`}
-                                        title={autoPinChat ? "Auto Pin Chat: ON — urut dari lama ke baru" : "Auto Pin Chat: OFF — klik untuk mengaktifkan"}
+                                        title={autoPinChat ? `Auto Pin Chat: ON (rotasi ${autoPinInterval >= 60 ? `${Math.round(autoPinInterval / 60)} mnt` : `${autoPinInterval} dtk`}) — klik untuk mematikan` : "Auto Pin Chat: OFF — klik untuk mengaktifkan"}
                                         aria-label="Toggle auto pin chat"
                                         aria-pressed={autoPinChat}
                                     >
                                         <Pin className="w-3.5 h-3.5" />
                                         {autoPinChat && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-yellow-400 shadow" />}
+                                    </button>
+                                    {autoPinChat && (
+                                        <select
+                                            value={autoPinInterval}
+                                            onChange={(e) => setAutoPinInterval(Number(e.target.value))}
+                                            className="h-6 bg-black/40 border border-yellow-500/30 text-yellow-300 rounded px-1 text-[9px] font-bold focus:outline-none cursor-pointer"
+                                            title="Interval otomatis lanjut ke chat berikutnya"
+                                        >
+                                            <option value={30} className="bg-[#1a1a1a] text-white">30 dtk</option>
+                                            <option value={60} className="bg-[#1a1a1a] text-white">1 mnt</option>
+                                            <option value={120} className="bg-[#1a1a1a] text-white">2 mnt</option>
+                                            <option value={180} className="bg-[#1a1a1a] text-white">3 mnt</option>
+                                            <option value={300} className="bg-[#1a1a1a] text-white">5 mnt</option>
+                                        </select>
+                                    )}
+                                    <button
+                                        onClick={() => pinNextChat()}
+                                        className="shrink-0 p-1.5 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+                                        title="Pin chat berikutnya (terbaru)"
+                                        aria-label="Pin chat berikutnya"
+                                    >
+                                        <SkipForward className="w-3.5 h-3.5" />
                                     </button>
                                     <button onClick={() => { if (chatMessages.length === 0) setChatMessages([]); else showConfirm({ title: "Bersihkan chat sesi ini?", description: "Semua chat sesi ini akan dihapus.", variant: "danger", onConfirm: () => setChatMessages([]) }); }} className="shrink-0 p-1.5 text-gray-500 hover:text-red-400 hover:bg-white/10 rounded transition-colors" title="Bersihkan chat sesi ini">
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -4702,6 +4844,61 @@ export default function Home() {
                                                             <input type="number" min={0} max={59} value={timerSubSec} onChange={(e) => setTimerSubSec(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                                             <span className="text-[9px] font-black text-gray-400">d</span>
                                                             <button onClick={() => { const c = (parseInt(timerSubDays) || 0) * 86400 + (parseInt(timerSubHours) || 0) * 3600 + (parseInt(timerSubMin) || 0) * 60 + (parseInt(timerSubSec) || 0); if (c > 0) handleTimerSub(c); else { handleTimerSub(300); } }} className="ml-auto h-7 px-3 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Square className="w-3 h-3" />- {timerSubDays && parseInt(timerSubDays) ? `${timerSubDays}h ` : ''}{timerSubHours && parseInt(timerSubHours) ? `${timerSubHours}j ` : ''}{timerSubMin || 5}:{String(timerSubSec || 0).padStart(2, '0')}</button>
+                                                        </div>
+                                                        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2 space-y-2">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-[9px] font-black uppercase text-violet-400 flex items-center gap-1">
+                                                                    <Calendar className="w-3 h-3" /> Base Time dari Date
+                                                                </span>
+                                                                {timerToDate && (
+                                                                    <span className="text-[9px] font-mono font-bold text-gray-400">
+                                                                        {(() => {
+                                                                            const sec = getTimerDateDiffSec(timerFromDate, timerToDate);
+                                                                            const d = Math.floor(sec / 86400);
+                                                                            const h = Math.floor((sec % 86400) / 3600);
+                                                                            const m = Math.floor((sec % 3600) / 60);
+                                                                            const s = sec % 60;
+                                                                            return sec > 0 ? `${d > 0 ? `${d}h ` : ''}${h}j ${m}m ${s}d` : '0s';
+                                                                        })()}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="space-y-1.5">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-[9px] font-bold text-gray-400 w-8 shrink-0">From</span>
+                                                                    <input
+                                                                        type="datetime-local"
+                                                                        value={timerFromDate}
+                                                                        onChange={(e) => setTimerFromDate(e.target.value)}
+                                                                        className="flex-1 min-w-0 h-6 bg-black/40 border border-white/10 rounded px-1.5 text-[10px] text-white font-mono focus:outline-none focus:border-white/20"
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setTimerFromDate(toDatetimeLocalString())}
+                                                                        className="h-6 px-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-[8px] font-black uppercase text-gray-300"
+                                                                        title="Isi From dengan waktu saat ini"
+                                                                    >
+                                                                        Now
+                                                                    </button>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-[9px] font-bold text-gray-400 w-8 shrink-0">To</span>
+                                                                    <input
+                                                                        type="datetime-local"
+                                                                        value={timerToDate}
+                                                                        onChange={(e) => setTimerToDate(e.target.value)}
+                                                                        className="flex-1 min-w-0 h-6 bg-black/40 border border-white/10 rounded px-1.5 text-[10px] text-white font-mono focus:outline-none focus:border-white/20"
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={handleTimerSetFromDates}
+                                                                        className="h-6 px-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded text-[9px] font-black uppercase flex items-center gap-1 shrink-0 shadow cursor-pointer"
+                                                                        title="Hitung durasi dan set ke timer"
+                                                                    >
+                                                                        <Check className="w-3 h-3" /> Set
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div className="flex gap-1.5">

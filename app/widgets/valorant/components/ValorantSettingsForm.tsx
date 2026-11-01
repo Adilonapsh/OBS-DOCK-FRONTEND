@@ -131,6 +131,32 @@ export function ValorantSettingsForm({
         </div>
       )}
 
+      {/* Tracker - Text Color */}
+      {state.theme === 'valorantui' && (
+        <div className="space-y-3">
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-teal-400" /> Tracker - Warna Teks</h2>
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+            <label className="block">
+              <span className="text-[11px] font-bold text-gray-300">Sumber Warna Teks</span>
+              <select value={state.trackerTextMode} onChange={(e) => update('trackerTextMode', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+                <option value="auto" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Auto - ikut warna rank/tier</option>
+                <option value="custom" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Custom - pilih warna sendiri</option>
+              </select>
+            </label>
+            {state.trackerTextMode === 'custom' && (
+              <label className="block">
+                <span className="text-[11px] font-bold text-gray-300">Warna Teks</span>
+                <span className="mt-1 flex gap-2">
+                  <input type="color" value={state.trackerTextColor} onChange={(e) => update('trackerTextColor', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0" />
+                  <input type="text" value={state.trackerTextColor} onChange={(e) => update('trackerTextColor', e.target.value)} className="flex-1 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
+                </span>
+              </label>
+            )}
+            <p className="text-[10px] text-gray-500">Mode <code className="bg-white/10 px-1 rounded text-white">auto</code> = warna teks ikut warna tier rank. Mode <code className="bg-white/10 px-1 rounded text-white">custom</code> = pilih warna bebas. Warna aksen pada RR selalu ngikut tier.</p>
+          </div>
+        </div>
+      )}
+
       {/* Posisi - Global */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Monitor className="w-4 h-4 text-emerald-400" /> Posisi - Global</h2>

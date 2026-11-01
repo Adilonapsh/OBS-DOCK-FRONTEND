@@ -40,7 +40,6 @@ function QrSettingsInner() {
           </>
         }
         urlBar={<UrlBar obsUrl={obsUrl} showKey={shell.showKey} onToggleKey={() => toggleShowKey(shell, obsUrl)} copied={shell.copied} onCopy={handleCopy} />}
-        settingsPanel={<QrSettingsForm state={state} update={update} />}
         previewPanel={
           <>
             <div className="flex items-center justify-between mb-3">
@@ -58,6 +57,8 @@ function QrSettingsInner() {
             </div>
           </>
         }
+        settingsPanel={<QrSettingsForm state={state} update={update} />}
+
       />
       <WidgetPageModals shell={shell} onReset={reset} />
     </>
