@@ -1,14 +1,7 @@
 import { WIDGET_FONTS } from '../_shared/constants/fonts';
 
-export const PINNED_THEMES = [
-  { value: 'standard', label: 'Standard - Dark Glass' },
-  { value: 'minimal', label: 'Minimal - Baris Bersih' },
-  { value: 'perchar', label: 'Per-Char - Bubble + Huruf Mengetik' },
-  { value: 'monkey', label: 'Monkey - Teks + Keyboard Mengetik' },
-  { value: 'island', label: 'Island - Dynamic Island' },
-  { value: 'plain', label: 'Plain' },
-  { value: 'brutalist', label: 'Brutalist' },
-] as const;
+// AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
+export { PINNED_THEME_OPTIONS as PINNED_THEMES } from './themes/registry';
 
 export const PINNED_FONTS = WIDGET_FONTS;
 

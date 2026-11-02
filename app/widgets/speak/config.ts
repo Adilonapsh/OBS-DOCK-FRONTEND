@@ -3,7 +3,6 @@
 // Tema memakai set yang sama dengan Pinned Chat supaya tampilan konsisten.
 
 import {
-  PINNED_THEMES,
   PINNED_FONTS,
   PINNED_ANIMS,
   PINNED_BORDER_FX,
@@ -11,7 +10,8 @@ import {
   PINNED_KB_CAPS,
 } from '../pinned/config';
 
-export const SPEAK_THEMES = PINNED_THEMES;
+// AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
+export { SPEAK_THEME_OPTIONS as SPEAK_THEMES } from './themes/registry';
 export const SPEAK_FONTS = PINNED_FONTS;
 export const SPEAK_ANIMS = PINNED_ANIMS;
 export const SPEAK_BORDER_FX = PINNED_BORDER_FX;

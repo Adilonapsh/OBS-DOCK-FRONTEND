@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "gen:themes": "node scripts/gen-theme-presets.mjs && node scripts/gen-widget-themes.mjs --dir=app/widgets/chat/themes --props=ChatThemeProps --map=chatThemeComponents --options=CHAT_THEME_OPTIONS --default=CHAT_THEME_DEFAULT && node scripts/gen-widget-themes.mjs --dir=app/widgets/ticker/themes --props=TickerThemeProps --map=tickerThemeComponents --options=TICKER_THEME_OPTIONS --default=TICKER_THEME_DEFAULT",
+    "gen:themes": "node scripts/gen-theme-presets.mjs && node scripts/gen-widget-themes.mjs --dir=app/widgets/chat/themes --props=ChatThemeProps --map=chatThemeComponents --options=CHAT_THEME_OPTIONS --default=CHAT_THEME_DEFAULT && node scripts/gen-widget-themes.mjs --dir=app/widgets/ticker/themes --props=TickerThemeProps --map=tickerThemeComponents --options=TICKER_THEME_OPTIONS --default=TICKER_THEME_DEFAULT && node scripts/gen-widget-themes.mjs --dir=app/widgets/valorant/themes --props=ValorantSkinProps --map=valorantThemeComponents --options=VALORANT_THEME_OPTIONS --default=VALORANT_THEME_DEFAULT && node scripts/gen-widget-themes.mjs --dir=app/widgets/heartrate/themes --props=HeartrateThemeProps --map=heartrateThemeComponents --options=HEARTRATE_THEME_OPTIONS --default=HEARTRATE_THEME_DEFAULT && node scripts/gen-widget-themes.mjs --dir=app/widgets/pinned/themes --props=PinnedChatCardProps --map=pinnedThemeComponents --options=PINNED_THEME_OPTIONS --default=PINNED_THEME_DEFAULT && node scripts/gen-widget-themes.mjs --dir=app/widgets/speak/themes --props=SpeakThemeProps --map=speakThemeComponents --options=SPEAK_THEME_OPTIONS --default=SPEAK_THEME_DEFAULT",
     "predev": "npm run gen:themes",
     "prebuild": "npm run gen:themes",
     "dev": "next dev -H 0.0.0.0 --port 3001",

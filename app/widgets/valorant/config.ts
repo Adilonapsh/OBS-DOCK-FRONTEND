@@ -3,13 +3,8 @@ import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/
 
 export const VALORANT_FONTS = WIDGET_FONTS;
 
-export const VALORANT_THEMES = [
-  { value: 'auto', label: 'Auto - ikut warna rank' },
-  { value: 'custom', label: 'Custom - pakai accent' },
-  { value: 'brutalist', label: 'Brutalist - Neo Brutalist' },
-  { value: 'pastel', label: 'Pastel - Cute Card' },
-  { value: 'valorantui', label: 'Valorant UI' },
-] as const;
+// AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
+export { VALORANT_THEME_OPTIONS as VALORANT_THEMES } from './themes/registry';
 
 export const VALORANT_DEFAULTS = {
   pos: 'center' as string,

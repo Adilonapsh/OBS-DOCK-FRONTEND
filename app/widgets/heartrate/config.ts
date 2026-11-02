@@ -3,14 +3,8 @@ import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/
 
 export const HEARTRATE_FONTS = WIDGET_FONTS;
 
-export const HEARTRATE_THEMES = [
-  { value: 'standard', label: 'Standard - Card' },
-  { value: 'minimal', label: 'Minimal' },
-  { value: 'pill', label: 'Pill - Capsule' },
-  { value: 'bar', label: 'Bar - Progress' },
-  { value: 'brutalist', label: 'Brutalist' },
-  { value: 'glass', label: 'Glass - Modern Health' },
-] as const;
+// AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
+export { HEARTRATE_THEME_OPTIONS as HEARTRATE_THEMES } from './themes/registry';
 
 export const HEARTRATE_ANIMS = [
   { value: 'elegant', label: 'Elegant' },

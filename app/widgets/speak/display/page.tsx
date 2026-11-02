@@ -9,7 +9,7 @@ import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { AutoScale } from '../../_shared/components/AutoScale';
 import { KEYFRAMES_CSS } from '../../_shared/constants/animations';
-import { PinnedChatCard, PINNED_CHAT_CSS, pinnedBaseWidth, type PinnedCardItem } from '../../_shared/components/PinnedChatCard';
+import { PinnedChatCard, PINNED_CHAT_CSS, pinnedBaseWidth, type PinnedCardItem } from '../../pinned/components/PinnedChatCard';
 import { SPEAK_THEMES } from '../config';
 
 type SpeakItem = PinnedCardItem;
