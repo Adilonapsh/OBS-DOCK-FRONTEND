@@ -11,13 +11,12 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { io, type Socket } from 'socket.io-client';
 import {
   Maximize2, Minimize2, Sun, Moon, Settings,
-  Play, Pause, SkipForward, SkipBack, Plus,
   Trash2, Radio, Sliders, ExternalLink, MessageSquare,
-  Tv, AlertCircle, Eye, EyeOff, Loader2, KeyRound, Music, Minus, RotateCcw,
-  LayoutGrid, GripVertical, ChevronUp, ChevronDown,
+  Tv, AlertCircle, Eye, EyeOff, Loader2, KeyRound, Music, Minus, Plus, RotateCcw,
+  LayoutGrid, BarChart3, ListChecks, Pin, Gamepad2, Clock, MessagesSquare,
+  Volume2, VolumeX, X,
 } from 'lucide-react';
 import DockableLayout, {
   createDefaultDockLayout,
@@ -29,7 +28,8 @@ import DockableLayout, {
   type DockLayoutState,
   type DockNode,
 } from './components/DockableLayout';
-import { getSocketUrl } from '../widgets/_shared/utils/socket';
+import ControlPanel, { isDockControlPanel } from './components/controls/ControlPanel';
+import { useDockControls } from './components/controls/useDockControls';
 import { createClient } from '@/utils/supabase/client';
 import { encrypt, decrypt, isEncrypted } from '../utils/encryption';
 import { gooeyToast } from "goey-toast";
@@ -37,43 +37,12 @@ import './mobile-dock.css';
 
 // ---------------------------------------------------------------- types
 
-type SongItem = {
-  id: string;
-  url: string;
-  videoId: string | null;
-  kind: 'youtube' | 'audio';
-  title: string;
-  requestedBy: string;
-  platform: string;
-  addedAt: number;
-};
-
-type SongState = {
-  room: string;
-  queue: SongItem[];
-  currentIndex: number;
-  isPlaying: boolean;
-  position: number;
-  duration: number;
-  updatedAt: number;
-  settings?: { command?: string };
-  lastError?: string | null;
-};
-
 type StreamInfo = {
   url: string;
   videoId: string;
   title: string;
   thumbnail: string;
   isLive: boolean;
-};
-
-type YtSearchItem = {
-  videoId: string;
-  title: string;
-  channel: string;
-  thumbnail: string;
-  url: string;
 };
 
 type PanelUrls = {
@@ -113,7 +82,6 @@ const LS = {
   tiptapWidget: 'mobile-dock:tiptap-widget',
   manualVideoId: 'mobile-dock:manual-video-id',
   bgmRoom: 'mobile-dock:bgm-room',
-  bgmEnabled: 'mobile-dock:bgm-enabled',
   panelUrls: 'mobile-dock:panel-urls',
   zooms: 'mobile-dock:zooms',
   theme: 'mobile-dock:theme',
@@ -121,7 +89,10 @@ const LS = {
 };
 
 // Panel yang bisa di-dock (urutan = urutan default tab & nav mobile)
-const KNOWN_DOCK_PANELS = ['deck', 'control', 'alert', 'monitor', 'chat', 'bgm'] as const;
+const KNOWN_DOCK_PANELS = [
+  'deck', 'control', 'alert', 'monitor', 'chat', 'bgm',
+  'poll', 'task', 'games', 'timer', 'chatfeed',
+] as const;
 type DockPanelId = (typeof KNOWN_DOCK_PANELS)[number];
 
 const DOCK_TITLES: Record<DockPanelId, string> = {
@@ -130,7 +101,12 @@ const DOCK_TITLES: Record<DockPanelId, string> = {
   alert: 'Alert',
   monitor: 'Monitor',
   chat: 'Chat',
-  bgm: 'BGM',
+  bgm: 'Music',
+  poll: 'Poll',
+  task: 'Task',
+  games: 'Games',
+  timer: 'Timer',
+  chatfeed: 'Chat Feed',
 };
 
 /** Bersihkan list panel kustom (buang entri rusak/duplikat, batasi 20). */
@@ -250,22 +226,6 @@ function findFirstTabs(node: DockNode): Extract<DockNode, { type: 'tabs' }> | nu
     const f = findFirstTabs(c);
     if (f) return f;
   }
-  return null;
-}
-
-function formatTime(secs: number): string {
-  const s = Math.max(0, Math.floor(secs || 0));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-}
-
-function toWatchUrl(input: string): string | null {
-  const t = input.trim();
-  if (!t) return null;
-  if (/^https?:\/\//i.test(t)) return t;
-  // youtube id mentah (11 char) -> watch url
-  if (/^[A-Za-z0-9_-]{11}$/.test(t)) return `https://www.youtube.com/watch?v=${t}`;
-  const m = t.match(/[?&]v=([A-Za-z0-9_-]{11})/) || t.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
-  if (m) return `https://www.youtube.com/watch?v=${m[1]}`;
   return null;
 }
 
@@ -490,37 +450,15 @@ export default function MobileDockPage() {
   const [showChatSettings, setShowChatSettings] = useState(false);
   const [manualInput, setManualInput] = useState(initialCache.manualVideoId);
 
-  // ---- BGM via Socket.IO (state server-authoritative `song-*`)
-  const [bgmEnabled, setBgmEnabled] = useState(() => readLS(LS.bgmEnabled, 'true') === 'true');
-  const [song, setSong] = useState<SongState | null>(null);
-  const [socketConnected, setSocketConnected] = useState(false);
-  const [showBgmSettings, setShowBgmSettings] = useState(false);
-  const [newBgmUrl, setNewBgmUrl] = useState('');
-  const [bgmSearchQuery, setBgmSearchQuery] = useState('');
-  const [bgmSearchResults, setBgmSearchResults] = useState<YtSearchItem[]>([]);
-  const [bgmIsSearching, setBgmIsSearching] = useState(false);
-  const [bgmSearchError, setBgmSearchError] = useState<string | null>(null);
-  // Search via backend (API key sama dengan dock desktop: YOUTUBE_API_KEY server).
-  const [bgmSearchWarning, setBgmSearchWarning] = useState<string | null>(null);
-  const [bgmSearchSource, setBgmSearchSource] = useState('');
-  // Sort queue BGM: drag handle (desktop) + tombol ↑↓ (touch-friendly)
-  const [bgmDragFrom, setBgmDragFrom] = useState<number | null>(null);
-  const [bgmDragOver, setBgmDragOver] = useState<number | null>(null);
-
   const containerRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<Socket | null>(null);
-  // Room socket: custom dari config, fallback ke privateKey (isolasi per akun)
-  const room = bgmRoomId.trim().toLowerCase() || (privateKey ?? 'global');
 
-  // posisi lokal agar progress bar jalan walau display player tertutup
-  const [localPos, setLocalPos] = useState(0);
-  const currentSongId = song && song.queue.length > 0
-    ? song.queue[Math.min(song.currentIndex, song.queue.length - 1)].id
-    : null;
-
-  const queue = song?.queue ?? [];
-  const currentIdx = song ? Math.min(song.currentIndex, Math.max(0, queue.length - 1)) : 0;
-  const current = queue.length > 0 ? queue[currentIdx] : null;
+  // ---- Dock Controls (Poll / Task / Pinned Chat / Games / Timer / Chat Feed)
+  // Satu socket reusable; room mengikuti BGM room atau private key.
+  const controlsRoom = useMemo(
+    () => bgmRoomId.trim().toLowerCase() || privateKey || 'global',
+    [bgmRoomId, privateKey]
+  );
+  const dockControls = useDockControls(keyVerified ? controlsRoom : '');
 
   // ------------------------------------------------- private key resolve
 
@@ -855,16 +793,15 @@ export default function MobileDockPage() {
     else gooeyToast.error('Gagal Menyimpan Data.');
   };
 
-  const saveBgmRoom = async (nextRoom: string, nextEnabled: boolean) => {
-    try { localStorage.setItem(LS.bgmEnabled, nextEnabled ? 'true' : 'false'); } catch {}
-    setBgmEnabled(nextEnabled);
+  /** Simpan room Music/BGM dari komponen MusicControl. */
+  const saveMusicRoom = async (nextRoom: string): Promise<boolean> => {
     const cfg: DockConfig = {
       discordUserId, deckId, tiptapKey: tiptapPrivateKey, tiptapWidget: tiptapAlertWidgetId,
       manualVideoId, bgmRoomId: nextRoom.trim(), urls: { ...panelUrls }, customPanels,
     };
     const ok = await persistConfig(cfg);
-    if (ok) setShowBgmSettings(false);
-    else gooeyToast.error('Gagal Menyimpan Data.');
+    if (!ok) gooeyToast.error('Gagal Menyimpan Data.');
+    return ok;
   };
 
   // ------------------------------------------------------------ effects
@@ -945,58 +882,6 @@ export default function MobileDockPage() {
     return () => { cancelled = true; clearInterval(t); };
   }, [manualVideoId, discordUserId, keyVerified]);
 
-  // Socket.IO BGM - ganti total Pusher private-room
-  useEffect(() => {
-    if (!keyVerified) return;
-    if (!bgmEnabled) {
-      socketRef.current?.disconnect();
-      socketRef.current = null;
-      setSocketConnected(false);
-      return;
-    }
-    const s = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
-    socketRef.current = s;
-
-    const onUpdate = (st: SongState) => {
-      // backend broadcast global -> filter room sendiri
-      if (!st || st.room !== room) return;
-      setSong(st);
-    };
-    s.on('song-update', onUpdate);
-    s.on('song-search-result', (res: { q?: string; results?: YtSearchItem[]; source?: string; warning?: string }) => {
-      setBgmIsSearching(false);
-      setBgmSearchResults(Array.isArray(res?.results) ? res.results : []);
-      setBgmSearchSource(String(res?.source || ''));
-      setBgmSearchWarning(typeof res?.warning === 'string' ? res.warning : null);
-      if (!res?.results || res.results.length === 0) {
-        setBgmSearchError('Tidak ketemu - coba kata kunci lain atau paste link langsung.');
-      } else {
-        setBgmSearchError(null);
-      }
-    });
-    s.on('connect', () => {
-      setSocketConnected(true);
-      s.emit('join-room', room);
-      s.emit('song-get', { privateKey: room });
-    });
-    s.on('disconnect', () => setSocketConnected(false));
-    return () => {
-      s.off('song-update', onUpdate);
-      s.off('song-search-result');
-      s.disconnect();
-      socketRef.current = null;
-      setSocketConnected(false);
-    };
-  }, [bgmEnabled, room, keyVerified]);
-
-  // sinkron posisi lokal dari server
-  useEffect(() => { setLocalPos(song?.position || 0); }, [song?.position, currentSongId]);
-  useEffect(() => {
-    if (!song?.isPlaying) return;
-    const id = setInterval(() => setLocalPos((p) => p + 1), 1000);
-    return () => clearInterval(id);
-  }, [song?.isPlaying, currentSongId]);
-
   // dock layout: simpan ke LS tiap berubah (debounce), Supabase ikut persistConfig
   const layoutSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleDockLayoutChange = (next: DockLayoutState) => {
@@ -1051,69 +936,6 @@ export default function MobileDockPage() {
   const chatSrc = panelUrls.chatUrl.trim()
     ? applyPlaceholders(panelUrls.chatUrl.trim(), viewStream.videoId)
     : `https://www.youtube.com/live_chat?v=${viewStream.videoId}&embed_domain=${embedDomain}`;
-
-  const songControl = (action: string, extra: Record<string, unknown> = {}) => {
-    socketRef.current?.emit('song-control', { privateKey: room, action, ...extra });
-  };
-
-  // Pindah posisi queue (sort by queue). Server menyesuaikan currentIndex by id.
-  const moveBgmSong = (from: number, to: number) => {
-    const len = queue.length;
-    if (from === to || from < 0 || to < 0 || from >= len || to >= len) return;
-    songControl('move', { from, to });
-  };
-
-  const effPos = song?.isPlaying ? Math.max(song.position || 0, localPos) : (song?.position || 0);
-  const effDur = song?.duration || 0;
-  const cmd = song?.settings?.command || '!song';
-
-  const addBgmUrl = (rawUrl: string, title?: string) => {
-    const url = toWatchUrl(rawUrl);
-    if (!url) return;
-    let who = 'dock';
-    try {
-      const raw = localStorage.getItem('obs-login');
-      const email = raw ? JSON.parse(raw).email : '';
-      if (email) who = String(email).split('@')[0];
-    } catch {}
-    socketRef.current?.emit('song-add', {
-      privateKey: room,
-      url,
-      title: (title || '').trim().slice(0, 160) || undefined,
-      requestedBy: who,
-      platform: 'dock',
-    });
-  };
-
-  const handleAddManual = () => {
-    if (!newBgmUrl.trim()) return;
-    // judul di-resolve server via oEmbed - sama seperti widget request queue
-    addBgmUrl(newBgmUrl);
-    setNewBgmUrl('');
-  };
-
-  // Cari lagu via backend (sama seperti dock desktop - pakai YOUTUBE_API_KEY server,
-  // bukan key frontend. Hasil + warning sumber (API/cadangan) datang via song-search-result).
-  const searchBgm = () => {
-    const q = bgmSearchQuery.trim();
-    if (!q) return;
-    const s = socketRef.current;
-    if (!s) {
-      setBgmSearchError('Belum terhubung - aktifkan BGM / cek koneksi dulu.');
-      return;
-    }
-    setBgmIsSearching(true);
-    setBgmSearchError(null);
-    setBgmSearchWarning(null);
-    s.emit('song-search', { q: q.slice(0, 100), maxResults: 6 });
-  };
-
-  const handlePickBgmResult = (r: YtSearchItem) => {
-    addBgmUrl(r.url, r.title);
-    setBgmSearchQuery('');
-    setBgmSearchResults([]);
-    setBgmSearchWarning(null);
-  };
 
   const openSettings = () => {
     setTmpCreds({ discordUserId, deckId, tiptapKey: tiptapPrivateKey, tiptapWidget: tiptapAlertWidgetId, manualVideoId, bgmRoomId });
@@ -1336,6 +1158,46 @@ export default function MobileDockPage() {
               </div>
             </div>
           )}
+          {/* Pinned & Speak tampil di tab Chat, sama seperti dock desktop */}
+          {dockControls.pinnedChat && (
+            <div className="relative px-3 py-2 bg-[var(--panel-bg)] border-b border-[var(--border-color)] flex gap-2 items-start shrink-0">
+              <Pin className="w-3 h-3 text-yellow-500 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0 pr-6">
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="text-[10px] font-black truncate">{dockControls.pinnedChat.user}</span>
+                  <span className="text-[8px] text-[var(--text-label)] uppercase shrink-0">({dockControls.pinnedChat.platform})</span>
+                </div>
+                <p className="text-[11px] text-[var(--text-label)] italic line-clamp-3 break-words">{dockControls.pinnedChat.text}</p>
+              </div>
+              <button
+                onClick={dockControls.pinActions.unpin}
+                className="absolute top-1.5 right-2 p-1 rounded text-[var(--text-label)] hover:text-[var(--text-main)] hover:bg-[var(--bg-color)] cursor-pointer"
+                title="Unpin chat"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+          {dockControls.speaking && (
+            <div className="relative px-3 py-2 bg-emerald-500/10 border-b border-emerald-500/20 flex gap-2 items-start shrink-0">
+              <Volume2 className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0 pr-6">
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="text-[10px] font-black truncate">{dockControls.speaking.user}</span>
+                  <span className="text-[8px] text-[var(--text-label)] uppercase shrink-0">({dockControls.speaking.platform})</span>
+                  <span className="text-[8px] text-emerald-500 font-black uppercase tracking-widest shrink-0">speaking</span>
+                </div>
+                <p className="text-[11px] text-[var(--text-label)] italic line-clamp-3 break-words">{dockControls.speaking.text}</p>
+              </div>
+              <button
+                onClick={dockControls.speakActions.stop}
+                className="absolute top-1.5 right-2 p-1 rounded text-[var(--text-label)] hover:text-emerald-500 hover:bg-[var(--bg-color)] cursor-pointer"
+                title="Stop speak"
+              >
+                <VolumeX className="w-3 h-3" />
+              </button>
+            </div>
+          )}
           <div className="flex-1 min-h-0 relative">
             <ZoomableFrame src={chatSrc} title="Live Chat" zoom={zooms.chat} frameClass={noPointer} />
           </div>
@@ -1345,250 +1207,17 @@ export default function MobileDockPage() {
         </div>
       );
     }
-    if (id === 'bgm') {
+    // Dock Control panels (Poll / Task / Pinned / Games / Timer / Chat Feed / Music)
+    if (isDockControlPanel(id)) {
       return (
-        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto mdock-scroll p-3 gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2"></div>
-            <button onClick={() => setShowBgmSettings((p) => !p)} className="p-1.5 text-[var(--text-label)] hover:text-[var(--text-main)] cursor-pointer" title="BGM settings">
-              <Settings className="w-4 h-4" />
-            </button>
-          </div>
-
-          {showBgmSettings && (
-            <div className="p-3 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-md space-y-3">
-              <input
-                type="text"
-                value={bgmRoomId}
-                onChange={(e) => setBgmRoomId(e.target.value)}
-                placeholder={`Room ID (kosong = private key)`}
-                className="w-full text-xs px-3 py-2 border border-[var(--border-color)] bg-[var(--panel-bg)] rounded-md"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => saveBgmRoom(bgmRoomId, true)}
-                  className="flex-1 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer"
-                >
-                  Connect
-                </button>
-                <button
-                  onClick={() => saveBgmRoom(bgmRoomId, false)}
-                  className="flex-1 py-2 text-xs font-medium text-red-500 bg-red-500/10 rounded-md cursor-pointer"
-                >
-                  Disconnect
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Now playing + kontrol - sama seperti widget request queue */}
-          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-4 space-y-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <Music className="w-4 h-4 text-emerald-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="font-bold text-[12px] truncate">{current ? current.title : 'Belum ada lagu'}</div>
-                {current && (
-                  <div className="text-[var(--text-label)] text-[9px] truncate">
-                    req by {current.requestedBy} • {current.platform}
-                  </div>
-                )}
-              </div>
-              <span className={`text-[9px] font-bold uppercase ${song?.isPlaying ? 'text-emerald-500' : 'text-[var(--text-label)]'}`}>
-                {song?.isPlaying ? 'Play' : 'Stop'}
-              </span>
-            </div>
-            {/* prev / play-pause / next inline + progress */}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => songControl('prev')}
-                className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--bg-color)] hover:opacity-80 border border-[var(--border-color)] text-[var(--text-main)] cursor-pointer"
-                title="Sebelumnya"
-              >
-                <SkipBack className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => songControl(song?.isPlaying ? 'pause' : 'play')}
-                className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--text-main)] text-[var(--bg-color)] hover:opacity-85 cursor-pointer"
-                title={song?.isPlaying ? 'Pause' : 'Play'}
-              >
-                {song?.isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-              </button>
-              <button
-                onClick={() => songControl('next')}
-                className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-[var(--bg-color)] hover:opacity-80 border border-[var(--border-color)] text-[var(--text-main)] cursor-pointer"
-                title="Berikutnya"
-              >
-                <SkipForward className="w-3.5 h-3.5" />
-              </button>
-              <div className="flex-1 min-w-0 mt-3">
-                <input
-                  type="range"
-                  value={Math.min(effPos, Math.max(effDur, 1))}
-                  min={0}
-                  max={Math.max(effDur, 1)}
-                  onChange={(e) => songControl('seek', { seconds: parseFloat(e.target.value) })}
-                  className="w-full h-1 appearance-none cursor-pointer accent-[var(--accent)] bg-[var(--border-color)] rounded-full"
-                />
-                <div className="flex justify-between text-[9px] font-mono text-[var(--text-label)] mt-1">
-                  <span>{formatTime(effPos)}</span>
-                  <span>{formatTime(effDur)}</span>
-                </div>
-              </div>
-            </div>
-            {/* tambah manual */}
-            <div className="flex gap-2">
-              <input
-                value={newBgmUrl}
-                onChange={(e) => setNewBgmUrl(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleAddManual(); }}
-                placeholder={`Paste URL YouTube / MP3… (atau ${cmd} di chat)`}
-                className="flex-1 h-9 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-xl px-3 text-[11px] text-[var(--text-main)] placeholder:text-[var(--text-label)] focus:outline-none"
-              />
-              <button onClick={handleAddManual} className="shrink-0 w-9 h-9 grid place-items-center rounded-xl bg-[var(--text-main)] text-[var(--bg-color)] hover:opacity-85 cursor-pointer" title="Tambah ke queue">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-            {song?.lastError && (
-              <div className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">
-                {song.lastError}
-              </div>
-            )}
-          </div>
-
-          {/* Choose song - sama seperti widget request queue */}
-          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--panel-bg)] p-3 space-y-2">
-            <h4 className="text-[var(--text-label)] text-[9px] font-bold uppercase flex items-center justify-between">
-              Choose Song ({queue.length})
-              {queue.length > 0 && (
-                <button onClick={() => songControl('clear')} className="text-[9px] text-red-500 hover:underline cursor-pointer normal-case font-medium">Clear</button>
-              )}
-            </h4>
-            <div className="space-y-1.5 max-h-[220px] overflow-y-auto mdock-scroll">
-              {!song || queue.length === 0 ? (
-                <div className="text-[10px] text-[var(--text-label)] italic opacity-70">Queue kosong. Ketik {cmd} + URL di chat.</div>
-              ) : (
-                queue.map((q, i) => (
-                  <div
-                    key={q.id}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setBgmDragOver(i);
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (bgmDragFrom !== null) moveBgmSong(bgmDragFrom, i);
-                      setBgmDragFrom(null);
-                      setBgmDragOver(null);
-                    }}
-                    className={`flex items-center gap-1.5 p-1.5 rounded-lg border cursor-pointer transition-colors ${
-                      current && q.id === current.id
-                        ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30'
-                        : 'bg-[var(--bg-color)] border-[var(--border-color)]'
-                    } ${bgmDragOver === i ? 'ring-1 ring-[var(--accent)] border-[var(--accent)]' : ''} ${
-                      bgmDragFrom === i ? 'opacity-50' : ''
-                    }`}
-                    onClick={() => songControl('choose', { index: i })}
-                    title="Klik untuk putar • drag handle / tombol ↑↓ untuk sort"
-                  >
-                    <span
-                      draggable
-                      onDragStart={(e) => {
-                        e.stopPropagation();
-                        setBgmDragFrom(i);
-                        e.dataTransfer.effectAllowed = 'move';
-                      }}
-                      onDragEnd={() => {
-                        setBgmDragFrom(null);
-                        setBgmDragOver(null);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="shrink-0 p-1 -ml-1 cursor-grab active:cursor-grabbing text-[var(--text-label)] hover:text-[var(--text-main)] touch-none"
-                      title="Drag untuk sort"
-                    >
-                      <GripVertical className="w-3.5 h-3.5" />
-                    </span>
-                    <span className={`text-[9px] font-mono w-4 shrink-0 ${current && q.id === current.id ? 'text-[var(--accent)]' : 'text-[var(--text-label)]'}`}>
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[10px] font-bold text-[var(--text-main)] truncate">{q.title}</div>
-                      <div className="text-[8px] text-[var(--text-label)] truncate">{q.requestedBy}</div>
-                    </div>
-                    <span className="shrink-0 flex flex-col" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => moveBgmSong(i, i - 1)}
-                        disabled={i === 0}
-                        className="p-0.5 text-[var(--text-label)] hover:text-[var(--text-main)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                        title="Naik"
-                      >
-                        <ChevronUp className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => moveBgmSong(i, i + 1)}
-                        disabled={i >= queue.length - 1}
-                        className="p-0.5 text-[var(--text-label)] hover:text-[var(--text-main)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                        title="Turun"
-                      >
-                        <ChevronDown className="w-3 h-3" />
-                      </button>
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        songControl('remove', { index: i });
-                      }}
-                      className="shrink-0 p-1 text-[var(--text-label)] hover:text-red-400 cursor-pointer"
-                      title="Hapus"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Cari YouTube via backend (API key sama dengan dock desktop) */}
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={bgmSearchQuery}
-                onChange={(e) => setBgmSearchQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') searchBgm(); }}
-                placeholder="Cari lagu YouTube..."
-                className="flex-1 text-xs px-3 py-2 border border-[var(--border-color)] bg-[var(--panel-bg)] rounded-md"
-              />
-              <button onClick={searchBgm} disabled={bgmIsSearching} className="px-3 py-2 text-xs font-medium text-white bg-[var(--accent)] rounded-md cursor-pointer disabled:opacity-50">
-                {bgmIsSearching ? '...' : 'Cari'}
-              </button>
-              <span className="shrink-0 px-2 py-2 text-[9px] font-bold rounded-md border border-[var(--border-color)] text-[var(--text-label)]">
-                {bgmIsSearching ? '…' : bgmSearchSource === 'youtube-api' ? 'API' : bgmSearchSource === 'scrape' ? 'Cad.' : 'YT'}
-              </span>
-            </div>
-            {bgmSearchWarning && <p className="text-[10px] text-yellow-500">{bgmSearchWarning}</p>}
-            {bgmSearchError && <p className="text-[10px] text-red-500">{bgmSearchError}</p>}
-            {bgmSearchResults.length > 0 && (
-              <div className="space-y-1 border border-[var(--border-color)] rounded-md p-1.5 max-h-48 overflow-y-auto mdock-scroll">
-                {bgmSearchResults.map((track: YtSearchItem) => (
-                  <div
-                    key={track.videoId}
-                    onClick={() => handlePickBgmResult(track)}
-                    className="p-2 cursor-pointer flex items-center gap-2 rounded-md hover:bg-[var(--bg-color)]"
-                  >
-                    {track.thumbnail && (
-                      <img src={track.thumbnail} alt="" className="w-8 h-8 rounded object-cover bg-[var(--bg-color)] shrink-0" />
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-xs truncate">{track.title}</p>
-                      {track.channel && <p className="text-[10px] truncate text-[var(--text-label)]">{track.channel}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <ControlPanel
+          id={id}
+          api={dockControls}
+          privateKey={privateKey}
+          musicRoom={controlsRoom}
+          musicRoomId={bgmRoomId}
+          onSaveMusicRoom={saveMusicRoom}
+        />
       );
     }
     // Panel kustom (tambah via Settings - URL bebas, mendukung {videoId})
@@ -1689,7 +1318,7 @@ export default function MobileDockPage() {
       </div>
 
       {/* MOBILE DOCK - nav mengikuti panel yang terlihat di layout */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t-2 border-[var(--border-color)] bg-[var(--dock-bg)] backdrop-blur-md flex items-center justify-around px-2 z-50 overflow-x-auto">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t-2 border-black/20 bg-[var(--accent)] flex items-center justify-around px-2 z-50 overflow-x-auto">
         {dockVisiblePanels(dockLayout.root).map((id) => {
           const customTitle = dockTitles[id] ?? id;
           const meta = {
@@ -1698,17 +1327,22 @@ export default function MobileDockPage() {
             alert: { label: 'Alert', Icon: AlertCircle },
             monitor: { label: 'Monitor', Icon: Eye },
             chat: { label: 'Chat', Icon: MessageSquare },
-            bgm: { label: 'BGM', Icon: Music },
+            bgm: { label: 'Music', Icon: Music },
+            poll: { label: 'Poll', Icon: BarChart3 },
+            task: { label: 'Task', Icon: ListChecks },
+            games: { label: 'Games', Icon: Gamepad2 },
+            timer: { label: 'Timer', Icon: Clock },
+            chatfeed: { label: 'Feed', Icon: MessagesSquare },
           }[id] ?? { label: customTitle, Icon: Tv };
           const { label, Icon } = meta;
           return (
             <button
               key={id}
               onClick={() => setMobilePanel(id)}
-              className={`flex flex-col items-center gap-1 cursor-pointer transition-colors shrink-0 px-2 ${mobilePanel === id ? 'text-[var(--text-main)]' : 'text-[var(--text-label)]'}`}
+              className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors shrink-0 px-3 py-1.5 rounded-xl ${mobilePanel === id ? 'bg-blue-700 text-white ring-1 ring-white/30 shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[9px] font-bold uppercase tracking-wide">{label}</span>
+              <Icon className={`w-5 h-5 ${mobilePanel === id ? 'text-white' : 'text-white/80'}`} />
+              <span className={`text-[9px] font-bold uppercase tracking-wide ${mobilePanel === id ? 'text-white' : 'text-white/80'}`}>{label}</span>
             </button>
           );
         })}

@@ -24,6 +24,49 @@
   --handle-color: rgba(255, 255, 255, 0.12);
 }
 
+/* globals.css meng-override `.text-white` menjadi gelap saat html.light.
+   Mobile dock punya tab bar biru & tombol beraksen yang butuh teks putih,
+   jadi kembalikan putih hanya di dalam wrapper mobile dock. */
+html.light .mdock-light .text-white,
+html.light .mdock-dark .text-white {
+  color: #ffffff !important;
+}
+
+html.light .mdock-light .text-white\/90,
+html.light .mdock-dark .text-white\/90 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+html.light .mdock-light .text-white\/80,
+html.light .mdock-dark .text-white\/80 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+html.light .mdock-light .text-white\/70,
+html.light .mdock-dark .text-white\/70 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+html.light .mdock-light .text-white\/60,
+html.light .mdock-dark .text-white\/60 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+html.light .mdock-light .text-white\/50,
+html.light .mdock-dark .text-white\/50 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+html.light .mdock-light .text-white\/40,
+html.light .mdock-dark .text-white\/40 {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+html.light .mdock-light .text-white\/30,
+html.light .mdock-dark .text-white\/30 {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
 @keyframes mdock-fade-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }

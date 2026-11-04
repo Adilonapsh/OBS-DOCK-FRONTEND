@@ -42,7 +42,7 @@ function nextDockId(prefix: string): string {
 
 // ------------------------------------------------------- layout factories
 
-/** Layout bawaan: Deck | Control + [Alert|Monitor] | [Chat|BGM] */
+/** Layout bawaan: Deck | Control + [Alert|Monitor] | [Chat|Music|Chat Feed] | [Poll|Task|Games|Timer] */
 export function createDefaultDockLayout(): DockLayoutState {
   return {
     version: 1,
@@ -50,7 +50,7 @@ export function createDefaultDockLayout(): DockLayoutState {
       type: 'split',
       id: 'root',
       dir: 'row',
-      sizes: [25, 45, 30],
+      sizes: [22, 40, 20, 18],
       children: [
         { type: 'tabs', id: 'tabs_deck', panels: ['deck'], active: 'deck' },
         {
@@ -63,7 +63,8 @@ export function createDefaultDockLayout(): DockLayoutState {
             { type: 'tabs', id: 'tabs_alert', panels: ['alert', 'monitor'], active: 'alert' },
           ],
         },
-        { type: 'tabs', id: 'tabs_chat', panels: ['chat', 'bgm'], active: 'chat' },
+        { type: 'tabs', id: 'tabs_chat', panels: ['chat', 'bgm', 'chatfeed'], active: 'chat' },
+        { type: 'tabs', id: 'tabs_controls', panels: ['poll', 'task', 'games', 'timer'], active: 'poll' },
       ],
     },
     hidden: [],
@@ -240,11 +241,35 @@ export function sanitizeDockLayout(saved: unknown, knownPanels: string[]): DockL
     if (missing.length > 0) {
       if (!clean) {
         clean = { type: 'tabs', id: nextDockId('tabs'), panels: [...missing], active: missing[0] };
-      } else {
+      } else if (missing.length === 1) {
+        // Satu panel baru (mis. panel kustom) → cukup ikut tab pertama.
         const t = firstTabs(clean);
         if (t) {
           t.panels.push(...missing);
           if (!t.active) t.active = t.panels[0];
+        }
+      } else {
+        // Banyak panel baru (mis. Poll/Task/Pinned/Games/Timer untuk user layout lama)
+        // → kelompokkan jadi satu kolom tab baru di kanan, jangan ditumpuk ke tab pertama.
+        const tabs: DockNode = {
+          type: 'tabs',
+          id: nextDockId('tabs'),
+          panels: [...missing],
+          active: missing[0],
+        };
+        if (clean.type === 'split' && clean.dir === 'row') {
+          const total = clean.sizes.reduce((a, b) => a + b, 0) || 100;
+          clean.sizes = clean.sizes.map((s) => (s / total) * 82);
+          clean.children.push(tabs);
+          clean.sizes.push(18);
+        } else {
+          clean = {
+            type: 'split',
+            id: nextDockId('split'),
+            dir: 'row',
+            sizes: [82, 18],
+            children: [clean, tabs],
+          };
         }
       }
     }
@@ -406,7 +431,7 @@ export default function DockableLayout(props: DockableLayoutProps) {
       return (
         <div className="relative flex flex-col min-h-0 min-w-0 flex-1 basis-0 bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden" data-dock-tabs-root={node.id}>
           {/* Tab bar = juga handle drag untuk panel aktif */}
-          <div className="flex items-stretch gap-0.5 p-1 bg-[var(--bg-color)] border-b border-[var(--border-color)] overflow-x-auto shrink-0">
+          <div className="flex items-stretch gap-0.5 p-1 bg-[var(--accent)] border-b border-black/20 overflow-x-auto shrink-0">
             {node.panels.map((p) => {
               const active = node.active === p;
               // Tab-bar juga target drop (tengah = gabung jadi tab) - seperti browser/VS Code.
@@ -423,14 +448,14 @@ export default function DockableLayout(props: DockableLayoutProps) {
                   }}
                   onClick={() => setActive(node.id, p)}
                   className={`group flex items-center gap-1 pl-1.5 pr-1 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md cursor-grab active:cursor-grabbing select-none shrink-0 touch-none ${
-                    active ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-label)] hover:text-[var(--text-main)] hover:bg-[var(--panel-bg)]'
-                  } ${tabDropHot ? 'ring-2 ring-[var(--accent)] bg-[var(--accent)]/30 text-white' : ''}`}
+                    active ? 'bg-blue-700 text-white ring-1 ring-white/30 shadow-sm' : 'text-white/85 hover:text-white hover:bg-white/15'
+                  } ${tabDropHot ? 'ring-2 ring-white bg-white/30 text-white' : ''}`}
                   title={active ? 'Drag untuk pindahkan panel • drop panel lain ke sini untuk gabung' : `Aktifkan ${p} • drop panel ke sini untuk gabung`}
                 >
-                  <span data-dock-grip className={`cursor-grab active:cursor-grabbing ${active ? 'text-white/80' : 'text-[var(--text-label)]'}`}>
+                  <span data-dock-grip className={`cursor-grab active:cursor-grabbing ${active ? 'text-[#ffffff]' : 'text-white/70'}`}>
                     <GripVertical className="w-3 h-3" />
                   </span>
-                  <span className="flex items-center gap-1 max-w-[120px] truncate">{renderTitle(p)}</span>
+                  <span className={`flex items-center gap-1 max-w-[120px] truncate ${active ? 'text-[#ffffff]' : 'text-white/85'}`}>{renderTitle(p)}</span>
                   {visible.length > 1 && (
                     <button
                       onPointerDown={(e) => e.stopPropagation()}
@@ -438,7 +463,7 @@ export default function DockableLayout(props: DockableLayoutProps) {
                         e.stopPropagation();
                         setConfirmHide(p);
                       }}
-                      className={`p-1 rounded ${active ? 'hover:bg-white/20' : 'hover:bg-[var(--bg-color)]'} opacity-50 hover:opacity-100 transition-opacity cursor-pointer touch-manipulation`}
+                      className="p-1 rounded hover:bg-white/20 opacity-50 hover:opacity-100 transition-opacity cursor-pointer touch-manipulation"
                       title="Sembunyikan panel"
                     >
                       <X className="w-3.5 h-3.5" />
