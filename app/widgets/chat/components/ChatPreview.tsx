@@ -7,6 +7,7 @@ import { getBttvGlobalEmotes, type BttvMap } from '../bttv';
 import { ANIM_MAP, ANIM_OUT_MAP, isElegantAnim } from '../../_shared/constants/animations';
 import { parseIgnoreList, passPlatformFilter, passCommandFilter, passSongCommandFilter, passIgnoreFilter } from '../themes/chatFilters';
 import { useDummyChatSimulation } from '../themes/dummySim';
+import { normalizeChatAlign } from '../themes/alignUtils';
 import type { ChatItem } from '../themes/types';
 import type { ChatSettings } from '../config';
 
@@ -85,6 +86,7 @@ export function ChatPreview({ state }: { state: ChatSettings }) {
     bubbleOpacity: state.bubbleOpacity,
     groupConsecutiveMessages: state.scrollDirection === '2' ? false : state.groupConsecutiveMessages,
     highlightMentions: state.highlightMentions,
+    align: normalizeChatAlign(state.align),
     imageEmbedPermissionLevel: state.imageEmbedPermissionLevel,
     showYouTubeLinkPreviews: state.showYouTubeLinkPreviews,
     cleanTextBorder: state.cleanTextBorder,

@@ -7,10 +7,11 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 import { useHorizontalShift } from './useHorizontalShift';
+import { alignColumn } from './alignUtils';
 
 export const themeMeta = { value: 'plain', label: 'Plain' } as const;
 
-export default function PlainTheme({ chats, font, accent, bg, maxMessages, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, fontSize, bgOpacity, textColor, exitingIds, horizontal, anim, horizontalAnim, hideAnim, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false, plainTextBorder = false, plainBorderColor = '#000000', plainBorderWidth = 1 }: ChatThemeProps & { plainTextBorder?: boolean; plainBorderColor?: string; plainBorderWidth?: number }) {
+export default function PlainTheme({ chats, font, accent, bg, maxMessages, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, fontSize, bgOpacity, textColor, exitingIds, horizontal, anim, horizontalAnim, hideAnim, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, align = 'left', imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false, plainTextBorder = false, plainBorderColor = '#000000', plainBorderWidth = 1 }: ChatThemeProps & { plainTextBorder?: boolean; plainBorderColor?: string; plainBorderWidth?: number }) {
   const horizontalRef = useRef<HTMLDivElement>(null);
   useHorizontalShift(horizontalRef, !!horizontal);
   const visible = chats.slice(-maxMessages);
@@ -49,7 +50,7 @@ export default function PlainTheme({ chats, font, accent, bg, maxMessages, showA
         <div
           ref={horizontalRef}
           className="w-full max-w-none flex flex-row flex-nowrap gap-x-3 items-end justify-end"
-          style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', clipPath: 'inset(-120px -40px -120px 0)' }}
+          style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', textAlign: align, clipPath: 'inset(-120px -40px -120px 0)' }}
         >
           {visible.map((c) => {
             const isExiting = exitingIds?.has(c.id);
@@ -118,7 +119,7 @@ export default function PlainTheme({ chats, font, accent, bg, maxMessages, showA
       <style>{`@keyframes plainFadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
       <div
         className="w-full max-w-[420px] flex flex-col gap-1"
-        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}
+        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', textAlign: align, alignItems: alignColumn(align) }}
       >
         {visible.map((c, i) => {
           const isExiting = exitingIds?.has(c.id);

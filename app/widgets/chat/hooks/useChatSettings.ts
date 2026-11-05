@@ -23,6 +23,7 @@ function applyNuttyAliases(get: (k: string) => string | null, s: Record<string, 
   alias('showTimestamps', 'showTimestamp');
   alias('background', 'bg');
   alias('inlineChat', 'inline');
+  alias('alignment', 'align');
   // opacity nutty 0-1, internal 0-100
   if (get('bgOpacity') === null && get('opacity') !== null) {
     const raw = String(get('opacity'));

@@ -6,11 +6,12 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 import { useHorizontalShift } from './useHorizontalShift';
+import { alignColumn } from './alignUtils';
 import './Boxed.css';
 
 export const themeMeta = { value: 'boxed', label: 'Boxed - Card dengan Header' } as const;
 
-export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, align = 'left', imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
   const horizontalRef = useRef<HTMLDivElement>(null);
   useHorizontalShift(horizontalRef, !!horizontal);
   const fallbackBg = bg === 'transparent' ? 'rgba(12,12,12,0.9)' : bg;
@@ -23,7 +24,7 @@ export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showPl
   const hl = (comment: string) => highlightMentions && isMentionMessage(comment);
   if (horizontal) {
     return (
-      <div ref={horizontalRef} className="chat-boxed-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, clipPath: 'inset(-120px -40px -120px 0)' }}>
+      <div ref={horizontalRef} className="chat-boxed-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, clipPath: 'inset(-120px -40px -120px 0)' }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
@@ -56,7 +57,7 @@ export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showPl
   }
   if (inline) {
     return (
-      <div className="chat-boxed-theme w-full max-w-[440px] rounded-[16px] border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: bgColor, opacity: bgOp }}>
+      <div className="chat-boxed-theme w-full max-w-[440px] rounded-[16px] border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: bgColor, opacity: bgOp, textAlign: align, alignItems: alignColumn(align) }}>
         <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between" style={{ background: `linear-gradient(90deg, ${accent}22, transparent)` }}>
           <span className="font-black text-[11px] uppercase tracking-widest text-white flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: accent }} />
@@ -86,7 +87,7 @@ export default function BoxedTheme({ chats, font, accent, bg, showAvatar, showPl
     );
   }
   return (
-    <div className="chat-boxed-theme w-full max-w-[440px] rounded-[20px] border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: bgColor, opacity: bgOp }}>
+    <div className="chat-boxed-theme w-full max-w-[440px] rounded-[20px] border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: bgColor, opacity: bgOp, textAlign: align, alignItems: alignColumn(align) }}>
       <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between" style={{ background: `linear-gradient(90deg, ${accent}22, transparent)` }}>
         <span className="font-black text-[11px] uppercase tracking-widest text-white flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: accent }} />

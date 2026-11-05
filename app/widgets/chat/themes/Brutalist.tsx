@@ -6,6 +6,7 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 import { useHorizontalShift } from './useHorizontalShift';
+import { alignFlex, alignRowDirection } from './alignUtils';
 import './Brutalist.css';
 
 export const themeMeta = { value: 'brutalist', label: 'Brutalist' } as const;
@@ -40,6 +41,7 @@ export default function BrutalistTheme({
   lineSpacing = 1.4,
   groupConsecutiveMessages = false,
   highlightMentions = false,
+  align = 'left',
   brutalistBg,
   brutalistTextColor,
   brutalistBadgeBg,
@@ -78,6 +80,15 @@ export default function BrutalistTheme({
   const getBorderStyle = () => `4px solid ${borderColor}`;
   const getShadow = () => `${shadowOffset}px ${shadowOffset}px 0px 0px ${borderColor}`;
   const getAvatarShadow = () => `3px 3px 0px 0px ${borderColor}`;
+  // Tail mengikuti side: align kanan -> pindah ke kanan bawah + mirror arahnya.
+  const getTailStyle = (backgroundColor: string, lifted = false) => ({
+    backgroundColor,
+    left: align === 'right' ? 'auto' : 40,
+    right: align === 'right' ? 40 : 'auto',
+    transform: align === 'right'
+      ? (lifted ? 'translateY(-4px) scaleX(-1)' : 'scaleX(-1)')
+      : (lifted ? 'translateY(-4px)' : undefined),
+  });
 
   const hide = hideAnim || 'fadeOut';
   const getAnim = (id: string) => {
@@ -99,7 +110,7 @@ export default function BrutalistTheme({
         <div
           ref={horizontalRef}
           className="w-full max-w-none flex flex-row flex-nowrap gap-4 items-end justify-end"
-          style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2, paddingRight: shadowOffset + 4, clipPath: 'inset(-120px -40px -120px 0)' }}
+          style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', textAlign: align, paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2, paddingRight: shadowOffset + 4, clipPath: 'inset(-120px -40px -120px 0)' }}
         >
           {visible.map((c) => {
             const isExiting = exitingIds?.has(c.id);
@@ -116,7 +127,7 @@ export default function BrutalistTheme({
                   animation: getAnim(c.id),
                 }}
               >
-                <div className="flex flex-row gap-3 items-start w-fit max-w-full relative">
+                <div className="flex flex-row gap-3 items-start w-fit max-w-full relative" style={{ flexDirection: alignRowDirection(align) }}>
                   {showAvatar && (
                     <div
                       className="block shrink-0 mt-1 overflow-hidden"
@@ -130,7 +141,7 @@ export default function BrutalistTheme({
                       />
                     </div>
                   )}
-                  <div className="flex flex-col gap-0 max-w-full items-start">
+                  <div className="flex flex-col gap-0 max-w-full" style={{ alignItems: alignFlex(align), textAlign: align }}>
                     {showUsername && (
                       <div
                         className="flex flex-row flex-wrap items-center gap-2 px-3 py-1 mb-[-4px] z-20 rotate-[-1deg]"
@@ -168,8 +179,8 @@ export default function BrutalistTheme({
                         {hasHalftone && <div className="absolute inset-0 z-0 pointer-events-none brutal-halftone" style={{ opacity: 0.05 }} />}
                         {hasTail && (
                           <>
-                            <div className="absolute w-8 h-8 left-10 -bottom-8 brut-bubble-tail" style={{ backgroundColor: borderColor }} />
-                            <div className="absolute w-8 h-8 left-10 -bottom-8 brut-bubble-tail translate-y-[-4px]" style={{ backgroundColor: bubbleBgEffective }} />
+                            <div className="absolute w-8 h-8 -bottom-8 brut-bubble-tail" style={getTailStyle(borderColor)} />
+                            <div className="absolute w-8 h-8 -bottom-8 brut-bubble-tail" style={getTailStyle(bubbleBgEffective, true)} />
                           </>
                         )}
                         <div className="relative z-10 font-bold tracking-tight" style={{ wordBreak: 'break-word' }}>
@@ -197,7 +208,7 @@ export default function BrutalistTheme({
     <>
       <div
         className="w-full max-w-[420px] flex flex-col gap-6"
-        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2, paddingRight: shadowOffset + 4 }}
+        style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', textAlign: align, paddingBottom: (hasTail ? 32 : 0) + shadowOffset + 2, paddingRight: shadowOffset + 4 }}
       >
         {visible.map((c, i) => {
           const isExiting = exitingIds?.has(c.id);
@@ -208,14 +219,16 @@ export default function BrutalistTheme({
           return (
             <div
               key={c.id}
-              className="brutalist-item w-full flex flex-col items-start"
+              className="brutalist-item w-full flex flex-col"
               style={{
                 opacity: isExiting ? 0 : 1,
                 transition: 'opacity 0.3s ease',
                 animation: 'brutalistIn 0.4s cubic-bezier(0.16,1,0.3,1) both',
+                alignItems: alignFlex(align),
+                textAlign: align,
               }}
             >
-              <div className="flex flex-row gap-4 items-start w-fit max-w-full relative">
+              <div className="flex flex-row gap-4 items-start w-fit max-w-full relative" style={{ flexDirection: alignRowDirection(align) }}>
                 {showAvatar && !grouped && (
                   <div
                     className="block shrink-0 mt-1.5 overflow-hidden"
@@ -229,7 +242,7 @@ export default function BrutalistTheme({
                     />
                   </div>
                 )}
-                <div className="flex flex-col gap-0 max-w-full items-start">
+                <div className="flex flex-col gap-0 max-w-full" style={{ alignItems: alignFlex(align), textAlign: align }}>
                   {showName && (
                     <div
                       className="flex flex-row flex-wrap items-center gap-2 px-3 py-1 mb-[-4px] z-20 rotate-[-1deg]"
@@ -267,8 +280,8 @@ export default function BrutalistTheme({
                       {hasHalftone && <div className="absolute inset-0 z-0 pointer-events-none brutal-halftone" style={{ opacity: 0.05 }} />}
                       {hasTail && (
                         <>
-                          <div className="absolute w-8 h-8 left-10 -bottom-8 brut-bubble-tail" style={{ backgroundColor: borderColor }} />
-                          <div className="absolute w-8 h-8 left-10 -bottom-8 brut-bubble-tail translate-y-[-4px]" style={{ backgroundColor: bubbleBgEffective }} />
+                          <div className="absolute w-8 h-8 -bottom-8 brut-bubble-tail" style={getTailStyle(borderColor)} />
+                          <div className="absolute w-8 h-8 -bottom-8 brut-bubble-tail" style={getTailStyle(bubbleBgEffective, true)} />
                         </>
                       )}
                       <div className="relative z-10 font-bold tracking-tight" style={{ wordBreak: 'break-word' }}>

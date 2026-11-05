@@ -6,6 +6,7 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 import { useHorizontalShift } from './useHorizontalShift';
+import { alignColumn, alignFlex } from './alignUtils';
 import './Cute.css';
 
 function getBadges(c: ChatItem): { label: string }[] {
@@ -30,7 +31,7 @@ function isEmoteOnly(comment?: string) {
 
 export const themeMeta = { value: 'cute', label: 'Cute - Lavender Pastel' } as const;
 
-export default function CuteTheme({ chats, font, accent, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, cuteBubbleBg, cuteResubFrom, cuteResubTo, cuteBadgeBg, cuteBadgeText, cuteNameMod, cuteNameUser, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+export default function CuteTheme({ chats, font, accent, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, cuteBubbleBg, cuteResubFrom, cuteResubTo, cuteBadgeBg, cuteBadgeText, cuteNameMod, cuteNameUser, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, align = 'left', imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
   const horizontalRef = useRef<HTMLDivElement>(null);
   useHorizontalShift(horizontalRef, !!horizontal);
   const hide = hideAnim || 'fadeOut';
@@ -54,7 +55,7 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
       <div
         ref={horizontalRef}
         className="cute-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end p-1"
-        style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', clipPath: 'inset(-120px -40px -120px 0)' }}
+        style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', textAlign: align, clipPath: 'inset(-120px -40px -120px 0)' }}
       >
         {chats.length === 0 ? null : chats.map((c, i) => {
           const badges = getBadges(c);
@@ -92,7 +93,7 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
 
   if (inline) {
     return (
-      <div className="cute-theme w-full max-w-[420px] flex flex-col gap-3 p-1" style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}>
+      <div className="cute-theme w-full max-w-[420px] flex flex-col gap-3 p-1" style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', textAlign: align, alignItems: alignColumn(align) }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const badges = getBadges(c);
           const resub = isResub(c.comment);
@@ -127,7 +128,7 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
   }
 
   return (
-    <div className="cute-theme w-full max-w-[380px] flex flex-col gap-3 p-1" style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent' }}>
+    <div className="cute-theme w-full max-w-[380px] flex flex-col gap-3 p-1" style={{ fontFamily: `'Nunito','Quicksand','${font}', sans-serif`, fontSize: `${fontSize}px`, background: 'transparent', textAlign: align, alignItems: alignColumn(align) }}>
       {chats.length === 0 ? null : chats.map((c, i) => {
         const badges = getBadges(c);
         const resub = isResub(c.comment);
@@ -136,7 +137,7 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
           if (!showMessage) return null;
           const resubText = c.comment.match(/resubscribed.*$/i)?.[0] || c.comment;
           return (
-            <div key={c.id} className="flex flex-col items-start gap-1" style={{ animation: getAnim(c.id) }}>
+            <div key={c.id} className="flex flex-col gap-1" style={{ animation: getAnim(c.id), alignItems: alignFlex(align), textAlign: align }}>
               <div className="w-full px-3.5 py-3 flex items-center gap-2.5 rounded-[12px]" style={{ background: resubGrad }}>
                 <span className="role-badge shadow-sm" style={{ background: badgeBg, color: '#a3b2f8' }}>RESUB</span>
                 <span className="font-extrabold text-[13px] sm:text-[14px] text-white tracking-wide truncate">{c.nickname} {resubText}</span>
@@ -148,7 +149,7 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
         const showName = showUsername && !grouped;
         if (emoteOnly) {
           return (
-            <div key={c.id} className="flex flex-col items-start gap-1" style={{ animation: getAnim(c.id) }}>
+            <div key={c.id} className="flex flex-col gap-1" style={{ animation: getAnim(c.id), alignItems: alignFlex(align), textAlign: align }}>
               {showName && (
                 <div className="flex items-center gap-2 px-1">
                   {showBadges && badges.map((b) => (<span key={b.label} className="role-badge" style={{ background: badgeBg, color: badgeText }}>{b.label}</span>))}
@@ -166,7 +167,7 @@ export default function CuteTheme({ chats, font, accent, showAvatar, showPlatfor
           );
         }
         return (
-          <div key={c.id} className="flex flex-col items-start gap-1" style={{ animation: getAnim(c.id) }}>
+          <div key={c.id} className="flex flex-col gap-1" style={{ animation: getAnim(c.id), alignItems: alignFlex(align), textAlign: align }}>
             <div className="flex items-center gap-2 px-1">
               {showAvatar && <img src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=2e2c45&color=a8a3ce`} alt={c.nickname} className="w-5 h-5 rounded-full object-cover border border-white/10 shrink-0" />}
               {showName && showBadges && badges.map((b) => (<span key={b.label} className="role-badge" style={{ background: badgeBg, color: badgeText }}>{b.label}</span>))}

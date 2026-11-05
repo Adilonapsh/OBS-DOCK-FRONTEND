@@ -6,11 +6,12 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 import { useHorizontalShift } from './useHorizontalShift';
+import { alignColumn, alignFlex } from './alignUtils';
 import './Clean.css';
 
 export const themeMeta = { value: 'clean', label: 'Clean - Baris Minimalis' } as const;
 
-export default function CleanTheme({ chats, font, accent, bg, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false, cleanTextBorder = false, cleanBorderColor = '#000000', cleanBorderWidth = 1.5 }: ChatThemeProps) {
+export default function CleanTheme({ chats, font, accent, bg, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, align = 'left', imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false, cleanTextBorder = false, cleanBorderColor = '#000000', cleanBorderWidth = 1.5 }: ChatThemeProps) {
   const horizontalRef = useRef<HTMLDivElement>(null);
   useHorizontalShift(horizontalRef, !!horizontal);
   const fallbackBg = bg === 'transparent' ? 'rgba(255,255,255,0.92)' : bg;
@@ -29,7 +30,7 @@ export default function CleanTheme({ chats, font, accent, bg, showAvatar, showPl
   const hl = (comment: string) => highlightMentions && isMentionMessage(comment);
   if (horizontal) {
     return (
-      <div ref={horizontalRef} className="chat-clean-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, clipPath: 'inset(-120px -40px -120px 0)' }}>
+      <div ref={horizontalRef} className="chat-clean-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, clipPath: 'inset(-120px -40px -120px 0)' }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
@@ -69,7 +70,7 @@ export default function CleanTheme({ chats, font, accent, bg, showAvatar, showPl
   }
   if (inline) {
     return (
-      <div className="chat-clean-theme w-full max-w-[420px] flex flex-col gap-1.5" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+      <div className="chat-clean-theme w-full max-w-[420px] flex flex-col gap-1.5" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, alignItems: alignColumn(align) }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
@@ -101,7 +102,7 @@ export default function CleanTheme({ chats, font, accent, bg, showAvatar, showPl
     );
   }
   return (
-    <div className="chat-clean-theme w-full max-w-[420px] flex flex-col gap-1.5" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+    <div className="chat-clean-theme w-full max-w-[420px] flex flex-col gap-1.5" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, alignItems: alignColumn(align) }}>
       {chats.length === 0 ? null : chats.map((c, i) => {
         const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
         const showName = showUsername && !grouped;
@@ -126,7 +127,7 @@ export default function CleanTheme({ chats, font, accent, bg, showAvatar, showPl
               className="w-6 h-6 rounded-full object-cover shrink-0"
             />
           )}
-          <div className="flex-1 min-w-0 flex items-baseline gap-2 flex-wrap">
+          <div className="flex-1 min-w-0 flex items-baseline gap-2 flex-wrap" style={{ justifyContent: alignFlex(align), textAlign: align }}>
             {showName && <span className="font-black text-[12px] flex items-center gap-1" style={{ color: chatNameColor(c, nameColor) }}>{showPlatform && <img src={platformLogo(c.platform)} alt={c.platform || ''} className="w-3.5 h-3.5 rounded-full bg-white p-0.5 object-contain shrink-0" />}{showBadges && chatRoles(c).map((r) => (<span key={r} className={`px-1 py-px rounded text-[8px] font-black uppercase shrink-0 ${chatRolePill(c.platform, r)}`}>{chatRoleLabel(r)}</span>))}<span className="truncate" style={cleanBorderStyle}>{c.nickname}</span></span>}
             {showMessage && <span className="text-[13px] leading-none break-words flex-1" style={{ color: msgColor, lineHeight: lineSpacing, ...cleanBorderStyle }}><EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} /><MessageExtras chat={c} permissionLevel={imageEmbedPermissionLevel} showYouTubePreview={showYouTubeLinkPreviews} dark={!isLight} /></span>}
           </div>

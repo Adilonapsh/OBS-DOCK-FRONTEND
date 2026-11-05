@@ -6,11 +6,12 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 import { useHorizontalShift } from './useHorizontalShift';
+import { alignColumn, alignFlex } from './alignUtils';
 import './Standard.css';
 
 export const themeMeta = { value: 'standard', label: 'Standard - Dark Glass' } as const;
 
-export default function StandardTheme({ chats, font, accent, bg, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+export default function StandardTheme({ chats, font, accent, bg, showAvatar, showPlatform, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.4, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, align = 'left', imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
   const horizontalRef = useRef<HTMLDivElement>(null);
   useHorizontalShift(horizontalRef, !!horizontal);
   const fallbackBg = bg === 'transparent' ? 'rgba(18,18,18,0.88)' : bg;
@@ -30,7 +31,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
   const hl = (comment: string) => highlightMentions && isMentionMessage(comment);
   if (horizontal) {
     return (
-      <div ref={horizontalRef} className="chat-standard-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, clipPath: 'inset(-120px -40px -120px 0)' }}>
+      <div ref={horizontalRef} className="chat-standard-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, clipPath: 'inset(-120px -40px -120px 0)' }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
@@ -79,7 +80,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
   }
   if (inline) {
     return (
-      <div className="chat-standard-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+      <div className="chat-standard-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, alignItems: alignColumn(align) }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
@@ -125,7 +126,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
     );
   }
   return (
-    <div className="chat-standard-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+    <div className="chat-standard-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, alignItems: alignColumn(align) }}>
       {chats.length === 0 ? null : chats.map((c, i) => {
         const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
         const showName = showUsername && !grouped;
@@ -152,7 +153,7 @@ export default function StandardTheme({ chats, font, accent, bg, showAvatar, sho
             )}
             <div className="flex-1 min-w-0">
               {showName && (
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap" style={{ justifyContent: alignFlex(align) }}>
                   <span className="font-black text-[12px] leading-none tracking-tight flex items-center gap-1" style={{ color: chatNameColor(c, text) }}>
                     {showPlatform && <img src={platformLogo(c.platform)} alt={c.platform} className="w-3.5 h-3.5 rounded-full bg-white p-0.5 object-contain" />}
                     {showBadges && chatRoles(c).map((r) => (<span key={r} className={`px-1 py-px rounded text-[8px] font-black uppercase ${chatRolePill(c.platform, r)}`}>{chatRoleLabel(r)}</span>))}

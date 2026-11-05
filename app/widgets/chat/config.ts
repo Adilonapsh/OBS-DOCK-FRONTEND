@@ -93,6 +93,8 @@ export const CHAT_DEFAULTS = {
   scrollDirection: '1' as string, // '1' = Normal, '2' = Reversed
   groupConsecutiveMessages: false,
   highlightMentions: false,
+  // ---- Align / rata konten ----
+  align: 'left' as string, // 'left' | 'center' | 'right'
   imageEmbedPermissionLevel: '69420' as string, // 40/30/20/15/10/69420 (Nobody = perilaku sekarang)
   showYouTubeLinkPreviews: false,
   // ---- Plain theme border ----
@@ -177,6 +179,7 @@ export function buildChatUrl(base: string, s: ChatSettings): string {
   if (s.textColor) p.set('textColor', s.textColor);
   p.set('maxMessages', String(s.maxMessages));
   p.set('hideAfter', String(s.hideAfter));
+  p.set('align', s.align || 'left');
   p.set('showAvatar', s.showAvatar ? '1' : '0');
   p.set('showPlatform', s.showPlatform ? '1' : '0');
   p.set('showTimestamp', s.showTimestamp ? '1' : '0');

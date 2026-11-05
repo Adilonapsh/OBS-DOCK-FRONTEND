@@ -6,6 +6,7 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 import { useHorizontalShift } from './useHorizontalShift';
+import { alignFlex, alignRowDirection } from './alignUtils';
 import './PerChar.css';
 
 export type PerCharThemeProps = ChatThemeProps & {
@@ -62,6 +63,7 @@ export default function PerCharTheme({
   bubbleOpacity = 0.9,
   groupConsecutiveMessages = false,
   highlightMentions = false,
+  align = 'left',
   imageEmbedPermissionLevel = '69420',
   showYouTubeLinkPreviews = false,
 }: PerCharThemeProps & { anim?: string; horizontalAnim?: string }) {
@@ -79,7 +81,7 @@ export default function PerCharTheme({
   // horizontal & inline pakai bubble penuh yang sama - cuma arah alir beda
   const flowCls = horizontal ? 'flex-row flex-nowrap items-end justify-end' : 'flex-col';
   return (
-    <div ref={horizontalRef} className={`chat-perchar-theme w-full ${horizontal ? 'max-w-none' : 'max-w-[480px]'} flex ${flowCls}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, ...(horizontal ? { clipPath: 'inset(-120px -40px -120px 0)' } : null) }}>
+    <div ref={horizontalRef} className={`chat-perchar-theme w-full ${horizontal ? 'max-w-none' : 'max-w-[480px]'} flex ${flowCls}`} style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, ...(!horizontal ? { alignItems: alignFlex(align) } : null), ...(horizontal ? { clipPath: 'inset(-120px -40px -120px 0)' } : null) }}>
       {chats.length === 0 ? null : chats.map((c, i) => {
         const color = platformColor(c.platform, accent);
         const isExiting = exitingIds?.has(c.id);
@@ -90,9 +92,9 @@ export default function PerCharTheme({
         const bubbleBackground = useChatBubbles ? bubbleBg(bubbleColor, bubbleOpacity, gradient) : gradient;
         const showMeta = showName || (showTimestamp && !!c.timestamp);
           return (
-            <div key={c.id} data-chat-id={c.id} className={`pc-row ${horizontal ? 'shrink-0' : ''}`} style={{ animation: getAnim(c.id) }}>
+            <div key={c.id} data-chat-id={c.id} className={`pc-row ${horizontal ? 'shrink-0' : ''}`} style={{ animation: getAnim(c.id), alignItems: alignFlex(align), textAlign: align }}>
             {showMeta ? (
-              <div className="pc-meta">
+              <div className="pc-meta" style={{ justifyContent: alignFlex(align), textAlign: align }}>
                 {showName && showPlatform && (
                   <img
                     src={platformLogo(c.platform)}
@@ -112,7 +114,7 @@ export default function PerCharTheme({
             ) : null}
             {showMessage ? (
               <>
-                <div className="pc-bubble-line">
+                <div className="pc-bubble-line" style={{ flexDirection: alignRowDirection(align), textAlign: align }}>
                   {showAvatar ? (
                     <img
                       src={c.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nickname)}&background=222&color=fff`}
@@ -130,7 +132,7 @@ export default function PerCharTheme({
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                   />
                   )}
-                  <div className="pc-bubble" style={{ background: bubbleBackground, fontSize: `${fontSize}px`, lineHeight: lineSpacing, ...(textColor ? { color: textColor } : null), ...(hl ? { boxShadow: `0 0 0 2px ${accent}, 0 4px 18px rgba(0,0,0,0.25)` } : null) }}>
+                  <div className="pc-bubble" style={{ background: bubbleBackground, fontSize: `${fontSize}px`, lineHeight: lineSpacing, textAlign: align, ...(textColor ? { color: textColor } : null), ...(hl ? { boxShadow: `0 0 0 2px ${accent}, 0 4px 18px rgba(0,0,0,0.25)` } : null) }}>
                     <EmoteText text={c.comment} emotes={c.emotes} bttvMap={bttvMap} bttvEnabled={bttv} perChar={{ delayMs: charDelayMs, durationS: charDurationS }} />
                   </div>
                 </div>

@@ -6,11 +6,12 @@ import { EmoteText } from './EmoteText';
 import { formatChatTime, isGroupedWithPrev, isMentionMessage, bubbleBg } from './chatFilters';
 import { MessageExtras } from './MessageExtras';
 import { useHorizontalShift } from './useHorizontalShift';
+import { alignColumn, alignFlex, alignRowDirection } from './alignUtils';
 import './Bubble.css';
 
 export const themeMeta = { value: 'bubble', label: 'Bubble - Putih WA-style' } as const;
 
-export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.35, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
+export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showPlatform = true, showTimestamp, showBadges, bttv, bttvMap, anim, horizontalAnim, hideAnim, fontSize, bgOpacity, horizontal, inline, textColor, exitingIds, showUsername = true, showMessage = true, timeFormat = '24-hour', lineSpacing = 1.35, useChatBubbles = false, bubbleColor = '#1d1d1d', bubbleOpacity = 0.9, groupConsecutiveMessages = false, highlightMentions = false, align = 'left', imageEmbedPermissionLevel = '69420', showYouTubeLinkPreviews = false }: ChatThemeProps) {
   const horizontalRef = useRef<HTMLDivElement>(null);
   useHorizontalShift(horizontalRef, !!horizontal);
   const fallbackBg = bg === 'transparent' ? '#ffffff' : bg;
@@ -22,7 +23,7 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showP
   const hl = (comment: string) => highlightMentions && isMentionMessage(comment);
   if (horizontal) {
     return (
-      <div ref={horizontalRef} className="chat-bubble-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, clipPath: 'inset(-120px -40px -120px 0)' }}>
+      <div ref={horizontalRef} className="chat-bubble-theme w-full max-w-none flex flex-row flex-nowrap gap-2 items-end justify-end" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, clipPath: 'inset(-120px -40px -120px 0)' }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
@@ -59,7 +60,7 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showP
   }
   if (inline) {
     return (
-      <div className="chat-bubble-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+      <div className="chat-bubble-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, alignItems: alignColumn(align) }}>
         {chats.length === 0 ? null : chats.map((c, i) => {
           const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
           const showName = showUsername && !grouped;
@@ -83,7 +84,7 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showP
     );
   }
   return (
-    <div className="chat-bubble-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px` }}>
+    <div className="chat-bubble-theme w-full max-w-[420px] flex flex-col gap-2" style={{ fontFamily: `'${font}', sans-serif`, fontSize: `${fontSize}px`, textAlign: align, alignItems: alignColumn(align) }}>
       {chats.length === 0 ? null : chats.map((c, i) => {
         const grouped = groupConsecutiveMessages && isGroupedWithPrev(chats, i);
         const showName = showUsername && !grouped;
@@ -93,7 +94,7 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showP
         <div
           key={c.id}
           className="chat-bubble-item flex gap-2 items-end"
-          style={{ animation: getAnim(c.id), animationDelay: `${i * 40}ms` }}
+          style={{ animation: getAnim(c.id), animationDelay: `${i * 40}ms`, flexDirection: alignRowDirection(align) }}
         >
           {showAvatar && (
             <img
@@ -105,10 +106,10 @@ export default function BubbleTheme({ chats, font, accent, bg, showAvatar, showP
           )}
           <div
             className="relative max-w-[82%] rounded-[18px] rounded-bl-[6px] px-3.5 py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border"
-            style={{ background: bgColor, borderColor: highlighted ? accent : 'rgba(0,0,0,0.06)', opacity: bgOp, boxShadow: highlighted ? `0 0 0 1px ${accent}, 0 8px 24px rgba(0,0,0,0.12)` : undefined }}
+            style={{ background: bgColor, borderColor: highlighted ? accent : 'rgba(0,0,0,0.06)', opacity: bgOp, boxShadow: highlighted ? `0 0 0 1px ${accent}, 0 8px 24px rgba(0,0,0,0.12)` : undefined, borderBottomLeftRadius: align === 'right' ? 18 : 6, borderBottomRightRadius: align === 'right' ? 6 : 18 }}
           >
             {showHead ? (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5" style={{ justifyContent: alignFlex(align) }}>
               {showName && <span className="font-black text-[11px] tracking-tight flex items-center gap-1" style={{ color: chatNameColor(c, accent) }}>{showPlatform && <img src={platformLogo(c.platform)} alt={c.platform || ''} className="w-3 h-3 rounded-full bg-white p-0.5 object-contain shrink-0" />}{showBadges && chatRoles(c).map((r) => (<span key={r} className={`px-1 py-px rounded text-[8px] font-black uppercase ${chatRolePill(c.platform, r)}`}>{chatRoleLabel(r)}</span>))}{c.nickname}</span>}
               {showTimestamp && c.timestamp ? <span className="text-black/30 text-[9px] font-mono">{formatChatTime(c.timestamp, timeFormat)}</span> : null}
             </div>

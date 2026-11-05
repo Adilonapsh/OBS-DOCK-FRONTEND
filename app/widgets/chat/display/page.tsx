@@ -21,6 +21,7 @@ import {
   passIgnoreFilter,
 } from '../themes/chatFilters';
 import { useDummyChatSimulation } from '../themes/dummySim';
+import { normalizeChatAlign } from '../themes/alignUtils';
 
 function getFloatParam(params: URLSearchParams, key: string, fallback: number): number {
   const v = params.get(key);
@@ -92,6 +93,8 @@ function ChatInner() {
   // nutty: groupConsecutive diabaikan saat reversed
   const groupConsecutiveMessages = getBoolParam(params, 'groupConsecutiveMessages', false) && !reversed;
   const highlightMentions = getBoolParam(params, 'highlightMentions', false);
+  // Align global semua tema. Alias nutty: alignment.
+  const align = normalizeChatAlign(getStringParam(params, 'align', getStringParam(params, 'alignment', 'left')));
   const imageEmbedPermissionLevel = getStringParam(params, 'imageEmbedPermissionLevel', '69420');
   const showYouTubeLinkPreviews = getBoolParam(params, 'showYouTubeLinkPreviews', false);
   const plainTextBorder = getBoolParam(params, 'plainTextBorder', false);
@@ -277,6 +280,7 @@ function ChatInner() {
     bubbleOpacity,
     groupConsecutiveMessages,
     highlightMentions,
+    align,
     imageEmbedPermissionLevel,
     showYouTubeLinkPreviews,
     plainTextBorder,

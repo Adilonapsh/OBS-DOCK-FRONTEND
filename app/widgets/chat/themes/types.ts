@@ -1,3 +1,5 @@
+import type { ChatAlign } from './alignUtils';
+
 export type ChatRole = 'broadcaster' | 'mod' | 'vip' | 'sub' | 'owner' | 'member' | 'verified';
 
 export type ChatEmote = { name: string; imageUrl: string };
@@ -63,6 +65,8 @@ export type ChatThemeProps = {
   bubbleOpacity?: number;
   groupConsecutiveMessages?: boolean;
   highlightMentions?: boolean;
+  /** Rata teks & posisi konten: kiri / tengah / kanan. Berlaku di semua tema. */
+  align?: ChatAlign;
   imageEmbedPermissionLevel?: string;
   showYouTubeLinkPreviews?: boolean;
   plainTextBorder?: boolean;

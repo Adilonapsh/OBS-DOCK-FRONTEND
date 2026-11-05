@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Palette, MessageSquare, Image as ImageIcon, Clock, Monitor, Copy } from 'lucide-react';
+import { Palette, MessageSquare, Image as ImageIcon, Clock, Monitor, Copy, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { CHAT_THEMES, CHAT_FONTS, CHAT_ANIMS, CHAT_HORIZONTAL_ANIMS, CHAT_HIDE_ANIMS, type ChatSettings } from '../config';
 import { PositionPicker } from '../../_shared/components/PositionPicker';
 import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
@@ -245,6 +245,26 @@ export function ChatSettingsForm({
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Palette className="w-4 h-4 text-amber-300" /> Tampilan Chat</h2>
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-bold text-gray-300">Align / Rata Konten</span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {([
+                { value: 'left', label: 'Kiri', Icon: AlignLeft },
+                { value: 'center', label: 'Tengah', Icon: AlignCenter },
+                { value: 'right', label: 'Kanan', Icon: AlignRight },
+              ] as const).map(({ value, label, Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => update('align', value)}
+                  className={`h-9 rounded-xl text-[10px] font-black uppercase border flex items-center justify-center gap-1.5 transition-colors ${state.align === value ? 'bg-white text-black border-white' : 'bg-black/30 text-gray-300 border-white/10 hover:bg-white/10'}`}
+                >
+                  <Icon className="w-3.5 h-3.5" /> {label}
+                </button>
+              ))}
+            </div>
+            <span className="text-[10px] text-gray-500">Berlaku untuk semua tema - teks, bubble, dan avatar mengikuti arah ini.</span>
+          </div>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Username</span><input type="checkbox" checked={state.showUsername} onChange={(e) => update('showUsername', e.target.checked)} className="w-4 h-4 accent-white" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pesan <span className="text-[9px] font-normal text-gray-400 block">Matikan = hanya nama yang tampil</span></span><input type="checkbox" checked={state.showMessage} onChange={(e) => update('showMessage', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
           <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5 cursor-pointer"><span className="text-[11px] font-bold text-white">Pronouns <span className="text-[9px] font-normal text-gray-400 block">Kompatibilitas URL nutty (belum ada data)</span></span><input type="checkbox" checked={state.showPronouns} onChange={(e) => update('showPronouns', e.target.checked)} className="w-4 h-4 accent-white shrink-0" /></label>
