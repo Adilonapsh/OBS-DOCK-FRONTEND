@@ -1,0 +1,1287 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import './landing.css';
+import { createClient } from '@/utils/supabase/client';
+import {
+  User,
+  ChevronDown,
+  MessageCircle,
+  Tv,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  X as XIcon,
+  Menu,
+  Camera,
+  Music2,
+  Monitor,
+  Layers,
+  Headphones,
+  MessageSquare,
+  BarChart3,
+  Smartphone,
+  Puzzle,
+  Gift,
+  Sliders,
+  Volume2,
+  Mic,
+  Radio
+} from 'lucide-react';
+
+/* --------------------------------------------------------------------------
+   FAQ Data
+   -------------------------------------------------------------------------- */
+interface FaqItem {
+  q: string;
+  a: string;
+}
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    q: 'Apa itu OBS Dock?',
+    a: 'OBS Dock adalah platform kontrol dan widget all-in-one untuk streamer. Kamu bisa mengontrol OBS Studio Mode / Scene Switcher langsung dari browser atau HP, serta menambahkan 14+ widget interaktif dan overlay real-time.',
+  },
+  {
+    q: 'Bagaimana cara menghubungkan widget ke OBS?',
+    a: 'Cukup salin URL Browser Source dari dashboard OBS Dock kamu, lalu tambahkan sumber "Browser" baru di scene OBS Studio. Widget langsung terhubung dan sinkron secara real-time via WebSocket.',
+  },
+  {
+    q: 'Apa itu Private Key dan seberapa amannya?',
+    a: 'Setiap streamer mendapatkan Private Key unik untuk isolasi room WebSocket privat. Ini menjamin data kontrol dock, chat, dan overlay kamu terisolasi penuh dan tidak bisa diakses atau diintervensi oleh streamer lain.',
+  },
+  {
+    q: 'Apakah OBS Dock gratis untuk digunakan?',
+    a: 'Ya! Fitur inti OBS Dock gratis untuk memulai tanpa memerlukan kartu kredit. Kamu bisa langsung mengontrol scene, memakai widget chat, timer, poll, dan overlay bawaan.',
+  },
+  {
+    q: 'Platform streaming apa saja yang didukung?',
+    a: 'OBS Dock mendukung integrasi multi-platform termasuk Twitch, YouTube Live, dan TikTok LIVE untuk interaksi chat, event gift/like/follow, serta animasi penonton.',
+  },
+  {
+    q: 'Bagaimana cara menggunakan Mobile Dock di smartphone?',
+    a: 'Cukup buka dashboard OBS Dock di browser smartphone kamu dan login ke akun yang sama. Antarmuka Mobile Dock responsif dan memungkinkanmu mengganti scene, trigger transisi, atau mute audio tanpa menyentuh PC.',
+  },
+  {
+    q: 'Apakah Media Player mendukung sinkronisasi lirik otomatis?',
+    a: 'Ya! Widget Media Player terintegrasi dengan LRCLIB dan SMTC Bridge di Windows. Lagu yang sedang diputar di Spotify atau Windows Media Player akan menampilkan synced lyrics baris demi baris di layar stream.',
+  },
+  {
+    q: 'Bagaimana cara kustomisasi tema overlay dan widget?',
+    a: 'Setiap widget memiliki konfigurasi visual lengkap di dashboard: warna solid, ukuran font, tata letak, border, sound alert, hingga posisi tanpa perlu menulis CSS manual.',
+  },
+  {
+    q: 'Apakah OBS Dock membutuhkan instalasi plugin khusus di OBS?',
+    a: 'Untuk overlay dan widget, hanya butuh Browser Source standar di OBS (tanpa plugin apapun). Untuk Dock Control penuh, OBS Studio versi 28 ke atas sudah memiliki OBS WebSocket bawaan yang langsung kompatibel.',
+  },
+  {
+    q: 'Bagaimana jika saya mengalami kendala teknis?',
+    a: 'Tersedia dokumentasi lengkap di dashboard serta live chat support di pojok kanan bawah. Kamu juga bisa bergabung ke komunitas streamer kami untuk bertanya dan berdiskusi.',
+  },
+];
+
+/* --------------------------------------------------------------------------
+   Data Definitions
+   -------------------------------------------------------------------------- */
+
+
+const PLATFORMS = [
+  { id: 'twitch', name: 'Twitch', icon: '/assets/logo/twitch.png' },
+  { id: 'youtube', name: 'YouTube', icon: '/assets/logo/youtube.png' },
+  { id: 'kick', name: 'Kick', icon: '/assets/logo/kick.png' },
+  { id: 'streamlabs', name: 'Streamlabs', icon: '/assets/logo/streamlabs.png' },
+  { id: 'obs', name: 'OBS Studio', icon: '/assets/logo/obs.png' },
+  { id: 'tiktok', name: 'TikTok LIVE', icon: '/assets/logo/tik-tok.png' },
+];
+
+/* Sticky Notes Reviews (Exact match to Screenshot 3) */
+interface ReviewNote {
+  id: string;
+  stars: number;
+  quote: string;
+  author: string;
+  product: string;
+  tint: 'tint-yellow' | 'tint-blue' | 'tint-green' | 'tint-purple' | 'tint-pink' | 'tint-cream' | 'tint-cyan';
+}
+
+const STICKY_REVIEWS: ReviewNote[] = [
+  {
+    id: '1',
+    stars: 5,
+    quote: 'Media Player widget-nya keren banget, sync lirik otomatis dari LRCLIB. Chat langsung nyambung ke OBS.',
+    author: 'Rian_FPS',
+    product: 'Media Player Widget',
+    tint: 'tint-purple',
+  },
+  {
+    id: '2',
+    stars: 5,
+    quote: 'Private key system-nya bikin tiap streamer punya room sendiri. Nggak ada drama bocor event dari streamer lain.',
+    author: 'SarahLive',
+    product: 'Dock Control',
+    tint: 'tint-blue',
+  },
+  {
+    id: '3',
+    stars: 5,
+    quote: 'Overlay chat-nya customizable banget, bisa ganti theme langsung dari editor tanpa restart OBS.',
+    author: 'DimasKuroba',
+    product: 'Chat Overlay',
+    tint: 'tint-green',
+  },
+  {
+    id: '4',
+    stars: 5,
+    quote: 'Scene switcher di dock control smooth banget. Studio mode OBS jadi jauh lebih enak dipake live.',
+    author: 'ArfanStream',
+    product: 'Dock Control',
+    tint: 'tint-blue',
+  },
+  {
+    id: '5',
+    stars: 5,
+    quote: 'Poll widget-nya interaktif, viewer bisa vote langsung dari chat TikTok Live. Seru banget!',
+    author: 'NitaChannel',
+    product: 'Poll Widget',
+    tint: 'tint-purple',
+  },
+  {
+    id: '6',
+    stars: 5,
+    quote: 'Gift overlay langsung muncul real-time waktu ada yang kasih gift di TikTok. Setup-nya gampang banget.',
+    author: 'BoyStream',
+    product: 'Gift Overlay',
+    tint: 'tint-pink',
+  },
+  {
+    id: '7',
+    stars: 5,
+    quote: 'Ticker widget buat running text pengumuman di stream. Simple tapi berguna banget buat info schedule.',
+    author: 'FranjohnGaming',
+    product: 'Ticker Widget',
+    tint: 'tint-purple',
+  },
+  {
+    id: '8',
+    stars: 5,
+    quote: 'Timer countdown buat giveaway segment. Viewer jadi lebih hype nungguin hasilnya!',
+    author: 'Hayley_IRL',
+    product: 'Timer Widget',
+    tint: 'tint-cyan',
+  },
+  {
+    id: '9',
+    stars: 5,
+    quote: 'Semua widget-nya bisa di-embed sebagai Browser Source. Clean, ringan, nggak ngaruh ke performa.',
+    author: 'DenimGaming',
+    product: 'Widgets',
+    tint: 'tint-cream',
+  },
+  {
+    id: '10',
+    stars: 5,
+    quote: 'QR widget buat nampilin link donasi / media sosial di stream. Praktis banget buat mobile streaming.',
+    author: 'KiraVT',
+    product: 'QR Widget',
+    tint: 'tint-cream',
+  },
+  {
+    id: '11',
+    stars: 5,
+    quote: 'Goals widget buat target subscriber bulanan. Viewer jadi ikut semangat bantu capai target.',
+    author: 'DanielFPS',
+    product: 'Goals Widget',
+    tint: 'tint-yellow',
+  },
+  {
+    id: '12',
+    stars: 5,
+    quote: 'Social rotator otomatis ganti-ganti sosmed di layar. Profesional banget tampilannya.',
+    author: 'DirkOne',
+    product: 'Social Rotator Widget',
+    tint: 'tint-cream',
+  },
+  {
+    id: '13',
+    stars: 5,
+    quote: 'Info slides buat nampilin sponsor atau aturan channel secara bergantian. Love it!',
+    author: 'OliviaStream',
+    product: 'Info Slides Widget',
+    tint: 'tint-green',
+  },
+  {
+    id: '14',
+    stars: 5,
+    quote: 'Dock-nya bisa dibuka dari HP waktu lagi live! Mobile dock feature-nya unexpected banget tapi super useful.',
+    author: 'JoelPlay',
+    product: 'Mobile Dock',
+    tint: 'tint-purple',
+  },
+  {
+    id: '15',
+    stars: 5,
+    quote: 'View counter real-time langsung keliatan di overlay. Viewer nggak perlu tanya terus berapa yang nonton.',
+    author: 'AnonStreamer',
+    product: 'View Counter Widget',
+    tint: 'tint-green',
+  },
+];
+
+/* OBS Dock Feature Categories */
+const AESTHETIC_CATEGORIES = [
+  {
+    id: 'dock',
+    title: 'Dock Control',
+    desc: 'OBS Studio Mode, scene switcher, dan stream tools - semua dalam satu panel yang bisa dibuka dari browser.',
+    icon: <Monitor size={22} color="#0284c7" strokeWidth={2.2} />,
+    bg: '#e0f2fe',
+    border: '#bae6fd',
+  },
+  {
+    id: 'overlay',
+    title: 'Overlays',
+    desc: 'Chat, gift, like, dan full overlay - langsung connect via Browser Source ke OBS atau Streamlabs.',
+    icon: <Layers size={22} color="#ea580c" strokeWidth={2.2} />,
+    bg: '#ffedd5',
+    border: '#fed7aa',
+  },
+  {
+    id: 'mediaplayer',
+    title: 'Media Player',
+    desc: '11 tema visual, sync lirik otomatis via LRCLIB, dan integrasi SMTC Bridge untuk Windows.',
+    icon: <Headphones size={22} color="#7c3aed" strokeWidth={2.2} />,
+    bg: '#ede9fe',
+    border: '#ddd6fe',
+  },
+  {
+    id: 'chat',
+    title: 'Chat Widget',
+    desc: 'Tampilkan live chat dari Twitch, YouTube, TikTok di stream - dengan berbagai tema dan animasi.',
+    icon: <MessageSquare size={22} color="#0284c7" strokeWidth={2.2} />,
+    bg: '#e0f2fe',
+    border: '#bae6fd',
+  },
+  {
+    id: 'poll',
+    title: 'Poll & Goals',
+    desc: 'Buat polling interaktif untuk viewer dan tampilkan goals subscriber/donasi secara real-time.',
+    icon: <BarChart3 size={22} color="#059669" strokeWidth={2.2} />,
+    bg: '#d1fae5',
+    border: '#a7f3d0',
+  },
+  {
+    id: 'mobiledock',
+    title: 'Mobile Dock',
+    desc: 'Kontrol OBS dari smartphone saat lagi live. Scene switch dan widget control di genggaman tangan.',
+    icon: <Smartphone size={22} color="#4f46e5" strokeWidth={2.2} />,
+    bg: '#e0e7ff',
+    border: '#c7d2fe',
+  },
+  {
+    id: 'utils',
+    title: 'Utility Widgets',
+    desc: 'Timer, ticker, QR code, view counter, social rotator, info slides - lengkap untuk setup profesional.',
+    icon: <Puzzle size={22} color="#16a34a" strokeWidth={2.2} />,
+    bg: '#dcfce7',
+    border: '#bbf7d0',
+  },
+];
+
+
+/* Community Spotlight Creators */
+const CREATORS = [
+  {
+    name: 'Rian Kurniawan (@rian_fps)',
+    role: 'Twitch Streamer · Pakai Dock Control + Overlay',
+    img: '/assets/packs/itachi.jpg',
+  },
+  {
+    name: 'Sarah Aliyah (@sarah_live)',
+    role: 'TikTok Live · Pakai Gift Overlay + Poll Widget',
+    img: '/assets/packs/vtuber.jpg',
+  },
+  {
+    name: 'Dimas Kuroba (@kuroba_vt)',
+    role: 'YouTube Gaming · Pakai Media Player + Lyrics Widget',
+    img: '/assets/packs/data.jpg',
+  },
+];
+
+export default function LandingPage() {
+  /* Auth State */
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => setIsLoggedIn(!!user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setIsLoggedIn(!!s));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  /* Navbar Dropdown State */
+  const [openDropdown, setOpenDropdown] = useState<'fitur' | 'widget' | null>(null);
+  const fiturRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const t = e.target as Node;
+      const insideFitur = fiturRef.current?.contains(t);
+      const insideWidget = widgetRef.current?.contains(t);
+      if (!insideFitur && !insideWidget) setOpenDropdown(null);
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenDropdown(null);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+
+  /* Mobile Menu State */
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileDropdown, setMobileDropdown] = useState<'fitur' | 'widget' | null>(null);
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      setMobileDropdown(null);
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth > 1024 && mobileOpen) setMobileOpen(false);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [mobileOpen]);
+
+  /* Toast Notification */
+  const [toastText, setToastText] = useState('');
+  const toastTimeoutRef = useRef<number | null>(null);
+  const showToast = (msg: string) => {
+    setToastText(msg);
+    if (toastTimeoutRef.current) window.clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = window.setTimeout(() => setToastText(''), 2600);
+  };
+
+
+  /* Platform filter state */
+  const [activePlatform, setActivePlatform] = useState('obs');
+
+  /* Aesthetic tab filter */
+  const [activeAestheticTab, setActiveAestheticTab] = useState<'product' | 'game' | 'aesthetic'>('product');
+
+  /* FAQ accordion */
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const toggleFaq = (i: number) => setOpenFaq(prev => prev === i ? null : i);
+
+  return (
+    <div className="kudos-page">
+      {/* ====================================================================
+         NAVBAR (Exact match to Kudos.tv screenshot)
+         ==================================================================== */}
+      <header className="kudos-header">
+        <div className="kudos-header-inner">
+          <Link href="/" className="kudos-logo">
+            OBS Dock
+          </Link>
+
+          <nav className="kudos-nav-links">
+            <Link href="/" className="kudos-nav-item active">
+              Home
+            </Link>
+            {/* Fitur Dropdown */}
+            <div
+              className="kudos-nav-dropdown-wrap"
+              ref={fiturRef}
+              onMouseEnter={() => setOpenDropdown('fitur')}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button
+                className={`kudos-nav-item kudos-nav-dropdown-trigger ${openDropdown === 'fitur' ? 'open' : ''}`}
+                onClick={() => setOpenDropdown(prev => (prev === 'fitur' ? null : 'fitur'))}
+                aria-expanded={openDropdown === 'fitur'}
+                aria-haspopup="true"
+              >
+                Fitur <ChevronDown className="chevron" size={14} style={{ transform: openDropdown === 'fitur' ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s ease' }} />
+              </button>
+              <div className={`kudos-dropdown ${openDropdown === 'fitur' ? 'open' : ''}`}>
+                <div className="kudos-dropdown-grid">
+                  <a href="#inside" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#e0f2fe', borderColor: '#bae6fd' }}><Monitor size={16} color="#0284c7" /></span>
+                    <span className="kudos-dropdown-text"><strong>Dock Control</strong><span>Studio Mode & Scene Switcher</span></span>
+                  </a>
+                  <a href="#inside" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#ffedd5', borderColor: '#fed7aa' }}><Layers size={16} color="#ea580c" /></span>
+                    <span className="kudos-dropdown-text"><strong>Event Overlay</strong><span>Gift, Follow & Donasi Real-time</span></span>
+                  </a>
+                  <a href="#inside" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#ede9fe', borderColor: '#ddd6fe' }}><Headphones size={16} color="#7c3aed" /></span>
+                    <span className="kudos-dropdown-text"><strong>Media Player</strong><span>11 Tema + Lirik LRCLIB</span></span>
+                  </a>
+                  <a href="#inside" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#e0e7ff', borderColor: '#c7d2fe' }}><Smartphone size={16} color="#4f46e5" /></span>
+                    <span className="kudos-dropdown-text"><strong>Mobile Dock</strong><span>Kontrol OBS dari HP</span></span>
+                  </a>
+                  <a href="#inside" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#dcfce7', borderColor: '#bbf7d0' }}><Radio size={16} color="#16a34a" /></span>
+                    <span className="kudos-dropdown-text"><strong>Private WebSocket</strong><span>Room isolasi per streamer</span></span>
+                  </a>
+                  <a href="#inside" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#f1f5f9', borderColor: '#e2e8f0' }}><Sliders size={16} color="#334155" /></span>
+                    <span className="kudos-dropdown-text"><strong>Widget Dashboard</strong><span>Kelola semua widget terpusat</span></span>
+                  </a>
+                </div>
+                <a href="#inside" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-footer">
+                  Lihat semua fitur <ArrowRight size={13} />
+                </a>
+              </div>
+            </div>
+
+            {/* Widget Dropdown */}
+            <div
+              className="kudos-nav-dropdown-wrap"
+              ref={widgetRef}
+              onMouseEnter={() => setOpenDropdown('widget')}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button
+                className={`kudos-nav-item kudos-nav-dropdown-trigger ${openDropdown === 'widget' ? 'open' : ''}`}
+                onClick={() => setOpenDropdown(prev => (prev === 'widget' ? null : 'widget'))}
+                aria-expanded={openDropdown === 'widget'}
+                aria-haspopup="true"
+              >
+                Widget <ChevronDown className="chevron" size={14} style={{ transform: openDropdown === 'widget' ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s ease' }} />
+              </button>
+              <div className={`kudos-dropdown kudos-dropdown--widget ${openDropdown === 'widget' ? 'open' : ''}`}>
+                <div className="kudos-dropdown-grid">
+                  <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#e0f2fe', borderColor: '#bae6fd' }}><MessageSquare size={16} color="#0284c7" /></span>
+                    <span className="kudos-dropdown-text"><strong>Chat Widget</strong><span>Twitch, YouTube, TikTok Live</span></span>
+                  </a>
+                  <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#d1fae5', borderColor: '#a7f3d0' }}><BarChart3 size={16} color="#059669" /></span>
+                    <span className="kudos-dropdown-text"><strong>Poll & Goals</strong><span>Vote interaktif & target donasi</span></span>
+                  </a>
+                  <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#ffedd5', borderColor: '#fed7aa' }}><Gift size={16} color="#ea580c" /></span>
+                    <span className="kudos-dropdown-text"><strong>Overlays</strong><span>Chat, Gift, Like, Full Overlay</span></span>
+                  </a>
+                  <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#ede9fe', borderColor: '#ddd6fe' }}><Music2 size={16} color="#7c3aed" /></span>
+                    <span className="kudos-dropdown-text"><strong>Media & Lirik</strong><span>Sync lirik otomatis</span></span>
+                  </a>
+                  <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#fef9c3', borderColor: '#fde68a' }}><Puzzle size={16} color="#a16207" /></span>
+                    <span className="kudos-dropdown-text"><strong>Utility Widgets</strong><span>Timer, Ticker, QR, Counter</span></span>
+                  </a>
+                  <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-item">
+                    <span className="kudos-dropdown-icon" style={{ background: '#cffafe', borderColor: '#a5f3fc' }}><Volume2 size={16} color="#0891b2" /></span>
+                    <span className="kudos-dropdown-text"><strong>Social Rotator</strong><span>Info Slides & sosmed</span></span>
+                  </a>
+                </div>
+                <a href="#aesthetic" onClick={() => setOpenDropdown(null)} className="kudos-dropdown-footer">
+                  Jelajahi semua widget <ArrowRight size={13} />
+                </a>
+              </div>
+            </div>
+
+            <a href="#reviews" className="kudos-nav-item">
+              Testimoni
+            </a>
+            <a href="#faq" className="kudos-nav-item">
+              FAQ
+            </a>
+            <a href="#spotlight" className="kudos-nav-item">
+              Komunitas
+            </a>
+          </nav>
+
+          <div className="kudos-nav-right">
+            <Link
+              href={isLoggedIn ? '/dashboard' : '/login'}
+              className="kudos-user-btn"
+              title={isLoggedIn ? 'Dashboard' : 'Login'}
+            >
+              <User size={19} />
+            </Link>
+
+            <Link
+              href={isLoggedIn ? '/dashboard' : '/register'}
+              className="kudos-cart-pill"
+            >
+              <Tv size={15} />
+              <span>{isLoggedIn ? 'Dashboard' : 'Mulai Gratis'}</span>
+            </Link>
+
+            {/* Hamburger - Mobile Only */}
+            <button
+              className="kudos-hamburger"
+              onClick={() => setMobileOpen(prev => !prev)}
+              aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'}
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <XIcon size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Drawer */}
+        <div className={`kudos-mobile-overlay ${mobileOpen ? 'open' : ''}`} onClick={() => setMobileOpen(false)} aria-hidden="true" />
+        <nav className={`kudos-mobile-menu ${mobileOpen ? 'open' : ''}`} aria-hidden={!mobileOpen}>
+          <Link href="/" className="kudos-mobile-link" onClick={() => setMobileOpen(false)}>Home</Link>
+
+          {/* Fitur Accordion */}
+          <div className="kudos-mobile-accordion">
+            <button
+              className={`kudos-mobile-link kudos-mobile-trigger ${mobileDropdown === 'fitur' ? 'open' : ''}`}
+              onClick={() => setMobileDropdown(prev => (prev === 'fitur' ? null : 'fitur'))}
+              aria-expanded={mobileDropdown === 'fitur'}
+            >
+              <span>Fitur</span>
+              <ChevronDown size={16} className="kudos-mobile-chevron" style={{ transform: mobileDropdown === 'fitur' ? 'rotate(180deg)' : undefined }} />
+            </button>
+            <div className={`kudos-mobile-dropdown ${mobileDropdown === 'fitur' ? 'open' : ''}`}>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#e0f2fe', borderColor: '#bae6fd' }}><Monitor size={16} color="#0284c7" /></span>
+                <span><strong>Dock Control</strong><span>Studio Mode & Scene Switcher</span></span>
+              </a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#ffedd5', borderColor: '#fed7aa' }}><Layers size={16} color="#ea580c" /></span>
+                <span><strong>Event Overlay</strong><span>Gift, Follow & Donasi</span></span>
+              </a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#ede9fe', borderColor: '#ddd6fe' }}><Headphones size={16} color="#7c3aed" /></span>
+                <span><strong>Media Player</strong><span>11 Tema + Lirik LRCLIB</span></span>
+              </a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#e0e7ff', borderColor: '#c7d2fe' }}><Smartphone size={16} color="#4f46e5" /></span>
+                <span><strong>Mobile Dock</strong><span>Kontrol OBS dari HP</span></span>
+              </a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#dcfce7', borderColor: '#bbf7d0' }}><Radio size={16} color="#16a34a" /></span>
+                <span><strong>Private WebSocket</strong><span>Room isolasi per streamer</span></span>
+              </a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#f1f5f9', borderColor: '#e2e8f0' }}><Sliders size={16} color="#334155" /></span>
+                <span><strong>Widget Dashboard</strong><span>Kelola semua widget</span></span>
+              </a>
+              <a href="#inside" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-footer">Lihat semua fitur <ArrowRight size={13} /></a>
+            </div>
+          </div>
+
+          {/* Widget Accordion */}
+          <div className="kudos-mobile-accordion">
+            <button
+              className={`kudos-mobile-link kudos-mobile-trigger ${mobileDropdown === 'widget' ? 'open' : ''}`}
+              onClick={() => setMobileDropdown(prev => (prev === 'widget' ? null : 'widget'))}
+              aria-expanded={mobileDropdown === 'widget'}
+            >
+              <span>Widget</span>
+              <ChevronDown size={16} className="kudos-mobile-chevron" style={{ transform: mobileDropdown === 'widget' ? 'rotate(180deg)' : undefined }} />
+            </button>
+            <div className={`kudos-mobile-dropdown ${mobileDropdown === 'widget' ? 'open' : ''}`}>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#e0f2fe', borderColor: '#bae6fd' }}><MessageSquare size={16} color="#0284c7" /></span>
+                <span><strong>Chat Widget</strong><span>Twitch, YouTube, TikTok</span></span>
+              </a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#d1fae5', borderColor: '#a7f3d0' }}><BarChart3 size={16} color="#059669" /></span>
+                <span><strong>Poll & Goals</strong><span>Vote & target donasi</span></span>
+              </a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#ffedd5', borderColor: '#fed7aa' }}><Gift size={16} color="#ea580c" /></span>
+                <span><strong>Overlays</strong><span>Chat, Gift, Full Overlay</span></span>
+              </a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#ede9fe', borderColor: '#ddd6fe' }}><Music2 size={16} color="#7c3aed" /></span>
+                <span><strong>Media & Lirik</strong><span>Sync lirik otomatis</span></span>
+              </a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#fef9c3', borderColor: '#fde68a' }}><Puzzle size={16} color="#a16207" /></span>
+                <span><strong>Utility Widgets</strong><span>Timer, Ticker, QR</span></span>
+              </a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-item">
+                <span className="kudos-dropdown-icon" style={{ background: '#cffafe', borderColor: '#a5f3fc' }}><Volume2 size={16} color="#0891b2" /></span>
+                <span><strong>Social Rotator</strong><span>Info Slides & sosmed</span></span>
+              </a>
+              <a href="#aesthetic" onClick={() => setMobileOpen(false)} className="kudos-mobile-dropdown-footer">Jelajahi semua widget <ArrowRight size={13} /></a>
+            </div>
+          </div>
+
+          <a href="#reviews" className="kudos-mobile-link" onClick={() => setMobileOpen(false)}>Testimoni</a>
+          <a href="#faq" className="kudos-mobile-link" onClick={() => setMobileOpen(false)}>FAQ</a>
+          <a href="#spotlight" className="kudos-mobile-link" onClick={() => setMobileOpen(false)}>Komunitas</a>
+
+          <div className="kudos-mobile-cta">
+            <Link href={isLoggedIn ? '/dashboard' : '/register'} className="kudos-mobile-cta-btn" onClick={() => setMobileOpen(false)}>
+              <Tv size={16} /> {isLoggedIn ? 'Buka Dashboard' : 'Mulai Gratis'}
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      <main>
+        {/* ====================================================================
+           OBS DOCK CENTERED H-SCREEN HERO SECTION
+           ==================================================================== */}
+        <section className="obs-hero-hscreen">
+          <div className="wrap">
+            <div className="obs-hero-inner">
+              {/* Top Badge */}
+              <div className="obs-hero-badge">
+                <span className="obs-pulse-dot" />
+                <span>OBS Studio v28+ & WebSocket Privat Siap Pakai</span>
+              </div>
+
+              {/* Headline */}
+              <h1 className="obs-hero-title">
+                Kontrol OBS & 14+ Widget Stream<br />
+                <span className="obs-hero-highlight">Langsung dari Browser</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="obs-hero-desc">
+                Ganti scene Studio Mode, kontrol audio, pasang overlay chat & event donasi real-time, serta jalankan widget interaktif tanpa software rumit. Terhubung otomatis via Browser Source dan WebSocket room privat.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="obs-hero-buttons">
+                <Link
+                  href={isLoggedIn ? '/dashboard' : '/register'}
+                  className="obs-btn-primary"
+                >
+                  {isLoggedIn ? 'Buka Dashboard' : 'Mulai Sekarang - Gratis'} <ArrowRight size={16} />
+                </Link>
+                <a href="#inside" className="obs-btn-secondary">
+                  <Sliders size={16} /> Jelajahi Fitur
+                </a>
+              </div>
+
+              {/* Trust & Proof Row */}
+              <div className="obs-hero-trust">
+                <span className="obs-hero-stars">★★★★★</span>
+                <span className="obs-hero-trust-bold">500+ streamer aktif</span>
+                <span>·</span>
+                <span>Tanpa kartu kredit</span>
+                <span>·</span>
+                <span>Setup instan 60 detik</span>
+              </div>
+
+              {/* OBS Dock Live Controller Screenshot Frame (/dock) */}
+              <div className="obs-dock-preview-frame">
+                {/* Topbar */}
+                <div className="obs-dock-preview-topbar">
+                  <div className="obs-dock-topbar-left">
+                    <div className="obs-dock-dots">
+                      <span className="obs-dock-dot red" />
+                      <span className="obs-dock-dot yellow" />
+                      <span className="obs-dock-dot green" />
+                    </div>
+                    <span className="obs-dock-title-tag">OBS_DOCK // app.obsdock.com/dock</span>
+                  </div>
+                  <div className="obs-dock-topbar-right">
+                    <span className="obs-dock-rec-pill">● OBS STUDIO READY</span>
+                    <span className="obs-dock-key-pill">ROOM: #usr_private</span>
+                  </div>
+                </div>
+
+                {/* Screenshot of /dock */}
+                <div className="obs-dock-screenshot-container">
+                  <img
+                    src="/assets/dock-preview.png"
+                    alt="OBS Dock Controller Interface (/dock)"
+                    className="obs-dock-screenshot-img"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+           "STREAM OVERLAYS FOR EVERY PLATFORM"
+           ==================================================================== */}
+        <section id="platforms" className="kudos-every-platform-section">
+          <div className="wrap">
+            <h2 className="kudos-platform-heading">
+              <span>Stream Overlays</span>
+              <span>for</span>
+              <span className="kudos-platform-pill-badge">Every Platform</span>
+            </h2>
+
+            <div className="kudos-platform-list">
+              {PLATFORMS.map((p) => (
+                <button
+                  key={p.id}
+                  className={`kudos-platform-tag-btn ${activePlatform === p.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setActivePlatform(p.id);
+                    showToast(`Platform dipilih: ${p.name}`);
+                  }}
+                >
+                  <img src={p.icon} alt={p.name} />
+                  <span>{p.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+           SECTION 1: "INSIDE A STREAM PACK" (Exact match to Screenshots 1 & 2)
+           ==================================================================== */}
+        <section id="inside" className="kudos-inside-section">
+          <div className="wrap">
+            <h2 className="kudos-section-title">Semua yang ada di OBS Dock</h2>
+
+            <div className="kudos-inside-grid">
+              {/* Card 1: Webcam overlays (Large card on left) */}
+              <div className="kudos-inside-card" style={{ gridRow: 'span 2' }}>
+                <div className="kudos-inside-visual tint-blue" style={{ height: '340px' }}>
+                  {/* Wireframe Mockup */}
+                  <div style={{ width: '85%', height: '80%', background: '#ffffff', borderRadius: 16, border: '1.5px solid #93c5fd', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.12)', position: 'relative', padding: 16 }}>
+                    <div style={{ position: 'absolute', top: 12, right: 12, width: 80, height: 18, background: '#e0f2fe', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 6px' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#0284c7' }} />
+                      <span style={{ width: 40, height: 4, background: '#93c5fd', borderRadius: 2 }} />
+                    </div>
+                    {/* Camera Frame */}
+                    <div style={{ position: 'absolute', bottom: 16, left: 16, width: '45%', height: '52%', background: '#f8fafc', border: '2px solid #0084ff', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#cbd5e1' }} />
+                    </div>
+                    {/* Audio Bar */}
+                    <div style={{ position: 'absolute', bottom: 22, right: 16, width: '42%', height: 16, background: '#f1f5f9', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#0084ff' }} />
+                      <span style={{ width: 48, height: 5, background: '#0084ff', borderRadius: 2 }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="kudos-inside-info">
+                  <h3 className="kudos-inside-card-title">Dock Control</h3>
+                  <p className="kudos-inside-card-desc">
+                    Panel OBS langsung di browser - scene switcher, studio mode, dan stream tools tanpa buka aplikasi lain.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 2: Twitch alerts (Middle tall card) */}
+              <div className="kudos-inside-card" style={{ gridRow: 'span 2' }}>
+                <div className="kudos-inside-visual tint-orange" style={{ height: '340px', flexDirection: 'column', gap: 14 }}>
+                  {/* Alert Bubble 1 */}
+                  <div style={{ width: '85%', height: 46, background: '#ffffff', borderRadius: 12, border: '1px solid #fed7aa', display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px', boxShadow: '0 6px 16px rgba(249, 115, 22, 0.08)' }}>
+                    <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#f97316' }} />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ width: '60%', height: 5, background: '#fdba74', borderRadius: 2 }} />
+                      <span style={{ width: '40%', height: 4, background: '#fed7aa', borderRadius: 2 }} />
+                    </div>
+                    <span style={{ width: 22, height: 10, background: '#ea580c', borderRadius: 4 }} />
+                  </div>
+                  {/* Alert Bubble 2 */}
+                  <div style={{ width: '85%', height: 46, background: '#ffffff', borderRadius: 12, border: '1px solid #fed7aa', display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px', boxShadow: '0 6px 16px rgba(249, 115, 22, 0.08)' }}>
+                    <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#ea580c' }} />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ width: '70%', height: 5, background: '#fdba74', borderRadius: 2 }} />
+                      <span style={{ width: '35%', height: 4, background: '#fed7aa', borderRadius: 2 }} />
+                    </div>
+                  </div>
+                  {/* Alert Bubble 3 */}
+                  <div style={{ width: '85%', height: 46, background: '#ffffff', borderRadius: 12, border: '1px solid #fed7aa', display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px', opacity: 0.85 }}>
+                    <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#fb923c' }} />
+                    <span style={{ width: '50%', height: 5, background: '#fdba74', borderRadius: 2 }} />
+                  </div>
+                </div>
+                <div className="kudos-inside-info">
+                  <h3 className="kudos-inside-card-title">Event Overlay</h3>
+                  <p className="kudos-inside-card-desc">
+                    Gift, follow, sub, dan donasi muncul real-time - WebSocket privat memastikan event streamer lain tidak bocor.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 3: Stream screens (Top Right) */}
+              <div className="kudos-inside-card">
+                <div className="kudos-inside-visual tint-purple">
+                  <div style={{ width: '80%', height: 85, background: '#ffffff', borderRadius: 12, border: '1px solid #e9d5ff', boxShadow: '0 8px 20px rgba(168, 85, 247, 0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <span style={{ width: '45%', height: 8, background: '#a855f7', borderRadius: 4 }} />
+                    <span style={{ width: '20%', height: 4, background: '#c084fc', borderRadius: 2 }} />
+                  </div>
+                </div>
+                <div className="kudos-inside-info">
+                  <h3 className="kudos-inside-card-title">Media Player + Lirik</h3>
+                  <p className="kudos-inside-card-desc">
+                    11 tema visual, sinkronisasi lirik otomatis LRCLIB, dan SMTC Bridge - musik stream tampil profesional.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 4: Twitch panels (Middle Right) */}
+              <div className="kudos-inside-card">
+                <div className="kudos-inside-visual tint-slate">
+                  <div style={{ width: '85%', height: 95, background: '#ffffff', borderRadius: 12, border: '1px solid #cbd5e1', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ width: '100%', height: 26, background: '#e2e8f0', borderRadius: 6 }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                      <div style={{ height: 38, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6 }} />
+                      <div style={{ height: 38, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6 }} />
+                      <div style={{ height: 38, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6 }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="kudos-inside-info">
+                  <h3 className="kudos-inside-card-title">Widget Dashboard</h3>
+                  <p className="kudos-inside-card-desc">
+                    Kelola semua widget - chat, poll, timer, ticker - dari satu panel terpusat.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Second Row of Bento Cards (Screenshot 2) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 20, marginBottom: 24 }}>
+              {/* Card 5: Stream transitions */}
+              <div className="kudos-inside-card">
+                <div className="kudos-inside-visual tint-green">
+                  <div style={{ width: '70%', height: 110, background: '#ffffff', borderRadius: 14, border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 16 }}>
+                    <div style={{ width: 54, height: 54, borderRadius: '50%', border: '3px solid #16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#86efac' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                      <div style={{ height: 10, background: '#dcfce7', borderRadius: 999 }} />
+                      <div style={{ height: 10, background: '#dcfce7', borderRadius: 999, width: '70%' }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="kudos-inside-info">
+                  <h3 className="kudos-inside-card-title">Mobile Dock</h3>
+                  <p className="kudos-inside-card-desc">
+                    Buka dock dari HP saat live - ganti scene, kontrol widget, tanpa sentuh laptop.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 6: Banners, avatars and extras */}
+              <div className="kudos-inside-card">
+                <div className="kudos-inside-visual tint-cyan" style={{ gap: 16 }}>
+                  {/* Banner bar */}
+                  <div style={{ width: '42%', height: 42, background: '#0284c7', borderRadius: 10 }} />
+                  {/* Avatar circle */}
+                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#ffffff', border: '3px solid #38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#94a3b8' }} />
+                  </div>
+                  {/* Badge Swatches */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ width: 32, height: 14, background: '#84cc16', borderRadius: 4 }} />
+                    <div style={{ width: 32, height: 14, background: '#ef4444', borderRadius: 4 }} />
+                    <div style={{ width: 32, height: 14, background: '#0084ff', borderRadius: 4 }} />
+                  </div>
+                </div>
+                <div className="kudos-inside-info">
+                  <h3 className="kudos-inside-card-title">Private Key & WebSocket</h3>
+                  <p className="kudos-inside-card-desc">
+                    Tiap akun punya room WebSocket sendiri. Event stream kamu tidak akan bocor ke streamer lain.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Compatibility Banner (Screenshot 2) */}
+            <div className="kudos-setup-banner">
+              <div className="kudos-setup-banner-left">
+                <div className="kudos-app-nodes">
+                  <span className="kudos-app-node-icon" title="OBS Studio">●</span>
+                  <span className="kudos-app-node-icon" title="Streamlabs">S</span>
+                  <span className="kudos-app-node-icon" title="TikTok">T</span>
+                </div>
+                <div className="kudos-setup-banner-text">
+                  Semua widget dan overlay tersedia sebagai Browser Source - langsung paste URL ke OBS, Streamlabs, atau StreamElements.
+                </div>
+              </div>
+              <a href="#aesthetic" className="kudos-btn-full-packs">
+                Lihat semua fitur <ArrowUpRight size={16} />
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+           SECTION 2: "WHAT STREAMERS SAY" (Exact match to Screenshot 3)
+           ==================================================================== */}
+        <section id="reviews" className="kudos-reviews-section">
+          <div className="wrap">
+            <div className="kudos-reviews-header">
+              <h2 className="kudos-reviews-title">Yang streamer bilang</h2>
+              <p className="kudos-reviews-subhead">
+                Review nyata dari para streamer yang sudah pakai OBS Dock setiap hari.
+              </p>
+            </div>
+
+            {/* Masonry / Sticky Board */}
+            <div className="kudos-sticky-board">
+              <div className="kudos-sticky-grid">
+                {STICKY_REVIEWS.map((r) => (
+                  <div key={r.id} className={`kudos-sticky-note ${r.tint}`}>
+                    <div>
+                      <div className="kudos-note-stars">
+                        {'★'.repeat(r.stars)}
+                      </div>
+                      <div className="kudos-note-quote">
+                        "{r.quote}"
+                      </div>
+                    </div>
+                    <div className="kudos-note-footer">
+                      <span className="kudos-note-author">{r.author}</span> · {r.product}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Navigation arrows at bottom right */}
+              <div className="kudos-sticky-nav">
+                <button
+                  className="kudos-sticky-nav-btn"
+                  onClick={() => showToast('Halaman ulasan sebelumnya')}
+                  aria-label="Previous Reviews"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  className="kudos-sticky-nav-btn"
+                  onClick={() => showToast('Halaman ulasan berikutnya')}
+                  aria-label="Next Reviews"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+           SECTION 3: "FIND YOUR AESTHETIC" (Exact match to Screenshot 4)
+           ==================================================================== */}
+        <section id="aesthetic" className="kudos-find-aesthetic-section">
+          <div className="wrap">
+            <div className="kudos-find-header">
+              <h2 className="kudos-section-title">Temukan Fitur yang Tepat</h2>
+
+              {/* Filter Tabs */}
+              <div className="kudos-find-tabs">
+                <button
+                  className={`kudos-find-tab ${activeAestheticTab === 'product' ? 'active' : ''}`}
+                  onClick={() => setActiveAestheticTab('product')}
+                >
+                  Fitur Utama
+                </button>
+                <button
+                  className={`kudos-find-tab ${activeAestheticTab === 'game' ? 'active' : ''}`}
+                  onClick={() => setActiveAestheticTab('game')}
+                >
+                  Multi-Platform
+                </button>
+                <button
+                  className={`kudos-find-tab ${activeAestheticTab === 'aesthetic' ? 'active' : ''}`}
+                  onClick={() => setActiveAestheticTab('aesthetic')}
+                >
+                  Semua Widget
+                </button>
+              </div>
+            </div>
+
+            {/* 7 Aesthetic Cards Grid */}
+            <div className="kudos-aesthetic-cards-grid">
+              {AESTHETIC_CATEGORIES.map((c) => (
+                <div key={c.id} className="kudos-aest-card">
+                  <div
+                    className="kudos-aest-icon-box"
+                    style={{
+                      backgroundColor: c.bg,
+                      borderColor: c.border,
+                    }}
+                  >
+                    {c.icon}
+                  </div>
+                  <div className="kudos-aest-info">
+                    <h3 className="kudos-aest-title">{c.title}</h3>
+                    <p className="kudos-aest-desc">{c.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom Full-Width Free Overlays Banner */}
+            <div className="kudos-free-overlays-banner">
+              <div className="kudos-free-banner-left">
+                <div className="kudos-free-gift-icon">
+                  <Gift size={24} color="#ca8a04" strokeWidth={2.2} />
+                </div>
+                <div>
+                  <h3 className="kudos-free-banner-title">Mulai Gratis Sekarang</h3>
+                  <p className="kudos-free-banner-desc">
+                    Gunakan 14+ widget, dock control, dan overlay interaktif langsung tanpa perlu kartu kredit.
+                  </p>
+                </div>
+              </div>
+              <Link href={isLoggedIn ? "/dashboard" : "/login"} className="kudos-btn-dark-pill">
+                Coba OBS Dock Gratis <ArrowRight size={15} />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+           SECTION 4: "BUY ONCE. NO SUBSCRIPTION." (Exact match to Screenshot 5)
+           ==================================================================== */}
+        <section id="buyonce" className="kudos-buyonce-section">
+          <div className="wrap">
+            <div className="kudos-buyonce-card">
+              {/* Left Typography Column */}
+              <div className="kudos-buyonce-left">
+                <h2 className="kudos-buyonce-heading">
+                  Mulai gratis.<br />
+                  <span className="kudos-lime-pill">Tanpa biaya langganan.</span>
+                </h2>
+              </div>
+
+              {/* Right Benefits Grid */}
+              <div className="kudos-buyonce-grid">
+                <div>
+                  <h3 className="kudos-buyonce-item-title">Langsung aktif tanpa kartu kredit</h3>
+                  <p className="kudos-buyonce-item-desc">
+                    Cukup daftar akun dan Private Key unik kamu langsung aktif otomatis. Siap digunakan detik itu juga tanpa masa trial yang mengunci fitur.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="kudos-buyonce-item-title">Atur tampilan sesuai gayamu</h3>
+                  <p className="kudos-buyonce-item-desc">
+                    Semua widget dan overlay dapat dikustomisasi: font, warna solid, tata letak, animasi kemunculan, hingga suara notifikasi event.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="kudos-buyonce-item-title">Ringan dan terisolasi privat</h3>
+                  <p className="kudos-buyonce-item-desc">
+                    Komunikasi WebSocket private room memastikan performa OBS tetap ringan tanpa lag CPU, dan aman dari campur tangan stream lain.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="kudos-buyonce-item-title">Bantuan dan panduan lengkap</h3>
+                  <p className="kudos-buyonce-item-desc">
+                    Tersedia panduan setup langkah demi langkah, dokumentasi browser source OBS, serta komunitas dan live chat yang siap membantu.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+           SECTION 5: "COMMUNITY SPOTLIGHT"
+           ==================================================================== */}
+        <section id="spotlight" className="kudos-community-section">
+          <div className="wrap">
+            <h2 className="kudos-community-heading">
+              <span>Community</span>
+              <span className="kudos-spotlight-pill">spotlight</span>
+            </h2>
+            <p className="kudos-community-subhead">
+              Lihat para streamer dan konten kreator yang telah mempercayakan live stream mereka dengan OBS Dock.
+            </p>
+
+            <div className="kudos-creator-grid">
+              {CREATORS.map((c, i) => (
+                <div key={i} className="kudos-creator-card">
+                  <img src={c.img} alt={c.name} className="kudos-creator-img" />
+                  <div className="kudos-creator-body">
+                    <h3 className="kudos-creator-name">{c.name}</h3>
+                    <p className="kudos-creator-desc">{c.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+           SECTION 6: FAQ - Frequently Asked Questions
+           ==================================================================== */}
+        <section id="faq" className="kudos-faq-section">
+          <div className="wrap">
+            <div className="kudos-faq-layout">
+              {/* Left sticky heading */}
+              <div className="kudos-faq-heading-col">
+                <h2 className="kudos-faq-title">Pertanyaan yang<br />sering diajukan</h2>
+              </div>
+
+              {/* Right accordion list */}
+              <div className="kudos-faq-list">
+                {FAQ_ITEMS.map((item, i) => (
+                  <div
+                    key={i}
+                    className={`kudos-faq-item ${openFaq === i ? 'open' : ''}`}
+                  >
+                    <button
+                      className="kudos-faq-question"
+                      onClick={() => toggleFaq(i)}
+                      aria-expanded={openFaq === i}
+                    >
+                      <span>{item.q}</span>
+                      <ChevronDown className="kudos-faq-chevron" size={18} />
+                    </button>
+                    <div className="kudos-faq-answer">
+                      <p>{item.a}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================================
+           SECTION 7: PRE-FOOTER CTA
+           ==================================================================== */}
+        <section id="cta" className="kudos-cta-section">
+          <div className="wrap kudos-cta-inner">
+            <h2 className="kudos-cta-heading">Upgrade stream kamu<br />ke level berikutnya</h2>
+            <p className="kudos-cta-sub">
+              Kontrol OBS Studio Mode, pasang 14+ widget interaktif, dan berikan pengalaman visual terbaik untuk penontonmu hari ini.
+            </p>
+            <div className="kudos-cta-actions">
+              <Link href={isLoggedIn ? "/dashboard" : "/login"} className="kudos-cta-btn-primary">
+                {isLoggedIn ? "Buka Dashboard" : "Mulai Gratis Sekarang"} <ArrowRight size={16} />
+              </Link>
+              <a href="#inside" className="kudos-cta-btn-ghost">
+                Pelajari Fitur
+              </a>
+            </div>
+            <p className="kudos-cta-reviews">Digunakan oleh 500+ streamer aktif di berbagai platform streaming.</p>
+          </div>
+        </section>
+      </main>
+
+      {/* ====================================================================
+         FOOTER
+         ==================================================================== */}
+      <footer className="kudos-footer">
+        <div className="wrap">
+          {/* Top: Logo + Social */}
+          <div className="kudos-footer-top">
+            <div className="kudos-footer-brand">
+              <span className="kudos-footer-logo">OBS Dock</span>
+              <span className="kudos-footer-follow">Ikuti Kami</span>
+              <div className="kudos-footer-socials">
+                <a href="#" className="kudos-social-btn" aria-label="TikTok">
+                  <Music2 size={16} />
+                </a>
+                <a href="#" className="kudos-social-btn" aria-label="Twitter / X">
+                  <XIcon size={16} />
+                </a>
+                <a href="#" className="kudos-social-btn" aria-label="Instagram">
+                  <Camera size={16} />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <hr className="kudos-footer-divider" />
+
+          {/* Footer columns */}
+          <div className="kudos-footer-cols">
+            <div className="kudos-footer-col">
+              <h4 className="kudos-footer-col-title">OBS Dock</h4>
+              <ul className="kudos-footer-links">
+                <li><Link href="/">Home</Link></li>
+                <li><Link href={isLoggedIn ? "/dashboard" : "/login"}>Dashboard</Link></li>
+                <li><a href="#inside">Fitur & Tools</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#spotlight">Komunitas</a></li>
+              </ul>
+            </div>
+
+            <div className="kudos-footer-col">
+              <h4 className="kudos-footer-col-title">Fitur Unggulan</h4>
+              <ul className="kudos-footer-links">
+                <li><a href="#inside">OBS Dock Control</a></li>
+                <li><a href="#inside">14+ Interactive Widgets</a></li>
+                <li><a href="#inside">Real-time Stream Overlays</a></li>
+                <li><a href="#inside">Media Player with Synced Lyrics</a></li>
+                <li><a href="#inside">Mobile Dock Controller</a></li>
+                <li><a href="#inside">Private Key Isolation</a></li>
+              </ul>
+            </div>
+
+            <div className="kudos-footer-col">
+              <h4 className="kudos-footer-col-title">Widgets & Tools</h4>
+              <ul className="kudos-footer-links">
+                <li><a href="#inside">Live Chat Widget</a></li>
+                <li><a href="#inside">Viewer Poll & Vote</a></li>
+                <li><a href="#inside">Sub & Follow Goals</a></li>
+                <li><a href="#inside">Stream Countdown Timer</a></li>
+                <li><a href="#inside">Social Media Rotator</a></li>
+                <li><a href="#inside">Real-time View Counter</a></li>
+              </ul>
+            </div>
+
+            <div className="kudos-footer-col">
+              <h4 className="kudos-footer-col-title">Platform & Bantuan</h4>
+              <ul className="kudos-footer-links">
+                <li><a href="#inside">OBS Studio (v28+)</a></li>
+                <li><a href="#inside">Streamlabs Desktop</a></li>
+                <li><a href="#inside">Twitch & YouTube Live</a></li>
+                <li><a href="#inside">TikTok LIVE Studio</a></li>
+                <li><a href="#faq">Panduan Browser Source</a></li>
+                <li><a href="#faq">Bantuan & Dokumentasi</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Footer bottom bar */}
+          <hr className="kudos-footer-divider" />
+          <div className="kudos-footer-bottom">
+            <p className="kudos-footer-copy">
+              © 2026, OBS Dock. All rights reserved.&nbsp;&nbsp;
+              <a href="#">Syarat & Ketentuan</a>&nbsp;&nbsp;
+              <a href="#">Kebijakan Privasi</a>&nbsp;&nbsp;
+              <a href="#">Dokumentasi</a>&nbsp;&nbsp;
+              <a href="#">Hubungi Kami</a>
+            </p>
+            <div className="kudos-payment-badges">
+              <span className="kudos-pay-badge">OBS Studio</span>
+              <span className="kudos-pay-badge">Twitch</span>
+              <span className="kudos-pay-badge">YouTube</span>
+              <span className="kudos-pay-badge">TikTok Live</span>
+              <span className="kudos-pay-badge">Streamlabs</span>
+              <span className="kudos-pay-badge">WebSocket</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* ====================================================================
+         FLOATING BLUE CHAT BUBBLE BUTTON (Exact match to Kudos bottom right)
+         ==================================================================== */}
+      <button
+        className="kudos-floating-chat"
+        onClick={() => showToast('Customer support chat live siap membantu!')}
+        aria-label="Live Chat Support"
+        title="Need help? Chat with us"
+      >
+        <MessageCircle size={24} />
+      </button>
+
+      {/* Toast Notification Bar */}
+      <div className={`kudos-toast ${toastText ? 'show' : ''}`}>
+        {toastText}
+      </div>
+    </div>
+  );
+}
+
