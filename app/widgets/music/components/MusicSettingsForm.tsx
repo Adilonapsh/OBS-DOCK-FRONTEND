@@ -38,6 +38,36 @@ export function MusicSettingsForm({ state, update }: Props) {
         </div>
       </div>
 
+      {state.theme === 'wave' && (
+        <div className="space-y-3">
+          <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Music className="w-4 h-4 text-purple-400" /> Wave Settings</h2>
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+            <label className="block">
+              <span className="text-[11px] font-bold text-gray-300">Wave Layout</span>
+              <select value={(state as unknown as { waveLayout?: string }).waveLayout || 'horizontal'} onChange={(e) => update('waveLayout' as keyof MusicSettings, e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+                <option value="horizontal" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Horizontal</option>
+                <option value="vertical" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Vertical</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-[11px] font-bold text-gray-300">Wave Density</span>
+              <input type="range" min={1} max={4} step={1} value={Number((state as unknown as { waveDensity?: number }).waveDensity ?? 2)} onChange={(e) => update('waveDensity' as keyof MusicSettings, parseInt(e.target.value) || 2)} className="mt-1 w-full accent-white cursor-pointer" />
+              <div className="text-[10px] text-gray-500 mt-1">{Number((state as unknown as { waveDensity?: number }).waveDensity ?? 2)} layer</div>
+            </label>
+            <label className="block">
+              <span className="text-[11px] font-bold text-gray-300">Wave Speed</span>
+              <input type="range" min={0.6} max={2.2} step={0.1} value={Number((state as unknown as { waveSpeed?: number }).waveSpeed ?? 1)} onChange={(e) => update('waveSpeed' as keyof MusicSettings, Number(e.target.value) || 1)} className="mt-1 w-full accent-white cursor-pointer" />
+              <div className="text-[10px] text-gray-500 mt-1">{Number((state as unknown as { waveSpeed?: number }).waveSpeed ?? 1).toFixed(1)}x</div>
+            </label>
+            <label className="block">
+              <span className="text-[11px] font-bold text-gray-300">Marquee Speed</span>
+              <input type="range" min={0.4} max={2.5} step={0.1} value={Number((state as unknown as { marqueeSpeed?: number }).marqueeSpeed ?? 1)} onChange={(e) => update('marqueeSpeed' as keyof MusicSettings, Number(e.target.value) || 1)} className="mt-1 w-full accent-white cursor-pointer" />
+              <div className="text-[10px] text-gray-500 mt-1">{Number((state as unknown as { marqueeSpeed?: number }).marqueeSpeed ?? 1).toFixed(1)}x</div>
+            </label>
+          </div>
+        </div>
+      )}
+
       {/* Warna */}
       <div className="space-y-3">
         <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Type className="w-4 h-4 text-green-400" /> Warna</h2>

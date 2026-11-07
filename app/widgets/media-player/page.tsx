@@ -27,13 +27,17 @@ const themes = [
   { value: 'color-palette', label: 'Color Palette' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'wave', label: 'Wave' },
   { value: 'retro8bit', label: 'Retro 8-Bit' },
 ];
 const fontsList = [...WIDGET_FONTS];
 const showAnimations = ['fade-in','slide-in-from-top','slide-in-from-bottom','slide-in-from-left','slide-in-from-right'];
 const hideAnimations = ['fade-out','slide-out-top','slide-out-bottom','slide-out-left','slide-out-right'];
 
-function buildUrl(base: string, state: any): string {
+type MediaPlayerState = typeof defaults;
+type MediaPlayerStateMap = Record<string, string | boolean | number | undefined>;
+
+function buildUrl(base: string, state: MediaPlayerStateMap): string {
   const p = new URLSearchParams();
   p.set('theme', state.theme);
   if (state.font) p.set('font', state.font);
@@ -51,6 +55,10 @@ function buildUrl(base: string, state: any): string {
   if (state.excludedApplications) p.set('excludedApplications', state.excludedApplications);
   p.set('showAlbumArt', String(state.showAlbumArt));
   p.set('showProgressBar', String(state.showProgressBar));
+  p.set('waveLayout', state.waveLayout || 'horizontal');
+  p.set('waveDensity', String(state.waveDensity ?? 2));
+  p.set('waveSpeed', String(state.waveSpeed ?? 1));
+  p.set('marqueeSpeed', String(state.marqueeSpeed ?? 1));
   p.set('swapArtistTrack', String(state.swapArtistTrack));
   p.set('showPrimary', String(state.showPrimary));
   p.set('showSecondary', String(state.showSecondary));
@@ -84,6 +92,10 @@ const defaults = {
   excludedApplications: '',
   showAlbumArt: true,
   showProgressBar: true,
+  waveLayout: 'horizontal',
+  waveDensity: 2,
+  waveSpeed: 1,
+  marqueeSpeed: 1,
   swapArtistTrack: false,
   showPrimary: true,
   showSecondary: true,
@@ -105,21 +117,21 @@ function MediaPlayerSettingsInner() {
   const settingsId = searchParams.get('settingsId') || '';
   const storeKey = settingsId ? `media-player-settings::${settingsId}` : 'media-player-settings';
   const [privateKey, setPrivateKey] = useState<string>('');
-  const [state, setState] = useState<any>({...defaults});
+  const [state, setState] = useState<MediaPlayerState>({...defaults});
   const loadFromUrl = (urlStr: string) => {
     const url = new URL(urlStr);
     const p = url.searchParams;
-    const s: any = { ...defaults };
+    const s: MediaPlayerStateMap = { ...defaults };
     for (const k of Object.keys(defaults)) {
       const v = p.get(k);
       if (v !== null) {
-        const def = (defaults as any)[k];
+        const def = defaults[k as keyof MediaPlayerState];
         if (typeof def === 'boolean') s[k] = v === 'true' || v === '1';
         else if (typeof def === 'number') s[k] = parseInt(v) || def;
         else s[k] = v;
       }
     }
-    setState(s);
+    setState(s as MediaPlayerState);
   };
   const shell = useWidgetPageShell(loadFromUrl);
   const reset = () => setState({...defaults});
@@ -130,17 +142,17 @@ function MediaPlayerSettingsInner() {
     // load from URL if present
     const hasParams = searchParams.get('theme');
     if (hasParams) {
-      const s: any = { ...defaults };
+      const s: MediaPlayerStateMap = { ...defaults };
       for (const k of Object.keys(defaults)) {
         const v = searchParams.get(k);
         if (v !== null) {
-          const def = (defaults as any)[k];
+          const def = defaults[k as keyof MediaPlayerState];
           if (typeof def === 'boolean') s[k] = v === 'true' || v === '1';
           else if (typeof def === 'number') s[k] = parseInt(v) || def;
           else s[k] = v;
         }
       }
-      setState(s);
+      setState(s as MediaPlayerState);
     } else {
       const saved = localStorage.getItem(storeKey);
       if (saved) try { setState({ ...defaults, ...JSON.parse(saved) }); } catch {}
@@ -166,7 +178,7 @@ function MediaPlayerSettingsInner() {
     return `/widgets/media-player/display?${p.toString()}`;
   }, [state]);
 
-  const update = (k: string, v: any) => setState((prev: any) => ({ ...prev, [k]: v }));
+  const update = (k: string, v: string | boolean | number) => setState((prev: MediaPlayerState) => ({ ...prev, [k]: v } as MediaPlayerState));
 
   const handleCopy = () => shell.copy(obsUrl);
 
@@ -232,6 +244,32 @@ function MediaPlayerSettingsInner() {
                       {themes.map(t => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
                     </select>
                   </label>
+                  {state.theme === 'wave' && (
+                    <>
+                      <label className="block">
+                        <span className="text-[11px] font-bold text-gray-300">Wave Layout</span>
+                        <select value={state.waveLayout || 'horizontal'} onChange={e => update('waveLayout', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
+                          <option value="horizontal" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Horizontal</option>
+                          <option value="vertical" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Vertical</option>
+                        </select>
+                      </label>
+                      <label className="block">
+                        <span className="text-[11px] font-bold text-gray-300">Wave Density</span>
+                        <input type="range" min={1} max={4} step={1} value={state.waveDensity ?? 2} onChange={e => update('waveDensity', parseInt(e.target.value) || 2)} className="mt-1 w-full accent-white cursor-pointer" />
+                        <div className="text-[10px] text-gray-500 mt-1">{state.waveDensity ?? 2} layer</div>
+                      </label>
+                      <label className="block">
+                        <span className="text-[11px] font-bold text-gray-300">Wave Speed</span>
+                        <input type="range" min={0.6} max={2.2} step={0.1} value={state.waveSpeed ?? 1} onChange={e => update('waveSpeed', Number(e.target.value) || 1)} className="mt-1 w-full accent-white cursor-pointer" />
+                        <div className="text-[10px] text-gray-500 mt-1">{(state.waveSpeed ?? 1).toFixed(1)}x</div>
+                      </label>
+                      <label className="block">
+                        <span className="text-[11px] font-bold text-gray-300">Marquee Speed</span>
+                        <input type="range" min={0.4} max={2.5} step={0.1} value={state.marqueeSpeed ?? 1} onChange={e => update('marqueeSpeed', Number(e.target.value) || 1)} className="mt-1 w-full accent-white cursor-pointer" />
+                        <div className="text-[10px] text-gray-500 mt-1">{(state.marqueeSpeed ?? 1).toFixed(1)}x</div>
+                      </label>
+                    </>
+                  )}
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Font <a href="ms-settings:fonts" className="text-white underline text-[10px] ml-1">Check installed fonts</a></span>
                     <input list="fonts" value={state.font} onChange={e => update('font', e.target.value)} placeholder="Type to search..." className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" />
@@ -245,7 +283,7 @@ function MediaPlayerSettingsInner() {
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Text Align</span><select value={state.textAlignment} onChange={e => update('textAlignment', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Left</option><option value="center" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Center</option><option value="right" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Right</option></select></label>
                   </div>
                   <div className="bg-black/30 border border-white/5 rounded-xl p-2">
-                    <PositionPicker value={(state as any).pos || 'center'} onChange={(v) => update('pos', v)} />
+                    <PositionPicker value={state.pos || 'center'} onChange={(v) => update('pos', v)} />
                   </div>
                   <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5">
                     <span className="text-[11px] font-bold text-white">Use Custom Colors</span>
@@ -304,9 +342,9 @@ function MediaPlayerSettingsInner() {
               <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><ImageIcon className="w-4 h-4 text-white" /> Live Preview</div>
               <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">{state.theme} • {state.font} • {state.showAnimation}</span>
             </div>
-            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[320px] flex p-4" style={getPositionStyle((state as any).pos || state.verticalAlignment || 'center') as any}>
+            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl min-h-[320px] flex p-4" style={getPositionStyle(state.pos || state.verticalAlignment || 'center')}>
               <iframe key={iframeSrc} src={iframeSrc} className="w-full h-full border-0 bg-black" allow="autoplay" />
-              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SMTC {state.smtcBridgeAddress}:{state.smtcBridgePort} • {state.autoHide ? `${state.displayDuration}s auto-hide` : 'always'} • {(state as any).pos || state.verticalAlignment || 'center'}</div>
+              <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">SMTC {state.smtcBridgeAddress}:{state.smtcBridgePort} • {state.autoHide ? `${state.displayDuration}s auto-hide` : 'always'} • {state.pos || state.verticalAlignment || 'center'}</div>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
               <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS</a>

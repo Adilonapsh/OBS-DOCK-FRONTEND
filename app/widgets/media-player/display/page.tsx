@@ -21,6 +21,7 @@ import ColorPaletteTheme from '../themes/ColorPalette';
 import PlainTheme from '../themes/Plain';
 import BrutalistTheme from '../themes/Brutalist';
 import Retro8BitMusicTheme from '../../music/themes/Retro8Bit';
+import WaveTheme from '../../_shared/components/WaveTheme';
 import type { AccentPalette } from '../themes/types';
 import LargeAlbumArtTheme from '../themes/LargeAlbumArt';
 
@@ -74,7 +75,7 @@ async function getVibrantPalette(src: string): Promise<AccentPalette> {
 }
 
 function MarqueeText({ text, id, isOverflowingRef }: { text: string; id: string; isOverflowingRef?: React.MutableRefObject<boolean> }) {
-  const spanRef = useRef<HTMLDivElement>(null);
+  const spanRef = useRef<HTMLSpanElement>(null);
   const [overflows, setOverflows] = useState(false);
   useEffect(() => {
     const el = spanRef.current; if (!el) return;
@@ -92,7 +93,7 @@ function MarqueeText({ text, id, isOverflowingRef }: { text: string; id: string;
   if (!overflows) return <span>{text}</span>;
   return (
     <span className="marquee-track">
-      <span className="marquee-content" ref={spanRef as any}>{text} &nbsp; • &nbsp; {text}</span>
+      <span className="marquee-content" ref={spanRef}>{text} &nbsp; • &nbsp; {text}</span>
     </span>
   );
 }
@@ -116,6 +117,10 @@ function MediaPlayerInner() {
   const excludedApplications = params.get('excludedApplications') || '';
   const showAlbumArt = getBoolParam(params, 'showAlbumArt', true);
   const showProgressBar = getBoolParam(params, 'showProgressBar', true);
+  const waveLayout = params.get('waveLayout') === 'vertical' ? 'vertical' : 'horizontal';
+  const waveDensity = Math.max(1, Math.min(4, getIntParam(params, 'waveDensity', 2)));
+  const waveSpeed = Math.max(0.6, Math.min(2.2, Number(params.get('waveSpeed') ?? 1)));
+  const marqueeSpeed = Math.max(0.4, Math.min(2.5, Number(params.get('marqueeSpeed') ?? 1)));
   const swapArtistTrack = getBoolParam(params, 'swapArtistTrack', false);
   const showPrimary = getBoolParam(params, 'showPrimary', true);
   const showSecondary = getBoolParam(params, 'showSecondary', true);
@@ -193,11 +198,11 @@ function MediaPlayerInner() {
         // filter sessions like reference
         const incList = includedApplications ? includedApplications.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : [];
         const excList = excludedApplications ? excludedApplications.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : [];
-        const validSessions: any[] = (data.sessions || []).filter((s: any) => {
+        const validSessions: Array<{ source_app_id?: string; playback_info?: { PlaybackStatus?: number } }> = (data.sessions || []).filter((s: { source_app_id?: string; playback_info?: { PlaybackStatus?: number } }) => {
           const appId = (s.source_app_id || '').toLowerCase();
           return !excList.some(ex => appId.includes(ex));
         });
-        let target: any = null;
+        let target: { source_app_id?: string; playback_info?: { PlaybackStatus?: number } } | null = null;
         if (incList.length > 0) {
           for (const targetApp of incList) {
             target = validSessions.find(s => {
@@ -262,8 +267,8 @@ function MediaPlayerInner() {
         } else {
           setVisibility(false);
         }
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Failed to connect to SMTC Bridge');
+      } catch (e: unknown) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to connect to SMTC Bridge');
       }
     };
     fetchOnce();
@@ -281,14 +286,13 @@ function MediaPlayerInner() {
   const secondaryText = artist;
 
   // theme helpers
-  const containerStyle: React.CSSProperties = {
+  const containerStyle: React.CSSProperties & Record<'--show-album-art', string> = {
     fontFamily: font ? `'${font}', Inter, sans-serif` : undefined,
     fontSize: `${fontSize}px`,
     maxWidth: maxWidth > 0 ? `${maxWidth}px` : '100%',
-    textAlign: textAlignment as any,
-    // @ts-ignore
+    textAlign: textAlignment === 'center' ? 'center' : textAlignment === 'right' ? 'right' : 'left',
     '--show-album-art': showAlbumArt ? '' : 'none',
-  } as any;
+  };
 
   const alignmentCls = verticalAlignment === 'align-to-top' ? 'items-start' : verticalAlignment === 'align-to-bottom' ? 'items-end' : 'items-center';
   const textAlignCls = textAlignment === 'center' ? 'text-center' : textAlignment === 'right' ? 'text-right' : 'text-left';
@@ -355,7 +359,7 @@ function MediaPlayerInner() {
         .anim-slide-out-left { animation: slide-out-left 0.5s ease forwards }
         .anim-slide-out-right { animation: slide-out-right 0.5s ease forwards }
       `}</style>
-      <div id="media-player-root" className={`min-h-screen w-screen flex p-6 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined, ...posStyle } as any}>
+      <div id="media-player-root" className={`min-h-screen w-screen flex p-6 ${obsMode ? 'bg-transparent !bg-transparent' : 'bg-[#0a0a0a]'}`} style={{ fontFamily: font ? `'${font}'` : undefined, background: obsMode ? 'transparent' : undefined, ...posStyle }}>
         <AutoScale defaultBase={500} baseWidth={theme === 'retro8bit' ? 566 : maxWidth > 0 ? maxWidth : 500}>
           <div
             id="main-container"
@@ -388,6 +392,7 @@ function MediaPlayerInner() {
                 case 'color-palette': return <ColorPaletteTheme {...themeProps} />;
                 case 'plain': return <PlainTheme {...themeProps} />;
                 case 'brutalist': return <BrutalistTheme {...themeProps} />;
+                case 'wave': return <WaveTheme {...themeProps} layout={waveLayout} waveDensity={waveDensity} waveSpeed={waveSpeed} marqueeSpeed={marqueeSpeed} />;
                 case 'retro8bit': return <Retro8BitMusicTheme {...themeProps} />;
                 case 'large-album-art': return <LargeAlbumArtTheme {...themeProps} />;
                 case 'standard':

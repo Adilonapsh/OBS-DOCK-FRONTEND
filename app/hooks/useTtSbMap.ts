@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { sanitizeParams } from './sbArgs';
+import { readActivePrivateKey } from './privateKey';
 
 export type TtSbEventKey = 'chat' | 'gift' | 'like' | 'follow' | 'member';
 export type TtSbEntry = { enabled: boolean; action: string; params: Record<string, string> };
@@ -86,14 +87,26 @@ export function useTtSbMap() {
       const uid = data.user?.id ?? null;
       if (cancelled) return;
       setUserId(uid);
-      if (!uid) return;
       try {
-        const { data: row } = await supabase
-          .from('integration_settings')
-          .select('tiktok_sb_map')
-          .eq('user_id', uid)
-          .single();
-        const dbMap = (row as { tiktok_sb_map?: unknown } | null)?.tiktok_sb_map;
+        let dbMap: unknown = null;
+        if (uid) {
+          const { data: row } = await supabase
+            .from('integration_settings')
+            .select('tiktok_sb_map')
+            .eq('user_id', uid)
+            .single();
+          dbMap = (row as { tiktok_sb_map?: unknown } | null)?.tiktok_sb_map;
+        }
+        // Tanpa login (dock ?key= / OBS dock) tabel dibatasi RLS, jadi mapping
+        // diambil lewat RPC security definer dengan private key aktif.
+        if (!dbMap) {
+          const key = readActivePrivateKey();
+          if (key) {
+            const { data: all } = await (supabase as any).rpc('get_sb_maps_by_private_key', { p_key: key });
+            const remote = (all as { tiktok_sb_map?: unknown; error?: string } | null)?.tiktok_sb_map;
+            if (remote) dbMap = remote;
+          }
+        }
         if (cancelled) return;
         if (dbMap) {
           const clean = sanitize(dbMap);
@@ -124,14 +137,24 @@ export function useTtSbMap() {
   const persist = useCallback(
     (next: TtSbMap, uid: string | null) => {
       saveCache(next);
-      if (!uid) return;
+      if (uid) {
+        supabase
+          .from('integration_settings')
+          .upsert({ user_id: uid, tiktok_sb_map: next, updated_at: new Date().toISOString() } as any, {
+            onConflict: 'user_id',
+          })
+          .then(({ error }) => {
+            if (error) console.error('Gagal simpan mapping ke database:', error.message);
+          });
+        return;
+      }
+      // Tanpa login: simpan lewat private key supaya dock OBS (profil lain) ikut baca.
+      const key = readActivePrivateKey();
+      if (!key) return;
       supabase
-        .from('integration_settings')
-        .upsert({ user_id: uid, tiktok_sb_map: next, updated_at: new Date().toISOString() } as any, {
-          onConflict: 'user_id',
-        })
+        .rpc('upsert_sb_map_by_private_key', { p_key: key, p_kind: 'tiktok', p_map: next })
         .then(({ error }) => {
-          if (error) console.error('Gagal simpan mapping ke database:', error.message);
+          if (error) console.error('Gagal simpan mapping via private key:', error.message);
         });
     },
     [supabase],

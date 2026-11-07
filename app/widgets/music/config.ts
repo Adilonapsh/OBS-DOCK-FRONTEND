@@ -14,6 +14,7 @@ export const MUSIC_THEMES = [
   { value: 'vinyl-disc', label: 'Vinyl Disc' },
   { value: 'color-palette', label: 'Color Palette' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'wave', label: 'Wave' },
   { value: 'retro8bit', label: 'Retro 8-Bit' },
 ] as const;
 
@@ -49,6 +50,10 @@ export const MUSIC_DEFAULTS = {
   songBlacklist: '',
   songAllowedRoles: ['all'] as string[],
   queuePos: 'bottom' as string,
+  waveLayout: 'horizontal' as string,
+  waveDensity: 2 as number,
+  waveSpeed: 1 as number,
+  marqueeSpeed: 1 as number,
   maxWidth: 500,
   verticalAlignment: 'align-to-center' as string,
   textAlignment: 'left' as string,
@@ -93,6 +98,10 @@ export function buildMusicUrl(base: string, s: MusicSettings): string {
   p.set('maxQueue', String(s.maxQueue));
   p.set('showProgress', s.showProgress ? '1' : '0');
   p.set('queuePos', (s as unknown as { queuePos: string }).queuePos || 'bottom');
+  p.set('waveLayout', (s as unknown as { waveLayout?: string }).waveLayout || 'horizontal');
+  p.set('waveDensity', String((s as unknown as { waveDensity?: number }).waveDensity ?? 2));
+  p.set('waveSpeed', String((s as unknown as { waveSpeed?: number }).waveSpeed ?? 1));
+  p.set('marqueeSpeed', String((s as unknown as { marqueeSpeed?: number }).marqueeSpeed ?? 1));
   p.set('maxWidth', String((s as unknown as { maxWidth: number }).maxWidth ?? 500));
   p.set('verticalAlignment', (s as unknown as { verticalAlignment: string }).verticalAlignment || 'align-to-center');
   p.set('textAlignment', (s as unknown as { textAlignment: string }).textAlignment || 'left');

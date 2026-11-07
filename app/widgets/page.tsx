@@ -846,9 +846,6 @@ function WidgetsListing() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href={privateKey ? `/widgets/display?key=${privateKey}&widget=full` : "/widgets/display"} target="_blank" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase border border-white">
-              <Eye className="w-3 h-3" /> Preview Full
-            </Link>
             <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">
               <Monitor className="w-3 h-3" /> Dock
             </Link>

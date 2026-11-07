@@ -22,6 +22,7 @@ import {
   ColorPaletteTheme,
 } from '../../media-player/themes';
 import BrutalistMusicTheme from '../themes/Brutalist';
+import WaveTheme from '../../_shared/components/WaveTheme';
 import Retro8BitMusicTheme from '../themes/Retro8Bit';
 
 type SongKind = 'youtube' | 'audio';
@@ -401,6 +402,10 @@ function MusicInner() {
   const maxQueue = Math.max(1, Math.min(10, getIntParam(params, 'maxQueue', 5)));
   const showProgress = getBoolParam(params, 'showProgress', true);
   const queuePos: string = getStringParam(params, 'queuePos', 'bottom');
+  const waveLayout = getStringParam(params, 'waveLayout', 'horizontal') === 'vertical' ? 'vertical' : 'horizontal';
+  const waveDensity = Math.max(1, Math.min(4, getIntParam(params, 'waveDensity', 2)));
+  const waveSpeed = Math.max(0.6, Math.min(2.2, Number(params.get('waveSpeed') ?? 1)));
+  const marqueeSpeed = Math.max(0.4, Math.min(2.5, Number(params.get('marqueeSpeed') ?? 1)));
   // Param shell ala media-player (biar tema port tampil persis)
   const maxWidth = getIntParam(params, 'maxWidth', 500);
   const verticalAlignment = getStringParam(params, 'verticalAlignment', 'align-to-center');
@@ -1252,6 +1257,8 @@ function MusicInner() {
             <ColorPaletteTheme {...mediaProps} />
           ) : theme === 'brutalist' ? (
             <BrutalistMusicTheme {...mediaProps} />
+          ) : theme === 'wave' ? (
+            <WaveTheme {...mediaProps} layout={waveLayout} waveDensity={waveDensity} waveSpeed={waveSpeed} marqueeSpeed={marqueeSpeed} />
           ) : theme === 'retro8bit' ? (
             <Retro8BitMusicTheme {...mediaProps} />
           ) : (

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { sanitizeParams } from './sbArgs';
+import { readActivePrivateKey } from './privateKey';
 
 // Event donasi (Saweria/TipTap/Trakteer/dll) yang bisa memicu DoAction di Streamer.bot.
 // Dieksekusi di dock saat event socket 'donation' masuk dari backend.
@@ -79,14 +80,26 @@ export function useDonationSbMap() {
       const uid = data.user?.id ?? null;
       if (cancelled) return;
       setUserId(uid);
-      if (!uid) return;
       try {
-        const { data: row } = await supabase
-          .from('integration_settings')
-          .select('donation_sb_map')
-          .eq('user_id', uid)
-          .single();
-        const dbMap = (row as { donation_sb_map?: unknown } | null)?.donation_sb_map;
+        let dbMap: unknown = null;
+        if (uid) {
+          const { data: row } = await supabase
+            .from('integration_settings')
+            .select('donation_sb_map')
+            .eq('user_id', uid)
+            .single();
+          dbMap = (row as { donation_sb_map?: unknown } | null)?.donation_sb_map;
+        }
+        // Tanpa login (dock ?key= / OBS dock) tabel dibatasi RLS, jadi mapping
+        // diambil lewat RPC security definer dengan private key aktif.
+        if (!dbMap) {
+          const key = readActivePrivateKey();
+          if (key) {
+            const { data: all } = await (supabase as any).rpc('get_sb_maps_by_private_key', { p_key: key });
+            const remote = (all as { donation_sb_map?: unknown; error?: string } | null)?.donation_sb_map;
+            if (remote) dbMap = remote;
+          }
+        }
         if (cancelled) return;
         if (dbMap) {
           const clean = sanitize(dbMap);
@@ -116,14 +129,24 @@ export function useDonationSbMap() {
   const persist = useCallback(
     (next: DonationSbMap, uid: string | null) => {
       saveCache(next);
-      if (!uid) return;
+      if (uid) {
+        supabase
+          .from('integration_settings')
+          .upsert({ user_id: uid, donation_sb_map: next, updated_at: new Date().toISOString() } as any, {
+            onConflict: 'user_id',
+          })
+          .then(({ error }) => {
+            if (error) console.error('Gagal simpan donation mapping ke database:', error.message);
+          });
+        return;
+      }
+      // Tanpa login: simpan lewat private key supaya dock OBS (profil lain) ikut baca.
+      const key = readActivePrivateKey();
+      if (!key) return;
       supabase
-        .from('integration_settings')
-        .upsert({ user_id: uid, donation_sb_map: next, updated_at: new Date().toISOString() } as any, {
-          onConflict: 'user_id',
-        })
+        .rpc('upsert_sb_map_by_private_key', { p_key: key, p_kind: 'donation', p_map: next })
         .then(({ error }) => {
-          if (error) console.error('Gagal simpan donation mapping ke database:', error.message);
+          if (error) console.error('Gagal simpan donation mapping via private key:', error.message);
         });
     },
     [supabase],

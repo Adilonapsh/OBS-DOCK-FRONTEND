@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { sanitizeParams } from './sbArgs';
+import { readActivePrivateKey } from './privateKey';
 
 // Event per widget yang bisa memicu DoAction di Streamer.bot.
 // Hanya widget dengan event server (poll/task/timer/music/pinned).
@@ -180,14 +181,26 @@ export function useWidgetSbMap() {
       const uid = data.user?.id ?? null;
       if (cancelled) return;
       setUserId(uid);
-      if (!uid) return;
       try {
-        const { data: row } = await supabase
-          .from('integration_settings')
-          .select('widget_sb_map')
-          .eq('user_id', uid)
-          .single();
-        const dbMap = (row as { widget_sb_map?: unknown } | null)?.widget_sb_map;
+        let dbMap: unknown = null;
+        if (uid) {
+          const { data: row } = await supabase
+            .from('integration_settings')
+            .select('widget_sb_map')
+            .eq('user_id', uid)
+            .single();
+          dbMap = (row as { widget_sb_map?: unknown } | null)?.widget_sb_map;
+        }
+        // Tanpa login (dock ?key= / OBS dock) tabel dibatasi RLS, jadi mapping
+        // diambil lewat RPC security definer dengan private key aktif.
+        if (!dbMap) {
+          const key = readActivePrivateKey();
+          if (key) {
+            const { data: all } = await (supabase as any).rpc('get_sb_maps_by_private_key', { p_key: key });
+            const remote = (all as { widget_sb_map?: unknown; error?: string } | null)?.widget_sb_map;
+            if (remote) dbMap = remote;
+          }
+        }
         if (cancelled) return;
         if (dbMap) {
           const clean = sanitize(dbMap);
@@ -217,14 +230,24 @@ export function useWidgetSbMap() {
   const persist = useCallback(
     (next: WidgetSbMap, uid: string | null) => {
       saveCache(next);
-      if (!uid) return;
+      if (uid) {
+        supabase
+          .from('integration_settings')
+          .upsert({ user_id: uid, widget_sb_map: next, updated_at: new Date().toISOString() } as any, {
+            onConflict: 'user_id',
+          })
+          .then(({ error }) => {
+            if (error) console.error('Gagal simpan widget mapping ke database:', error.message);
+          });
+        return;
+      }
+      // Tanpa login: simpan lewat private key supaya dock OBS (profil lain) ikut baca.
+      const key = readActivePrivateKey();
+      if (!key) return;
       supabase
-        .from('integration_settings')
-        .upsert({ user_id: uid, widget_sb_map: next, updated_at: new Date().toISOString() } as any, {
-          onConflict: 'user_id',
-        })
+        .rpc('upsert_sb_map_by_private_key', { p_key: key, p_kind: 'widget', p_map: next })
         .then(({ error }) => {
-          if (error) console.error('Gagal simpan widget mapping ke database:', error.message);
+          if (error) console.error('Gagal simpan widget mapping via private key:', error.message);
         });
     },
     [supabase],

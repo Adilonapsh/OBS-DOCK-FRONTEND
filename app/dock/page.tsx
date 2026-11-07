@@ -879,6 +879,10 @@ export default function Home() {
         return true;
     };
 
+    // Throttle toast saat mapping aktif tapi Streamer.bot tidak terhubung, supaya
+    // kegagalan tidak lagi diam-diam (mis. pin chat tidak mentrigger action).
+    const sbOfflineWarnAtRef = useRef(0);
+
     // Helper Widget → SB: cek enabled + kirim DoAction. Key sesuai useWidgetSbMap.
     // Params custom (template {variabel}) di-resolve dari args aktual lalu digabung.
     const fireWidgetSb = (key: "poll_started" | "poll_ended" | "task_added" | "task_done" | "task_cleared" | "timer_started" | "timer_finished" | "timer_extended" | "timer_reduced" | "song_requested" | "song_next" | "chat_pinned" | "chat_unpinned" | "speak_started" | "speak_stopped", args: Record<string, unknown>) => {
@@ -886,7 +890,15 @@ export default function Home() {
             const entry = widgetSbMapRef.current?.[key];
             if (!entry?.enabled) return false;
             const base = { type: key, ...args };
-            return fireSbAction(entry.action, resolveSbArgs(base, (entry as { params?: Record<string, string> }).params));
+            const sent = fireSbAction(entry.action, resolveSbArgs(base, (entry as { params?: Record<string, string> }).params));
+            if (!sent && entry.action.trim()) {
+                const now = Date.now();
+                if (now - sbOfflineWarnAtRef.current > 5000) {
+                    sbOfflineWarnAtRef.current = now;
+                    gooeyToast.warning("Streamer.bot belum terhubung di dock ini - action widget tidak terkirim.");
+                }
+            }
+            return sent;
         } catch { return false; }
     };
 
