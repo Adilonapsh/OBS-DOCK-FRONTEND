@@ -13,6 +13,7 @@ export type WidgetSbEventKey =
   | 'poll_ended'
   | 'task_added'
   | 'task_done'
+  | 'task_removed'
   | 'task_cleared'
   | 'timer_started'
   | 'timer_finished'
@@ -50,6 +51,7 @@ export const WIDGET_SB_GROUPS: Array<{
     events: [
       { key: 'task_added', label: 'Task Added', hint: 'taskId, text, user, total' },
       { key: 'task_done', label: 'Task Done', hint: 'taskId, text, user, doneCount' },
+      { key: 'task_removed', label: 'Task Removed', hint: 'taskId, text, user, total' },
       { key: 'task_cleared', label: 'Tasks Cleared', hint: 'count' },
     ],
   },
@@ -109,6 +111,7 @@ export const WIDGET_SB_TEST_ARGS: Record<WidgetSbEventKey, Record<string, unknow
   poll_ended: { type: 'poll_ended', pollId: '123', question: 'Mana turnamen selanjutnya?', options: 'ML,Valorant', optionsCount: 2, votes: '9,3', results: 'ML: 9, Valorant: 3', total: 12, winner: 'ML', winnerVotes: 9, duration: 60, platforms: 'tiktok,twitch', platformVotes: 'tiktok: 9, twitch: 3' },
   task_added: { type: 'task_added', taskId: '1', text: 'Push rank (tes)', user: '', total: 4 },
   task_done: { type: 'task_done', taskId: '1', text: 'Push rank (tes)', user: '', total: 4, doneCount: 2 },
+  task_removed: { type: 'task_removed', taskId: '1', text: 'Push rank (tes)', user: '', total: 3 },
   task_cleared: { type: 'task_cleared', count: 3 },
   timer_started: { type: 'timer_started', totalSeconds: 3000, mode: 'powerup', session: 1, totalSessions: 3 },
   timer_finished: { type: 'timer_finished', totalSeconds: 0, mode: 'powerup', session: 1, totalSessions: 3 },

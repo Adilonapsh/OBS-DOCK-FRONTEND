@@ -861,9 +861,12 @@ export default function Home() {
     donationSbMapRef.current = donationSbMap;
     // ref transisi untuk deteksi edge (started/ended, bukan setiap update)
     const prevPollRef = useRef<{ id?: string; ended?: boolean } | null>(null);
-    const prevTasksRef = useRef<{ len: number; done: number } | null>(null);
-    const prevTimerRef = useRef<{ isRunning?: boolean; totalSeconds?: number } | null>(null);
-    const prevSongRef = useRef<{ len: number; index: number; currentId: string | null } | null>(null);
+    // Task & song mulai dari baseline kosong supaya event PERTAMA (task/request
+    // pertama saat belum ada data) tetap terdeteksi. Update `initial` dari
+    // task-get/song-get tidak dihitung sebagai perubahan.
+    const prevTasksRef = useRef<{ len: number; done: number; items?: Array<{ id: string; text: string; user?: string; completed?: boolean }> } | null>({ len: 0, done: 0, items: [] });
+    const prevTimerRef = useRef<{ isRunning?: boolean; totalSeconds?: number } | null>({ isRunning: false, totalSeconds: undefined });
+    const prevSongRef = useRef<{ len: number; index: number; currentId: string | null } | null>({ len: 0, index: 0, currentId: null });
 
     // Kirim DoAction ke Streamer.bot. Diam jika action kosong / SB tidak konek.
     const fireSbAction = (actionName: string, args: Record<string, unknown>) => {
@@ -885,7 +888,7 @@ export default function Home() {
 
     // Helper Widget → SB: cek enabled + kirim DoAction. Key sesuai useWidgetSbMap.
     // Params custom (template {variabel}) di-resolve dari args aktual lalu digabung.
-    const fireWidgetSb = (key: "poll_started" | "poll_ended" | "task_added" | "task_done" | "task_cleared" | "timer_started" | "timer_finished" | "timer_extended" | "timer_reduced" | "song_requested" | "song_next" | "chat_pinned" | "chat_unpinned" | "speak_started" | "speak_stopped", args: Record<string, unknown>) => {
+    const fireWidgetSb = (key: "poll_started" | "poll_ended" | "task_added" | "task_done" | "task_removed" | "task_cleared" | "timer_started" | "timer_finished" | "timer_extended" | "timer_reduced" | "song_requested" | "song_next" | "chat_pinned" | "chat_unpinned" | "speak_started" | "speak_stopped", args: Record<string, unknown>) => {
         try {
             const entry = widgetSbMapRef.current?.[key];
             if (!entry?.enabled) return false;
@@ -1017,6 +1020,7 @@ export default function Home() {
             s.emit('poll-get', { privateKey: room });
             s.emit('task-get', { privateKey: room });
             s.emit('timer-get', { privateKey: room });
+            s.emit('song-get', { privateKey: room });
             // Kabari plugin Stream Deck state Auto Pin saat dock (re)connect.
             s.emit('auto-pin-state', { privateKey: room, enabled: autoPinChatRef.current });
             // Kirim ulang aksi pin terakhir setelah reconnect: emit saat socket
@@ -1135,6 +1139,17 @@ export default function Home() {
                 const items: any[] = Array.isArray(t?.items) ? t.items : [];
                 const len = items.length;
                 const done = items.filter((x: any) => !!x?.completed).length;
+                const snapshot = items.map((x: any) => ({
+                    id: String(x?.id ?? ''),
+                    text: String(x?.text ?? ''),
+                    user: String(x?.user ?? ''),
+                    completed: !!x?.completed,
+                }));
+                // Response task-get = snapshot awal, bukan task baru.
+                if (t?.initial) {
+                    prevTasksRef.current = { len, done, items: snapshot };
+                    return;
+                }
                 const prev = prevTasksRef.current;
                 if (prev && len > prev.len) {
                     const added = items[items.length - 1];
@@ -1146,7 +1161,9 @@ export default function Home() {
                     });
                 }
                 if (prev && done > prev.done) {
-                    const newly = items.find((x: any) => !!x?.completed);
+                    const prevDoneIds = new Set((prev.items || []).filter((x) => x.completed).map((x) => x.id));
+                    const newly = items.find((x: any) => !!x?.completed && !prevDoneIds.has(String(x?.id ?? '')))
+                        || items.find((x: any) => !!x?.completed);
                     fireWidgetSb('task_done', {
                         taskId: String((newly as any)?.id || ''),
                         text: String((newly as any)?.text || ''),
@@ -1155,7 +1172,23 @@ export default function Home() {
                         doneCount: done,
                     });
                 }
-                prevTasksRef.current = { len, done };
+                if (prev && len < prev.len) {
+                    const currentIds = new Set(items.map((x: any) => String(x?.id ?? '')));
+                    const removed = (prev.items || []).filter((x) => !currentIds.has(String(x.id)));
+                    if (removed.length === 0) {
+                        fireWidgetSb('task_removed', { taskId: '', text: '', user: '', total: len });
+                    } else {
+                        for (const r of removed) {
+                            fireWidgetSb('task_removed', {
+                                taskId: String(r.id || ''),
+                                text: String(r.text || ''),
+                                user: String(r.user || ''),
+                                total: len,
+                            });
+                        }
+                    }
+                }
+                prevTasksRef.current = { len, done, items: snapshot };
             } catch { }
         });
         s.on('task-clear', () => {
@@ -1164,7 +1197,7 @@ export default function Home() {
                 fireWidgetSb('task_cleared', { count: prev?.len || 0 });
             } catch { }
             setActiveTasks(null);
-            prevTasksRef.current = { len: 0, done: 0 };
+            prevTasksRef.current = { len: 0, done: 0, items: [] };
         });
         s.on('timer-update', (t: any) => {
             try {
@@ -1175,6 +1208,12 @@ export default function Home() {
                 const session = typeof t?.currentSession === 'number' ? t.currentSession : 1;
                 const totalSessions = typeof t?.totalSessions === 'number' ? t.totalSessions : 1;
                 const timerInfo = { mode, session, totalSessions };
+                // Response timer-get = snapshot awal, bukan perubahan state.
+                if (t?.initial) {
+                    prevTimerRef.current = { isRunning: running, totalSeconds: secs ?? undefined };
+                    setActiveTimer(t);
+                    return;
+                }
                 if (prev && !prev.isRunning && running) fireWidgetSb('timer_started', { totalSeconds: secs ?? 0, ...timerInfo });
                 if (prev && prev.isRunning && secs === 0) {
                     fireWidgetSb('timer_finished', { totalSeconds: 0, ...timerInfo });
@@ -1201,9 +1240,14 @@ export default function Home() {
             try {
                 const len = Array.isArray(st?.queue) ? st.queue.length : 0;
                 const idx = typeof st?.currentIndex === 'number' ? st.currentIndex : 0;
-                const prev = prevSongRef.current;
                 const current = len > 0 ? st.queue[Math.min(idx, len - 1)] : null;
                 const currentId = current?.id ?? null;
+                // Response song-get = snapshot awal, bukan request/lagu baru.
+                if (st?.initial) {
+                    prevSongRef.current = { len, index: idx, currentId };
+                    return;
+                }
+                const prev = prevSongRef.current;
                 const prevCurrentId = prev?.currentId ?? null;
                 const songInfo = (s: any) => ({
                     songId: String(s?.id || ''),
@@ -1972,6 +2016,14 @@ export default function Home() {
     const speakMessage = (user: string, text: string, platform: string, avatar?: string) => {
         if (speakingExitTimer.current) clearTimeout(speakingExitTimer.current);
         if (speakingAutoClearTimer.current) clearTimeout(speakingAutoClearTimer.current);
+        // Speak baru menggantikan speak lama -> tutup event sebelumnya dulu.
+        if (speakingChat && !speakingExiting) {
+            fireWidgetSb('speak_stopped', {
+                nickname: speakingChat.user,
+                comment: speakingChat.text,
+                platform: speakingChat.platform,
+            });
+        }
         setSpeakingExiting(false);
         setSpeakingChat({ user, text, platform, avatar });
         fireWidgetSb('speak_started', { nickname: user, comment: text, profilePictureUrl: avatar || '', platform });
@@ -1986,6 +2038,8 @@ export default function Home() {
 
         // Bersihkan bar di dock setelah 45s (audio yang lebih panjang tetap jalan di widget).
         speakingAutoClearTimer.current = setTimeout(() => {
+            // Speak berakhir otomatis -> picu Speak Stopped juga (bukan cuma saat tombol stop).
+            fireWidgetSb('speak_stopped', { nickname: user, comment: text, platform });
             setSpeakingExiting(true);
             speakingExitTimer.current = setTimeout(() => {
                 setSpeakingChat(null);
