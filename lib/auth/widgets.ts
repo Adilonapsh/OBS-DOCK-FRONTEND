@@ -28,6 +28,7 @@ export const WIDGET_CATALOG = [
   { key: 'qr', title: 'QR Code', category: 'info' },
   { key: 'heartrate', title: 'Heartrate', category: 'info' },
   { key: 'valorant', title: 'Valorant Rank', category: 'info' },
+  { key: 'stream-bar', title: 'Stream Bar', category: 'info' },
   { key: 'custom', title: 'Custom Overlay', category: 'minimal' },
 ] as const;
 

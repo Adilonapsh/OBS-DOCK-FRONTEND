@@ -3006,6 +3006,23 @@ export default function Home() {
                             ...(kbps !== undefined ? { bitrate: kbps } : {}),
                             obsStatus: "CONNECTED",
                         }));
+                        // Kirim durasi OBS ke overlay (room private key yang sama)
+                        // supaya jam di Stream Bar identik dengan yang di dock.
+                        {
+                            const parts = timecode.split(":").map(Number);
+                            const tcSeconds = parts.length >= 3 && parts.every(Number.isFinite)
+                                ? parts[0] * 3600 + parts[1] * 60 + Math.floor(parts[2])
+                                : 0;
+                            const durationMs = Number(responseData.outputDuration);
+                            const seconds = active
+                                ? Math.max(0, Math.floor((Number.isFinite(durationMs) && durationMs > 0 ? durationMs : tcSeconds * 1000) / 1000))
+                                : 0;
+                            pollSocketRef.current?.emit("stream-time", {
+                                privateKey: privateKey || readStoredDockKey() || "global",
+                                active,
+                                seconds,
+                            });
+                        }
                         if (kbpsNum !== null) {
                             const chartVal = kbpsNum;
                             setStreamChartData(prev => {

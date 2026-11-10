@@ -110,6 +110,12 @@ const MUSIC_THEMES: [string, string][] = [
   ['brutalist', 'Brutalist'], ['retro8bit', 'Retro 8-Bit'],
 ];
 
+const STREAM_BAR_THEMES: [string, string][] = [
+  ['standard', 'Standard - Deep Teal'],
+  ['minimal', 'Minimal - Slate'],
+  ['neon', 'Neon - Cyber Violet'],
+];
+
 export const WIDGET_LAYER_PRESETS: WidgetLayerPreset[] = [
   {
     key: 'chat', title: 'Chat Overlay', category: 'chat', path: '/widgets/chat/display',
@@ -283,6 +289,20 @@ export const WIDGET_LAYER_PRESETS: WidgetLayerPreset[] = [
       font(), accent(), num('refresh', 'Refresh (detik)', 0, 600), pos(),
     ],
   },
+  {
+    key: 'stream-bar', title: 'Stream Bar', category: 'info', path: '/widgets/stream-bar/display',
+    size: { w: 100, h: 10 },
+    params: { theme: 'standard', font: 'Outfit', accent: '#3fe0c8', pos: 'center', activity: 'chatting', goalStyle: 'radial' },
+    fields: [
+      themes(STREAM_BAR_THEMES), font(), accent(),
+      text('welcomeTitle', 'Judul welcome'), text('activityTitle', 'Judul activity (kosong = preset)'),
+      text('gameName', 'Nama game'), bool('gameActive', 'Aktifkan kartu game'),
+      select('goalStyle', 'Gaya goal', [o('radial', 'Radial'), o('bar', 'Bar')]),
+      num('goalRotateMs', 'Rotasi goal (ms)', 2000, 20000, 500),
+      num('alertMs', 'Durasi alert (ms)', 3000, 15000, 500),
+      pos(),
+    ],
+  },
 ];
 
 const PRESET_MAP = new Map(WIDGET_LAYER_PRESETS.map((p) => [p.key, p]));
@@ -314,6 +334,7 @@ export const WIDGET_SETTINGS_KEYS: Record<WidgetLayerKey, string> = {
   qr: 'qr-settings',
   heartrate: 'heartrate-settings',
   valorant: 'valorant-settings',
+  'stream-bar': 'stream-bar-settings',
 };
 
 export function getWidgetSettingsKey(key: string | undefined | null): string | null {

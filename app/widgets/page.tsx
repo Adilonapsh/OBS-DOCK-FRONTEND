@@ -25,7 +25,7 @@ type WidgetItem = {
   tags: string[];
   layout: string;
   params: string; // extra query
-  preview: "chat" | "gift" | "pinned" | "speak" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant" | "donation-leaderboard" | "games";
+  preview: "chat" | "gift" | "pinned" | "speak" | "like" | "counter" | "goal" | "ticker" | "clock" | "social" | "minimal" | "full" | "media" | "lyrics" | "poll" | "task" | "timer" | "follow" | "social-rotator" | "pin" | "music" | "qr" | "heartrate" | "valorant" | "donation-leaderboard" | "games" | "stream-bar";
   recommended?: boolean;
   w: number;
   h: number;
@@ -306,6 +306,18 @@ const WIDGETS: WidgetItem[] = [
     preview: "donation-leaderboard",
     recommended: true,
     w: 400, h: 420,
+  },
+  {
+    id: "stream-bar",
+    title: "Stream Bar",
+    desc: "Bar overlay lebar untuk OBS — rotasi activity / now playing / game, welcome + rules marquee, alert follow/sub/gift/donasi/raid, dan goals radial/bar yang update live. 3 tema.",
+    category: "info",
+    tags: ["Stream Bar", "Activity", "Now Playing", "Goals", "OBS"],
+    layout: "stream-bar",
+    params: "theme=standard&font=Outfit&accent=%233fe0c8&pos=center&activity=chatting&goalStyle=radial&goalRotateMs=6000&alertMs=7000",
+    preview: "stream-bar",
+    recommended: true,
+    w: 2576, h: 272,
   },
 ];
 
@@ -634,6 +646,40 @@ function PreviewThumb({ type }: { type: WidgetItem["preview"] }) {
       </div>
     );
   }
+  if (type === "stream-bar") {
+    return (
+      <div className="w-full h-full bg-black flex flex-col justify-center p-2 gap-1.5">
+        <div className="flex items-center gap-1.5 h-8 rounded-lg bg-gradient-to-r from-[#143753] to-[#0f2f4a] border border-[#1d4466] px-2">
+          <div className="w-6 h-6 rounded-md bg-[#0b2a42] border border-[#2aa6b8] shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="h-1.5 w-2/3 bg-white/80 rounded" />
+            <div className="mt-1 h-1 w-1/3 bg-white/30 rounded" />
+          </div>
+          <div className="flex gap-1">
+            <span className="h-2.5 w-3 rounded-full bg-[#071c2e] border border-white/10" />
+            <span className="h-2.5 w-3 rounded-full bg-[#071c2e] border border-white/10" />
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 h-6 rounded-lg bg-gradient-to-r from-[#0f3a57] to-[#0c3250] border border-[#1d5576] px-2">
+          <span className="w-3 h-3 rounded-full border border-[#3fe0c8] shrink-0" />
+          <div className="flex-1 space-y-0.5">
+            <div className="h-1 w-1/2 bg-white/70 rounded" />
+            <div className="h-0.5 w-3/4 bg-white/20 rounded" />
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 h-7 rounded-lg bg-gradient-to-r from-[#4aa6f4] via-[#44c0e4] to-[#3dd9c6] px-2">
+          <span className="w-4 h-4 rounded-full bg-[#0b2a42] border border-white/40 shrink-0" />
+          <div className="h-1.5 w-1/2 bg-[#0b2a44]/70 rounded" />
+          <span className="ml-auto h-2.5 w-8 rounded bg-[#0b2a40]" />
+        </div>
+        <div className="flex items-center gap-1.5 h-5 rounded-lg bg-[#143753]/70 border border-[#1d4466] px-2">
+          <span className="w-3 h-3 rounded-full border-[2px] border-[#3fe0c8] shrink-0" />
+          <div className="h-1 w-1/3 bg-white/70 rounded" />
+          <div className="ml-auto h-1 w-1/4 bg-[#3fe0c8]/70 rounded" />
+        </div>
+      </div>
+    );
+  }
   // full
   return (    <div className="w-full h-full bg-black relative p-2 overflow-hidden">
       <div className="absolute top-2 left-2 flex gap-1">
@@ -806,6 +852,11 @@ function WidgetsListing() {
     if (item.id === 'donation-leaderboard') {
       const base = `${window.location.origin}/widgets/donation-leaderboard/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
       return transparent ? `${base}&obs=1` : base;
+    }
+    if (item.id === 'stream-bar') {
+      const base = `${window.location.origin}/widgets/stream-bar/display?${item.params}${privateKey ? `&key=${privateKey}` : ''}`;
+      // Preview kartu memutar demo supaya rotasi activity/musik/game + alert terlihat.
+      return transparent ? `${base}&obs=1` : `${base}&demo=1`;
     }
     if (item.id === 'custom') {
       try {
@@ -1037,6 +1088,10 @@ function WidgetsListing() {
                         <Link href={`/widgets/donation-leaderboard${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
+                      ) : item.id === 'stream-bar' ? (
+                        <Link href={`/widgets/stream-bar${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                          <Cog className="w-3 h-3" /> Settings
+                        </Link>
                       ) : item.id === 'custom' ? (
                         <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
                           <Layers className="w-3 h-3" /> Open Editor
@@ -1051,7 +1106,7 @@ function WidgetsListing() {
                         </Link>
                       )}
                     </div>
-                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'games' || item.id === 'pinned' || item.id === 'speak' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'donation-leaderboard' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
+                    {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'games' || item.id === 'pinned' || item.id === 'speak' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'donation-leaderboard' || item.id === 'stream-bar' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
                         href={urlObs}
                         draggable
