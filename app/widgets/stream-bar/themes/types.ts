@@ -95,4 +95,15 @@ export type StreamBarThemeProps = {
   goals: StreamBarGoal[];
   goalStyle: 'radial' | 'bar';
   goalRotateMs: number;
+
+  // Brutalist (opsional, hanya dipakai tema brutalist)
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
 };

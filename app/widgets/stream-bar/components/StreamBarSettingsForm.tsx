@@ -11,6 +11,7 @@ import {
   type StreamBarSettings,
 } from '../config';
 import type { StreamBarGoal, StreamBarRule } from '../themes/types';
+import { BrutalistSettingsSection } from '../../_shared/components/BrutalistSettingsSection';
 
 const inputClass = 'mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white';
 const labelClass = 'block text-[11px] font-bold text-gray-300';
@@ -83,6 +84,14 @@ export function StreamBarSettingsForm({
           </label>
         </div>
       </div>
+
+      {/* Brutalist - Neo Brutalist */}
+      {state.theme === 'brutalist' && (
+        <BrutalistSettingsSection
+          state={state as unknown as Record<string, unknown>}
+          update={update as unknown as (k: string, v: unknown) => void}
+        />
+      )}
 
       {/* Welcome */}
       <div className="space-y-3">

@@ -3,17 +3,20 @@
 
 import type { ComponentType } from "react";
 import type { StreamBarThemeProps } from "./types";
+import BrutalistTheme from "./Brutalist";
 import MinimalTheme from "./Minimal";
 import NeonTheme from "./Neon";
 import StandardTheme from "./Standard";
 
 export const streamBarThemeComponents: Record<string, ComponentType<StreamBarThemeProps>> = {
+  "brutalist": BrutalistTheme,
   "minimal": MinimalTheme,
   "neon": NeonTheme,
   "standard": StandardTheme,
 };
 
 export const STREAM_BAR_THEME_OPTIONS = [
+  { value: "brutalist", label: "Brutalist - Yellow Poster" },
   { value: "minimal", label: "Minimal - Slate" },
   { value: "neon", label: "Neon - Cyber Violet" },
   { value: "standard", label: "Standard - Deep Teal" },

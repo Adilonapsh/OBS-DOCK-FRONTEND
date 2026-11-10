@@ -114,6 +114,7 @@ const STREAM_BAR_THEMES: [string, string][] = [
   ['standard', 'Standard - Deep Teal'],
   ['minimal', 'Minimal - Slate'],
   ['neon', 'Neon - Cyber Violet'],
+  ['brutalist', 'Brutalist - Yellow Poster'],
 ];
 
 export const WIDGET_LAYER_PRESETS: WidgetLayerPreset[] = [

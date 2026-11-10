@@ -310,7 +310,7 @@ const WIDGETS: WidgetItem[] = [
   {
     id: "stream-bar",
     title: "Stream Bar",
-    desc: "Bar overlay lebar untuk OBS — rotasi activity / now playing / game, welcome + rules marquee, alert follow/sub/gift/donasi/raid, dan goals radial/bar yang update live. 3 tema.",
+    desc: "Bar overlay lebar untuk OBS — rotasi activity / now playing / game, welcome + rules marquee, alert follow/sub/gift/donasi/raid, dan goals radial/bar yang update live. 4 tema.",
     category: "info",
     tags: ["Stream Bar", "Activity", "Now Playing", "Goals", "OBS"],
     layout: "stream-bar",

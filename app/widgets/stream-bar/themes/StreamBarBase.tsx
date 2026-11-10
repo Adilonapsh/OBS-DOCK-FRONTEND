@@ -270,7 +270,8 @@ export function StreamBarBase({
   goals,
   goalStyle,
   goalRotateMs,
-}: StreamBarThemeProps & { palette: StreamBarPalette }) {
+  className,
+}: StreamBarThemeProps & { palette: StreamBarPalette; className?: string }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 1000);
@@ -361,6 +362,7 @@ export function StreamBarBase({
 
   const stageClass = [
     'stream-bar-stage',
+    className || '',
     alerting ? 'sb-alerting' : '',
     leaving ? 'sb-leaving' : '',
   ].filter(Boolean).join(' ');

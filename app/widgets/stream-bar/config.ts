@@ -81,6 +81,17 @@ export type StreamBarSettings = {
 
   alertMs: number;
   demo: boolean;
+
+  // Brutalist (dipakai kalau theme = brutalist)
+  brutalistBg: string;
+  brutalistTextColor: string;
+  brutalistBadgeBg: string;
+  brutalistBorderColor: string;
+  brutalistShadow: number;
+  brutalistHalftone: boolean;
+  brutalistTail: boolean;
+  brutalistItalic: boolean;
+  brutalistUppercase: boolean;
 };
 
 export const STREAM_BAR_DEFAULTS: StreamBarSettings = {
@@ -113,6 +124,16 @@ export const STREAM_BAR_DEFAULTS: StreamBarSettings = {
 
   alertMs: 7000,
   demo: false,
+
+  brutalistBg: '#ffd93d',
+  brutalistTextColor: '#111111',
+  brutalistBadgeBg: '#ffffff',
+  brutalistBorderColor: '#111111',
+  brutalistShadow: 12,
+  brutalistHalftone: true,
+  brutalistTail: true,
+  brutalistItalic: true,
+  brutalistUppercase: true,
 };
 
 export function parseStreamBarRules(raw: string | null | undefined): StreamBarRule[] {
@@ -190,5 +211,15 @@ export function buildStreamBarUrl(base: string, s: StreamBarSettings): string {
 
   p.set('alertMs', String(s.alertMs));
   p.set('demo', s.demo ? '1' : '0');
+
+  p.set('brutalistBg', s.brutalistBg || '#ffd93d');
+  p.set('brutalistTextColor', s.brutalistTextColor || '#111111');
+  p.set('brutalistBadgeBg', s.brutalistBadgeBg || '#ffffff');
+  p.set('brutalistBorderColor', s.brutalistBorderColor || '#111111');
+  p.set('brutalistShadow', String(s.brutalistShadow ?? 12));
+  p.set('brutalistHalftone', s.brutalistHalftone ? '1' : '0');
+  p.set('brutalistTail', s.brutalistTail ? '1' : '0');
+  p.set('brutalistItalic', s.brutalistItalic ? '1' : '0');
+  p.set('brutalistUppercase', s.brutalistUppercase ? '1' : '0');
   return `${base}?${p.toString()}`;
 }

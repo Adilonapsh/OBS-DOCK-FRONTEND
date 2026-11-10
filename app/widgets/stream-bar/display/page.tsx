@@ -138,6 +138,17 @@ function StreamBarInner() {
   const goalsRaw = searchParams.get('goals');
   const initialGoals = useMemo(() => parseStreamBarGoals(goalsRaw), [goalsRaw]);
 
+  // Brutalist custom (opsional, hanya dipakai tema brutalist).
+  const brutalistBg = getStringParam(params, 'brutalistBg', '#ffd93d');
+  const brutalistTextColor = getStringParam(params, 'brutalistTextColor', '#111111');
+  const brutalistBadgeBg = getStringParam(params, 'brutalistBadgeBg', '#ffffff');
+  const brutalistBorderColor = getStringParam(params, 'brutalistBorderColor', '#111111');
+  const brutalistShadow = Math.max(0, Math.min(20, getIntParam(params, 'brutalistShadow', 12)));
+  const brutalistHalftone = getBoolParam(params, 'brutalistHalftone', true);
+  const brutalistTail = getBoolParam(params, 'brutalistTail', true);
+  const brutalistItalic = getBoolParam(params, 'brutalistItalic', true);
+  const brutalistUppercase = getBoolParam(params, 'brutalistUppercase', true);
+
   // Durasi live. Kalau dock mengirim `stream-time` (dari OBS outputTimecode),
   // nilai itu yang dipakai supaya sama persis dengan yang tampil di dock.
   const [openedAt] = useState(() => Date.now());
@@ -643,6 +654,15 @@ function StreamBarInner() {
             goals={goals}
             goalStyle={goalStyle}
             goalRotateMs={goalRotateMs}
+            brutalistBg={brutalistBg}
+            brutalistTextColor={brutalistTextColor}
+            brutalistBadgeBg={brutalistBadgeBg}
+            brutalistBorderColor={brutalistBorderColor}
+            brutalistShadow={brutalistShadow}
+            brutalistHalftone={brutalistHalftone}
+            brutalistTail={brutalistTail}
+            brutalistItalic={brutalistItalic}
+            brutalistUppercase={brutalistUppercase}
           />
         </AutoScale>
       </div>
