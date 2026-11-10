@@ -947,6 +947,9 @@ export default function Home() {
     const obsPollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const prevStreamBytesRef = useRef<number | null>(null);
     const prevStreamBytesTimeRef = useRef<number>(0);
+    // Kapan terakhir durasi live dikirim ke overlay. Kirim hanya saat status
+    // live berubah + resync jarang, bukan tiap poll (hemat bandwidth).
+    const lastStreamTimeEmitRef = useRef<{ at: number; active: boolean; seconds: number }>({ at: 0, active: false, seconds: 0 });
     const hasInitialObsConnectRef = useRef(false);
 
     const tkSocketRef = useRef<Socket | null>(null);
@@ -1012,6 +1015,17 @@ export default function Home() {
         pollSocketRef.current = s;
         let lastConnectedAt = Date.now();
         const getRoom = () => privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
+        // Overlay baru minta durasi live sekali saat connect (bukan polling).
+        s.on('stream-time-get', () => {
+            const last = lastStreamTimeEmitRef.current;
+            if (!last.at) return; // belum ada status dari OBS
+            const elapsed = last.active ? Math.floor((Date.now() - last.at) / 1000) : 0;
+            s.emit('stream-time', {
+                privateKey: getRoom(),
+                active: last.active,
+                seconds: last.active ? last.seconds + elapsed : 0,
+            });
+        });
         s.on('connect', () => {
             lastConnectedAt = Date.now();
             setServerConnected(true);
@@ -3008,20 +3022,29 @@ export default function Home() {
                         }));
                         // Kirim durasi OBS ke overlay (room private key yang sama)
                         // supaya jam di Stream Bar identik dengan yang di dock.
+                        // Hanya saat status live berubah + resync tiap 30 dtk;
+                        // overlay menghitung detiknya sendiri di antara update.
                         {
-                            const parts = timecode.split(":").map(Number);
-                            const tcSeconds = parts.length >= 3 && parts.every(Number.isFinite)
-                                ? parts[0] * 3600 + parts[1] * 60 + Math.floor(parts[2])
-                                : 0;
-                            const durationMs = Number(responseData.outputDuration);
-                            const seconds = active
-                                ? Math.max(0, Math.floor((Number.isFinite(durationMs) && durationMs > 0 ? durationMs : tcSeconds * 1000) / 1000))
-                                : 0;
-                            pollSocketRef.current?.emit("stream-time", {
-                                privateKey: privateKey || readStoredDockKey() || "global",
-                                active,
-                                seconds,
-                            });
+                            const last = lastStreamTimeEmitRef.current;
+                            const nowMs = Date.now();
+                            if (active !== last.active || (active && nowMs - last.at >= 30000)) {
+                                const parts = timecode.split(":").map(Number);
+                                const tcSeconds = parts.length >= 3 && parts.every(Number.isFinite)
+                                    ? parts[0] * 3600 + parts[1] * 60 + Math.floor(parts[2])
+                                    : 0;
+                                const durationMs = Number(responseData.outputDuration);
+                                const seconds = active
+                                    ? Math.max(0, Math.floor((Number.isFinite(durationMs) && durationMs > 0 ? durationMs : tcSeconds * 1000) / 1000))
+                                    : 0;
+                                last.active = active;
+                                last.at = nowMs;
+                                last.seconds = seconds;
+                                pollSocketRef.current?.emit("stream-time", {
+                                    privateKey: privateKey || readStoredDockKey() || "global",
+                                    active,
+                                    seconds,
+                                });
+                            }
                         }
                         if (kbpsNum !== null) {
                             const chartVal = kbpsNum;

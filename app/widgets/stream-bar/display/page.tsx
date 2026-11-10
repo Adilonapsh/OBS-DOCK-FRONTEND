@@ -371,6 +371,9 @@ function StreamBarInner() {
       setConnected(true);
       socket.emit('join-room', room);
       socket.emit('song-get', auth);
+      // Minta durasi live sekali saat connect; setelah itu overlay menghitung
+      // sendiri dan hanya di-resync berkala oleh dock.
+      socket.emit('stream-time-get', auth);
     });
     socket.on('disconnect', () => setConnected(false));
 
