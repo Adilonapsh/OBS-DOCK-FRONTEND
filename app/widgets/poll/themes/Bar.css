@@ -1,0 +1,6 @@
+.poll-bar-theme { backdrop-filter: blur(12px); animation: pollIn 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+.poll-bar-theme #poll-question { letter-spacing: -0.02em; }
+.poll-option { backdrop-filter: blur(8px); animation: pollIn 0.5s ease both; }
+.poll-option.poll-winner { animation: pollIn 0.5s ease both, winnerPulse 0.9s ease 0.6s both, winnerGlow 1.2s ease 0.6s; border-width: 2px !important; }
+@keyframes winnerPulse { 0%{ transform: scale(1); } 40%{ transform: scale(1.03); } 70%{ transform: scale(0.98); } 100%{ transform: scale(1.02); } }
+@keyframes winnerGlow { 0%{ box-shadow: 0 0 0 rgba(255,255,255,0); } 50%{ box-shadow: 0 0 24px rgba(139,92,246,0.5); } 100%{ box-shadow: 0 8px 24px rgba(0,0,0,0.2); } }

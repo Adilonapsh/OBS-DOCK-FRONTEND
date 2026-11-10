@@ -1,0 +1,285 @@
+/* Brutalist - Neo-Brutalist poster: blok warna tebal, garis hitam, sudut tajam.
+   Semua warna mengikuti setting brutalist* (bar bg, text, badge, border). */
+.stream-bar-stage.sb-brutalist {
+  letter-spacing: 0;
+}
+
+/* ===== Bar utama ===== */
+.stream-bar-stage.sb-brutalist .sb-bar {
+  border-radius: 0;
+  border: 4px solid var(--sb-bar-edge);
+  box-shadow: var(--sb-shadow);
+}
+/* Halftone dot hanya kalau setting Halftone aktif. */
+.stream-bar-stage.sb-brutalist.sb-brut-halftone .sb-bar {
+  background-image:
+    radial-gradient(var(--sb-bar-edge) 1.5px, transparent 1.7px),
+    linear-gradient(180deg, var(--sb-bar-from) 0%, var(--sb-bar-to) 100%);
+  background-size: 14px 14px, 100% 100%;
+}
+
+/* Corner stamps (setting Tail). */
+.stream-bar-stage.sb-brutalist.sb-brut-tail .sb-bar::before,
+.stream-bar-stage.sb-brutalist.sb-brut-tail .sb-bar::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist.sb-brut-tail .sb-bar::before {
+  left: 10px;
+  top: 10px;
+}
+.stream-bar-stage.sb-brutalist.sb-brut-tail .sb-bar::after {
+  right: 10px;
+  bottom: 10px;
+}
+
+.stream-bar-stage.sb-brutalist .sb-bar-halo {
+  border-radius: 0;
+  border: 3px solid var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist.sb-alerting .sb-bar-halo {
+  animation: sb-brut-pulse 1s steps(2, end) infinite;
+}
+@keyframes sb-brut-pulse {
+  0%,
+  100% {
+    box-shadow: 8px 8px 0 0 var(--sb-bar-edge);
+  }
+  50% {
+    box-shadow: 14px 14px 0 0 var(--sb-bar-edge);
+  }
+}
+
+.stream-bar-stage.sb-brutalist .sb-bar-fx {
+  border-radius: 0;
+}
+
+/* ===== Tipografi ===== */
+.stream-bar-stage.sb-brutalist .sb-np-label,
+.stream-bar-stage.sb-brutalist .sb-w-label,
+.stream-bar-stage.sb-brutalist .sb-g-label,
+.stream-bar-stage.sb-brutalist .sb-a-label {
+  letter-spacing: 1.6px;
+  font-weight: 800;
+}
+.stream-bar-stage.sb-brutalist.sb-brut-upper .sb-np-label,
+.stream-bar-stage.sb-brutalist.sb-brut-upper .sb-w-label,
+.stream-bar-stage.sb-brutalist.sb-brut-upper .sb-g-label,
+.stream-bar-stage.sb-brutalist.sb-brut-upper .sb-a-label {
+  text-transform: uppercase;
+}
+.stream-bar-stage.sb-brutalist.sb-brut-italic .sb-np-label,
+.stream-bar-stage.sb-brutalist.sb-brut-italic .sb-w-label,
+.stream-bar-stage.sb-brutalist.sb-brut-italic .sb-g-label,
+.stream-bar-stage.sb-brutalist.sb-brut-italic .sb-a-label,
+.stream-bar-stage.sb-brutalist.sb-brut-italic .sb-artist,
+.stream-bar-stage.sb-brutalist.sb-brut-italic .sb-w-sub,
+.stream-bar-stage.sb-brutalist.sb-brut-italic .sb-m-item {
+  font-style: italic;
+}
+.stream-bar-stage.sb-brutalist .sb-sub,
+.stream-bar-stage.sb-brutalist .sb-artist,
+.stream-bar-stage.sb-brutalist .sb-w-sub,
+.stream-bar-stage.sb-brutalist .sb-m-item,
+.stream-bar-stage.sb-brutalist .sb-g-sub {
+  font-weight: 600;
+}
+
+/* ===== Kartu kiri: cover + chip ===== */
+.stream-bar-stage.sb-brutalist .sb-cover,
+.stream-bar-stage.sb-brutalist .sb-cover-sm {
+  border-radius: 0;
+  border: 4px solid var(--sb-bar-edge);
+  box-shadow: 6px 6px 0 0 var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-vinyl {
+  border-radius: 0;
+  background: repeating-radial-gradient(circle at 50% 50%, #111111 0 7px, #2f2f2f 7px 14px);
+  box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.45);
+}
+.stream-bar-stage.sb-brutalist .sb-dot,
+.stream-bar-stage.sb-brutalist .sb-dot.sb-red {
+  border-radius: 0;
+  box-shadow: none;
+}
+.stream-bar-stage.sb-brutalist .sb-dot.sb-red {
+  background: #ff3b30;
+}
+.stream-bar-stage.sb-brutalist .sb-eq i {
+  border-radius: 0;
+}
+.stream-bar-stage.sb-brutalist .sb-chip {
+  height: 32px;
+  border-radius: 0;
+  border: 2px solid var(--sb-bar-edge);
+  box-shadow: 3px 3px 0 0 var(--sb-bar-edge);
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  font-size: 13px;
+}
+
+/* ===== Progress lagu ===== */
+.stream-bar-stage.sb-brutalist .sb-track {
+  border-radius: 0;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-track b {
+  border-radius: 0;
+  background: var(--sb-bar-edge);
+  box-shadow: none;
+}
+
+/* ===== Panel tengah ===== */
+.stream-bar-stage.sb-brutalist .sb-panel {
+  border-radius: 0;
+}
+.stream-bar-stage.sb-brutalist .sb-welcome {
+  border: 3px solid var(--sb-bar-edge);
+  box-shadow: 8px 8px 0 0 var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-w-line {
+  height: 5px;
+  border-radius: 0;
+  background: var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-w-icon {
+  border-radius: 0;
+  border: 3px solid var(--sb-bar-edge);
+  background: var(--sb-bar-from);
+  box-shadow: 5px 5px 0 0 var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-w-div {
+  height: 2px;
+  background: var(--sb-bar-edge);
+  opacity: 0.85;
+}
+.stream-bar-stage.sb-brutalist .sb-m-item {
+  color: var(--sb-text);
+}
+.stream-bar-stage.sb-brutalist .sb-m-item b {
+  color: var(--sb-bar-edge);
+  background: var(--sb-bar-from);
+  padding: 0 6px;
+  border: 1px solid var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-m-sep {
+  margin: 0 28px;
+  font-weight: 900;
+}
+
+/* ===== Alert: panel warna border, aksen warna bar ===== */
+.stream-bar-stage.sb-brutalist .sb-alert {
+  background: var(--sb-bar-edge);
+  border: 0;
+  clip-path: inset(0 100% 0 0);
+}
+.stream-bar-stage.sb-brutalist.sb-alerting .sb-alert {
+  animation: sb-brut-alert-in 0.55s steps(6, end) forwards;
+}
+.stream-bar-stage.sb-brutalist.sb-leaving .sb-alert {
+  animation: sb-brut-alert-out 0.4s steps(5, end) forwards;
+}
+@keyframes sb-brut-alert-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes sb-brut-alert-out {
+  from {
+    clip-path: inset(0 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+.stream-bar-stage.sb-brutalist .sb-ring {
+  border-radius: 0;
+  border: 3px solid var(--sb-bar-from);
+  background: transparent;
+  opacity: 0.45;
+}
+.stream-bar-stage.sb-brutalist .sb-wave {
+  border-radius: 0;
+  border: 3px solid var(--sb-bar-from);
+}
+.stream-bar-stage.sb-brutalist .sb-a-icon {
+  border-radius: 0;
+  background: var(--sb-bar-from);
+  border: 4px solid var(--sb-bar-from);
+  box-shadow: inset 0 0 0 4px var(--sb-bar-edge);
+  color: var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-a-label {
+  color: var(--sb-bar-from);
+}
+.stream-bar-stage.sb-brutalist .sb-a-text {
+  font-weight: 800;
+  color: var(--sb-chip-bg);
+}
+.stream-bar-stage.sb-brutalist .sb-chip-inline {
+  border-radius: 0;
+  background: var(--sb-bar-from);
+  color: var(--sb-bar-edge);
+  border: 2px solid var(--sb-bar-edge);
+  font-weight: 800;
+}
+.stream-bar-stage.sb-brutalist .sb-a-track {
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.2);
+}
+.stream-bar-stage.sb-brutalist .sb-a-track b {
+  border-radius: 0;
+  background: var(--sb-bar-from);
+}
+
+/* ===== Goals ===== */
+.stream-bar-stage.sb-brutalist .sb-g-ring {
+  border: 3px solid var(--sb-bar-edge);
+  background: var(--sb-chip-bg);
+  box-shadow: 4px 4px 0 0 var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-g-ring svg {
+  width: 100%;
+  height: 100%;
+}
+.stream-bar-stage.sb-brutalist .sb-g-ring svg circle:first-child {
+  stroke: rgba(0, 0, 0, 0.16);
+}
+.stream-bar-stage.sb-brutalist .sb-g-arc {
+  stroke-linecap: butt;
+}
+.stream-bar-stage.sb-brutalist .sb-g-pct {
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+.stream-bar-stage.sb-brutalist .sb-g-pct2 {
+  color: var(--sb-bar-edge);
+  font-weight: 800;
+}
+.stream-bar-stage.sb-brutalist .sb-g-bar {
+  border-radius: 0;
+  border: 1px solid var(--sb-bar-edge);
+  background: rgba(0, 0, 0, 0.14);
+}
+.stream-bar-stage.sb-brutalist .sb-g-bar b {
+  border-radius: 0;
+  background: var(--sb-bar-edge);
+}
+.stream-bar-stage.sb-brutalist .sb-g-main small {
+  color: var(--sb-muted);
+}
+.stream-bar-stage.sb-brutalist .sb-g-line {
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.14);
+}
+.stream-bar-stage.sb-brutalist .sb-g-line b {
+  background: var(--sb-bar-edge);
+}
