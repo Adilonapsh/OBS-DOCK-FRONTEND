@@ -1,4 +1,4 @@
-# DESIGN SYSTEM - OBS Overlays
+# DESIGN SYSTEM - Keluno
 
 > **Design spec untuk Agent AI - jaga konsistensi visual & kode.**
 > File: `docs/DESIGN.md` | Pair: `docs/PRD.md` | Update: `2026-09-04`

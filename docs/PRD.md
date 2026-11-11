@@ -1,14 +1,14 @@
-# PRD - OBS Overlays (TikTok + Streamer.bot → OBS Browser Source)
+# PRD - Keluno (TikTok + Streamer.bot → OBS Browser Source)
 
 > **Product Requirements Document untuk Agent AI - sumber kebenaran tunggal.**
 > Versi: `1.4` | Tanggal: `2026-09-08` | Stack: `Next.js 16 + Socket.IO + TikTok Live Connector + Streamer.bot WS + Supabase`
-> Owner: `obs-overlays` | File: `docs/PRD.md` (agent wajib baca sebelum coding)
+> Owner: `keluno` | File: `docs/PRD.md` (agent wajib baca sebelum coding)
 
 ---
 
 ## 1. Ringkasan Eksekutif
 
-**OBS Overlays** adalah platform overlay modular untuk OBS Studio yang menggabungkan **TikTok Live (WebcastPushConnection)** dan **Streamer.bot (Twitch/YouTube/Kick)** menjadi **satu event stream `tiktok-chat`** yang diisolasi per-`privateKey` (room). Setiap widget adalah **Browser Source transparan** (`?obs=1`) dengan tema yang bisa dikustom dan di-preview sebelum masuk OBS.
+**Keluno** adalah platform overlay modular untuk OBS Studio yang menggabungkan **TikTok Live (WebcastPushConnection)** dan **Streamer.bot (Twitch/YouTube/Kick)** menjadi **satu event stream `tiktok-chat`** yang diisolasi per-`privateKey` (room). Setiap widget adalah **Browser Source transparan** (`?obs=1`) dengan tema yang bisa dikustom dan di-preview sebelum masuk OBS.
 
 **Tujuan bisnis:**
 - 1 URL = 1 widget = 1 Browser Source (modular, bukan canvas full 1920×1080)

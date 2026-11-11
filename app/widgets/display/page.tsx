@@ -660,7 +660,7 @@ function WidgetDisplayContent() {
                 <div className="w-5 h-5 rounded-md bg-white flex items-center justify-center">
                   <Monitor className="w-3 h-3 text-black" />
                 </div>
-                <span className="text-white font-black text-[8px] tracking-widest uppercase">OBS OVERLAYS</span>
+                <span className="text-white font-black text-[8px] tracking-widest uppercase">Keluno</span>
                 <span className="text-gray-500 text-[8px] font-bold">WIDGET</span>
               </div>
             )}

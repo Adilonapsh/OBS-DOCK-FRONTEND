@@ -90,7 +90,7 @@ export function useDonationSbMap() {
             .single();
           dbMap = (row as { donation_sb_map?: unknown } | null)?.donation_sb_map;
         }
-        // Tanpa login (dock ?key= / OBS dock) tabel dibatasi RLS, jadi mapping
+        // Tanpa login (dock ?key= / Keluno dock) tabel dibatasi RLS, jadi mapping
         // diambil lewat RPC security definer dengan private key aktif.
         if (!dbMap) {
           const key = readActivePrivateKey();

@@ -18,14 +18,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://app.obsdock.com"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://obsdock.chrono.web.id"
   ),
   title: {
-    default: "OBS Dock- Kontrol OBS & Widget Stream dari Browser",
-    template: "%s | OBS Dock",
+    default: "Keluno - Kontrol OBS & Widget Stream dari Browser",
+    template: "%s | Keluno",
   },
   description:
-    "OBS Dock: kontrol OBS Studio Mode & scene switcher dari browser/HP, plus 14+ widget dan overlay real-time (chat, poll, goals, gift, media player + lirik) via WebSocket privat.",
+    "Keluno: kontrol OBS Studio Mode & scene switcher dari browser/HP, plus 14+ widget dan overlay real-time (chat, poll, goals, gift, media player + lirik) via WebSocket privat.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

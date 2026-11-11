@@ -778,7 +778,7 @@ function EditorContent() {
 
                 <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/40 backdrop-blur border border-white/5 rounded-full flex items-center gap-1">
                   <div className="w-4 h-4 rounded bg-white grid place-items-center"><Monitor className="w-2.5 h-2.5 text-black" /></div>
-                  <span className="text-white font-black text-[7px] uppercase">OBS OVERLAYS</span>
+                  <span className="text-white font-black text-[7px] uppercase">Keluno</span>
                 </div>
               </div>
 

@@ -1,5 +1,5 @@
 -- ============================================
--- OBS Overlays - Supabase Database Schema
+-- Keluno - Supabase Database Schema
 -- Jalankan di Supabase Dashboard → SQL Editor → New query → Paste & Run
 -- Project: https://tdsbidgbhltmjjdrdkla.supabase.co
 -- ============================================

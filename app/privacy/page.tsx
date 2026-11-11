@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 
 export const metadata = {
-    title: "Kebijakan Privasi - OBS Dock",
-    description: "Kebijakan privasi OBS Dock: data yang dikumpulkan, login Google, pihak ketiga, dan hak pengguna.",
+    title: "Kebijakan Privasi - Keluno",
+    description: "Kebijakan privasi Keluno: data yang dikumpulkan, login Google, pihak ketiga, dan hak pengguna.",
 };
 
 function Section({ no, title, children }: { no: string; title: string; children: React.ReactNode }) {
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
                     </div>
                 </div>
                 <p className="text-gray-400 text-[13px] leading-relaxed mb-8">
-                    OBS Dock (“kami”) adalah panel kontrol dan overlay widget untuk streamer (OBS Studio, TikTok LIVE, Twitch, YouTube).
+                    Keluno (“kami”) adalah panel kontrol dan overlay widget untuk streamer (OBS Studio, TikTok LIVE, Twitch, YouTube).
                     Kebijakan ini menjelaskan data apa yang kami kumpulkan, mengapa, dan hak kamu atas data tersebut.
                 </p>
 

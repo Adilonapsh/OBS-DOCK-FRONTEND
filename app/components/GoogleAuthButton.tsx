@@ -53,12 +53,12 @@ export default function GoogleAuthButton({
             type="button"
             onClick={handleGoogle}
             disabled={loading}
-            className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 transition-colors gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
         >
             {loading ? (
-                <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                <span className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
             ) : (
-                <GoogleIcon className="w-4 h-4" />
+                <GoogleIcon className="w-5 h-5" />
             )}
             {loading ? 'Membuka Google...' : label}
         </button>

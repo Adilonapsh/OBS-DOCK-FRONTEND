@@ -2,10 +2,15 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { User, Lock, Eye, EyeOff, LogIn, Monitor, Sparkles, AlertCircle } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Monitor, AlertCircle, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import AuthLayout from "../components/AuthLayout";
 import GoogleAuthButton from "../components/GoogleAuthButton";
+
+const inputClass =
+    "block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 transition-colors focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-slate-50 focus:bg-white placeholder-slate-400 focus:outline-none";
+const iconClass =
+    "absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400";
 
 function LoginContent() {
     const router = useRouter();
@@ -100,100 +105,149 @@ function LoginContent() {
 
     return (
         <AuthLayout
-            icon={<LogIn className="w-4 h-4 text-blue-400" />}
-            title="Login"
-            subtitle="Masuk dengan akun terdaftar."
-            tagline={
-                <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
-                    <Sparkles className="w-3 h-3 text-blue-400" /> TruOverlay • Stream Control
-                </p>
-            }
-            after={
-                <p className="text-center text-[10px] text-gray-600 mt-4">
-                    Belum punya akun? <Link href="/register" className="text-blue-400 font-bold hover:text-blue-300">Daftar</Link> • Butuh bantuan? <span className="text-gray-400">Hubungi admin</span>
-                </p>
+            title="Masuk"
+            badge="Dock"
+            subtitle="Masuk dengan akun terdaftar untuk melanjutkan."
+            footer={
+                <>
+                    <p>
+                        Belum punya akun?{" "}
+                        <Link href="/register" className="font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+                            Daftar
+                        </Link>
+                    </p>
+                    <p className="mt-1">
+                        Butuh bantuan?{" "}
+                        <span className="font-medium text-slate-700">Hubungi admin</span>
+                    </p>
+                </>
             }
         >
-            <form onSubmit={handleLogin} className="space-y-4">
-                        {error && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold px-3 py-2 rounded-lg flex items-start gap-2">
-                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                                <span>{error}</span>
-                            </div>
-                        )}
-                        {info && (
-                            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold px-3 py-2 rounded-lg">
-                                {info}
-                            </div>
-                        )}
+            <form onSubmit={handleLogin} className="space-y-5">
+                {error && (
+                    <div role="alert" className="bg-red-50 border border-red-200 text-red-600 text-sm px-3.5 py-2.5 rounded-lg flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                        <span>{error}</span>
+                    </div>
+                )}
+                {info && (
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-3.5 py-2.5 rounded-lg flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                        <span>{info}</span>
+                    </div>
+                )}
 
-                        <div>
-                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-400 mb-1.5">Email</label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                                <input
-                                    type="email"
-                                    value={form.email}
-                                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                    placeholder="email@contoh.com"
-                                    className="w-full h-10 pl-9 pr-3 bg-white/5 border border-white/10 rounded-xl text-[13px] font-bold text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-colors"
-                                />
-                            </div>
+                {/* Email Field */}
+                <div className="space-y-2">
+                    <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email</label>
+                    <div className="relative">
+                        <div className={iconClass}>
+                            <User className="w-[18px] h-[18px]" />
                         </div>
+                        <input
+                            type="email"
+                            id="email"
+                            value={form.email}
+                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                            placeholder="email@contoh.com"
+                            autoComplete="email"
+                            required
+                            className={inputClass}
+                        />
+                    </div>
+                </div>
 
-                        <div>
-                            <label className="block text-[8px] font-black tracking-widest uppercase text-gray-400 mb-1.5">Password</label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                                <input
-                                    type={showPass ? "text" : "password"}
-                                    value={form.password}
-                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                    placeholder="••••••••"
-                                    className="w-full h-10 pl-9 pr-9 bg-white/5 border border-white/10 rounded-xl text-[13px] font-bold text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-colors"
-                                />
-                                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                                    {showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                </button>
-                            </div>
+                {/* Password Field */}
+                <div className="space-y-2">
+                    <label htmlFor="password" className="block text-sm font-medium text-slate-700">Password</label>
+                    <div className="relative">
+                        <div className={iconClass}>
+                            <Lock className="w-[18px] h-[18px]" />
                         </div>
-
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" checked={form.remember} onChange={(e) => setForm({ ...form, remember: e.target.checked })} className="w-3 h-3 accent-blue-600" />
-                                <span className="text-[10px] font-bold text-gray-400">Ingat saya</span>
-                            </label>
-                            <Link href="/forgot-password" className="text-[10px] font-bold text-blue-400 hover:text-blue-300">Lupa password?</Link>
-                        </div>
-
+                        <input
+                            type={showPass ? "text" : "password"}
+                            id="password"
+                            value={form.password}
+                            onChange={(e) => setForm({ ...form, password: e.target.value })}
+                            placeholder="••••••••"
+                            autoComplete="current-password"
+                            required
+                            className={`${inputClass} pr-10`}
+                        />
                         <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                            type="button"
+                            onClick={() => setShowPass(!showPass)}
+                            aria-label={showPass ? "Sembunyikan password" : "Tampilkan password"}
+                            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
                         >
-                            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <LogIn className="w-3.5 h-3.5" />}
-                            {loading ? "Memproses..." : "Masuk"}
+                            {showPass ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
                         </button>
+                    </div>
+                </div>
 
-                        <div className="flex items-center gap-3 py-1">
-                            <div className="flex-1 h-px bg-white/5" />
-                            <span className="text-[8px] font-black tracking-widest uppercase text-gray-600">atau</span>
-                            <div className="flex-1 h-px bg-white/5" />
-                        </div>
+                {/* Options Row */}
+                <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center">
+                        <input
+                            id="remember-me"
+                            name="remember-me"
+                            type="checkbox"
+                            checked={form.remember}
+                            onChange={(e) => setForm({ ...form, remember: e.target.checked })}
+                            className="h-4 w-4 accent-brand-600 border-slate-300 rounded cursor-pointer"
+                        />
+                        <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 cursor-pointer select-none">
+                            Ingat saya
+                        </label>
+                    </div>
+                    <div className="text-sm">
+                        <Link href="/forgot-password" className="font-medium text-brand-600 hover:text-brand-700 transition-colors">
+                            Lupa password?
+                        </Link>
+                    </div>
+                </div>
 
-                        <GoogleAuthButton next={next} label="Masuk dengan Google" onError={setError} />
+                {/* Main Login Button */}
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 transition-all active:scale-[0.99] gap-2 items-center disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    {loading ? "Memproses..." : "Masuk"}
+                    {!loading && <ArrowRight className="w-4 h-4" />}
+                </button>
+            </form>
 
-                        <button type="button" onClick={() => { const gk = "guest_" + Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join(""); sessionStorage.setItem("guest_private_key", gk); sessionStorage.setItem("dock_private_verified", gk); try { localStorage.setItem("dock_private_key", gk); } catch {} router.push("/dock"); }} className="w-full h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-colors">
-                            <Monitor className="w-3.5 h-3.5" /> Masuk sebagai Guest
-                        </button>
-                    </form>
+            {/* Divider */}
+            <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                    <span className="px-3 bg-white text-slate-400 uppercase tracking-widest font-semibold">Atau</span>
+                </div>
+            </div>
+
+            {/* Alternative Logins */}
+            <div className="space-y-3">
+                <GoogleAuthButton next={next} label="Masuk dengan Google" onError={setError} />
+
+                <button
+                    type="button"
+                    onClick={() => { const gk = "guest_" + Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join(""); sessionStorage.setItem("guest_private_key", gk); sessionStorage.setItem("dock_private_verified", gk); try { localStorage.setItem("dock_private_key", gk); } catch {} router.push("/dock"); }}
+                    className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 transition-colors gap-3"
+                >
+                    <Monitor className="w-5 h-5 text-slate-600" /> Masuk sebagai Guest
+                </button>
+            </div>
         </AuthLayout>
     );
 }
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a] grid place-items-center text-gray-500 text-sm">Memuat…</div>}>
+        <Suspense fallback={<div className="min-h-screen bg-slate-50 grid place-items-center text-slate-500 text-sm">Memuat…</div>}>
             <LoginContent />
         </Suspense>
     );

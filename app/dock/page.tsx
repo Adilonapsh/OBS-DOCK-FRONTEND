@@ -769,8 +769,8 @@ export default function Home() {
     };
 
     // URL siap paste ke OBS > View > Docks > Custom Browser Docks.
-    // Key di URL = cara paling andal di OBS dock (storage CEF terpisah dari browser).
-    const handleCopyObsDockUrl = async () => {
+    // Key di URL = cara paling andal di Keluno dock (storage CEF terpisah dari browser).
+    const handleCopyKelunoUrl = async () => {
         const key = privateKey || privateKeyInput.trim();
         if (!key || typeof window === "undefined") return;
         await navigator.clipboard.writeText(`${window.location.origin}/dock?key=${key}`);
@@ -3518,7 +3518,7 @@ export default function Home() {
                                     </div>
                                     <code className="block text-[10px] break-all text-cyan-400 font-mono-custom bg-white/5 p-2 rounded border border-white/5">{privateKey}</code>
                                     <button onClick={handleRegeneratePrivateKey} className="text-[10px] font-bold text-red-400 hover:text-red-300">Regenerate private key</button>
-                                    <button onClick={handleCopyObsDockUrl} className="block w-full h-9 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 font-black text-[10px] uppercase tracking-widest">Copy URL Dock OBS</button>
+                                    <button onClick={handleCopyKelunoUrl} className="block w-full h-9 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 font-black text-[10px] uppercase tracking-widest">Copy URL Dock OBS</button>
                                     <p className="text-[9px] text-gray-500 leading-relaxed">Paste ke OBS → View → Docks → Custom Browser Docks. URL berisi <code className="text-cyan-400">?key=</code> agar key tidak hilang saat OBS dibuka ulang.</p>
                                 </div>
                             )}

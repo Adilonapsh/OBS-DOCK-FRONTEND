@@ -1,6 +1,6 @@
 # Role & Permission (RBAC)
 
-Dokumen ini menjelaskan model akses OBS Dock: **guest**, **user**, dan **admin**.
+Dokumen ini menjelaskan model akses Keluno: **guest**, **user**, dan **admin**.
 
 ## 1. Konsep
 

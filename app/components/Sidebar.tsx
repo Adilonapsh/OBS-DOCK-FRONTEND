@@ -218,10 +218,7 @@ export default function Sidebar({
         }`}
       >
         <div className="h-14 flex items-center gap-3 px-5 border-b border-white/5">
-          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
-            <Image src="/assets/logo/obs.png" alt="OBS" width={18} height={18} />
-          </div>
-          <span className="font-black tracking-tighter text-white text-[13px]">OBS OVERLAYS</span>
+          <Image src="/assets/logo/Keluno_Wordmark.webp" alt="Keluno" width={200} height={81} className="h-10 w-auto object-contain shrink-0" />
           <button onClick={onClose} className="ml-auto lg:hidden p-1 text-gray-500 hover:text-white">
             <X className="w-4 h-4" />
           </button>

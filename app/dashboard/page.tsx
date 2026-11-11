@@ -160,7 +160,7 @@ export default function DashboardPage() {
 
 
                 <div className="bg-[#161616] border border-white/10 rounded-xl p-4 flex items-center justify-between">
-                    <span className="text-[10px] text-gray-600 font-bold uppercase">© 2026 OBS Overlays</span>
+                    <span className="text-[10px] text-gray-600 font-bold uppercase">© 2026 Keluno</span>
                     <div className="flex items-center gap-3 text-[10px] font-black uppercase">
                         <Link href="/dock" className="text-white hover:text-zinc-300 flex items-center gap-1"><Settings className="w-3 h-3" /> Dock</Link>
                     </div>

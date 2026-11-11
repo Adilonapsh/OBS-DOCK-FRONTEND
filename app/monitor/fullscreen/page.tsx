@@ -464,7 +464,7 @@ function FullscreenContent() {
               )
             ) : (
               <div className={`${OFFLINE_FRAME} flex items-center justify-center`}>
-                <Logo size={96} />
+                <Logo size={96} variant="light" />
               </div>
             )}
 

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, FileText } from "lucide-react";
 
 export const metadata = {
-    title: "Syarat & Ketentuan - OBS Dock",
-    description: "Syarat dan ketentuan penggunaan OBS Dock: akun, penggunaan wajar, dan batasan layanan.",
+    title: "Syarat & Ketentuan - Keluno",
+    description: "Syarat dan ketentuan penggunaan Keluno: akun, penggunaan wajar, dan batasan layanan.",
 };
 
 function Section({ no, title, children }: { no: string; title: string; children: React.ReactNode }) {
@@ -35,13 +35,13 @@ export default function TermsPage() {
                     </div>
                 </div>
                 <p className="text-gray-400 text-[13px] leading-relaxed mb-8">
-                    Dengan membuat akun, masuk (termasuk lewat Google), atau memakai OBS Dock, kamu menyetujui syarat di bawah ini.
+                    Dengan membuat akun, masuk (termasuk lewat Google), atau memakai Keluno, kamu menyetujui syarat di bawah ini.
                     Jika tidak setuju, jangan gunakan layanan.
                 </p>
 
                 <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 sm:p-7">
                     <Section no="01" title="Layanan">
-                        <p>OBS Dock adalah panel kontrol stream dan overlay widget (chat, polling, task, timer, musik, rank Valorant, dsb.) yang tampil sebagai browser source di OBS / Streamlabs dan dikendalikan dari dock web atau mobile.</p>
+                        <p>Keluno adalah panel kontrol stream dan overlay widget (chat, polling, task, timer, musik, rank Valorant, dsb.) yang tampil sebagai browser source di OBS / Streamlabs dan dikendalikan dari dock web atau mobile.</p>
                     </Section>
 
                     <Section no="02" title="Akun">
@@ -54,7 +54,7 @@ export default function TermsPage() {
                             <li>Menampilkan konten ilegal, pornografi, ujaran kebencian, atau yang melanggar aturan platform (Twitch, YouTube, TikTok) lewat overlay.</li>
                             <li>Menyalahgunakan backend (spam request, scraping agresif, membebani API pencarian lagu/lirik/rank) hingga mengganggu pengguna lain.</li>
                             <li>Mencoba mengakses data pengguna lain, mengakali isolasi private key, atau mengeksploitasi celah keamanan. Temuan bug harap dilaporkan ke admin.</li>
-                            <li>Mengatasnamakan OBS Dock atau menjual kembali akses layanan tanpa izin.</li>
+                            <li>Mengatasnamakan Keluno atau menjual kembali akses layanan tanpa izin.</li>
                         </ul>
                     </Section>
 

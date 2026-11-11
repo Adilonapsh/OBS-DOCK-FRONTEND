@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
 
 export default withSentryConfig(nextConfig, {
   org: "noreply",
-  project: "obsdock",
+  project: "keluno",
 
   silent: !process.env.CI,
 

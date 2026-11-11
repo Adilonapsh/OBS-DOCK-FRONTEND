@@ -15,7 +15,7 @@ export default function SentryExamplePage() {
         <h1 className="text-xl font-semibold">Sentry Test Page</h1>
         <p className="text-sm opacity-70">
           Klik tombol di bawah untuk memicu test error. Cek hasilnya di Sentry &gt;
-          Issues (project obsdock).
+          Issues (project keluno).
         </p>
         <button
           type="button"

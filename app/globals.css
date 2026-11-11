@@ -14,6 +14,50 @@
   --font-sans: var(--font-plus-jakarta-sans);
 }
 
+@theme {
+  --color-brand-50: #f0f7fc;
+  --color-brand-100: #e0eff9;
+  --color-brand-500: #1a7bc2;
+  --color-brand-600: #005ea6;
+  --color-brand-700: #004c8c;
+  --color-brand-900: #00335e;
+  --color-brand-950: #001a33;
+}
+
+/* Animasi blob untuk panel branding halaman auth. */
+@keyframes auth-blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: auth-blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob {
+    animation: none;
+  }
+}
+
 html.dark {
   --background: #0a0a0a;
   --foreground: #ededed;
