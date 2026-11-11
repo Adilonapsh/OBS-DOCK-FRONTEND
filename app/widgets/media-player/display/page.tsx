@@ -40,6 +40,14 @@ function getIntParam(params: URLSearchParams, key: string, fallback: number): nu
 function getBoolParam(params: URLSearchParams, key: string, fallback: boolean): boolean {
   const v = params.get(key); if (v === null) return fallback; return v === 'true' || v === '1';
 }
+
+// Bentuk session dari SMTC Bridge (/now-playing) yang dipakai di fetch loop.
+type SmtcSession = {
+  source_app_id?: string;
+  playback_info?: { PlaybackStatus?: number };
+  media_properties?: { Title?: string; Artist?: string; Thumbnail?: string };
+  timeline_properties?: { Position: number; EndTime: number; LastUpdatedTime: string };
+};
 function msToTime(ms: number): string {
   if (!ms || ms < 0) return '0:00';
   const totalSec = Math.floor(ms / 1000);
@@ -198,11 +206,11 @@ function MediaPlayerInner() {
         // filter sessions like reference
         const incList = includedApplications ? includedApplications.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : [];
         const excList = excludedApplications ? excludedApplications.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : [];
-        const validSessions: Array<{ source_app_id?: string; playback_info?: { PlaybackStatus?: number } }> = (data.sessions || []).filter((s: { source_app_id?: string; playback_info?: { PlaybackStatus?: number } }) => {
+        const validSessions: SmtcSession[] = (data.sessions || []).filter((s: SmtcSession) => {
           const appId = (s.source_app_id || '').toLowerCase();
           return !excList.some(ex => appId.includes(ex));
         });
-        let target: { source_app_id?: string; playback_info?: { PlaybackStatus?: number } } | null = null;
+        let target: SmtcSession | undefined;
         if (incList.length > 0) {
           for (const targetApp of incList) {
             target = validSessions.find(s => {
@@ -228,27 +236,34 @@ function MediaPlayerInner() {
         }
 
         if (target) {
-          const pInfo = target.playback_info; const mProps = target.media_properties; const tProps = target.timeline_properties;
-          // visibility by playback
-          if (pInfo.PlaybackStatus !== playbackStatus) {
-            if (pInfo.PlaybackStatus === PlaybackStatus.PLAYING || (showWhilePaused && pInfo.PlaybackStatus === PlaybackStatus.PAUSED)) setVisibility(true);
-            else setVisibility(false);
-            setPlaybackStatus(pInfo.PlaybackStatus);
-            setIsPausedOverlay(pInfo.PlaybackStatus === PlaybackStatus.PAUSED);
+          const pInfo = target.playback_info;
+          const mProps = target.media_properties;
+          const tProps = target.timeline_properties;
+          if (!pInfo) {
+            setVisibility(false);
+            return;
           }
-          if (pInfo.PlaybackStatus === PlaybackStatus.PLAYING || (showWhilePaused && pInfo.PlaybackStatus === PlaybackStatus.PAUSED)) {
-            const newKey = `${mProps.Title}-${mProps.Artist}-${mProps.Thumbnail}`;
+          const status = pInfo.PlaybackStatus ?? PlaybackStatus.STOPPED;
+          // visibility by playback
+          if (status !== playbackStatus) {
+            if (status === PlaybackStatus.PLAYING || (showWhilePaused && status === PlaybackStatus.PAUSED)) setVisibility(true);
+            else setVisibility(false);
+            setPlaybackStatus(status);
+            setIsPausedOverlay(status === PlaybackStatus.PAUSED);
+          }
+          if (status === PlaybackStatus.PLAYING || (showWhilePaused && status === PlaybackStatus.PAUSED)) {
+            const newKey = `${mProps?.Title}-${mProps?.Artist}-${mProps?.Thumbnail}`;
             if (newKey !== currentSongKeyRef.current) {
               // ChangeTrack with fade
-              const newArt = mProps.Thumbnail || PLACEHOLDER;
+              const newArt = mProps?.Thumbnail || PLACEHOLDER;
               // pre-extract palette
               const pal = await getVibrantPalette(newArt);
               if (cancelled) return;
               setPalette(pal);
               // short fade out then in
               // we do immediate set for simplicity, CSS handles transition
-              setTrack(swapArtistTrack ? (mProps.Artist || '') : (mProps.Title || ''));
-              setArtist(swapArtistTrack ? (mProps.Title || '') : (mProps.Artist || ''));
+              setTrack(swapArtistTrack ? (mProps?.Artist || '') : (mProps?.Title || ''));
+              setArtist(swapArtistTrack ? (mProps?.Title || '') : (mProps?.Artist || ''));
               setArt(newArt);
               setBgArt(newArt);
               lastArtRef.current = newArt;
@@ -260,7 +275,7 @@ function MediaPlayerInner() {
             setTimeline(tProps);
             const anchor = Date.parse(tProps.LastUpdatedTime.replace(' ', 'T'));
             const drift = Date.now() - anchor;
-            const isPlaying = pInfo.PlaybackStatus === PlaybackStatus.PLAYING;
+            const isPlaying = status === PlaybackStatus.PLAYING;
             const pos = isPlaying && tProps.EndTime > 0 ? tProps.Position + drift : tProps.Position;
             setCurrentPos(pos);
           }

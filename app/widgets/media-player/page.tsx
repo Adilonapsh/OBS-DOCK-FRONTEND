@@ -37,7 +37,7 @@ const hideAnimations = ['fade-out','slide-out-top','slide-out-bottom','slide-out
 type MediaPlayerState = typeof defaults;
 type MediaPlayerStateMap = Record<string, string | boolean | number | undefined>;
 
-function buildUrl(base: string, state: MediaPlayerStateMap): string {
+function buildUrl(base: string, state: MediaPlayerState): string {
   const p = new URLSearchParams();
   p.set('theme', state.theme);
   if (state.font) p.set('font', state.font);
@@ -178,7 +178,7 @@ function MediaPlayerSettingsInner() {
     return `/widgets/media-player/display?${p.toString()}`;
   }, [state]);
 
-  const update = (k: string, v: string | boolean | number) => setState((prev: MediaPlayerState) => ({ ...prev, [k]: v } as MediaPlayerState));
+  const update = (k: string, v: unknown) => setState((prev: MediaPlayerState) => ({ ...prev, [k]: v } as MediaPlayerState));
 
   const handleCopy = () => shell.copy(obsUrl);
 
