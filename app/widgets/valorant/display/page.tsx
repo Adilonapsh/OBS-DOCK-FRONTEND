@@ -2,7 +2,9 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { io } from 'socket.io-client';
 import { getStringParam, getIntParam, getBoolParam } from '../../_shared/utils/url';
+import { getSocketUrl } from '../../_shared/utils/socket';
 import { loadGoogleFont } from '../../_shared/utils/font';
 import { getPositionStyle } from '../../_shared/constants/positions';
 import { parseBrutalistParams } from '../../_shared/constants/brutalist';
@@ -34,6 +36,9 @@ function ValorantInner() {
   const showSeason = getBoolParam(params, 'showSeason', VALORANT_DEFAULTS.showSeason);
   const showUsername = getBoolParam(params, 'showUsername', VALORANT_DEFAULTS.showUsername);
   const showTag = getBoolParam(params, 'showTag', VALORANT_DEFAULTS.showTag);
+  const partyCodeParam = getStringParam(params, 'partyCode', VALORANT_DEFAULTS.partyCode);
+  const showPartyCodeParam = getBoolParam(params, 'showPartyCode', VALORANT_DEFAULTS.showPartyCode);
+  const privateKey = getStringParam(params, 'key', getStringParam(params, 'privateKey', ''));
   const obsMode = getBoolParam(params, 'obs', false) || getBoolParam(params, 'transparent', false);
   const simulate = getBoolParam(params, 'simulate', false);
 
@@ -52,6 +57,9 @@ function ValorantInner() {
   const [updatedAt, setUpdatedAt] = useState('');
   const [promo, setPromo] = useState<PromoState>(null);
   const [error, setError] = useState('');
+  // Party code live dari dock (socket). null = belum ada update → pakai URL.
+  const [livePartyCode, setLivePartyCode] = useState<string | null>(null);
+  const [liveShowPartyCode, setLiveShowPartyCode] = useState<boolean | null>(null);
 
   const tiersRef = useRef<ValoTier[]>([]);
   const tierIdxRef = useRef(-1);
@@ -62,6 +70,22 @@ function ValorantInner() {
   const rafRef = useRef(0);
 
   useEffect(() => { loadGoogleFont(font, '400;700;900', 'valorant-font'); }, [font]);
+
+  // Party code dari dock → widget, live tanpa reload OBS.
+  useEffect(() => {
+    if (simulate) return;
+    const s = io(getSocketUrl(), { transports: ['websocket', 'polling'] as const });
+    const room = privateKey || 'global';
+    s.on('connect', () => {
+      s.emit('join-room', room);
+      s.emit('valorant-party-get', { privateKey: room });
+    });
+    s.on('valorant-party', (data: any) => {
+      if (typeof data?.partyCode === 'string') setLivePartyCode(data.partyCode);
+      if (typeof data?.showPartyCode === 'boolean') setLiveShowPartyCode(data.showPartyCode);
+    });
+    return () => { s.disconnect(); };
+  }, [privateKey, simulate]);
 
   // Animasi increment/decrement RR setiap target berubah
   useEffect(() => {
@@ -237,6 +261,9 @@ function ValorantInner() {
   const winrate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
   const posStyle = getPositionStyle(pos);
   const riotId = [showUsername ? username : '', showTag ? `#${tag}` : ''].filter(Boolean).join(' ');
+  // Dock (socket) menang; URL jadi fallback saat dock belum pernah mengirim.
+  const partyCode = livePartyCode !== null ? livePartyCode : partyCodeParam;
+  const showPartyCode = liveShowPartyCode !== null ? liveShowPartyCode : showPartyCodeParam;
 
   return (
     <>
@@ -277,6 +304,8 @@ function ValorantInner() {
           promo={promo}
           trackerTextMode={trackerTextMode}
           trackerTextColor={trackerTextColor}
+          partyCode={partyCode}
+          showPartyCode={showPartyCode}
         />
       </div>
     </>

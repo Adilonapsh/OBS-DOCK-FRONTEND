@@ -149,7 +149,7 @@ function ParamsEditor({ vars, params, onChange, preview }: {
           onClick={() => setOpen((v) => !v)}
           className="flex-1 h-8 px-3 flex items-center justify-between rounded-lg hover:bg-zinc-200 dark:hover:bg-white/5 text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-gray-400 hover:text-zinc-950 dark:hover:text-white transition-colors"
         >
-          <span>Parameter {entries.length > 0 && <span className="ml-1 px-1.5 py-px bg-emerald-500/20 text-emerald-300 rounded-full">{entries.length}</span>}</span>
+          <span>Parameter {entries.length > 0 && <span className="ml-1 px-1.5 py-px bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-full">{entries.length}</span>}</span>
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
         <button
@@ -167,7 +167,7 @@ function ParamsEditor({ vars, params, onChange, preview }: {
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 dark:text-gray-500">Args Streamer.bot</span>
             <button type="button" onClick={copyPreview} className="flex items-center gap-1 text-[9px] font-bold text-zinc-600 dark:text-gray-400 hover:text-zinc-950 dark:hover:text-white">
-              {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />} {copied ? "Disalin!" : "Salin"}
+              {copied ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />} {copied ? "Disalin!" : "Salin"}
             </button>
           </div>
           <pre className="max-h-40 overflow-auto text-[10px] leading-relaxed font-sans text-emerald-800 dark:text-emerald-200/90 whitespace-pre-wrap break-all">
@@ -275,12 +275,12 @@ function EventCard({ icon: Icon, title, desc, vars, enabled, action, params, pre
   return (
     <div className={`group rounded-2xl border p-3.5 space-y-3 transition-all ${ready ? "bg-white/[0.04] border-emerald-500/25 hover:border-emerald-500/45" : enabled ? "bg-white/[0.03] border-amber-500/30 hover:border-amber-500/50" : "bg-black/30 border-white/10 hover:border-white/20"}`}>
       <div className="flex items-center gap-3">
-        <div className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 transition-colors ${ready ? "bg-emerald-500/15 text-emerald-300" : "bg-white/5 text-gray-400"}`}>
+        <div className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 transition-colors ${ready ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-zinc-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"}`}>
           <Icon className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-white font-black text-[12px] tracking-wide truncate">{title}</span>
+            <span className="text-zinc-900 dark:text-white font-black text-[12px] tracking-wide truncate">{title}</span>
           </div>
           <div className="text-gray-500 text-[10px] truncate mt-0.5">{desc}</div>
         </div>
@@ -292,14 +292,14 @@ function EventCard({ icon: Icon, title, desc, vars, enabled, action, params, pre
           <select
             value={action}
             onChange={(e) => onAction(e.target.value)}
-            className={`w-full h-10 appearance-none bg-black/40 border border-white/10 rounded-xl pl-3 pr-8 text-[12px] font-sans focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 cursor-pointer ${mapped ? "text-white" : "text-gray-500"}`}
+            className={`w-full h-10 appearance-none bg-white dark:bg-black/40 border border-zinc-300 dark:border-white/10 rounded-xl pl-3 pr-8 text-[12px] font-sans focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 cursor-pointer ${mapped ? "text-zinc-900 dark:text-white" : "text-gray-500"}`}
             title={connected ? "Pilih action Streamer.bot" : "Streamer.bot tidak terhubung - daftar mungkin tidak terbaru"}
           >
-            <option value="" className="bg-[#161616] text-gray-400">
+            <option value="" className="bg-white dark:bg-[#161616] text-gray-500 dark:text-gray-400">
               {sbActions.length === 0 ? (connected ? "Memuat actions…" : "Pilih action Streamer.bot…") : `Pilih action… (${sbActions.length})`}
             </option>
             {options.map((name) => (
-              <option key={name} value={name} className="bg-[#161616] text-white">
+              <option key={name} value={name} className="bg-white dark:bg-[#161616] text-zinc-900 dark:text-white">
                 {name}
               </option>
             ))}
@@ -309,7 +309,7 @@ function EventCard({ icon: Icon, title, desc, vars, enabled, action, params, pre
         <button
  onClick={onTest}
  disabled={!connected || !mapped || testing}
- className="shrink-0 h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed btn-primary hover:bg-emerald-200"
+ className="shrink-0 h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed btn-primary"
  title={!connected ? "Streamer.bot tidak terhubung" : !mapped ? "Pilih action dulu" : "Kirim DoAction percobaan"}
  >
           <FlaskConical className={`w-3.5 h-3.5 ${testing ? "animate-pulse" : ""}`} /> {testing ? "…" : "Tes"}
@@ -520,7 +520,7 @@ export default function IntegrationsPage() {
 
   const tiktokItems = allItems.filter((i) => i.group === "tiktok");
   const donationItems = allItems.filter((i) => i.group === "donation");
-  const statusColor = connected ? "text-emerald-300" : sbStatus === "ERROR" ? "text-red-400" : "text-gray-500";
+  const statusColor = connected ? "text-emerald-700 dark:text-emerald-300" : sbStatus === "ERROR" ? "text-red-600 dark:text-red-400" : "text-gray-500";
   const dotColor = connected ? "bg-emerald-400 animate-pulse" : sbStatus === "ERROR" ? "bg-red-500" : "bg-gray-600";
 
   const TABS: Array<{ id: FilterTab; label: string }> = [
@@ -540,7 +540,7 @@ export default function IntegrationsPage() {
         <header className="h-14 bg-[#121212]/90 backdrop-blur border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-white"><Plug className="w-3 h-3" /> STREAMER.BOT</span>
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/10 border border-white/10 rounded text-[8px] font-black tracking-widest text-zinc-900 dark:text-white"><Plug className="w-3 h-3" /> STREAMER.BOT</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -559,18 +559,18 @@ export default function IntegrationsPage() {
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
             <div className="flex flex-col md:flex-row md:items-center gap-4 relative">
               <div className="flex-1">
-                <h1 className="text-white font-black text-lg md:text-xl tracking-tight flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-amber-300" /> Event Streamer.bot
+                <h1 className="text-zinc-900 dark:text-white font-black text-lg md:text-xl tracking-tight flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-amber-500 dark:text-amber-300" /> Event Streamer.bot
                 </h1>
-                <p className="text-gray-400 text-[11px] md:text-xs mt-1.5 leading-relaxed max-w-[560px]">
-                  Setiap event TikTok, donasi & widget memicu <span className="text-white font-bold">DoAction</span> di Streamer.bot.
-                  Nyalakan event, pilih action, atur parameter, lalu tekan <span className="text-white font-bold">Tes</span>.
-                  Eksekusi live berjalan di <span className="text-white font-bold">dock</span> - tersinkron otomatis.
+                <p className="text-gray-500 dark:text-gray-400 text-[11px] md:text-xs mt-1.5 leading-relaxed max-w-[560px]">
+                  Setiap event TikTok, donasi & widget memicu <span className="text-zinc-900 dark:text-white font-bold">DoAction</span> di Streamer.bot.
+                  Nyalakan event, pilih action, atur parameter, lalu tekan <span className="text-zinc-900 dark:text-white font-bold">Tes</span>.
+                  Eksekusi live berjalan di <span className="text-zinc-900 dark:text-white font-bold">dock</span> - tersinkron otomatis.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 rounded-full text-[10px] font-black">{totalActive}/{allItems.length} aktif siap</span>
+                  <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 rounded-full text-[10px] font-black">{totalActive}/{allItems.length} aktif siap</span>
                   {totalEnabled > totalActive && (
-                    <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded-full text-[10px] font-black">{totalEnabled - totalActive} nyala tapi belum ada action</span>
+                    <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-black">{totalEnabled - totalActive} nyala tapi belum ada action</span>
                   )}
                   <span className="px-2.5 py-1 bg-white/5 border border-white/10 text-gray-400 rounded-full text-[10px]  font-sans">{sbEndpoint}</span>
                 </div>
@@ -583,7 +583,7 @@ export default function IntegrationsPage() {
               </button>
             </div>
             {!connected && (
-              <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl text-[11px] text-amber-200 leading-relaxed relative">
+              <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed relative">
                 ⚠️ Streamer.bot belum terhubung - mapping tetap bisa diatur (tersimpan), tapi tombol <b>Tes</b> butuh koneksi. Cek address/port di Config atau buka dock dengan Streamer.bot menyala.
               </div>
             )}
@@ -597,7 +597,7 @@ export default function IntegrationsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari event / action… (mis. gift, poll, song)"
-                className="w-full h-10 pl-9 pr-9 bg-[#161616] border border-white/10 rounded-xl text-[12px] font-sans text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30"
+                className="w-full h-10 pl-9 pr-9 bg-white dark:bg-[#161616] border border-zinc-300 dark:border-white/10 rounded-xl text-[12px] font-sans text-zinc-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30"
               />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 grid place-items-center rounded-lg text-gray-500 hover:text-white hover:bg-white/10">
@@ -622,12 +622,12 @@ export default function IntegrationsPage() {
           {visibleGroup("tiktok", tiktokItems.map((i) => i.key)) && (
             <section className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
               <button onClick={() => toggleGroup("tiktok")} className="w-full px-5 py-4 flex items-center gap-3 hover:bg-white/[0.02] transition-colors text-left">
-                <div className="w-10 h-10 rounded-xl bg-pink-500/15 text-pink-300 grid place-items-center shrink-0 font-black">TT</div>
+                <div className="w-10 h-10 rounded-xl bg-pink-100 dark:bg-pink-500/15 text-pink-700 dark:text-pink-300 grid place-items-center shrink-0 font-black">TT</div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-black uppercase text-[12px] tracking-widest">TikTok Live Streamer.bot</h3>
-                  <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[280px]">
+                  <h3 className="text-zinc-900 dark:text-white font-black uppercase text-[12px] tracking-widest">TikTok Live Streamer.bot</h3>
+                  <div className="mt-1 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden max-w-[280px]">
                     <div
-                      className="h-full bg-white rounded-full transition-all"
+                      className="h-full bg-[var(--primary)] rounded-full transition-all"
                       style={{ width: `${(tiktokItems.filter((i) => i.enabled && i.action.trim()).length / Math.max(1, tiktokItems.length)) * 100}%` }}
                     />
                   </div>
@@ -640,7 +640,7 @@ export default function IntegrationsPage() {
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => setGroupEnabled("tiktok", TT_SB_KEYS, true)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Nyalakan semua</button>
                     <button onClick={() => setGroupEnabled("tiktok", TT_SB_KEYS, false)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Matikan semua</button>
-                    <button onClick={() => testGroup(tiktokItems)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
+                    <button onClick={() => testGroup(tiktokItems)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] flex items-center gap-1.5 transition-colors">
                       <Play className="w-3 h-3" /> Tes semua yg aktif
                     </button>
                   </div>
@@ -679,14 +679,14 @@ export default function IntegrationsPage() {
           {visibleGroup("donation", donationItems.map((i) => i.key)) && (
             <section className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
               <button onClick={() => toggleGroup("donation")} className="w-full px-5 py-4 flex items-center gap-3 hover:bg-white/[0.02] transition-colors text-left">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-300 grid place-items-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 grid place-items-center shrink-0">
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-black uppercase text-[12px] tracking-widest">Donasi Streamer.bot</h3>
-                  <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[280px]">
+                  <h3 className="text-zinc-900 dark:text-white font-black uppercase text-[12px] tracking-widest">Donasi Streamer.bot</h3>
+                  <div className="mt-1 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden max-w-[280px]">
                     <div
-                      className="h-full bg-white rounded-full transition-all"
+                      className="h-full bg-[var(--primary)] rounded-full transition-all"
                       style={{ width: `${(donationItems.filter((i) => i.enabled && i.action.trim()).length / Math.max(1, donationItems.length)) * 100}%` }}
                     />
                   </div>
@@ -699,7 +699,7 @@ export default function IntegrationsPage() {
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => setGroupEnabled("donation", DONATION_SB_KEYS, true)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Nyalakan semua</button>
                     <button onClick={() => setGroupEnabled("donation", DONATION_SB_KEYS, false)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Matikan semua</button>
-                    <button onClick={() => testGroup(donationItems)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
+                    <button onClick={() => testGroup(donationItems)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] flex items-center gap-1.5 transition-colors">
                       <Play className="w-3 h-3" /> Tes semua yg aktif
                     </button>
                   </div>
@@ -744,14 +744,14 @@ export default function IntegrationsPage() {
             return (
               <section key={group.widget} className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
                 <button onClick={() => toggleGroup(group.widget)} className="w-full px-5 py-4 flex items-center gap-3 hover:bg-white/[0.02] transition-colors text-left">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/15 text-violet-200 grid place-items-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-200 grid place-items-center shrink-0">
                     <Icon className="w-4.5 h-4.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-black uppercase text-[12px] tracking-widest">{group.title} <span className="text-gray-600 normal-case font-bold">- {group.desc}</span></h3>
-                    <div className="mt-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[280px]">
+                    <h3 className="text-zinc-900 dark:text-white font-black uppercase text-[12px] tracking-widest">{group.title} <span className="text-gray-500 dark:text-gray-600 normal-case font-bold">- {group.desc}</span></h3>
+                    <div className="mt-1 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden max-w-[280px]">
                       <div
-                        className="h-full bg-white rounded-full transition-all"
+                        className="h-full bg-[var(--primary)] rounded-full transition-all"
                         style={{ width: `${(activeCount / Math.max(1, items.length)) * 100}%` }}
                       />
                     </div>
@@ -764,7 +764,7 @@ export default function IntegrationsPage() {
                     <div className="flex flex-wrap gap-2">
                       <button onClick={() => setGroupEnabled(group.widget, group.events.map((e) => e.key), true)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Nyalakan semua</button>
                       <button onClick={() => setGroupEnabled(group.widget, group.events.map((e) => e.key), false)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Matikan semua</button>
-                      <button onClick={() => testGroup(items)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
+                      <button onClick={() => testGroup(items)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] flex items-center gap-1.5 transition-colors">
                         <Play className="w-3 h-3" /> Tes semua yg aktif
                       </button>
                     </div>
@@ -802,7 +802,7 @@ export default function IntegrationsPage() {
           {isSearching && filteredKeys.size === 0 && (
             <div className="bg-[#161616] border border-dashed border-white/15 rounded-2xl p-10 text-center">
               <Search className="w-8 h-8 text-gray-600 mx-auto" />
-              <div className="text-white font-black uppercase text-[12px] mt-3">Tidak ketemu</div>
+              <div className="text-zinc-900 dark:text-white font-black uppercase text-[12px] mt-3">Tidak ketemu</div>
               <div className="text-gray-500 text-[11px] mt-1">Coba kata kunci lain atau reset filter.</div>
               <button onClick={() => { setSearch(""); setTab("all"); }} className="mt-4 h-9 px-4 btn-primary rounded-xl text-[10px] font-black uppercase tracking-wider">Reset pencarian</button>
             </div>
@@ -817,7 +817,7 @@ export default function IntegrationsPage() {
 
       {/* Toast */}
       {toast && (
-        <div key={toast.id} className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[11px] font-bold shadow-2xl animate-in fade-in slide-in-from-bottom-2 ${toast.kind === "success" ? "bg-emerald-950/95 border-emerald-500/40 text-emerald-200" : toast.kind === "error" ? "bg-red-950/95 border-red-500/40 text-red-200" : "bg-[#1a1a1a]/95 border-white/15 text-gray-200"}`}>
+        <div key={toast.id} className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[11px] font-bold shadow-2xl animate-in fade-in slide-in-from-bottom-2 ${toast.kind === "success" ? "bg-emerald-50 dark:bg-emerald-950/95 border-emerald-500/40 text-emerald-800 dark:text-emerald-200" : toast.kind === "error" ? "bg-red-50 dark:bg-red-950/95 border-red-500/40 text-red-800 dark:text-red-200" : "bg-white dark:bg-[#1a1a1a]/95 border-zinc-300 dark:border-white/15 text-zinc-800 dark:text-gray-200"}`}>
           {toast.kind === "success" ? <Check className="w-3.5 h-3.5" /> : toast.kind === "error" ? <X className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
           {toast.msg}
         </div>

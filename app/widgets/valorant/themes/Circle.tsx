@@ -6,6 +6,8 @@
 // Ring SVG (ticks + track + inner arc + progress RR) + rank icon tengah + badge RR%.
 // Warna ngikut themeColor (auto = warna tier | custom = accent). Data (rr/icon) dari display/page.
 
+import { RollingCode } from './RollingCode';
+
 const R_PROGRESS = 95;
 const R_INNER = 82;
 const R_MIDDLE = 68;
@@ -23,6 +25,8 @@ export function ValorantCircle({
   themeColor,
   rankName,
   promo,
+  partyCode,
+  showPartyCode,
 }: {
   font: string;
   rr: number;
@@ -30,6 +34,8 @@ export function ValorantCircle({
   themeColor: string;
   rankName: string;
   promo?: { direction: 'up' | 'down'; tierName: string; iconUrl: string } | null;
+  partyCode?: string;
+  showPartyCode?: boolean;
 }) {
   const progress = Math.min(100, Math.max(0, rr));
   const offset = CIRC - (progress / 100) * CIRC;
@@ -168,6 +174,21 @@ export function ValorantCircle({
       >
         {Math.round(progress)}%
       </div>
+
+      {showPartyCode && partyCode ? (
+        <div
+          style={{
+            position: 'absolute', left: '50%', top: '100%', transform: 'translate(-50%, 8px)',
+            display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+            padding: '4px 12px', borderRadius: 12,
+            background: 'rgba(8,8,12,0.72)', border: `1px solid ${tier}66`,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)', zIndex: 11,
+          }}
+        >
+          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: tier, opacity: 0.85 }}>PARTY</span>
+          <RollingCode code={partyCode} charStyle={{ fontSize: 14, fontWeight: 900, color: '#ffffff', letterSpacing: '0.1em' }} />
+        </div>
+      ) : null}
     </div>
   );
 }

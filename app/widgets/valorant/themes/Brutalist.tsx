@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import type { ValorantSkinProps } from './types';
+import { RollingCode } from './RollingCode';
 
 export const themeMeta = { value: 'brutalist', label: 'Brutalist - Neo Brutalist' } as const;
 
@@ -94,6 +95,12 @@ export default function BrutalistTheme(p: ValorantSkinProps) {
               {p.showStreak && p.wins >= 2 && <span className="px-2 py-0.5 rounded-lg font-black" style={{ background: badgeBg, border: `2px solid ${border}`, color: tier }}>🔥 {p.wins}</span>}
               <span className="ml-auto text-[10px] font-bold" style={{ color: ink }}>{p.updatedAt}</span>
             </div>
+            {p.showPartyCode && p.partyCode ? (
+              <div className="flex items-center gap-1.5">
+                <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-wider ${upCls}`} style={{ color: ink, background: badgeBg, border: `2px solid ${border}` }}>PARTY</span>
+                <RollingCode code={p.partyCode} charStyle={{ fontSize: 14, fontWeight: 900, color: tier, letterSpacing: '0.1em', textShadow: `1px 1px 0 ${border}` }} />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -158,6 +165,14 @@ export default function BrutalistTheme(p: ValorantSkinProps) {
               </div>
             </div>
           )}
+          {p.showPartyCode && p.partyCode ? (
+            <div className="flex justify-center mt-3">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-xl" style={{ background: bg, border: `2px solid ${border}`, boxShadow: hardSm }}>
+                <span className={`text-[10px] font-black tracking-[0.2em] ${upCls}`} style={{ color: ink }}>PARTY CODE</span>
+                <RollingCode code={p.partyCode} charStyle={{ fontSize: 18, fontWeight: 900, color: tier, letterSpacing: '0.12em', textShadow: numShadow }} />
+              </div>
+            </div>
+          ) : null}
           <div className={`text-center mt-3 text-[11px] font-black tracking-[0.2em] ${upCls}`} style={{ color: ink }}>
             {p.updatedAt ? `UPDATED ${p.updatedAt}` : 'LOADING...'} • AUTO-REFRESH ON
           </div>

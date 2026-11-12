@@ -3,11 +3,12 @@
 /* eslint-disable @next/next/no-img-element */
 
 import type { ValorantSkinProps } from './types';
+import { RollingCode } from './RollingCode';
 
 export const themeMeta = { value: 'auto', label: 'Auto - ikut warna rank' } as const;
 
 export default function StandardTheme(props: ValorantSkinProps) {
-  const { view, family, riotId, seasonText, rankName, rr, ghostRr, iconUrl, themeColor, wins, losses, winrate, shield, showStreak, showWinrate, showSeason, updatedAt, promo } = props;
+  const { view, family, riotId, seasonText, rankName, rr, ghostRr, iconUrl, themeColor, wins, losses, winrate, shield, showStreak, showWinrate, showSeason, updatedAt, promo, partyCode, showPartyCode } = props;
   const [r, g, b] = [props.r, props.g, props.b];
   const progress = props.progress;
   const cssVars = {
@@ -63,6 +64,12 @@ export default function StandardTheme(props: ValorantSkinProps) {
               {showWinrate && <span className="tracking-wider">• Winrate: <span className="font-black">{winrate}%</span></span>}
               <span className="ml-auto text-[10px] font-bold bg-black/40 border border-white/20 rounded px-1.5 py-0.5 whitespace-nowrap" style={{ color: themeColor }}>{updatedAt}</span>
             </div>
+            {showPartyCode && partyCode ? (
+              <div className="flex items-center gap-1.5 text-[10px] font-black tracking-wider" style={{ color: themeColor }}>
+                <span className="opacity-70">PARTY</span>
+                <RollingCode code={partyCode} charStyle={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.08em', textShadow: `0 0 8px rgba(${r},${g},${b},0.4)` }} />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -135,6 +142,14 @@ export default function StandardTheme(props: ValorantSkinProps) {
               <div className="text-3xl font-black tracking-wider" style={{ color: themeColor, textShadow: `0 0 14px rgba(${r},${g},${b},0.5)` }}>{showWinrate ? `${winrate}%` : '—'}</div>
             </div>
           </div>
+          {showPartyCode && partyCode ? (
+            <div className="flex justify-center items-center gap-2 mb-5">
+              <span className="text-[10px] font-black tracking-[0.25em]" style={{ color: themeColor, opacity: 0.7 }}>PARTY CODE</span>
+              <span className="px-3 py-1 rounded-md border" style={{ background: `rgba(${r},${g},${b},0.12)`, borderColor: `rgba(${r},${g},${b},0.35)` }}>
+                <RollingCode code={partyCode} charStyle={{ color: themeColor, fontSize: 18, fontWeight: 900, letterSpacing: '0.14em', textShadow: `0 0 10px rgba(${r},${g},${b},0.5)` }} />
+              </span>
+            </div>
+          ) : null}
           {showStreak && (
             <div className="flex justify-center items-center gap-2 text-xs font-black tracking-[0.2em]" style={{ color: themeColor, textShadow: `0 0 10px rgba(${r},${g},${b},0.5)` }}>
               <span className="text-[16px]">🔥</span> {wins} WIN STREAK

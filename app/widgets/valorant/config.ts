@@ -26,6 +26,8 @@ export const VALORANT_DEFAULTS = {
   showSeason: true,
   showUsername: true,
   showTag: true,
+  partyCode: '',
+  showPartyCode: true,
   ...BRUTALIST_DEFAULTS,
 } as const;
 
@@ -50,6 +52,8 @@ export function buildValorantUrl(base: string, s: ValorantSettings): string {
   p.set('showSeason', s.showSeason ? '1' : '0');
   p.set('showUsername', s.showUsername ? '1' : '0');
   p.set('showTag', s.showTag ? '1' : '0');
+  if (s.partyCode) p.set('partyCode', s.partyCode);
+  p.set('showPartyCode', s.showPartyCode ? '1' : '0');
   p.set('trackerTextMode', s.trackerTextMode);
   p.set('trackerTextColor', s.trackerTextColor);
   appendBrutalistParams(p, s as unknown as Record<string, unknown>);

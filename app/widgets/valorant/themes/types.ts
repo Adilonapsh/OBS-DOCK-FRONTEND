@@ -27,6 +27,8 @@ export type ValorantCardProps = {
   pastelBg: string;
   trackerTextMode: string;
   trackerTextColor: string;
+  partyCode: string;
+  showPartyCode: boolean;
 };
 
 export type ValorantSkinProps = ValorantCardProps & {

@@ -427,6 +427,21 @@ export default function Home() {
     });
     const [lastActivity, setLastActivity] = useState(() => Date.now());
     const bumpActivity = () => setLastActivity(Date.now());
+    // Party code Valorant - diatur dari dock, dikirim live ke widget lewat socket.
+    const [valorantPartyCode, setValorantPartyCode] = useState(() => {
+        if (typeof window === 'undefined') return '';
+        try { return localStorage.getItem('dock-valorant-partyCode') || ''; } catch { return ''; }
+    });
+    const [valorantShowPartyCode, setValorantShowPartyCode] = useState(() => {
+        if (typeof window === 'undefined') return true;
+        try { const v = localStorage.getItem('dock-valorant-showPartyCode'); return v === null ? true : v === 'true'; } catch { return true; }
+    });
+    const valorantPartyRef = useRef({ partyCode: valorantPartyCode, showPartyCode: valorantShowPartyCode });
+    useEffect(() => {
+        valorantPartyRef.current = { partyCode: valorantPartyCode, showPartyCode: valorantShowPartyCode };
+        try { localStorage.setItem('dock-valorant-partyCode', valorantPartyCode); } catch { }
+        try { localStorage.setItem('dock-valorant-showPartyCode', String(valorantShowPartyCode)); } catch { }
+    }, [valorantPartyCode, valorantShowPartyCode]);
     useEffect(() => { try { localStorage.setItem('dock-autoMinimizeEnabled', String(autoMinimizeEnabled)); } catch { } }, [autoMinimizeEnabled]);
     useEffect(() => { try { localStorage.setItem('dock-autoPinChat', String(autoPinChat)); } catch { } }, [autoPinChat]);
     useEffect(() => { try { localStorage.setItem('dock-autoPinInterval', String(autoPinInterval)); } catch { } }, [autoPinInterval]);
@@ -961,6 +976,13 @@ export default function Home() {
     // loop reconnect tiap ~5 dtk; tiap reconnect TikTok kirim ulang chat terakhir.
     const tkRetryCountRef = useRef(0);
     const tkConnectedAtRef = useRef<number | null>(null);
+    // Timer untuk menunda log highlight TikTok sampai judul asli dari roomInfo
+    // (event tiktok-title) datang. Fallback "Live TikTok @user" hanya dipakai
+    // kalau judul asli tidak tersedia.
+    const tkHighlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Judul yang sudah dicatat sebagai highlight pada sesi ini - mencegah dobel
+    // simpan ketika judul dikirim di tiktok-connected sekaligus tiktok-title.
+    const tkLoggedHighlightRef = useRef<string | null>(null);
     // Username + privateKey terakhir yang diminta - dipakai handler socket agar tidak
     // pakai payload basi (stale closure) saat ganti akun / reconnect otomatis.
     const tkWantedRef = useRef<{ username: string; privateKey: string | null }>({ username: "", privateKey: null });
@@ -1001,6 +1023,16 @@ export default function Home() {
     const [confirmState, setConfirmState] = useState<{ open: boolean, title: string, description: string, onConfirm: () => void, variant?: "danger" | "default" }>({ open: false, title: "", description: "", onConfirm: () => { } });
     const showConfirm = (opts: { title: string, description?: string, onConfirm: () => void, variant?: "danger" | "default" }) => setConfirmState({ open: true, title: opts.title, description: opts.description || "", onConfirm: opts.onConfirm, variant: opts.variant });
 
+    // Kirim party code terbaru ke server tiap berubah / ganti room.
+    useEffect(() => {
+        const room = privateKey || (typeof window !== 'undefined' ? (readStoredDockKey() || '') : '') || 'global';
+        pollSocketRef.current?.emit('valorant-party-set', {
+            privateKey: room,
+            partyCode: valorantPartyCode,
+            showPartyCode: valorantShowPartyCode,
+        });
+    }, [valorantPartyCode, valorantShowPartyCode, privateKey]);
+
     useEffect(() => {
         const s = io(getSocketUrl(), {
             transports: ['websocket', 'polling'] as const,
@@ -1035,6 +1067,12 @@ export default function Home() {
             s.emit('task-get', { privateKey: room });
             s.emit('timer-get', { privateKey: room });
             s.emit('song-get', { privateKey: room });
+            // Sinkron party code Valorant setelah reconnect / server restart.
+            s.emit('valorant-party-set', {
+                privateKey: room,
+                partyCode: valorantPartyRef.current.partyCode,
+                showPartyCode: valorantPartyRef.current.showPartyCode,
+            });
             // Kabari plugin Stream Deck state Auto Pin saat dock (re)connect.
             s.emit('auto-pin-state', { privateKey: room, enabled: autoPinChatRef.current });
             // Kirim ulang aksi pin terakhir setelah reconnect: emit saat socket
@@ -1369,6 +1407,11 @@ export default function Home() {
             pollSocketRef.current.emit('poll-get', { privateKey: room });
             pollSocketRef.current.emit('task-get', { privateKey: room });
             pollSocketRef.current.emit('timer-get', { privateKey: room });
+            pollSocketRef.current.emit('valorant-party-set', {
+                privateKey: room,
+                partyCode: valorantPartyRef.current.partyCode,
+                showPartyCode: valorantPartyRef.current.showPartyCode,
+            });
         }
     }, [privateKey]);
 
@@ -2119,6 +2162,11 @@ export default function Home() {
         tkStreamEndedRef.current = false;
         tkRetryCountRef.current = 0;
         tkConnectedAtRef.current = null;
+        tkLoggedHighlightRef.current = null;
+        if (tkHighlightTimerRef.current) {
+            clearTimeout(tkHighlightTimerRef.current);
+            tkHighlightTimerRef.current = null;
+        }
         clearTikTokRetry();
         const username = tiktokConfig.username.trim();
         if (!username) {
@@ -2181,7 +2229,7 @@ export default function Home() {
                 addSystemLog(`Menghubungkan ke TikTok @${tkWantedRef.current.username || username}...`, "info");
             });
 
-            tkSocketRef.current.on("tiktok-connected", () => {
+            tkSocketRef.current.on("tiktok-connected", (payload: any) => {
                 setTiktokStatus("CONNECTED");
                 setTiktokError(null);
                 // Catat waktu connect stabil - dipakai auto-retry untuk reset hitungan
@@ -2192,6 +2240,9 @@ export default function Home() {
                 // berakhir / auto-retry menghapus history- sekarang chat dipertahankan.
                 // Pakai akun terakhir yang diminta (bukan closure) agar ganti akun tercatat benar.
                 const wantUser = tkWantedRef.current.username || username;
+                const connectedUser = String(payload?.username ?? wantUser).trim() || wantUser;
+                // Backend mengirim judul asli roomInfo langsung di payload connected.
+                const connectedTitle = typeof payload === "object" && payload ? String(payload.title ?? "").trim() : "";
                 const sess = readChatSession();
                 const uname = wantUser.trim().toLowerCase();
                 if (!sess || sess.username !== uname) {
@@ -2202,23 +2253,54 @@ export default function Home() {
                     writeChatSession({ username: uname, ended: false });
                 }
                 addSystemLog(`Berhasil terhubung ke TikTok Live: @${wantUser}`, "success");
-                // Auto-log highlight TikTok hari ini dari livestream (data asli via dock connect)
-                // Judul asli akan di-overwrite oleh tiktok-title jika ada (dari roomInfo)
-                // Thumbnail bisa diambil dari roomUser nanti, untuk sekarang pakai null (akan fallback)
-                logHighlightForToday("tiktok", `Live TikTok @${wantUser}`, null, `https://www.tiktok.com/@${wantUser}/live`, "tiktok_live", { username: wantUser, live: true });
+                if (connectedTitle) {
+                    setTiktokLiveTitle(connectedTitle);
+                }
+                if (tkHighlightTimerRef.current) {
+                    clearTimeout(tkHighlightTimerRef.current);
+                    tkHighlightTimerRef.current = null;
+                }
+                if (connectedTitle) {
+                    // Judul asli sudah tersedia - simpan langsung, tanpa placeholder.
+                    if (tkLoggedHighlightRef.current !== connectedTitle) {
+                        tkLoggedHighlightRef.current = connectedTitle;
+                        logHighlightForToday("tiktok", connectedTitle, null, `https://www.tiktok.com/@${connectedUser}/live`, "tiktok_live", { username: connectedUser, live: true, titleFromRoomInfo: true });
+                    }
+                } else if (!tkLoggedHighlightRef.current) {
+                    // Judul belum ada - tunggu sebentar apakah event tiktok-title datang.
+                    // Kalau tidak, baru pakai fallback "Live TikTok @user".
+                    tkHighlightTimerRef.current = setTimeout(() => {
+                        tkHighlightTimerRef.current = null;
+                        const fallbackTitle = `Live TikTok @${wantUser}`;
+                        tkLoggedHighlightRef.current = fallbackTitle;
+                        logHighlightForToday("tiktok", fallbackTitle, null, `https://www.tiktok.com/@${wantUser}/live`, "tiktok_live", { username: wantUser, live: true });
+                    }, 3000);
+                }
             });
 
             tkSocketRef.current.on("tiktok-title", (data: any) => {
                 const title = String(data?.title ?? "").trim();
                 const uname = String(data?.username ?? tkWantedRef.current.username ?? "").trim();
                 if (!title) return;
+                // Judul asli sudah ada - batalkan fallback placeholder.
+                if (tkHighlightTimerRef.current) {
+                    clearTimeout(tkHighlightTimerRef.current);
+                    tkHighlightTimerRef.current = null;
+                }
                 setTiktokLiveTitle(title);
                 addSystemLog(`📺 Judul live TikTok @${uname}: "${title}"`, "success");
-                // Update highlight hari ini dengan judul asli dari roomInfo
+                // Hindari simpan dobel kalau judul yang sama sudah dikirim di payload connected.
+                if (tkLoggedHighlightRef.current === title) return;
+                tkLoggedHighlightRef.current = title;
+                // Simpan highlight hari ini dengan judul asli dari roomInfo
                 logHighlightForToday("tiktok", title, null, `https://www.tiktok.com/@${uname}/live`, "tiktok_live", { username: uname, live: true, titleFromRoomInfo: true });
             });
 
             tkSocketRef.current.on("tiktok-error", (err: string) => {
+                if (tkHighlightTimerRef.current) {
+                    clearTimeout(tkHighlightTimerRef.current);
+                    tkHighlightTimerRef.current = null;
+                }
                 setTiktokStatus("ERROR");
                 setTiktokError(err);
                 clearTikTokRetry();
@@ -2226,6 +2308,10 @@ export default function Home() {
             });
 
             tkSocketRef.current.on("tiktok-disconnected", () => {
+                if (tkHighlightTimerRef.current) {
+                    clearTimeout(tkHighlightTimerRef.current);
+                    tkHighlightTimerRef.current = null;
+                }
                 setTiktokStatus("DISCONNECTED");
                 setTiktokError(null);
                 setTiktokRoomViewerCount(null);
@@ -2240,6 +2326,10 @@ export default function Home() {
             });
 
             tkSocketRef.current.on("tiktok-streamEnd", () => {
+                if (tkHighlightTimerRef.current) {
+                    clearTimeout(tkHighlightTimerRef.current);
+                    tkHighlightTimerRef.current = null;
+                }
                 setTiktokStatus("DISCONNECTED");
                 setTiktokError(null);
                 setTiktokRoomViewerCount(null);
@@ -2328,6 +2418,10 @@ export default function Home() {
     const disconnectTikTok = () => {
         tkManualDisconnectRef.current = true;
         tkStreamEndedRef.current = false;
+        if (tkHighlightTimerRef.current) {
+            clearTimeout(tkHighlightTimerRef.current);
+            tkHighlightTimerRef.current = null;
+        }
         clearTikTokRetry();
         const username = tiktokConfig.username.trim() || (typeof window !== "undefined" ? localStorage.getItem("tiktokUsername") || "" : "");
         const payload: any = privateKey ? { username, privateKey } : username;
@@ -2542,21 +2636,43 @@ export default function Home() {
 
             // Cek sudah ada highlight hari ini untuk platform ini (hindari duplikat)
             let exists = false;
+            let existsId: string | null = null;
             try {
                 if (effectiveKey) {
                     const { data } = await (supabaseLocal as any).rpc("get_highlights_by_private_key", { p_key: effectiveKey, p_days: 1 });
                     if (Array.isArray(data)) {
-                        exists = data.some((h: any) => h.platform === platform && new Date(h.started_at).getTime() >= todayStart.getTime());
+                        const match = data.find((h: any) => h.platform === platform && new Date(h.started_at).getTime() >= todayStart.getTime());
+                        exists = !!match;
+                        existsId = match?.id ?? null;
                     }
                 } else {
                     const { data: sess } = await supabaseLocal.auth.getSession();
                     if (sess.session) {
                         const { data } = await supabaseLocal.from("highlights").select("id,started_at").eq("platform", platform).gte("started_at", todayIso).limit(1);
                         exists = !!(data && (data as any).length > 0);
+                        existsId = (data as any)?.[0]?.id ?? null;
                     }
                 }
             } catch { }
             if (exists) {
+                // Highlight hari ini sudah ada. Kalau sekarang kita punya judul asli
+                // dari roomInfo (bukan placeholder "Live TikTok @user"), perbarui
+                // judulnya agar dashboard tidak menampilkan placeholder.
+                const isRealTitle = metadata?.titleFromRoomInfo === true && !!title.trim() && !title.startsWith("Live TikTok @");
+                if (isRealTitle && existsId) {
+                    try {
+                        const { data: sess } = await supabaseLocal.auth.getSession();
+                        const userId = sess.session?.user?.id;
+                        if (userId) {
+                            const { error } = await supabaseLocal
+                                .from("highlights")
+                                .update({ title, metadata } as any)
+                                .eq("id", existsId)
+                                .eq("user_id", userId);
+                            if (!error) addSystemLog(`✅ [highlight] ${platform} judul diperbarui: ${title}`, "success");
+                        }
+                    } catch { }
+                }
                 console.log(`[highlight] skip ${platform} - already logged today`);
                 return;
             }
@@ -3493,6 +3609,10 @@ export default function Home() {
         }
 
         return () => {
+            if (tkHighlightTimerRef.current) {
+                clearTimeout(tkHighlightTimerRef.current);
+                tkHighlightTimerRef.current = null;
+            }
             if (tkSocketRef.current) {
                 tkSocketRef.current.close();
             }
@@ -4626,6 +4746,33 @@ export default function Home() {
                                             {Object.values(widgetSbMap).filter((e: any) => e?.enabled).length}/{Object.keys(widgetSbMap).length}
                                         </span>
                                     </div>
+                                </div>
+
+                                <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">Valorant</h4>
+                                <div className="stat-card space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-white font-black uppercase text-[10px] flex items-center gap-2"><Gamepad2 className="w-3 h-3 text-red-400" /> Party Code</div>
+                                            <div className="text-gray-500 text-[9px]">Live ke widget Valorant (rolling slide-up)</div>
+                                        </div>
+                                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${valorantPartyCode ? "bg-green-500/20 text-green-400" : "bg-white/5 text-gray-500"}`}>{valorantPartyCode ? "AKTIF" : "KOSONG"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={valorantPartyCode}
+                                            onChange={(e) => setValorantPartyCode(e.target.value.toUpperCase().slice(0, 16))}
+                                            placeholder="ABCDE"
+                                            maxLength={16}
+                                            className="flex-1 h-9 min-w-0 bg-white/5 border border-white/10 rounded-xl px-3 text-sm text-white font-mono tracking-[0.2em] focus:outline-none focus:border-red-500/50"
+                                        />
+                                        <button onClick={() => setValorantPartyCode("")} className="h-9 px-3 btn-secondary border rounded-xl text-[9px] font-black uppercase">Clear</button>
+                                    </div>
+                                    <label className="flex items-center justify-between p-2.5 bg-white/5 border border-white/10 rounded-xl cursor-pointer">
+                                        <span className="text-[10px] font-bold text-white">Tampilkan Party Code</span>
+                                        <input type="checkbox" checked={valorantShowPartyCode} onChange={(e) => setValorantShowPartyCode(e.target.checked)} className="w-4 h-4 accent-red-500 cursor-pointer" />
+                                    </label>
+                                    <p className="text-[9px] text-gray-600 leading-relaxed">Perubahan langsung dikirim ke widget lewat socket - tidak perlu reload OBS. Kosongkan kode untuk menyembunyikan badge.</p>
                                 </div>
 
                                 <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">Dock Auto Minimize</h4>

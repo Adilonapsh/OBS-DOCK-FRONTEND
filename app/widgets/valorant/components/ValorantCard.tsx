@@ -11,11 +11,11 @@ export type { PromoState };
 // Dispatcher tipis: semua skin ada di themes/<NamaTema>.tsx dan otomatis
 // terdaftar lewat themes/registry.tsx (pola yang sama seperti widget chat).
 export function ValorantCard(props: ValorantCardProps) {
-  const { view, font, themeColor, rr, iconUrl, rankName, promo, themeMode, brutalist } = props;
+  const { view, font, themeColor, rr, iconUrl, rankName, promo, themeMode, brutalist, partyCode, showPartyCode } = props;
 
   // View circle: standalone circular RR overlay, independen dari themeMode.
   if (view === 'circle') {
-    return <ValorantCircle font={font} rr={rr} iconUrl={iconUrl} themeColor={themeColor} rankName={rankName} promo={promo} />;
+    return <ValorantCircle font={font} rr={rr} iconUrl={iconUrl} themeColor={themeColor} rankName={rankName} promo={promo} partyCode={partyCode} showPartyCode={showPartyCode} />;
   }
 
   // Brutalist butuh setting brutalist; kalau tidak ada, jatuh ke standard.

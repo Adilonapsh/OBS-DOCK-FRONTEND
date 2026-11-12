@@ -4,6 +4,7 @@
 
 import { pastelBgFor, PASTEL_BORDER } from '../utils/pastelTiers';
 import type { ValorantSkinProps } from './types';
+import { RollingCode } from './RollingCode';
 
 export const themeMeta = { value: 'pastel', label: 'Pastel - Cute Card' } as const;
 
@@ -80,6 +81,14 @@ export default function PastelTheme(p: ValorantSkinProps) {
               <div style={{ fontSize: 15, fontWeight: 900, color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>{p.showWinrate ? `${p.winrate}%` : '—'}</div>
             </div>
           </div>
+          {p.showPartyCode && p.partyCode ? (
+            <div className="flex items-center justify-center" style={{ gap: 8, marginTop: 10, position: 'relative', zIndex: 2 }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: border, letterSpacing: 1.5 }}>PARTY</span>
+              <span style={{ background: 'rgba(255,255,255,0.35)', borderRadius: 8, padding: '3px 10px' }}>
+                <RollingCode code={p.partyCode} charStyle={{ fontSize: 15, fontWeight: 900, color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }} />
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
     );
@@ -127,6 +136,15 @@ export default function PastelTheme(p: ValorantSkinProps) {
             </div>
           </div>
         </div>
+
+        {p.showPartyCode && p.partyCode ? (
+          <div className="flex items-center justify-center" style={{ padding: '0 32px 22px', gap: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: 2, color: border, opacity: 0.8 }}>PARTY CODE</span>
+            <span style={{ background: 'rgba(255,255,255,0.35)', borderRadius: 10, padding: '4px 12px' }}>
+              <RollingCode code={p.partyCode} charStyle={{ fontSize: 20, fontWeight: 900, color: '#ffffff', letterSpacing: '0.1em', textShadow: '0 2px 4px rgba(0,0,0,0.18)' }} />
+            </span>
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-2" style={{ borderTop: edge, background: 'rgba(0,0,0,0.05)', borderBottomLeftRadius: 19, borderBottomRightRadius: 19 }}>
           <div className="text-center whitespace-nowrap" style={{ padding: '20px 0', fontSize: 22, fontWeight: 900, color: '#ffffff', textShadow: '0 1px 3px rgba(0,0,0,0.15)', letterSpacing: 0.5, borderRight: edge }}>

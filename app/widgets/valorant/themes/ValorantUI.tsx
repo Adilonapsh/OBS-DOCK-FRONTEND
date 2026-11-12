@@ -1,6 +1,7 @@
 'use client';
 
 import type { ValorantSkinProps } from './types';
+import { RollingCode } from './RollingCode';
 
 export const themeMeta = { value: 'valorantui', label: 'Valorant UI' } as const;
 
@@ -14,6 +15,13 @@ export default function ValorantUITheme(p: ValorantSkinProps) {
   const wins = p.wins;
   const losses = p.losses;
   const kd = (wins + losses > 0) ? (wins / Math.max(1, losses)).toFixed(2) : '—';
+
+  const partyRow = p.showPartyCode && p.partyCode ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: textColor, opacity: 0.6 }}>PARTY CODE</span>
+      <RollingCode code={p.partyCode} charStyle={{ fontSize: 15, fontWeight: 900, color: accent, letterSpacing: '0.12em' }} />
+    </div>
+  ) : null;
 
   const svgContent = (gradId: string) => (
     <svg
@@ -124,6 +132,7 @@ export default function ValorantUITheme(p: ValorantSkinProps) {
     return (
       <div style={{ fontFamily: p.family, width: '100%', maxWidth: 302 }}>
         {svgContent('tgrd_mini')}
+        {partyRow}
       </div>
     );
   }
@@ -131,6 +140,7 @@ export default function ValorantUITheme(p: ValorantSkinProps) {
   return (
     <div style={{ fontFamily: p.family, width: '100%', maxWidth: 420 }}>
       {svgContent('tgrd_reg')}
+      {partyRow}
     </div>
   );
 }
