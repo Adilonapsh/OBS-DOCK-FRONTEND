@@ -227,30 +227,30 @@ export default function StreamDetailModal({ stream, onClose }: StreamDetailModal
               {s.ready && getStreamUrl() && (
                 <div className="flex flex-wrap gap-2">
                   <a
-                    href={getFullscreenUrl(s.name, false)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black hover:bg-gray-200 transition-colors rounded-lg text-xs font-black uppercase tracking-wide"
-                  >
+ href={getFullscreenUrl(s.name, false)}
+ target="_blank"
+ rel="noopener noreferrer"
+ className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary transition-colors rounded-lg text-xs font-black uppercase tracking-wide"
+ >
                     <Maximize2 size={12} />
                   </a>
                   <a 
-                    href={getStreamUrl()} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors rounded-lg text-xs font-black uppercase tracking-wide text-gray-300"
-                  >
+ href={getStreamUrl()} 
+ target="_blank" 
+ rel="noopener noreferrer"
+ className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border transition-colors rounded-lg text-xs font-black uppercase tracking-wide "
+ >
                    <ExternalLink size={12} />
                   </a>
                 </div>
               )}
               {!s.ready && (
                 <a
-                  href={getFullscreenUrl(s.name, false)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors rounded-lg text-xs font-black uppercase tracking-wide text-gray-300"
-                >
+ href={getFullscreenUrl(s.name, false)}
+ target="_blank"
+ rel="noopener noreferrer"
+ className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border transition-colors rounded-lg text-xs font-black uppercase tracking-wide "
+ >
                   <Maximize2 size={12} /> Buka Layar Offline / OBS
                 </a>
               )}

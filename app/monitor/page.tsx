@@ -376,12 +376,12 @@ export default function MonitorPage() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <button
-              onClick={() => {
-                setLoading(true);
-                fetchPaths();
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs font-black uppercase bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-gray-300 transition-colors"
-            >
+ onClick={() => {
+ setLoading(true);
+ fetchPaths();
+ }}
+ className="flex items-center gap-2 px-3 py-1.5 text-xs font-black uppercase btn-secondary border rounded-lg transition-colors"
+ >
               <span className={cn("w-1.5 h-1.5 rounded-full bg-green-500", loading && "animate-pulse")}></span>
               Refresh
             </button>
@@ -433,24 +433,24 @@ export default function MonitorPage() {
             <p className="text-sm font-black uppercase tracking-widest text-white">Kelompokkan Kamera:</p>
             <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 max-w-max">
               <button
-                type="button"
-                onClick={() => setGroupBy("none")}
-                className={cn("px-3 py-1.5 text-xs font-black uppercase tracking-wide rounded-lg transition-all", groupBy === "none" ? "bg-white text-black shadow" : "text-gray-500 hover:text-white")}
-              >
+ type="button"
+ onClick={() => setGroupBy("none")}
+ className={cn("px-3 py-1.5 text-xs font-black uppercase tracking-wide rounded-lg transition-all", groupBy === "none" ? "btn-primary shadow" : "btn-secondary")}
+ >
                 Semua Stream
               </button>
               <button
-                type="button"
-                onClick={() => setGroupBy("server")}
-                className={cn("px-3 py-1.5 text-xs font-black uppercase tracking-wide rounded-lg transition-all", groupBy === "server" ? "bg-white text-black shadow" : "text-gray-500 hover:text-white")}
-              >
+ type="button"
+ onClick={() => setGroupBy("server")}
+ className={cn("px-3 py-1.5 text-xs font-black uppercase tracking-wide rounded-lg transition-all", groupBy === "server" ? "btn-primary shadow" : "btn-secondary")}
+ >
                 Per Server
               </button>
               <button
-                type="button"
-                onClick={() => setGroupBy("group")}
-                className={cn("px-3 py-1.5 text-xs font-black uppercase tracking-wide rounded-lg transition-all", groupBy === "group" ? "bg-white text-black shadow" : "text-gray-500 hover:text-white")}
-              >
+ type="button"
+ onClick={() => setGroupBy("group")}
+ className={cn("px-3 py-1.5 text-xs font-black uppercase tracking-wide rounded-lg transition-all", groupBy === "group" ? "btn-primary shadow" : "btn-secondary")}
+ >
                 Per Kategori
               </button>
             </div>

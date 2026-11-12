@@ -73,7 +73,6 @@ export default function ResetPasswordPage() {
     return (
         <AuthLayout
             title="Password Baru"
-            badge="Reset"
             subtitle="Buat password baru untuk akunmu."
             footer={
                 <>

@@ -253,8 +253,8 @@ function DonationsInner() {
             <span className="hidden md:inline text-[10px] text-gray-500 font-bold">{filtered.length} logs • {privateKey ? `${privateKey.slice(0, 6)}…` : 'global'}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={fetchLogs} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} /> Refresh</button>
-            <button onClick={handleExport} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><Download className="w-3 h-3" /> Export CSV</button>
+            <button onClick={fetchLogs} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase "><RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} /> Refresh</button>
+            <button onClick={handleExport} className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase "><Download className="w-3 h-3" /> Export CSV</button>
             <Link href="/widgets/donation-leaderboard" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-black rounded-xl text-[10px] font-black uppercase"><Trophy className="w-3 h-3" /> Leaderboard</Link>
           </div>
         </header>
@@ -295,10 +295,10 @@ function DonationsInner() {
               <span className="hidden sm:inline-flex items-center gap-1 text-gray-500 text-[10px] font-black uppercase tracking-widest"><Filter className="w-3 h-3" /> Platform</span>
               {PLATFORMS.map((p) => (
                 <button
-                  key={p}
-                  onClick={() => setPlatformFilter(p)}
-                  className={`shrink-0 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors ${platformFilter === p ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
-                >
+ key={p}
+ onClick={() => setPlatformFilter(p)}
+ className={`shrink-0 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors ${platformFilter === p ? 'btn-primary ' : 'btn-secondary '}`}
+ >
                   {p === 'all' ? 'Semua' : p}
                 </button>
               ))}
@@ -342,8 +342,8 @@ function DonationsInner() {
                         <div className="text-white font-black uppercase text-[11px] mt-3">Belum ada donasi</div>
                         <div className="text-gray-500 text-[11px] mt-1">Donasi via Saweria/TipTap/Trakteer/BagiBagi akan muncul di sini (per privateKey).</div>
                         <div className="mt-3 flex justify-center gap-2">
-                          <button onClick={fetchLogs} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Refresh</button>
-                          <Link href="/integrations" className="px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase">Atur Webhook</Link>
+                          <button onClick={fetchLogs} className="px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Refresh</button>
+                          <Link href="/integrations" className="px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase">Atur Webhook</Link>
                         </div>
                       </td>
                     </tr>
@@ -371,8 +371,8 @@ function DonationsInner() {
                           <td className="px-4 py-3 hidden xl:table-cell"><span className="font-mono text-[10px] text-gray-500 truncate max-w-[100px] inline-block" title={l.transaction_id || ''}>{l.transaction_id ? `${l.transaction_id.slice(0, 8)}…` : '—'}</span></td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => handleCopy(l.transaction_id || l.id)} className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 hover:text-white" title="Copy Trx ID"><Copy className="w-3 h-3" /></button>
-                              <button onClick={() => setShowRaw(showRaw === l.id ? null : l.id)} className={`p-1.5 border rounded-lg ${showRaw === l.id ? 'bg-white text-black border-white' : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-400 hover:text-white'}`} title="View raw"><Eye className="w-3 h-3" /></button>
+                              <button onClick={() => handleCopy(l.transaction_id || l.id)} className="p-1.5 btn-secondary border rounded-lg " title="Copy Trx ID"><Copy className="w-3 h-3" /></button>
+                              <button onClick={() => setShowRaw(showRaw === l.id ? null : l.id)} className={`p-1.5 border rounded-lg ${showRaw === l.id ? 'btn-primary ' : 'btn-secondary '}`} title="View raw"><Eye className="w-3 h-3" /></button>
                             </div>
                           </td>
                         </tr>
@@ -402,8 +402,8 @@ function DonationsInner() {
             <div className="flex items-center justify-between px-4 py-3 border-t border-white/5 bg-black/20">
               <span className="text-[11px] text-gray-500 font-bold">{filtered.length} logs • Hal {currentPage} / {totalPages}</span>
               <div className="flex items-center gap-2">
-                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
-                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
+                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-8 h-8 grid place-items-center btn-secondary border rounded-lg disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
+                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="w-8 h-8 grid place-items-center btn-secondary border rounded-lg disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
               </div>
             </div>
           </div>
@@ -411,7 +411,7 @@ function DonationsInner() {
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
             <div>
               <div className="text-amber-300 font-black uppercase text-[11px]">Webhook Donasi</div>
-              <div className="text-gray-400 text-[11px] mt-1">Atur token di <Link href="/connections" className="text-white font-bold underline">Connections → Donation</Link>.</div>
+              <div className="text-gray-400 text-[11px] mt-1">Atur token di <Link href="/connections" className="text-amber-700 dark:text-white font-bold underline">Connections → Donation</Link>.</div>
             </div>
             <Link href="/connection" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 text-black rounded-xl text-[11px] font-black uppercase"><ExternalLink className="w-3 h-3" /> Atur Webhook</Link>
           </div>

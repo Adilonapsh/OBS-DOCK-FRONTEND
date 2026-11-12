@@ -203,8 +203,8 @@ export default function AccountPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <ThemeToggle />
-                        <Link href="/dashboard" className="hidden sm:inline-flex px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300 items-center gap-1"><LayoutDashboard className="w-3 h-3" /> Dashboard</Link>
-                        <Link href="/dock" className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1"><Monitor className="w-3 h-3" /> Dock</Link>
+                        <Link href="/dashboard" className="hidden sm:inline-flex px-3 py-1.5 btn-secondary border rounded-lg text-[10px] font-black uppercase items-center gap-1"><LayoutDashboard className="w-3 h-3" /> Dashboard</Link>
+                        <Link href="/dock" className="px-3 py-1.5 btn-primary rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1"><Monitor className="w-3 h-3" /> Dock</Link>
                     </div>
                 </header>
 
@@ -261,7 +261,7 @@ export default function AccountPage() {
                                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
                                             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full h-10 pl-9 pr-3 bg-white/5 border border-white/10 rounded-xl text-[13px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
                                         </div>
-                                        <button onClick={handleEmailSave} disabled={saving} className="px-4 h-10 bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white">Update Email</button>
+                                        <button onClick={handleEmailSave} disabled={saving} className="px-4 h-10 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Update Email</button>
                                     </div>
                                     <p className="text-[9px] text-gray-600 mt-1">Ganti email butuh konfirmasi via inbox.</p>
                                 </div>
@@ -276,7 +276,7 @@ export default function AccountPage() {
                                     </div>
                                 </div>
 
-                                <button onClick={handleSaveProfile} disabled={saving} className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60">
+                                <button onClick={handleSaveProfile} disabled={saving} className="w-full h-10 rounded-xl btn-primary text-white font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60">
                                     <Save className="w-3.5 h-3.5" /> {saving ? "Menyimpan..." : "Simpan Profil"}
                                 </button>
                                 </div>
@@ -303,7 +303,7 @@ export default function AccountPage() {
                                         <input type={pass.show ? "text" : "password"} value={pass.confirm} onChange={(e) => setPass({ ...pass, confirm: e.target.value })} placeholder="Ulangi password baru" className="w-full h-10 pl-9 pr-9 bg-white/5 border border-white/10 rounded-xl text-[13px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50" />
                                     </div>
                                 </div>
-                                <button onClick={handlePasswordChange} disabled={saving} className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase tracking-widest">Update Password</button>
+                                <button onClick={handlePasswordChange} disabled={saving} className="w-full h-10 rounded-xl btn-primary text-white font-black text-[11px] uppercase tracking-widest">Update Password</button>
                                 </div>
                             </div>
                             </div>
@@ -322,7 +322,7 @@ export default function AccountPage() {
                                     </div>
                                     <code className={`block text-[10px] font-mono-custom break-all p-2 bg-white/5 rounded border border-white/5 ${showPrivate ? "text-cyan-400" : "text-white blur-[4px] select-none"}`}>{showPrivate ? form.private_key : form.private_key ? "•".repeat(32) : "- belum ada -"}</code>
                                     <div className="flex gap-2 mt-3">
-                                        <button onClick={async () => { await navigator.clipboard.writeText(form.private_key); setMsg({ type: "success", text: "Private key dicopy." }); }} className="flex-1 h-8 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-[10px] font-black uppercase text-white flex items-center justify-center gap-1"><Copy className="w-3 h-3" /> Copy</button>
+                                        <button onClick={async () => { await navigator.clipboard.writeText(form.private_key); setMsg({ type: "success", text: "Private key dicopy." }); }} className="flex-1 h-8 btn-secondary border rounded-lg text-[10px] font-black uppercase flex items-center justify-center gap-1"><Copy className="w-3 h-3" /> Copy</button>
                                         <button onClick={() => setShowRegenerateConfirm(true)} className="flex-1 h-8 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-[10px] font-black uppercase text-red-400 flex items-center justify-center gap-1"><RefreshCw className="w-3 h-3" /> Regenerate</button>
                                     </div>
                                 </div>
@@ -336,8 +336,8 @@ export default function AccountPage() {
                             <h2 className="text-white font-black">Tampilkan Private Key?</h2>
                             <p className="text-[11px] text-gray-400 leading-relaxed">Private key bersifat <span className="text-white font-bold">rahasia</span>. Jangan bagikan ke orang lain.</p>
                             <div className="flex gap-3">
-                                <button onClick={() => setShowPrivateConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Batal</button>
-                                <button onClick={() => { setShowPrivate(true); setShowPrivateConfirm(false); }} className="flex-1 h-9 bg-white text-black border border-white rounded-xl text-sm font-black">Tampilkan</button>
+                                <button onClick={() => setShowPrivateConfirm(false)} className="flex-1 h-9 btn-secondary border rounded-xl text-sm font-bold ">Batal</button>
+                                <button onClick={() => { setShowPrivate(true); setShowPrivateConfirm(false); }} className="flex-1 h-9 btn-primary border rounded-xl text-sm font-black">Tampilkan</button>
                             </div>
                         </div>
                     </div>
@@ -457,11 +457,11 @@ export default function AccountPage() {
 
                         <div className="px-6 py-4 bg-black/20 border-t border-white/5 flex gap-3">
                             <button
-                                type="button"
-                                onClick={() => setShowDeleteConfirm(false)}
-                                disabled={deleting}
-                                className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300 disabled:opacity-50"
-                            >
+ type="button"
+ onClick={() => setShowDeleteConfirm(false)}
+ disabled={deleting}
+ className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase disabled:opacity-50"
+ >
                                 Batal
                             </button>
                             <button

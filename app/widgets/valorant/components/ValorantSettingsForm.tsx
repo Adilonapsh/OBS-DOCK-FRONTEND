@@ -180,8 +180,8 @@ export function ValorantSettingsForm({
       <p className="text-[10px] text-gray-500 leading-relaxed text-center">Semua fetch lewat backend <code className="bg-white/10 px-1 rounded text-white">/api/valo/*</code> (server-side, bebas CORS). Auto-refresh {state.refresh > 0 ? `tiap ${state.refresh}s` : 'mati'} + animasi RANK UP/DOWN saat tier berubah.</p>
 
       <div className="flex gap-2">
-        <button onClick={reset} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-        <button onClick={onCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
+        <button onClick={reset} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+        <button onClick={onCopy} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5" /> Copy URL</button>
       </div>
     </>
   );

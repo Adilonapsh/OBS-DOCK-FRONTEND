@@ -308,12 +308,12 @@ function OverlayContent() {
             <div className="hidden lg:flex items-center gap-1.5 bg-black/40 border border-white/10 rounded-xl px-2 py-1.5">
               <span className="text-[9px] font-black uppercase text-gray-500 tracking-widest px-1">URL OBS</span>
               <code className="text-[10px] font-mono text-cyan-300 max-w-[260px] truncate">{overlayUrl}</code>
-              <button onClick={handleCopy} className="ml-1 p-1.5 bg-white text-black rounded-lg hover:bg-gray-100 transition-colors">
+              <button onClick={handleCopy} className="ml-1 p-1.5 btn-primary rounded-lg transition-colors">
                 {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
               </button>
             </div>
 
-            <button onClick={handleTestChat} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white flex items-center gap-1.5">
+            <button onClick={handleTestChat} className="h-8 px-3 btn-secondary border rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5">
               <MessageSquare className="w-3 h-3" /> Test Chat
             </button>
             <button onClick={handleTestGift} className="h-8 px-3 bg-[#FE2C55]/20 hover:bg-[#FE2C55]/30 border border-[#FE2C55]/20 rounded-xl text-[10px] font-black uppercase text-[#FE2C55] flex items-center gap-1.5">
@@ -322,10 +322,10 @@ function OverlayContent() {
             <button onClick={handleTestPin} className="h-8 px-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/20 rounded-xl text-[10px] font-black uppercase text-cyan-400 flex items-center gap-1.5">
               <Pin className="w-3 h-3" /> Pin
             </button>
-            <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="h-8 px-3 bg-white hover:bg-zinc-200 rounded-xl text-[10px] font-black uppercase text-black flex items-center gap-1.5">
+            <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="h-8 px-3 btn-primary rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5">
               <ExternalLink className="w-3 h-3" /> Dock
             </Link>
-            <button onClick={() => setShowControls(false)} className="h-8 px-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400">
+            <button onClick={() => setShowControls(false)} className="h-8 px-2 btn-secondary border rounded-xl ">
               <Settings2 className="w-4 h-4" />
             </button>
           </div>
@@ -659,10 +659,10 @@ function OverlayContent() {
                 <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase text-[9px]">Pinned</span><span className="text-white font-bold">{pinned ? "Active" : "-"}</span></div>
               </div>
               <div className="mt-auto pt-3 flex gap-2">
-                <Link href={`/overlay?key=${privateKey || ""}`} className="flex-1 h-8 flex items-center justify-center gap-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-gray-100">
+                <Link href={`/overlay?key=${privateKey || ""}`} className="flex-1 h-8 flex items-center justify-center gap-1.5 btn-primary rounded-xl text-[10px] font-black uppercase ">
                   <ExternalLink className="w-3 h-3" /> Buka Transparent
                 </Link>
-                <button onClick={() => { setChats([]); setPinned(null); setGifts(null); }} className="px-3 h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">
+                <button onClick={() => { setChats([]); setPinned(null); setGifts(null); }} className="px-3 h-8 btn-secondary border rounded-xl text-[10px] font-black uppercase ">
                   Clear
                 </button>
               </div>

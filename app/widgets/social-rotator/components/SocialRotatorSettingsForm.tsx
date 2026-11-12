@@ -41,7 +41,7 @@ export function SocialRotatorSettingsForm({ state, update }: { state: SocialRota
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Text Color</span><input type="color" value={state.textColor} onChange={(e) => update('textColor', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'btn-primary ' : 'btn-secondary '}`}>Transparent</button></div></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Opacity - {state.bgOpacity}%</span><input type="range" min={10} max={100} value={state.bgOpacity} onChange={(e) => update('bgOpacity', parseInt(e.target.value))} className="mt-1 w-full accent-white" /></label>
           </div>
         </div>
@@ -65,7 +65,7 @@ export function SocialRotatorSettingsForm({ state, update }: { state: SocialRota
               <input value={s.label || ''} onChange={(e) => updateSocial(s.id, { label: e.target.value })} placeholder="Label (Instagram)" className="w-full h-8 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white" />
             </div>
           ))}
-          <button onClick={addSocial} className="w-full h-8 bg-white text-black rounded-xl text-xs font-black uppercase">+ Tambah Social</button>
+          <button onClick={addSocial} className="w-full h-8 btn-primary rounded-xl text-xs font-black uppercase">+ Tambah Social</button>
           <div className="text-[10px] text-gray-500">Maks 10 • drag belum support, urutan sesuai list.</div>
         </div>
       </div>

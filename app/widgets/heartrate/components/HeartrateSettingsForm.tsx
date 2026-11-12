@@ -41,10 +41,10 @@ export function HeartrateSettingsForm({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Accent</span><input type="color" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#161616' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#161616' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'btn-primary ' : 'btn-secondary '}`}>Transparent</button></div></label>
           </div>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Opacity BG - {state.bgOpacity}%</span><input type="range" min={0} max={100} value={state.bgOpacity} onChange={(e) => update('bgOpacity', parseInt(e.target.value) || 100)} className="mt-1 w-full accent-white" /></label>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks Color</span><div className="mt-1 flex gap-1"><input type="color" value={state.textColor || '#ffffff'} onChange={(e) => update('textColor', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('textColor', '')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${!state.textColor ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Auto</button></div></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks Color</span><div className="mt-1 flex gap-1"><input type="color" value={state.textColor || '#ffffff'} onChange={(e) => update('textColor', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('textColor', '')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${!state.textColor ? 'btn-primary ' : 'btn-secondary '}`}>Auto</button></div></label>
           <div className="bg-black/30 border border-white/5 rounded-xl p-2">
             <PositionPicker value={state.pos || 'center'} onChange={(v) => update('pos', v)} />
           </div>
@@ -132,8 +132,8 @@ export function HeartrateSettingsForm({
       </div>
 
       <div className="flex gap-2">
-        <button onClick={reset} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-        <button onClick={onCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
+        <button onClick={reset} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+        <button onClick={onCopy} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5" /> Copy URL</button>
       </div>
     </>
   );

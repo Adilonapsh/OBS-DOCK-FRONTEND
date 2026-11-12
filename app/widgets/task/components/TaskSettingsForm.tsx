@@ -62,7 +62,7 @@ export function TaskSettingsForm({
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Accent</span><input type="color" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'btn-primary ' : 'btn-secondary '}`}>Transparent</button></div></label>
           </div>
           <label className="block"><span className="text-[11px] font-bold text-gray-300">Opacity Background - {state.bgOpacity}%</span><input type="range" min={10} max={100} value={state.bgOpacity} onChange={(e) => update('bgOpacity', parseInt(e.target.value))} className="mt-1 w-full accent-white" /></label>
         </div>
@@ -114,19 +114,19 @@ export function TaskSettingsForm({
               <button onClick={() => removeTask(t.id)} className="text-[10px] font-black uppercase text-red-400 hover:text-red-300 px-1">Hapus</button>
             </div>
           ))}
-          <button onClick={addTask} className="w-full h-8 bg-white text-black rounded-xl text-[11px] font-black uppercase hover:bg-zinc-100">+ Tambah Task</button>
+          <button onClick={addTask} className="w-full h-8 btn-primary rounded-xl text-[11px] font-black uppercase ">+ Tambah Task</button>
         </div>
       </div>
 
       <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-3">
         <div className="text-violet-300 font-black uppercase text-[10px]">OBS - Task Focus</div>
         <div className="text-gray-400 text-[11px] leading-relaxed mt-1">Timer & tasks live di OBS - tasks bisa ditoggle di preview, timer auto-next sesi. Background transparent cocok untuk OBS.</div>
-        <Link href={privateKey ? `/dock?key=${privateKey}` : '/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Buka Dock</Link>
+        <Link href={privateKey ? `/dock?key=${privateKey}` : '/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 btn-primary rounded-xl text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Buka Dock</Link>
       </div>
 
       <div className="flex gap-2">
-        <button onClick={reset} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-        <button onClick={onCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
+        <button onClick={reset} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+        <button onClick={onCopy} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5" /> Copy URL</button>
       </div>
     </>
   );

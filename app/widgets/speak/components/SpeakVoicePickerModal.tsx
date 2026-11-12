@@ -300,14 +300,14 @@ export function SpeakVoicePickerModal({ open, selectedVoiceId, onClose, onSelect
                       const isPlaying = playing === key;
                       return (
                         <button
-                          key={`${sample.audio}-${index}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            playSample(voice.id, sample);
-                          }}
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] ${isPlaying ? 'border-zinc-900 bg-zinc-900 !text-white' : 'border-zinc-200 bg-white !text-zinc-700 hover:bg-zinc-100'}`}
-                          title={`Putar sample: ${sample.title}`}
-                        >
+ key={`${sample.audio}-${index}`}
+ onClick={(event) => {
+ event.stopPropagation();
+ playSample(voice.id, sample);
+ }}
+ className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] ${isPlaying ? 'border-zinc-900 bg-zinc-900 !text-white' : 'border-zinc-200 btn-primary !text-zinc-700 '}`}
+ title={`Putar sample: ${sample.title}`}
+ >
                           {isPlaying ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                           {sample.title}
                         </button>
@@ -337,10 +337,10 @@ export function SpeakVoicePickerModal({ open, selectedVoiceId, onClose, onSelect
           {hasMore && !loading && voices.length > 0 && (
             <div className="flex justify-center pt-5">
               <button
-                disabled={loadingMore}
-                onClick={() => setPage((current) => current + 1)}
-                className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-xs font-medium hover:bg-zinc-100 disabled:opacity-50"
-              >
+ disabled={loadingMore}
+ onClick={() => setPage((current) => current + 1)}
+ className="inline-flex items-center gap-2 rounded-full border border-zinc-300 btn-primary px-4 py-2 text-xs font-medium disabled:opacity-50"
+ >
                 {loadingMore && <Loader2 className="w-3 h-3 animate-spin" />}
                 Muat lebih banyak
               </button>

@@ -166,7 +166,7 @@ export default function Highlights() {
       <div className="bg-[#161616] border border-white/10 rounded-2xl overflow-hidden">
       <div className="px-5 py-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-white/[0.02] to-transparent">
         <div>
-          <h3 className="text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-2">
+          <h3 className="font-black text-[11px] uppercase tracking-widest flex items-center gap-2">
             <Video className="w-3.5 h-3.5 text-white" /> Sorotan {rangeLabel} Terakhir
           </h3>
           <p className="text-gray-500 text-[11px] mt-1">
@@ -177,19 +177,19 @@ export default function Highlights() {
           <div className="flex bg-black/30 rounded-full p-1 border border-white/10">
             {RANGES.map((r) => (
               <button
-                key={r.value}
-                onClick={() => setRange(r.value as RangeDays)}
-                className={`px-3 py-1 rounded-full text-[10px] font-black uppercase transition-colors ${range === r.value ? "bg-white text-black" : "text-gray-500 hover:text-white"}`}
-              >
+ key={r.value}
+ onClick={() => setRange(r.value as RangeDays)}
+ className={`px-3 py-1 rounded-full text-[10px] font-black uppercase transition-colors ${range === r.value ? "btn-primary text-white" : "btn-secondary"}`}
+ >
                 {r.label}
               </button>
             ))}
           </div>
           <button
-            onClick={() => fetchHighlights(range)}
-            disabled={loading}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300 flex items-center gap-1.5 disabled:opacity-50"
-          >
+ onClick={() => fetchHighlights(range)}
+ disabled={loading}
+ className="px-3 py-1.5 btn-primary border rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1.5 transition-colors disabled:opacity-50"
+ >
             <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} /> Refresh
           </button>
         </div>
@@ -202,12 +202,12 @@ export default function Highlights() {
           const icon = f === "all" ? undefined : PLATFORM_META[f]?.icon;
           return (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide border shrink-0 transition-colors flex items-center gap-1.5 ${
-                isActive ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"
-              }`}
-            >
+ key={f}
+ onClick={() => setFilter(f)}
+ className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide border shrink-0 transition-colors flex items-center gap-1.5 ${
+ isActive ? "btn-primary " : "btn-secondary "
+ }`}
+ >
               {icon && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={icon} alt={label} className="w-3.5 h-3.5 object-contain" />
@@ -288,7 +288,7 @@ export default function Highlights() {
                       </span>
                       <div className="flex items-center gap-1">
                         {h.video_url && (
-                          <a href={h.video_url} target="_blank" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 hover:text-white">
+                          <a href={h.video_url} target="_blank" className="p-1.5 btn-secondary border rounded-lg ">
                             <Play className="w-3 h-3" />
                           </a>
                         )}

@@ -78,7 +78,6 @@ export default function RegisterPage() {
     return (
         <AuthLayout
             title="Buat Akun"
-            badge="Dock"
             subtitle="Daftar untuk menyimpan widget dan private key kamu."
             footer={
                 <>

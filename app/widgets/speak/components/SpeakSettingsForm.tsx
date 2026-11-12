@@ -154,10 +154,10 @@ export function SpeakSettingsForm({ state, update, onOpenVoicePicker }: Props) {
               {state.voiceId ? `${state.voiceTitle || 'Fish Audio voice'}${state.voiceAuthor ? ` • ${state.voiceAuthor}` : ''}` : 'Default voice dari webhook'}
             </div>
             <button
-              type="button"
-              onClick={onOpenVoicePicker}
-              className="mt-3 h-8 w-full rounded-lg border border-white/10 bg-white/5 text-[10px] font-bold uppercase text-white hover:bg-white/10"
-            >
+ type="button"
+ onClick={onOpenVoicePicker}
+ className="mt-3 h-8 w-full rounded-lg border btn-secondary text-[10px] font-bold uppercase "
+ >
               Pilih Voice
             </button>
           </div>

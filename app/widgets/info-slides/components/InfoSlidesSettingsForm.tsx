@@ -118,8 +118,8 @@ export function InfoSlidesSettingsForm({ state, update, reset }: { state: InfoSl
                 </div>
                 <span className="flex-1 text-[10px] font-black uppercase text-gray-500">#{idx+1} • {s.id}</span>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => moveSlide(idx, idx-1)} disabled={idx===0} className="w-6 h-6 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed" title="Naik"><ChevronUp className="w-3 h-3" /></button>
-                  <button onClick={() => moveSlide(idx, idx+1)} disabled={idx===slides.length-1} className="w-6 h-6 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed" title="Turun"><ChevronDown className="w-3 h-3" /></button>
+                  <button onClick={() => moveSlide(idx, idx-1)} disabled={idx===0} className="w-6 h-6 grid place-items-center rounded-lg btn-secondary border disabled:opacity-30 disabled:cursor-not-allowed" title="Naik"><ChevronUp className="w-3 h-3" /></button>
+                  <button onClick={() => moveSlide(idx, idx+1)} disabled={idx===slides.length-1} className="w-6 h-6 grid place-items-center rounded-lg btn-secondary border disabled:opacity-30 disabled:cursor-not-allowed" title="Turun"><ChevronDown className="w-3 h-3" /></button>
                   <button onClick={() => removeSlide(s.id)} className="ml-1 text-[11px] font-bold text-red-400 hover:text-red-300">Hapus</button>
                 </div>
               </div>
@@ -147,11 +147,11 @@ export function InfoSlidesSettingsForm({ state, update, reset }: { state: InfoSl
             {newImage && <img src={newImage} alt="" className="w-10 h-10 rounded-lg object-cover border border-white/10 bg-white shrink-0" onError={e=> (e.currentTarget.style.display='none')} />}
             <label className="flex-1 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[11px] font-bold text-gray-300 cursor-pointer">Upload Gambar<input type="file" accept="image/*" className="hidden" onChange={e=>{const f=e.target.files?.[0]; if(f) fileToDataUrl(f, setNewImage); (e.target as HTMLInputElement).value='';}} /></label>
           </div>
-          <button onClick={addSlide} disabled={!newTitle.trim() || slides.length >= 10} className="w-full h-9 bg-white text-black rounded-xl font-black uppercase text-[11px] disabled:opacity-40">+ Tambah Slide</button>
+          <button onClick={addSlide} disabled={!newTitle.trim() || slides.length >= 10} className="w-full h-9 btn-primary rounded-xl font-black uppercase text-[11px] disabled:opacity-40">+ Tambah Slide</button>
         </div>
       </div>
 
-      <button onClick={reset} className="w-full h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-400">Reset ke Default (5 slide)</button>
+      <button onClick={reset} className="w-full h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset ke Default (5 slide)</button>
     </div>
   );
 }

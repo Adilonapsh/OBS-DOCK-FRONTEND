@@ -6,20 +6,37 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Ganti dua nilai ini untuk ganti tema seluruh tombol & tab. */
+  --primary: #005ea6;
+  --secondary: #DDF1FF;
+
+  --primary-hover: #004a8c;
+  --primary-foreground: #ffffff;
+  --primary-muted: color-mix(in srgb, var(--primary) 55%, #fff);
+  --secondary-hover: #c9e9ff;
+  --secondary-border: #b9e0fb;
+  --secondary-foreground: var(--primary);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plus-jakarta-sans);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-brand-600: var(--primary);
+  --color-brand-700: var(--primary-hover);
 }
 
 @theme {
   --color-brand-50: #f0f7fc;
   --color-brand-100: #e0eff9;
   --color-brand-500: #1a7bc2;
-  --color-brand-600: #005ea6;
-  --color-brand-700: #004c8c;
   --color-brand-900: #00335e;
   --color-brand-950: #001a33;
 }
@@ -76,6 +93,71 @@ body {
 
 .font-mono-custom {
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border-color: var(--secondary-border);
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-hover);
+}
+
+/* Hex lama di className Tailwind dipetakan ke token, jadi ganti --primary/--secondary cukup di :root. */
+.bg-\[\#005ea6\],
+.bg-\[\#085CA2\],
+.bg-\[\#004a8c\] {
+  background-color: var(--primary) !important;
+}
+
+.hover\:bg-\[\#005ea6\]:hover,
+.hover\:bg-\[\#085CA2\]:hover,
+.hover\:bg-\[\#004a8c\]:hover {
+  background-color: var(--primary-hover) !important;
+}
+
+.border-\[\#005ea6\],
+.border-\[\#085CA2\] {
+  border-color: var(--primary) !important;
+}
+
+.text-\[\#005ea6\],
+.hover\:text-\[\#005ea6\]:hover {
+  color: var(--primary) !important;
+}
+
+.bg-\[\#DDF1FF\] {
+  background-color: var(--secondary) !important;
+}
+
+.hover\:bg-\[\#DDF1FF\]:hover,
+.hover\:bg-\[\#c9e9ff\]:hover {
+  background-color: var(--secondary-hover) !important;
+}
+
+.border-\[\#b9e0fb\],
+.border-\[\#DDF1FF\] {
+  border-color: var(--secondary-border) !important;
+}
+
+.text-\[\#DDF1FF\] {
+  color: var(--secondary) !important;
+}
+
+.from-\[\#005ea6\] {
+  --tw-gradient-from: var(--primary) !important;
 }
 
 .stat-card {
@@ -196,22 +278,29 @@ html.designer-scroll::-webkit-scrollbar-thumb:hover {
 
 .tab-btn {
   cursor: pointer;
-  color: #6b7280;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--secondary-border);
+}
+
+.tab-btn:hover {
+  background: var(--secondary-hover);
 }
 
 .tab-btn.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
 }
 
 .dock-control-btn {
   min-width: 110px;
   height: 32px;
   padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--secondary-border);
   border-radius: 0.7rem;
-  background: rgba(255, 255, 255, 0.02);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
   font-size: 8px;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -221,18 +310,18 @@ html.designer-scroll::-webkit-scrollbar-thumb:hover {
 }
 
 .dock-control-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--secondary-hover);
 }
 
 .dock-control-btn.active {
-  background: #2563eb;
-  border-color: #3b82f6;
-  color: white;
-  box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--primary) 50%, transparent);
 }
 
 .dock-control-btn.active:hover {
-  background: #1d4ed8;
+  background: var(--primary-hover);
 }
 
 .dock-control-btn:disabled {
@@ -368,6 +457,13 @@ html.light .bg-black\/60 {
   border-color: rgba(0, 0, 0, 0.10) !important;
 }
 
+/* backdrop modal tetap gelap transparan supaya panel putih tetap terlihat */
+html.light .fixed.inset-0.bg-black\/50,
+html.light .fixed.inset-0.bg-black\/60,
+html.light .fixed.inset-0.bg-black\/70 {
+  background: rgba(15, 23, 42, 0.45) !important;
+}
+
 html.light .bg-white {
   background: #ffffff !important;
 }
@@ -412,21 +508,7 @@ html.light .divide-white\/5>*+* {
 }
 
 /* text */
-html.light .text-white {
-  color: #0f172a !important;
-}
 
-html.light .text-white\/90 {
-  color: rgba(15, 23, 42, 0.90) !important;
-}
-
-html.light .text-white\/80 {
-  color: rgba(15, 23, 42, 0.80) !important;
-}
-
-html.light .text-white\/70 {
-  color: rgba(15, 23, 42, 0.70) !important;
-}
 
 html.light .text-white\/60 {
   color: rgba(15, 23, 42, 0.60) !important;
@@ -539,9 +621,65 @@ html.light .text-black {
   color: #0f172a !important;
 }
 
+/* ===== Dashboard / widget settings: text putih ikut light mode ===== */
+/* Area aplikasi memakai bg-[#0a0a0a]; kartu & panelnya sudah dipaksa terang
+   oleh override di atas, jadi teks putih harus jadi gelap. */
+/* teks putih jadi gelap, tapi teks di atas badge/latar berwarna dibiarkan putih */
+html.light .bg-\[\#0a0a0a\] .text-white:not(button):not(button *):not(a):not(a *):not(.btn-primary *):not(.btn-secondary *):not(.g-stage *):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-pink"]):not([class*="bg-fuchsia"]):not([class*="bg-purple"]):not([class*="bg-violet"]):not([class*="bg-indigo"]):not([class*="bg-blue"]):not([class*="bg-sky"]):not([class*="bg-cyan"]):not([class*="bg-teal"]):not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-orange"]):not([class*="bg-zinc-6"]):not([class*="bg-zinc-7"]):not([class*="bg-zinc-8"]):not([class*="bg-zinc-9"]):not([class*="bg-slate-6"]):not([class*="bg-slate-7"]):not([class*="bg-slate-8"]):not([class*="bg-slate-9"]):not([class*="bg-neutral-6"]):not([class*="bg-neutral-7"]):not([class*="bg-neutral-8"]):not([class*="bg-neutral-9"]):not([class*="bg-gray-6"]):not([class*="bg-gray-7"]):not([class*="bg-gray-8"]):not([class*="bg-gray-9"]):not([class*="bg-[#8b5cf6]"]):not([class*="bg-[#970020]"]):not([class*="bg-[#FE2C55]"]):not([class*="bg-[#9D4EDD]"]):not([class*="bg-[var(--accent)]"]) {
+  color: #0f172a !important;
+}
+
+html.light .bg-\[\#0a0a0a\] .text-white\/90:not(button):not(button *):not(a):not(a *):not(.btn-primary *):not(.btn-secondary *):not(.g-stage *) {
+  color: rgba(15, 23, 42, 0.90) !important;
+}
+
+html.light .bg-\[\#0a0a0a\] .text-white\/80:not(button):not(button *):not(a):not(a *):not(.btn-primary *):not(.btn-secondary *):not(.g-stage *) {
+  color: rgba(15, 23, 42, 0.80) !important;
+}
+
+html.light .bg-\[\#0a0a0a\] .text-white\/70:not(button):not(button *):not(a):not(a *):not(.btn-primary *):not(.btn-secondary *):not(.g-stage *) {
+  color: rgba(15, 23, 42, 0.70) !important;
+}
+
+html.light .bg-\[\#0a0a0a\] .text-white\/60:not(button):not(button *):not(a):not(a *):not(.btn-primary *):not(.btn-secondary *):not(.g-stage *) {
+  color: rgba(15, 23, 42, 0.60) !important;
+}
+
+html.light .bg-\[\#0a0a0a\] .text-white\/50:not(button):not(button *):not(a):not(a *):not(.btn-primary *):not(.btn-secondary *):not(.g-stage *) {
+  color: rgba(15, 23, 42, 0.55) !important;
+}
+
+html.light .bg-\[\#0a0a0a\] .text-white\/40:not(button):not(button *):not(a):not(a *):not(.btn-primary *):not(.btn-secondary *):not(.g-stage *) {
+  color: rgba(15, 23, 42, 0.45) !important;
+}
+
+html.light .bg-\[\#0a0a0a\] .text-white\/30:not(button):not(button *):not(a):not(a *):not(.btn-primary *):not(.btn-secondary *):not(.g-stage *) {
+  color: rgba(15, 23, 42, 0.35) !important;
+}
+
+/* varian teks yang sering dipakai di panel setting */
+html.light .bg-\[\#0a0a0a\] .text-gray-100:not(button *):not(a *),
+html.light .bg-\[\#0a0a0a\] .text-zinc-200:not(button *):not(a *),
+html.light .bg-\[\#0a0a0a\] .text-neutral-200:not(button *):not(a *) {
+  color: #334155 !important;
+}
+
 /* hover */
 html.light .hover\:text-white:hover {
   color: #0f172a !important;
+}
+
+html.light .group:hover .group-hover\:text-white {
+  color: #0f172a !important;
+}
+
+html.light .hover\:text-gray-100:hover,
+html.light .hover\:text-gray-200:hover {
+  color: #0f172a !important;
+}
+
+html.light .hover\:text-gray-300:hover {
+  color: #334155 !important;
 }
 
 html.light .hover\:bg-white\/5:hover {
@@ -633,16 +771,8 @@ html.light .custom-scrollbar::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.04);
 }
 
-/* active nav in light - make it dark for contrast */
-html.light .bg-white.text-black {
-  background: #0f172a !important;
-  color: #ffffff !important;
-  border-color: #0f172a !important;
-}
-
-html.light .bg-white.text-black .text-black {
-  color: #ffffff !important;
-}
+/* Catatan: badge "bg-white text-black" dibiarkan putih di light mode.
+   Highlight nav aktif sudah memakai .btn-primary, jadi tidak perlu diinversi. */
 
 /* Widget thumbnails - in light mode should be white (not black) with dark text */
 html.light .widget-thumb,
@@ -698,22 +828,22 @@ html.light .widget-thumb .pin-pc-bubble span {
 
 /* Dock header specific */
 html.light .dock-control-btn {
-  background: #ffffff !important;
-  border-color: rgba(0, 0, 0, 0.14) !important;
-  color: #334155 !important;
+  background: var(--secondary) !important;
+  border-color: var(--secondary-border) !important;
+  color: var(--secondary-foreground) !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 html.light .dock-control-btn:hover {
-  background: #f8fafc !important;
-  border-color: rgba(0, 0, 0, 0.18) !important;
-  color: #0f172a !important;
+  background: var(--secondary-hover) !important;
+  border-color: var(--secondary-border) !important;
+  color: var(--secondary-foreground) !important;
 }
 
 html.light .dock-control-btn.active {
-  background: #2563eb !important;
-  color: #ffffff !important;
-  border-color: #2563eb !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-color: var(--primary) !important;
 }
 
 html.light header.h-14.bg-\[\#121212\] {
@@ -730,7 +860,7 @@ html.light header .text-gray-400 {
   color: #475569 !important;
 }
 
-html.light header .text-white {
+html.light header .text-white:not(.btn-primary):not(.btn-primary *):not(.btn-secondary):not(.btn-secondary *):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-pink"]):not([class*="bg-fuchsia"]):not([class*="bg-purple"]):not([class*="bg-violet"]):not([class*="bg-indigo"]):not([class*="bg-blue"]):not([class*="bg-sky"]):not([class*="bg-cyan"]):not([class*="bg-teal"]):not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-orange"]):not([class*="bg-[#8b5cf6]"]):not([class*="bg-[#970020]"]):not([class*="bg-[#FE2C55]"]):not([class*="bg-[#9D4EDD]"]) {
   color: #0f172a !important;
 }
 
@@ -739,12 +869,15 @@ html.light header .border-white\/10 {
 }
 
 html.light .tab-btn {
-  color: #64748b !important;
+  background: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border-color: var(--secondary-border) !important;
 }
 
 html.light .tab-btn.active {
-  background: #0f172a !important;
-  color: #ffffff !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-color: var(--primary) !important;
 }
 
 html.light .system-connect-btn {
@@ -875,7 +1008,7 @@ html.light .admin-page button:disabled {
 }
 
 html.light .admin-page button:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -959,7 +1092,7 @@ html.dark .landing-root .text-\[\#64748b\] {
 }
 
 html.dark .landing-root .text-\[\#005ea6\] {
-  color: #5eb2ff !important;
+  color: var(--primary-muted) !important;
 }
 
 /* surfaces */
@@ -1002,7 +1135,7 @@ html.dark .landing-root .hover\:text-\[\#0f172a\]:hover {
 }
 
 html.dark .landing-root .hover\:text-\[\#005ea6\]:hover {
-  color: #5eb2ff !important;
+  color: var(--primary-muted) !important;
 }
 
 /* shadows lebih lembut di dark */
@@ -1012,7 +1145,7 @@ html.dark .landing-root .shadow-\[0_4px_12px_rgba\(15\,23\,42\,0\.05\)\] {
 
 /* tombol aktif biru- paksa text tetap putih di dark mode */
 html.dark .landing-root .bg-\[\#005ea6\] {
-  background: #005ea6 !important;
+  background: var(--primary) !important;
 }
 
 html.dark .landing-root .bg-\[\#005ea6\] .text-white,
@@ -1023,4 +1156,147 @@ html.dark .landing-root .bg-\[\#005ea6\] * {
 
 html.dark .landing-root .\!text-white {
   color: #ffffff !important;
+}
+/* ===== Dock: tombol monokrom (hitam / putih) =====
+   Hanya berlaku di halaman /dock (wrapper .dock-page), tanpa mengubah
+   halaman lain. Dark mode: tombol putih di atas panel gelap.
+   Light mode: tombol hitam di atas panel terang. */
+.dock-page .btn-primary {
+  background: #ffffff !important;
+  color: #0a0a0a !important;
+  border-color: #ffffff !important;
+}
+
+.dock-page .btn-primary:hover {
+  background: #e4e4e7 !important;
+  border-color: #e4e4e7 !important;
+  color: #0a0a0a !important;
+}
+
+.dock-page .btn-secondary {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #f4f4f5 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.dock-page .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  color: #ffffff !important;
+}
+
+.dock-page .tab-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #d4d4d8 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dock-page .tab-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dock-page .tab-btn.active {
+  background: #ffffff !important;
+  color: #0a0a0a !important;
+  border-color: #ffffff !important;
+}
+
+.dock-page .dock-control-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #e4e4e7 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.dock-page .dock-control-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dock-page .dock-control-btn.active {
+  background: #ffffff !important;
+  color: #0a0a0a !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25) !important;
+}
+
+.dock-page .dock-control-btn.active:hover {
+  background: #e4e4e7 !important;
+}
+
+/* Toggle switch: knob & ikon harus kontras di tombol putih */
+.dock-page .btn-primary > .bg-white {
+  background: #18181b !important;
+}
+
+.dock-page .btn-primary .text-\[\#005ea6\] {
+  color: #ffffff !important;
+}
+
+/* Light mode: inversi (hitam di atas putih) */
+html.light .dock-page .btn-primary {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+}
+
+html.light .dock-page .btn-primary:hover {
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+html.light .dock-page .btn-secondary {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .dock-page .btn-secondary:hover {
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+html.light .dock-page .tab-btn {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .dock-page .tab-btn:hover {
+  background: #e2e8f0 !important;
+}
+
+html.light .dock-page .tab-btn.active {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+}
+
+html.light .dock-page .dock-control-btn {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .dock-page .dock-control-btn:hover {
+  background: #e2e8f0 !important;
+}
+
+html.light .dock-page .dock-control-btn.active {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+  box-shadow: 0 0 10px rgba(15, 23, 42, 0.2) !important;
+}
+
+html.light .dock-page .dock-control-btn.active:hover {
+  background: #1e293b !important;
+}
+
+html.light .dock-page .btn-primary > .bg-white {
+  background: #ffffff !important;
+}
+
+html.light .dock-page .btn-primary .text-\[\#005ea6\] {
+  color: #0f172a !important;
 }

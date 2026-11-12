@@ -153,7 +153,7 @@ function ClockEditorInner() {
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => shell.setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
+            <Link href="/widgets" className="p-1.5 btn-secondary border rounded-xl "><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><Clock3 className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
               <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Clock</div>
@@ -161,9 +161,9 @@ function ClockEditorInner() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
-            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
-            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
+            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase "><RefreshCw className="w-3 h-3" /> Defaults</button>
+            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Load URL</button>
+            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase "><ExternalLink className="w-3 h-3" /> Preview</a>
           </div>
         </header>
 
@@ -172,13 +172,13 @@ function ClockEditorInner() {
             <div className="text-[9px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1.5"><Settings2 className="w-3 h-3" /> Widget URL - paste ke OBS Browser Source (transparent)</div>
             <div onClick={copyUrl} className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 cursor-pointer hover:border-white/20 group">
               <code className={`flex-1 text-[11px] font-mono truncate ${shell.showKey ? 'text-white' : 'text-white blur-[3px] select-none'}`}>{shell.showKey ? obsUrl : maskUrl(obsUrl)}</code>
-              <button type="button" onClick={(e)=>{e.stopPropagation(); toggleShowKey(shell, obsUrl);}} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white">{shell.showKey ? <EyeOff className="w-3.5 h-3.5"/> : <Eye className="w-3.5 h-3.5"/>}</button>
+              <button type="button" onClick={(e)=>{e.stopPropagation(); toggleShowKey(shell, obsUrl);}} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg btn-secondary border ">{shell.showKey ? <EyeOff className="w-3.5 h-3.5"/> : <Eye className="w-3.5 h-3.5"/>}</button>
               <span className={`shrink-0 w-7 h-7 grid place-items-center rounded-lg ${shell.copied ? 'bg-emerald-500 text-white' : 'bg-white text-black group-hover:bg-zinc-100'}`}>{shell.copied ? <Check className="w-3.5 h-3.5"/> : <Copy className="w-3.5 h-3.5"/>}</span>
             </div>
           </div>
           <div className="flex self-end gap-2 shrink-0">
-            <a href={obsUrl} target="_blank" className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5"/> OBS</a>
-            <a href={obsUrl} draggable onDragStart={(e)=>{e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed='copy';}} className="h-9 px-3 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5"/> Drag ke OBS</a>
+            <a href={obsUrl} target="_blank" className="h-9 px-3 btn-secondary border rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5"/> OBS</a>
+            <a href={obsUrl} draggable onDragStart={(e)=>{e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed='copy';}} className="h-9 px-3 btn-primary border border-dashed border-zinc-300 rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5"/> Drag ke OBS</a>
           </div>
         </div>
 
@@ -222,7 +222,7 @@ function ClockEditorInner() {
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Gap antar baris</span><input type="number" value={state.gap} onChange={e=>update('gap', parseInt(e.target.value)||0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-2"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={e=>update('bg', e.target.value)} className="w-9 h-9 bg-black/40 border border-white/10 rounded-xl p-1" /><button onClick={()=>update('bg','transparent')} className={`flex-1 h-9 rounded-xl text-[11px] font-black uppercase border ${state.bg==='transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
+                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-2"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={e=>update('bg', e.target.value)} className="w-9 h-9 bg-black/40 border border-white/10 rounded-xl p-1" /><button onClick={()=>update('bg','transparent')} className={`flex-1 h-9 rounded-xl text-[11px] font-black uppercase border ${state.bg==='transparent' ? 'btn-primary ' : 'btn-secondary '}`}>Transparent</button></div></label>
                   </div>
                   <div className="bg-black/30 border border-white/5 rounded-xl p-2">
                     <PositionPicker value={state.pos || 'center'} onChange={(v) => update('pos', v)} />
@@ -253,8 +253,8 @@ function ClockEditorInner() {
               <LineEditor title="Line 3 - Extra (opsional)" icon={<Sparkles className="w-3.5 h-3.5 text-amber-400"/>} presets={[...timePresets, ...datePresets, {label:'Custom: [Live] • dddd', value:'[Live] • dddd'}]} value={state.l3} onFormat={(v:string)=>update('l3',v)} state={state} prefix="3" update={update} />
 
               <div className="flex gap-2">
-                <button onClick={()=>setState({...defaults})} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-                <button onClick={copyUrl} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5"/> Copy OBS URL</button>
+                <button onClick={()=>setState({...defaults})} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+                <button onClick={copyUrl} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5"/> Copy OBS URL</button>
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-2">
@@ -279,9 +279,9 @@ function ClockEditorInner() {
               <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">CLOCK • {state.tz} • {state.font}</div>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-              <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3"/> Buka OBS</a>
-              <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>
-              <button onClick={()=>window.open(previewUrl,'_blank')} className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white"><ExternalLink className="w-3 h-3"/> Popout</button>
+              <a href={obsUrl} target="_blank" className="h-9 btn-primary rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3"/> Buka OBS</a>
+              <Link href="/widgets" className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 ">Widgets</Link>
+              <button onClick={()=>window.open(previewUrl,'_blank')} className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 "><ExternalLink className="w-3 h-3"/> Popout</button>
             </div>
           </div>
         </div>

@@ -35,9 +35,9 @@ function FollowSettingsInner() {
         subtitle="Follow alert + suara - dari server.ts tiktok-follow/member (TikTok + Streamer.bot)"
         headerActions={
           <>
-            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
-            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
-            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
+            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase "><RefreshCw className="w-3 h-3" /> Defaults</button>
+            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Load URL</button>
+            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase "><ExternalLink className="w-3 h-3" /> Preview</a>
           </>
         }
         urlBar={<UrlBar obsUrl={obsUrl} showKey={shell.showKey} onToggleKey={() => toggleShowKey(shell, obsUrl)} copied={shell.copied} onCopy={handleCopy} />}

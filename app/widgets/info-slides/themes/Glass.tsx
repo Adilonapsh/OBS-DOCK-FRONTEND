@@ -21,7 +21,7 @@ export default function GlassTheme({ slides, index, font, accent, textColor, sho
         </div>
         <div className="hidden sm:flex gap-1">
           <button onClick={onPrev} className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white grid place-items-center">‹</button>
-          <button onClick={onNext} className="w-8 h-8 rounded-full bg-white text-black grid place-items-center">›</button>
+          <button onClick={onNext} className="w-8 h-8 rounded-full btn-primary grid place-items-center">›</button>
         </div>
       </div>
       {showProgress && <div className="flex justify-center gap-1.5 mt-3">{slides.map((_,i)=> <span key={i} className={`h-1.5 rounded-full transition-all ${i===index?'w-6 bg-white':'w-1.5 bg-white/30'}`} />)}</div>}

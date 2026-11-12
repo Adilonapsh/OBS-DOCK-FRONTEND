@@ -431,7 +431,7 @@ export default function DockableLayout(props: DockableLayoutProps) {
       return (
         <div className="relative flex flex-col min-h-0 min-w-0 flex-1 basis-0 bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden" data-dock-tabs-root={node.id}>
           {/* Tab bar = juga handle drag untuk panel aktif */}
-          <div className="flex items-stretch gap-0.5 p-1 bg-[var(--accent)] border-b border-black/20 overflow-x-auto shrink-0">
+          <div className="flex items-stretch gap-0.5 p-1 bg-[var(--accent)] border-b border-black/20 overflow-x-auto mdock-scroll-x shrink-0">
             {node.panels.map((p) => {
               const active = node.active === p;
               // Tab-bar juga target drop (tengah = gabung jadi tab) - seperti browser/VS Code.

@@ -11,9 +11,10 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import {
   Maximize2, Minimize2, Sun, Moon, Settings,
-  Trash2, Radio, Sliders, ExternalLink, MessageSquare,
+  Trash2, Sliders, ExternalLink, MessageSquare,
   Tv, AlertCircle, Eye, EyeOff, Loader2, KeyRound, Music, Minus, Plus, RotateCcw,
   LayoutGrid, BarChart3, ListChecks, Pin, Gamepad2, Clock, MessagesSquare,
   Volume2, VolumeX, X,
@@ -1246,9 +1247,14 @@ export default function MobileDockPage() {
       {/* HEADER */}
       <header className="fixed top-0 left-0 right-0 h-12 border-b border-[var(--border-color)] bg-[var(--panel-bg)] flex justify-between items-center px-4 z-50">
         <div className="flex items-center gap-2">
-          <div className="p-1 bg-[var(--accent)] text-white rounded-md">
-            <Radio className="w-3 h-3 animate-pulse" />
-          </div>
+          <Image
+            src="/assets/logo/Keluno_logo.webp"
+            alt="Keluno"
+            width={32}
+            height={32}
+            priority
+            className="h-6 w-6 rounded-md object-contain shrink-0"
+          />
           <h1 className="text-sm font-bold flex items-center gap-1">
             Mobile Dock
             <span className={`text-[8px] mt-1 px-1 py-0.5 rounded ${viewStream.isLive ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--bg-color)]'}`}>
@@ -1318,7 +1324,7 @@ export default function MobileDockPage() {
       </div>
 
       {/* MOBILE DOCK - nav mengikuti panel yang terlihat di layout */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t-2 border-black/20 bg-[var(--accent)] flex items-center justify-around px-2 z-50 overflow-x-auto">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t-2 border-black/20 bg-[var(--accent)] flex items-center justify-around px-2 z-50 overflow-x-auto mdock-scroll-hide">
         {dockVisiblePanels(dockLayout.root).map((id) => {
           const customTitle = dockTitles[id] ?? id;
           const meta = {

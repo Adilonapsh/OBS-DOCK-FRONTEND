@@ -191,7 +191,7 @@ function LyricsSettingsInner() {
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => shell.setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
+            <Link href="/widgets" className="p-1.5 btn-secondary border rounded-xl "><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><Mic2 className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
               <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Lyrics <span className="hidden sm:inline px-2 py-0.5 bg-white text-black rounded-full text-[9px]">{state.source === 'music' ? 'LRCLIB | Music Request' : 'LRCLIB | SMTC'}</span></div>
@@ -199,9 +199,9 @@ function LyricsSettingsInner() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
-            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load Settings</button>
-            <a href={iframeSrc} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
+            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase "><RefreshCw className="w-3 h-3" /> Defaults</button>
+            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Load Settings</button>
+            <a href={iframeSrc} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase "><ExternalLink className="w-3 h-3" /> Preview</a>
           </div>
         </header>
 
@@ -211,22 +211,22 @@ function LyricsSettingsInner() {
             <div className="text-[9px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1.5"><Settings2 className="w-3 h-3" /> Widget URL - Click to copy (paste ke OBS Browser Source)</div>
             <div onClick={handleCopy} className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 cursor-pointer hover:border-white/20 group">
               <code className={`flex-1 text-[11px] font-mono truncate ${shell.showKey ? "text-white" : "text-white blur-[3px] select-none"}`}>{shell.showKey ? obsUrl : obsUrl.replace(/key=[^&]+/, 'key=••••••••••••••••')}</code>
-              <button type="button" onClick={(e) => { e.stopPropagation(); toggleShowKey(shell, obsUrl); }} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white" title={shell.showKey ? "Sembunyikan key" : "Tampilkan key (konfirmasi)"}>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggleShowKey(shell, obsUrl); }} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg btn-secondary border " title={shell.showKey ? "Sembunyikan key" : "Tampilkan key (konfirmasi)"}>
                 {shell.showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
               <span className={`shrink-0 w-7 h-7 grid place-items-center rounded-lg ${shell.copied ? 'bg-emerald-500 text-white' : 'bg-white text-black group-hover:bg-zinc-100'}`}>{shell.copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}</span>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button onClick={handleCopy} className="h-9 px-4 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center gap-2 border border-white"><Copy className="w-3.5 h-3.5" /> {shell.copied ? 'Copied!' : 'Copy URL'}</button>
-            <a href={obsUrl} target="_blank" className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3 h-3" /> OBS</a>
+            <button onClick={handleCopy} className="h-9 px-4 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center gap-2 border "><Copy className="w-3.5 h-3.5" /> {shell.copied ? 'Copied!' : 'Copy URL'}</button>
+            <a href={obsUrl} target="_blank" className="h-9 px-3 btn-secondary border rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3 h-3" /> OBS</a>
             <a
-              href={obsUrl}
-              draggable
-              onDragStart={(e) => { e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed = 'copy'; }}
-              title="Tahan & drag langsung ke OBS → Sources (akan buat Browser Source otomatis)"
-              className="h-9 px-3 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing select-none"
-            >
+ href={obsUrl}
+ draggable
+ onDragStart={(e) => { e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed = 'copy'; }}
+ title="Tahan & drag langsung ke OBS → Sources (akan buat Browser Source otomatis)"
+ className="h-9 px-3 btn-primary border border-dashed border-zinc-300 rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing select-none"
+ >
               <GripVertical className="w-3.5 h-3.5" /> Drag ke OBS
             </a>
           </div>
@@ -318,7 +318,7 @@ function LyricsSettingsInner() {
                   <Toggle label="Show While Paused" desc="Visible even when track is paused." checked={state.showWhilePaused} onChange={v => update('showWhilePaused', v)} />
                   <Toggle label="Auto-Hide on Track Change" desc="Show for a set duration whenever a new track starts." checked={state.autoHide} onChange={v => update('autoHide', v)} />
                   {state.autoHide && <label className="block ml-4"><span className="text-[11px] font-bold text-gray-300">Display Duration (seconds)</span><input type="number" min={1} max={60} value={state.displayDuration} onChange={e => update('displayDuration', parseInt(e.target.value)||5)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>}
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Included Apps <span className="font-normal opacity-60">priority order, empty = focused app</span></span><span className="text-[10px] text-gray-500"> <a href="http://127.0.0.1:5000/sessions" target="_blank" className="text-white underline">View active sources</a></span><input value={state.includedApplications} onChange={e => update('includedApplications', e.target.value)} placeholder="Spotify.exe, vlc.exe" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Included Apps <span className="font-normal opacity-60">priority order, empty = focused app</span></span><span className="text-[10px] text-gray-500"> <a href="http://127.0.0.1:5000/sessions" target="_blank" className="text-gray-200 underline">View active sources</a></span><input value={state.includedApplications} onChange={e => update('includedApplications', e.target.value)} placeholder="Spotify.exe, vlc.exe" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Excluded Apps</span><input value={state.excludedApplications} onChange={e => update('excludedApplications', e.target.value)} placeholder="Chrome, vlc.exe" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Show Animation</span><select value={state.showAnimation} onChange={e => update('showAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{showAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Hide Animation</span><select value={state.hideAnimation} onChange={e => update('hideAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{hideAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
@@ -331,13 +331,13 @@ function LyricsSettingsInner() {
                 <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Address</span><input value={state.smtcBridgeAddress} onChange={e => update('smtcBridgeAddress', e.target.value)} placeholder="127.0.0.1" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" /></label>
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Port</span><input value={state.smtcBridgePort} onChange={e => update('smtcBridgePort', e.target.value)} placeholder="5000" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" /></label>
-                  <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Download SMTC Bridge: <a href="https://github.com/nuttylmao/smtc-bridge/releases" target="_blank" className="text-white underline">github.com/nuttylmao/smtc-bridge</a> • Test: <a href={`http://${state.smtcBridgeAddress}:${state.smtcBridgePort}/now-playing`} target="_blank" className="text-white underline">/now-playing</a> • LRCLIB: <a href="https://lrclib.net" target="_blank" className="text-white underline">lrclib.net</a></div>
+                  <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Download SMTC Bridge: <a href="https://github.com/nuttylmao/smtc-bridge/releases" target="_blank" className="text-gray-200 underline">github.com/nuttylmao/smtc-bridge</a> • Test: <a href={`http://${state.smtcBridgeAddress}:${state.smtcBridgePort}/now-playing`} target="_blank" className="text-gray-200 underline">/now-playing</a> • LRCLIB: <a href="https://lrclib.net" target="_blank" className="text-gray-200 underline">lrclib.net</a></div>
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <button onClick={() => setState({...defaults})} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-                <button onClick={handleCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
+                <button onClick={() => setState({...defaults})} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+                <button onClick={handleCopy} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5" /> Copy URL</button>
               </div>
             </div>
           </div>
@@ -353,9 +353,9 @@ function LyricsSettingsInner() {
               <div className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/60 backdrop-blur px-2 py-1 rounded-full text-white/60 border border-white/10 pointer-events-none">LRCLIB {state.lrclibEnabled ? 'ON' : 'OFF'} • {state.lyricsFontSize}px • {state.lyricsAlign} • {(state as any).pos || state.verticalAlignment || 'center'}</div>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-              <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS</a>
-              <button onClick={() => window.open(`http://${state.smtcBridgeAddress}:${state.smtcBridgePort}/now-playing`, '_blank')} className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Test API</button>
-              <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>
+              <a href={obsUrl} target="_blank" className="h-9 btn-primary rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS</a>
+              <button onClick={() => window.open(`http://${state.smtcBridgeAddress}:${state.smtcBridgePort}/now-playing`, '_blank')} className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 ">Test API</button>
+              <Link href="/widgets" className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 ">Widgets</Link>
             </div>
           </div>
         </div>

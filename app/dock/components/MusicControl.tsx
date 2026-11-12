@@ -281,24 +281,24 @@ export default function MusicControl({
         {/* prev / play-pause / next inline + progress */}
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => control('prev')}
-            className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300"
-            title="Sebelumnya"
-          >
+ onClick={() => control('prev')}
+ className="w-8 h-8 shrink-0 grid place-items-center rounded-full btn-secondary border "
+ title="Sebelumnya"
+ >
             <SkipBack className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => control(song?.isPlaying ? 'pause' : 'play')}
-            className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-white text-black hover:bg-zinc-200"
-            title={song?.isPlaying ? 'Pause' : 'Play'}
-          >
+ onClick={() => control(song?.isPlaying ? 'pause' : 'play')}
+ className="w-8 h-8 shrink-0 grid place-items-center rounded-full btn-primary "
+ title={song?.isPlaying ? 'Pause' : 'Play'}
+ >
             {song?.isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
           </button>
           <button
-            onClick={() => control('next')}
-            className="w-8 h-8 shrink-0 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300"
-            title="Berikutnya"
-          >
+ onClick={() => control('next')}
+ className="w-8 h-8 shrink-0 grid place-items-center rounded-full btn-secondary border "
+ title="Berikutnya"
+ >
             <SkipForward className="w-3.5 h-3.5" />
           </button>
           <div className="flex-1 min-w-0 mt-3">
@@ -333,7 +333,7 @@ export default function MusicControl({
             placeholder={`Paste URL YouTube / MP3… (atau ${cmd} di chat)`}
             className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl px-3 text-[11px] text-white placeholder:text-gray-600 focus:outline-none focus:border-white/20"
           />
-          <button onClick={handleAdd} className="shrink-0 w-9 h-9 grid place-items-center rounded-xl bg-white text-black hover:bg-zinc-200" title="Tambah ke queue">
+          <button onClick={handleAdd} className="shrink-0 w-9 h-9 grid place-items-center rounded-xl btn-primary " title="Tambah ke queue">
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -367,11 +367,11 @@ export default function MusicControl({
             <div className="space-y-1 max-h-[180px] overflow-y-auto custom-scrollbar">
               {searchResults.map((r) => (
                 <button
-                  key={r.videoId}
-                  onClick={() => handlePickResult(r)}
-                  className="w-full flex items-center gap-2 p-1.5 rounded-lg border bg-white/5 border-white/5 hover:bg-white/10 text-left"
-                  title="Klik untuk tambah ke queue"
-                >
+ key={r.videoId}
+ onClick={() => handlePickResult(r)}
+ className="w-full flex items-center gap-2 p-1.5 rounded-lg border btn-secondary text-left"
+ title="Klik untuk tambah ke queue"
+ >
                   {r.thumbnail ? (
                     <img src={r.thumbnail} alt="" className="w-10 h-[22px] rounded object-cover shrink-0" loading="lazy" />
                   ) : null}

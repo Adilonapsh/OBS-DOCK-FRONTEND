@@ -24,8 +24,8 @@ export default function BoxedTheme({ slides, index, font, accent, textColor, bg,
           </div>
           {showArrows && (
             <div className="hidden sm:flex flex-col gap-1">
-              <button onClick={onPrev} className="w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10">‹</button>
-              <button onClick={onNext} className="w-7 h-7 grid place-items-center rounded-lg bg-white text-black hover:bg-zinc-100">›</button>
+              <button onClick={onPrev} className="w-7 h-7 grid place-items-center rounded-lg btn-secondary border ">‹</button>
+              <button onClick={onNext} className="w-7 h-7 grid place-items-center rounded-lg btn-primary ">›</button>
             </div>
           )}
         </div>

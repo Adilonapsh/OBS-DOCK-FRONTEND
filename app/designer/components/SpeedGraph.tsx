@@ -239,24 +239,24 @@ export default function SpeedGraph({
     <div className="space-y-1.5">
       <div className="flex items-center gap-1 flex-wrap">
         <button
-          onClick={() => setView('value')}
-          className={`text-[10px] font-black px-2 py-1 rounded-none ${view === 'value' ? 'bg-white text-black' : 'bg-white/5 text-gray-500 hover:text-gray-300'}`}
-        >
+ onClick={() => setView('value')}
+ className={`text-[10px] font-black px-2 py-1 rounded-none ${view === 'value' ? 'btn-primary ' : 'btn-secondary '}`}
+ >
           Value
         </button>
         <button
-          onClick={() => setView('speed')}
-          className={`text-[10px] font-black px-2 py-1 rounded-none ${view === 'speed' ? 'bg-white text-black' : 'bg-white/5 text-gray-500 hover:text-gray-300'}`}
-        >
+ onClick={() => setView('speed')}
+ className={`text-[10px] font-black px-2 py-1 rounded-none ${view === 'speed' ? 'btn-primary ' : 'btn-secondary '}`}
+ >
           Speed
         </button>
         <span className="w-px h-4 bg-white/10 mx-0.5" />
         {dims.map((d) => (
           <button
-            key={d.id}
-            onClick={() => setDimId(d.id)}
-            className={`text-[10px] font-black px-2 py-1 rounded-none ${d.id === dim.id ? 'bg-white/15 text-white' : 'bg-white/5 text-gray-500 hover:text-gray-300'}`}
-          >
+ key={d.id}
+ onClick={() => setDimId(d.id)}
+ className={`text-[10px] font-black px-2 py-1 rounded-none ${d.id === dim.id ? 'bg-white/15 ' : 'btn-secondary '}`}
+ >
             {d.label}
           </button>
         ))}

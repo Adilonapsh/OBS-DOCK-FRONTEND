@@ -962,11 +962,11 @@ function Editor() {
         />
         <span className="text-[10px] text-gray-500 bg-white/5 px-2 py-1 rounded whitespace-nowrap">{canvasW}×{canvasH} • {doc.layers.length} layers</span>
         <div className="ml-auto flex items-center gap-2">
-          <Link href={previewUrl} target="_blank" className="flex items-center gap-1.5 text-[11px] font-black bg-white/10 px-3 py-2 rounded-lg"><FaEye className="w-3.5 h-3.5" /> Preview</Link>
+          <Link href={previewUrl} target="_blank" className="flex items-center gap-1.5 text-[11px] font-black btn-secondary px-3 py-2 rounded-lg"><FaEye className="w-3.5 h-3.5" /> Preview</Link>
           <button
-            onClick={copyObsUrl}
-            className="flex items-center gap-1.5 text-[11px] font-black bg-white text-black px-3 py-2 rounded-lg"
-          >
+ onClick={copyObsUrl}
+ className="flex items-center gap-1.5 text-[11px] font-black btn-primary px-3 py-2 rounded-lg"
+ >
             {copied ? <FaCheck className="w-3.5 h-3.5" /> : <FaCopy className="w-3.5 h-3.5" />} {copied ? 'Copied!' : 'Copy OBS URL'}
           </button>
         </div>
@@ -977,12 +977,12 @@ function Editor() {
         {(['File', 'Edit', 'View'] as const).map((m) => (
           <div key={m} className="relative shrink-0">
             <button
-              onClick={() => setOpenMenu((o) => (o === m ? null : m))}
-              onMouseEnter={() => {
-                if (openMenu) setOpenMenu(m);
-              }}
-              className={`px-3 py-1.5 rounded-md ${openMenu === m ? 'bg-white/10 text-white' : 'text-gray-300 hover:bg-white/5'}`}
-            >
+ onClick={() => setOpenMenu((o) => (o === m ? null : m))}
+ onMouseEnter={() => {
+ if (openMenu) setOpenMenu(m);
+ }}
+ className={`px-3 py-1.5 rounded-md ${openMenu === m ? 'btn-secondary ' : ' '}`}
+ >
               {m}
             </button>
             {openMenu === m && (
@@ -1070,13 +1070,13 @@ function Editor() {
         <aside className="bg-[#121212] border-r border-white/5 py-3 flex lg:flex-col items-center gap-1.5 overflow-x-auto lg:overflow-y-auto custom-scrollbar max-h-[calc(100vh-56px)] lg:max-h-none lg:h-full">
           {TOOLS.map((t) => (
             <button
-              key={t.id}
-              onClick={() => handleTool(t.id)}
-              title={t.id === 'select' ? 'Select / Move' : `Tambah ${t.label}`}
-              className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center gap-0.5 border transition-colors ${
-                activeTool === t.id ? 'bg-white/15 border-white/50 text-white' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10 hover:text-white'
-              }`}
-            >
+ key={t.id}
+ onClick={() => handleTool(t.id)}
+ title={t.id === 'select' ? 'Select / Move' : `Tambah ${t.label}`}
+ className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center gap-0.5 border transition-colors ${
+ activeTool === t.id ? 'bg-white/15 border-white/50 ' : 'btn-secondary border-transparent '
+ }`}
+ >
               <t.icon className="w-[18px] h-[18px]" />
               <span className="text-[8px] font-black uppercase leading-none">{t.label}</span>
             </button>
@@ -1271,10 +1271,10 @@ function Editor() {
             <div className="grid grid-cols-2 gap-1.5">
               {SIZE_PRESETS.map((p) => (
                 <button
-                  key={p.id}
-                  onClick={() => setCanvasSize(p.w, p.h)}
-                  className={`text-[11px] font-bold px-2 py-1.5 rounded-lg ${canvasW === p.w && canvasH === p.h ? 'bg-white/15 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                >
+ key={p.id}
+ onClick={() => setCanvasSize(p.w, p.h)}
+ className={`text-[11px] font-bold px-2 py-1.5 rounded-lg ${canvasW === p.w && canvasH === p.h ? 'bg-white/15 ' : 'btn-secondary '}`}
+ >
                   {p.label}
                 </button>
               ))}
@@ -1379,17 +1379,17 @@ function Editor() {
                   if (!off) return null;
                   return (
                     <button
-                      onClick={() => {
-                        const nx = Math.round((canvasW - sb.w) / 2);
-                        const ny = Math.round((canvasH - sb.h) / 2);
-                        if (selected.keyframes?.position !== undefined) {
-                          patchLayer(selected.id, (l) => ({ ...l, keyframes: setKeyframe(l.keyframes, 'position', scrubRef.current, [nx, ny]) }));
-                        } else {
-                          patchLayer(selected.id, { x: nx, y: ny });
-                        }
-                      }}
-                      className="w-full text-[11px] font-black bg-white text-black rounded-lg px-3 py-2 hover:bg-gray-200"
-                    >
+ onClick={() => {
+ const nx = Math.round((canvasW - sb.w) / 2);
+ const ny = Math.round((canvasH - sb.h) / 2);
+ if (selected.keyframes?.position !== undefined) {
+ patchLayer(selected.id, (l) => ({ ...l, keyframes: setKeyframe(l.keyframes, 'position', scrubRef.current, [nx, ny]) }));
+ } else {
+ patchLayer(selected.id, { x: nx, y: ny });
+ }
+ }}
+ className="w-full text-[11px] font-black btn-primary rounded-lg px-3 py-2 "
+ >
                       Layer di luar canvas - Pusatkan
                     </button>
                   );

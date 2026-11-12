@@ -135,11 +135,11 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
   const isDataUrl = value.startsWith('data:audio');
   const tabBtn = (t: Tab, icon: React.ReactNode, label: string) => (
     <button
-      key={t}
-      onClick={() => setTab(t)}
-      className={`flex-1 h-7 rounded-lg text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-colors ${tab === t ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/5'
-        }`}
-    >
+ key={t}
+ onClick={() => setTab(t)}
+ className={`flex-1 h-7 rounded-lg text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-colors ${tab === t ? 'btn-primary ' : 'text-gray-400 hover:text-white hover:bg-white/5'
+ }`}
+ >
       {icon}
       {label}
     </button>
@@ -163,10 +163,10 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
           />
           {!!value && !isDataUrl && (
             <button
-              onClick={() => previewUrl(value)}
-              aria-label="Preview suara"
-              className="w-8 h-8 shrink-0 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white flex items-center justify-center"
-            >
+ onClick={() => previewUrl(value)}
+ aria-label="Preview suara"
+ className="w-8 h-8 shrink-0 btn-secondary border rounded-xl flex items-center justify-center"
+ >
               {playing === value ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
             </button>
           )}
@@ -192,10 +192,10 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
                 File lokal terpasang • {formatBytes(dataUrlBytes(value))} inline
               </span>
               <button
-                onClick={() => previewUrl(value)}
-                aria-label="Preview suara"
-                className="w-7 h-7 shrink-0 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white flex items-center justify-center"
-              >
+ onClick={() => previewUrl(value)}
+ aria-label="Preview suara"
+ className="w-7 h-7 shrink-0 btn-secondary border rounded-lg flex items-center justify-center"
+ >
                 {playing === value ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
               </button>
               <button
@@ -240,10 +240,10 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
               className="flex-1 min-w-0 h-8 bg-black/40 border border-white/10 rounded-xl px-2 text-[11px] text-white placeholder:text-gray-500"
             />
             <button
-              onClick={() => fetchBrowse(q.trim(), 1, false)}
-              aria-label="Cari"
-              className="w-8 h-8 shrink-0 bg-white text-black hover:bg-zinc-200 rounded-xl flex items-center justify-center"
-            >
+ onClick={() => fetchBrowse(q.trim(), 1, false)}
+ aria-label="Cari"
+ className="w-8 h-8 shrink-0 btn-primary rounded-xl flex items-center justify-center"
+ >
               {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
             </button>
           </div>
@@ -275,23 +275,23 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
                       }`}
                   >
                     <button
-                      onClick={() => previewUrl(clipUrl)}
-                      aria-label={isPlaying ? 'Stop preview' : `Preview ${it.title}`}
-                      className="w-7 h-7 shrink-0 bg-white/5 hover:bg-white/15 border border-white/10 rounded-lg text-white flex items-center justify-center"
-                    >
+ onClick={() => previewUrl(clipUrl)}
+ aria-label={isPlaying ? 'Stop preview' : `Preview ${it.title}`}
+ className="w-7 h-7 shrink-0 btn-secondary border rounded-lg flex items-center justify-center"
+ >
                       {isPlaying ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                     </button>
                     <span className="flex-1 min-w-0 text-[11px] font-bold text-white truncate" title={it.title}>
                       {it.title}
                     </span>
                     <button
-                      onClick={() => {
-                        stopAudio();
-                        onChange(clipUrl);
-                      }}
-                      className={`h-7 px-2.5 shrink-0 rounded-lg text-[10px] font-black uppercase ${selected ? 'bg-emerald-500 text-black' : 'bg-white text-black hover:bg-zinc-200'
-                        }`}
-                    >
+ onClick={() => {
+ stopAudio();
+ onChange(clipUrl);
+ }}
+ className={`h-7 px-2.5 shrink-0 rounded-lg text-[10px] font-black uppercase ${selected ? 'bg-emerald-500 ' : 'btn-primary '
+ }`}
+ >
                       {selected ? 'Dipakai' : 'Pilih'}
                     </button>
                   </div>
@@ -304,10 +304,10 @@ export function SfxPicker({ value, onChange, placeholder, backendUrl, maxUploadB
           )}
           {items.length > 0 && (
             <button
-              onClick={() => fetchBrowse(q.trim(), page + 1, true)}
-              disabled={loadingMore}
-              className="w-full h-7 text-[10px] font-black uppercase text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-50"
-            >
+ onClick={() => fetchBrowse(q.trim(), page + 1, true)}
+ disabled={loadingMore}
+ className="w-full h-7 text-[10px] font-black uppercase btn-secondary border rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-50"
+ >
               {loadingMore && <Loader2 className="w-3 h-3 animate-spin" />} Muat lagi
             </button>
           )}

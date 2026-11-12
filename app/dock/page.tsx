@@ -3501,7 +3501,7 @@ export default function Home() {
 
 
     return (
-        <div className="h-screen p-3 max-w-[100vw] overflow-x-hidden flex flex-col">
+        <div className="dock-page h-screen bg-[#0a0a0a] p-3 max-w-[100vw] overflow-x-hidden flex flex-col">
             {!privateKeyVerified ? (
                 <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-[#161616] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
@@ -3514,11 +3514,11 @@ export default function Home() {
                                 <div className="bg-black/30 border border-white/10 rounded-xl p-3 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[8px] font-black tracking-widest uppercase text-gray-500">Private Key Kamu</span>
-                                        <button onClick={handleCopyPrivateKey} className="px-2 py-1 bg-white/10 hover:bg-white/15 border border-white/10 rounded text-[9px] font-black uppercase text-white">Copy</button>
+                                        <button onClick={handleCopyPrivateKey} className="px-2 py-1 btn-secondary border rounded text-[9px] font-black uppercase ">Copy</button>
                                     </div>
                                     <code className="block text-[10px] break-all text-cyan-400 font-mono-custom bg-white/5 p-2 rounded border border-white/5">{privateKey}</code>
                                     <button onClick={handleRegeneratePrivateKey} className="text-[10px] font-bold text-red-400 hover:text-red-300">Regenerate private key</button>
-                                    <button onClick={handleCopyKelunoUrl} className="block w-full h-9 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 font-black text-[10px] uppercase tracking-widest">Copy URL Dock OBS</button>
+                                    <button onClick={handleCopyKelunoUrl} className="block w-full h-9 rounded-xl btn-secondary font-black text-[10px] uppercase tracking-widest">Copy URL Dock OBS</button>
                                     <p className="text-[9px] text-gray-500 leading-relaxed">Paste ke OBS → View → Docks → Custom Browser Docks. URL berisi <code className="text-cyan-400">?key=</code> agar key tidak hilang saat OBS dibuka ulang.</p>
                                 </div>
                             )}
@@ -3527,8 +3527,8 @@ export default function Home() {
                                 <input type="text" value={privateKeyInput} onChange={(e) => setPrivateKeyInput(e.target.value)} placeholder="64-char hex..." className="w-full h-10 px-3 bg-white/5 border border-white/10 rounded-xl text-[11px] font-mono-custom text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50" />
                             </div>
                             {privateKeyError && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold px-3 py-2 rounded-lg">{privateKeyError}</div>}
-                            <button onClick={handleVerifyPrivateKey} className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-[11px] uppercase tracking-widest">Verifikasi & Masuk Dock</button>
-                            <button onClick={async () => { try { localStorage.removeItem("dock_private_key"); } catch { } await logoutToLogin(supabase); }} className="w-full h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest">Logout</button>
+                            <button onClick={handleVerifyPrivateKey} className="w-full h-10 rounded-xl btn-primary font-black text-[11px] uppercase tracking-widest">Verifikasi & Masuk Dock</button>
+                            <button onClick={async () => { try { localStorage.removeItem("dock_private_key"); } catch { } await logoutToLogin(supabase); }} className="w-full h-8 rounded-xl btn-secondary border font-black text-[10px] uppercase tracking-widest">Logout</button>
                         </div>
                     </div>
                 </div>
@@ -3988,10 +3988,10 @@ export default function Home() {
                                                 </div>
                                             </div>
                                             <div className="opacity-0 group-hover:opacity-100 absolute top-0 right-0 flex items-center gap-1 transition-opacity">
-                                                <button onClick={() => speakMessage(message.user, message.text, message.platform, message.avatar)} className="p-1.5 bg-white/10 hover:bg-emerald-500/25 rounded text-gray-400 hover:text-emerald-300 transition-all shadow-md" title="Speak Chat (AI/TTS)">
+                                                <button onClick={() => speakMessage(message.user, message.text, message.platform, message.avatar)} className="p-1.5 btn-secondary rounded transition-all shadow-md" title="Speak Chat (AI/TTS)">
                                                     <Volume2 className="w-3 h-3" />
                                                 </button>
-                                                <button onClick={() => pinMessage(message.user, message.text, message.platform, message.avatar)} className="p-1.5 bg-white/10 hover:bg-white/20 rounded text-gray-400 hover:text-white transition-all shadow-md" title="Pin Chat">
+                                                <button onClick={() => pinMessage(message.user, message.text, message.platform, message.avatar)} className="p-1.5 btn-secondary rounded transition-all shadow-md" title="Pin Chat">
                                                     <Pin className="w-3 h-3" />
                                                 </button>
                                             </div>
@@ -4216,7 +4216,7 @@ export default function Home() {
                             <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
                                 <div className="flex items-center justify-between px-1">
                                     <h4 className="text-gray-500 text-[9px] font-black uppercase">Stream Briefing</h4>
-                                    <button onClick={requestAIBriefing} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white text-black text-[8px] font-black uppercase hover:bg-zinc-200 transition-all">
+                                    <button onClick={requestAIBriefing} className="flex items-center gap-1.5 px-2 py-1 rounded-md btn-primary text-[8px] font-black uppercase transition-all">
                                         <Sparkles className="w-3 h-3" />
                                         AI Sync
                                     </button>
@@ -4296,7 +4296,7 @@ export default function Home() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
-                                    <button onClick={copyBriefingToChat} className="py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[8px] font-black uppercase transition-all flex items-center justify-center gap-2">
+                                    <button onClick={copyBriefingToChat} className="py-2 btn-secondary border rounded-lg text-[8px] font-black uppercase transition-all flex items-center justify-center gap-2">
                                         <Share2 className="w-3 h-3" /> Share to Chat
                                     </button>
                                     <button onClick={clearBriefing} className="py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-[8px] font-black uppercase text-red-400 transition-all">
@@ -4449,11 +4449,11 @@ export default function Home() {
                                             <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${status.virtualCamStatus === "STARTED" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}>{status.virtualCamStatus || "STOPPED"}</span>
                                         </div>
                                         <button
-                                            onClick={toggleVirtualCam}
-                                            aria-label={status.virtualCamStatus === "STARTED" ? "Matikan Virtual Camera" : "Aktifkan Virtual Camera"}
-                                            title={status.virtualCamStatus === "STARTED" ? "Matikan" : "Aktifkan"}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full p-0.5 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${status.virtualCamStatus === "STARTED" ? "bg-[#005ea6]" : "bg-white/10 border border-white/10"}`}
-                                        >
+ onClick={toggleVirtualCam}
+ aria-label={status.virtualCamStatus === "STARTED" ? "Matikan Virtual Camera" : "Aktifkan Virtual Camera"}
+ title={status.virtualCamStatus === "STARTED" ? "Matikan" : "Aktifkan"}
+ className={`relative inline-flex h-5 w-9 items-center rounded-full p-0.5 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${status.virtualCamStatus === "STARTED" ? "btn-primary" : "btn-secondary border "}`}
+ >
                                             <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 ${status.virtualCamStatus === "STARTED" ? "translate-x-4" : "translate-x-0"}`}>
                                                 <Power className={`w-2.5 h-2.5 ${status.virtualCamStatus === "STARTED" ? "text-[#005ea6]" : "text-gray-500"}`} />
                                             </span>
@@ -4466,11 +4466,11 @@ export default function Home() {
                                             <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${status.replayBufferStatus === "STARTED" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}>{status.replayBufferStatus || "STOPPED"}</span>
                                         </div>
                                         <button
-                                            onClick={toggleReplayBuffer}
-                                            aria-label={status.replayBufferStatus === "STARTED" ? "Matikan Replay Buffer" : "Aktifkan Replay Buffer"}
-                                            title={status.replayBufferStatus === "STARTED" ? "Matikan" : "Aktifkan"}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full p-0.5 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${status.replayBufferStatus === "STARTED" ? "bg-[#005ea6]" : "bg-white/10 border border-white/10"}`}
-                                        >
+ onClick={toggleReplayBuffer}
+ aria-label={status.replayBufferStatus === "STARTED" ? "Matikan Replay Buffer" : "Aktifkan Replay Buffer"}
+ title={status.replayBufferStatus === "STARTED" ? "Matikan" : "Aktifkan"}
+ className={`relative inline-flex h-5 w-9 items-center rounded-full p-0.5 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${status.replayBufferStatus === "STARTED" ? "btn-primary" : "btn-secondary border "}`}
+ >
                                             <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 ${status.replayBufferStatus === "STARTED" ? "translate-x-4" : "translate-x-0"}`}>
                                                 <Power className={`w-2.5 h-2.5 ${status.replayBufferStatus === "STARTED" ? "text-[#005ea6]" : "text-gray-500"}`} />
                                             </span>
@@ -4611,7 +4611,7 @@ export default function Home() {
                                 <h4 className="text-gray-500 text-[9px] font-black uppercase px-1 mt-2">TikTok → Streamer.bot</h4>
                                 <div className="stat-card space-y-2">
                                     <p className="text-[9px] text-gray-600 leading-relaxed">Pemetaan event dikelola di halaman Streamer.bot (tersimpan di database).</p>
-                                    <Link href="/integrations" className="h-9 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white">
+                                    <Link href="/integrations" className="h-9 flex items-center justify-center gap-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">
                                         <Zap className="w-3 h-3" /> Kelola Streamer.bot
                                     </Link>
                                     <div className="flex justify-between items-center py-1 border-t border-white/5">
@@ -4720,7 +4720,7 @@ export default function Home() {
                         <button onClick={closeUpdateTitle} className="px-4 py-2 rounded-lg font-bold text-gray-400 text-[10px] uppercase hover:bg-white/5 transition-colors">
                             Batal
                         </button>
-                        <button onClick={handleUpdateTitle} className="px-6 py-2 rounded-lg font-black text-black text-[10px] uppercase bg-white hover:bg-zinc-200 transition-all flex items-center gap-2">
+                        <button onClick={handleUpdateTitle} className="px-6 py-2 rounded-lg font-black text-[10px] uppercase btn-primary transition-all flex items-center gap-2">
                             Update
                         </button>
                     </div>
@@ -4764,16 +4764,16 @@ export default function Home() {
                             <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth">
                                 <div className="flex items-center gap-1 w-max pr-1">
                                     {visibleTabs.map((t, i) => (
-                                        <button key={t.id} onClick={() => setDockSwiperTab(t.id)} className={`h-7 px-3 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5 border transition-all shrink-0 ${i === safeIndex ? 'bg-white text-black border-white shadow-sm' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200'}`}>
+                                        <button key={t.id} onClick={() => setDockSwiperTab(t.id)} className={`h-7 px-3 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5 border transition-all shrink-0 ${i === safeIndex ? 'btn-primary shadow-sm' : 'btn-secondary '}`}>
                                             {t.icon} {t.label} {t.count !== undefined && <span className={`px-1 py-0.5 rounded-full text-[9px] ${i === safeIndex ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>{t.count}</span>}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div className="flex items-center gap-1 shrink-0 z-10 pl-1.5 border-l border-white/10 ml-auto backdrop-blur-sm">
-                                <button onClick={() => setDockSwiperMinimized(!dockSwiperMinimized)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white shrink-0 transition-colors" title={dockSwiperMinimized ? 'Expand' : 'Minimize'}>{dockSwiperMinimized ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}</button>
-                                <button onClick={() => go(-1)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white shrink-0 transition-colors" title="Page sebelumnya"><ChevronDown className="w-3 h-3 rotate-90" /></button>
-                                <button onClick={() => go(1)} className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white shrink-0 transition-colors" title="Page berikutnya"><ChevronDown className="w-3 h-3 -rotate-90" /></button>
+                                <button onClick={() => setDockSwiperMinimized(!dockSwiperMinimized)} className="w-7 h-7 grid place-items-center rounded-full btn-secondary border shrink-0 transition-colors" title={dockSwiperMinimized ? 'Expand' : 'Minimize'}>{dockSwiperMinimized ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}</button>
+                                <button onClick={() => go(-1)} className="w-7 h-7 grid place-items-center rounded-full btn-secondary border shrink-0 transition-colors" title="Page sebelumnya"><ChevronDown className="w-3 h-3 rotate-90" /></button>
+                                <button onClick={() => go(1)} className="w-7 h-7 grid place-items-center rounded-full btn-secondary border shrink-0 transition-colors" title="Page berikutnya"><ChevronDown className="w-3 h-3 -rotate-90" /></button>
                             </div>
                         </div>
                         <div className={dockSwiperMinimized ? 'overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform max-h-0 opacity-0 -translate-y-1 scale-[0.98]' : 'overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform max-h-[500px] opacity-100 translate-y-0 scale-100'}>
@@ -4791,8 +4791,8 @@ export default function Home() {
                                                         </div>
                                                         <div className="flex items-center gap-1.5 shrink-0">
                                                             <button onClick={handleStopPoll} className="h-6 px-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-full text-red-400 text-[10px] font-black uppercase flex items-center gap-1"><Square className="w-3 h-3" /> Stop</button>
-                                                            <button onClick={handleClearPoll} className="w-6 h-6 grid place-items-center rounded-full bg-white/5 text-gray-400"><Trash2 className="w-3 h-3" /></button>
-                                                            <button onClick={() => setActivePoll(null)} className="w-6 h-6 grid place-items-center rounded-full bg-white/5 text-gray-400"><X className="w-3 h-3" /></button>
+                                                            <button onClick={handleClearPoll} className="w-6 h-6 grid place-items-center rounded-full btn-secondary "><Trash2 className="w-3 h-3" /></button>
+                                                            <button onClick={() => setActivePoll(null)} className="w-6 h-6 grid place-items-center rounded-full btn-secondary "><X className="w-3 h-3" /></button>
                                                         </div>
                                                     </div>
                                                     <div className="p-3 space-y-1.5 max-h-[220px] overflow-y-auto custom-scrollbar">
@@ -4820,7 +4820,7 @@ export default function Home() {
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <button onClick={handleClearTasks} disabled={!((activeTasks as { items?: unknown[] })?.items?.length)} className="h-6 px-2 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-full text-gray-400 hover:text-red-400 text-[10px] font-black uppercase flex items-center gap-1 disabled:opacity-30"><Trash2 className="w-3 h-3" /> Clear</button>
-                                                            <button onClick={() => setLayout({ ...layout, createTask: true })} className="w-6 h-6 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400" title="Buka modal"><Plus className="w-3 h-3" /></button>
+                                                            <button onClick={() => setLayout({ ...layout, createTask: true })} className="w-6 h-6 grid place-items-center rounded-full btn-secondary border " title="Buka modal"><Plus className="w-3 h-3" /></button>
                                                         </div>
                                                     </div>
                                                     {/* list - full card, scroll */}
@@ -4895,7 +4895,7 @@ export default function Home() {
                                                     {/* input - nempel di bawah list */}
                                                     <div className="flex gap-2 pt-2 shrink-0 border-t border-white/5">
                                                         <input value={newTaskText} onChange={(e) => setNewTaskText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAddTask(); }} placeholder="Tambah task..." className="flex-1 h-8 bg-white/5 border border-white/10 rounded-full px-3 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50" />
-                                                        <button onClick={handleAddTask} className="h-8 px-4 bg-cyan-600 hover:bg-cyan-500 rounded-full text-white text-[11px] font-black uppercase flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>
+                                                        <button onClick={handleAddTask} className="h-8 px-4 btn-primary rounded-full text-white text-[11px] font-black uppercase flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>
                                                     </div>
                                                     {/* <div className="text-[10px] text-gray-500 leading-relaxed">Sinkron ke OBS via <code className="bg-white/10 px-1 rounded text-white">task widget</code> - toggle/hapus langsung update overlay.</div> */}
                                                 </div>
@@ -4912,7 +4912,7 @@ export default function Home() {
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-1.5">
                                                         <button onClick={() => handleTimerControl(activeTimer?.isRunning ? 'stop' : 'start')} className={`h-7 rounded-full text-[10px] font-black uppercase border flex items-center justify-center gap-1 ${activeTimer?.isRunning ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 'bg-green-600 text-white border-green-500'}`}>{activeTimer?.isRunning ? <><Pause className="w-3 h-3" />Stop</> : <><Play className="w-3 h-3" />Start</>}</button>
-                                                        <button onClick={() => handleTimerControl('reset')} className="h-7 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-bold flex items-center justify-center gap-1"><RefreshCcw className="w-3 h-3" />Reset</button>
+                                                        <button onClick={() => handleTimerControl('reset')} className="h-7 btn-secondary border rounded-full text-[10px] font-bold flex items-center justify-center gap-1"><RefreshCcw className="w-3 h-3" />Reset</button>
                                                     </div>
                                                     <div className="flex flex-col gap-1.5">
                                                         <div className="flex items-center gap-1 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
@@ -4925,7 +4925,7 @@ export default function Home() {
                                                             <span className="text-[9px] font-black text-gray-400">m</span>
                                                             <input type="number" min={0} max={59} value={timerCustomSec} onChange={(e) => setTimerCustomSec(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleTimerSetCustom(); }} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                                             <span className="text-[9px] font-black text-gray-400">d</span>
-                                                            <button onClick={handleTimerSetCustom} className="ml-auto h-7 px-3 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Clock className="w-3 h-3" />Set</button>
+                                                            <button onClick={handleTimerSetCustom} className="ml-auto h-7 px-3 btn-primary border rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Clock className="w-3 h-3" />Set</button>
                                                         </div>
                                                         <div className="flex items-center gap-1 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
                                                             <span className="text-[9px] font-black uppercase text-green-400 w-6 shrink-0">Add</span>
@@ -4937,7 +4937,7 @@ export default function Home() {
                                                             <span className="text-[9px] font-black text-gray-400">m</span>
                                                             <input type="number" min={0} max={59} value={timerAddSec} onChange={(e) => setTimerAddSec(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                                             <span className="text-[9px] font-black text-gray-400">d</span>
-                                                            <button onClick={() => { const c = (parseInt(timerAddDays) || 0) * 86400 + (parseInt(timerAddHours) || 0) * 3600 + (parseInt(timerAddMin) || 0) * 60 + (parseInt(timerAddSec) || 0); if (c > 0) handleTimerAdd(c); else { handleTimerAdd(300); } }} className="ml-auto h-7 px-3 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Plus className="w-3 h-3" />+ {timerAddDays && parseInt(timerAddDays) ? `${timerAddDays}h ` : ''}{timerAddHours && parseInt(timerAddHours) ? `${timerAddHours}j ` : ''}{timerAddMin || 5}:{String(timerAddSec || 0).padStart(2, '0')}</button>
+                                                            <button onClick={() => { const c = (parseInt(timerAddDays) || 0) * 86400 + (parseInt(timerAddHours) || 0) * 3600 + (parseInt(timerAddMin) || 0) * 60 + (parseInt(timerAddSec) || 0); if (c > 0) handleTimerAdd(c); else { handleTimerAdd(300); } }} className="ml-auto h-7 px-3 btn-primary border rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Plus className="w-3 h-3" />+ {timerAddDays && parseInt(timerAddDays) ? `${timerAddDays}h ` : ''}{timerAddHours && parseInt(timerAddHours) ? `${timerAddHours}j ` : ''}{timerAddMin || 5}:{String(timerAddSec || 0).padStart(2, '0')}</button>
                                                         </div>
                                                         <div className="flex items-center gap-1 bg-white/[0.04] border border-white/10 rounded-xl p-1.5">
                                                             <span className="text-[9px] font-black uppercase text-red-400 w-6 shrink-0">Sub</span>
@@ -4949,7 +4949,7 @@ export default function Home() {
                                                             <span className="text-[9px] font-black text-gray-400">m</span>
                                                             <input type="number" min={0} max={59} value={timerSubSec} onChange={(e) => setTimerSubSec(e.target.value)} placeholder="0" className="w-[44px] h-7 bg-black/40 border border-white/10 rounded-full px-1 text-center text-[11px] font-mono font-black text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                                             <span className="text-[9px] font-black text-gray-400">d</span>
-                                                            <button onClick={() => { const c = (parseInt(timerSubDays) || 0) * 86400 + (parseInt(timerSubHours) || 0) * 3600 + (parseInt(timerSubMin) || 0) * 60 + (parseInt(timerSubSec) || 0); if (c > 0) handleTimerSub(c); else { handleTimerSub(300); } }} className="ml-auto h-7 px-3 bg-white hover:bg-zinc-100 text-black border border-white rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Square className="w-3 h-3" />- {timerSubDays && parseInt(timerSubDays) ? `${timerSubDays}h ` : ''}{timerSubHours && parseInt(timerSubHours) ? `${timerSubHours}j ` : ''}{timerSubMin || 5}:{String(timerSubSec || 0).padStart(2, '0')}</button>
+                                                            <button onClick={() => { const c = (parseInt(timerSubDays) || 0) * 86400 + (parseInt(timerSubHours) || 0) * 3600 + (parseInt(timerSubMin) || 0) * 60 + (parseInt(timerSubSec) || 0); if (c > 0) handleTimerSub(c); else { handleTimerSub(300); } }} className="ml-auto h-7 px-3 btn-primary border rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0"><Square className="w-3 h-3" />- {timerSubDays && parseInt(timerSubDays) ? `${timerSubDays}h ` : ''}{timerSubHours && parseInt(timerSubHours) ? `${timerSubHours}j ` : ''}{timerSubMin || 5}:{String(timerSubSec || 0).padStart(2, '0')}</button>
                                                         </div>
                                                         <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2 space-y-2">
                                                             <div className="flex items-center justify-between">
@@ -4979,11 +4979,11 @@ export default function Home() {
                                                                         className="flex-1 min-w-0 h-6 bg-black/40 border border-white/10 rounded px-1.5 text-[10px] text-white font-mono focus:outline-none focus:border-white/20"
                                                                     />
                                                                     <button
-                                                                        type="button"
-                                                                        onClick={() => setTimerFromDate(toDatetimeLocalString())}
-                                                                        className="h-6 px-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-[8px] font-black uppercase text-gray-300"
-                                                                        title="Isi From dengan waktu saat ini"
-                                                                    >
+ type="button"
+ onClick={() => setTimerFromDate(toDatetimeLocalString())}
+ className="h-6 px-1.5 btn-secondary border rounded text-[8px] font-black uppercase "
+ title="Isi From dengan waktu saat ini"
+ >
                                                                         Now
                                                                     </button>
                                                                 </div>
@@ -4998,7 +4998,7 @@ export default function Home() {
                                                                     <button
                                                                         type="button"
                                                                         onClick={handleTimerSetFromDates}
-                                                                        className="h-6 px-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded text-[9px] font-black uppercase flex items-center gap-1 shrink-0 shadow cursor-pointer"
+                                                                        className="h-6 px-2.5 btn-secondary rounded text-[9px] font-black uppercase flex items-center gap-1 shrink-0 shadow cursor-pointer"
                                                                         title="Hitung durasi dan set ke timer"
                                                                     >
                                                                         <Check className="w-3 h-3" /> Set
@@ -5009,7 +5009,7 @@ export default function Home() {
                                                     </div>
                                                     <div className="flex gap-1.5">
                                                         {['powerup', 'sleep', 'locked', 'paused'].map((m) => (
-                                                            <button key={m} onClick={() => handleTimerControl('mode', { mode: m })} className={`flex-1 h-6 rounded-full text-[9px] font-black uppercase border ${activeTimer?.mode === m ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>{m}</button>
+                                                            <button key={m} onClick={() => handleTimerControl('mode', { mode: m })} className={`flex-1 h-6 rounded-full text-[9px] font-black uppercase border ${activeTimer?.mode === m ? 'btn-primary ' : 'btn-secondary '}`}>{m}</button>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -5023,28 +5023,28 @@ export default function Home() {
                                                         </div>
                                                         <div className="flex items-center gap-1.5 shrink-0">
                                                             <button
-                                                                onClick={() => gameSocketRef.current?.emit('game-get', { privateKey: privateKey || readStoredDockKey() || 'global', gameId: TRIVIA_GAME_ID })}
-                                                                className="w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white"
-                                                                title="Refresh status game"
-                                                            >
+ onClick={() => gameSocketRef.current?.emit('game-get', { privateKey: privateKey || readStoredDockKey() || 'global', gameId: TRIVIA_GAME_ID })}
+ className="w-7 h-7 grid place-items-center rounded-full btn-secondary border "
+ title="Refresh status game"
+ >
                                                                 <RefreshCcw className="w-3 h-3" />
                                                             </button>
-                                                            <a href={gameSettingsHref} className="h-7 px-2.5 rounded-full bg-white text-black text-[9px] font-black uppercase flex items-center">
+                                                            <a href={gameSettingsHref} className="h-7 px-2.5 rounded-full btn-primary text-[9px] font-black uppercase flex items-center">
                                                                 Settings
                                                             </a>
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-4 gap-1.5">
-                                                        <button onClick={() => sendGameCommand('start')} className="h-8 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[9px] font-black uppercase flex items-center justify-center gap-1">
+                                                        <button onClick={() => sendGameCommand('start')} className="h-8 rounded-lg btn-primary text-[9px] font-black uppercase flex items-center justify-center gap-1">
                                                             <Play className="w-3 h-3" /> Start
                                                         </button>
-                                                        <button onClick={() => sendGameCommand('stop')} className="h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-[9px] font-black uppercase flex items-center justify-center gap-1">
+                                                        <button onClick={() => sendGameCommand('stop')} className="h-8 rounded-lg btn-secondary border text-[9px] font-black uppercase flex items-center justify-center gap-1">
                                                             <Square className="w-3 h-3" /> Stop
                                                         </button>
-                                                        <button onClick={() => sendGameCommand('skip')} className="h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-[9px] font-black uppercase flex items-center justify-center gap-1">
+                                                        <button onClick={() => sendGameCommand('skip')} className="h-8 rounded-lg btn-secondary border text-[9px] font-black uppercase flex items-center justify-center gap-1">
                                                             <SkipForward className="w-3 h-3" /> Skip
                                                         </button>
-                                                        <button onClick={() => sendGameCommand('reset')} className="h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-[9px] font-black uppercase flex items-center justify-center gap-1">
+                                                        <button onClick={() => sendGameCommand('reset')} className="h-8 rounded-lg btn-secondary border text-[9px] font-black uppercase flex items-center justify-center gap-1">
                                                             <RotateCcw className="w-3 h-3" /> Reset
                                                         </button>
                                                     </div>
@@ -5167,7 +5167,7 @@ export default function Home() {
                             <button onClick={closeCreatePoll} className="px-4 py-2 rounded-lg font-bold text-gray-400 text-[10px] uppercase hover:bg-white/5 transition-colors">
                                 Batal
                             </button>
-                            <button onClick={handleCreatePoll} className="px-6 py-2 rounded-lg font-black text-black text-[10px] uppercase bg-white hover:bg-zinc-200 transition-all flex items-center gap-2">
+                            <button onClick={handleCreatePoll} className="px-6 py-2 rounded-lg font-black text-[10px] uppercase btn-primary transition-all flex items-center gap-2">
                                 Start Poll
                             </button>
                         </div>

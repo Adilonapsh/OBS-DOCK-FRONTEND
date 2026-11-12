@@ -31,7 +31,7 @@ export function GoalSettingsForm({ state, update }: Props) {
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Accent</span><span className="mt-1 flex gap-2"><input type="color" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0" /><input type="text" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" /></span></label>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><span className="mt-1 flex gap-2"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></span></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><span className="mt-1 flex gap-2"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10 shrink-0" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'btn-primary ' : 'btn-secondary '}`}>Transparent</button></span></label>
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Animasi</span><select value={state.anim} onChange={(e) => update('anim', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{GOALS_ANIMS.map((a) => <option key={a.value} value={a.value} className="bg-zinc-900">{a.label}</option>)}</select></label>
           </div>
         </div>
@@ -87,14 +87,14 @@ export function GoalSettingsForm({ state, update }: Props) {
               <span className="text-[11px] font-bold text-gray-300">Preset Cepat</span>
               <div className="mt-1 grid grid-cols-3 gap-2">
                 <button
-                  onClick={() => {
-                    update('brutalistBg' as any, '#FFFFFF');
-                    update('brutalistTextColor' as any, '#000000');
-                    update('brutalistBadgeBg' as any, '#FFFFFF');
-                    update('brutalistBorderColor' as any, '#000000');
-                  }}
-                  className="p-2 bg-white text-black text-[10px] font-black border-2 border-black"
-                >
+ onClick={() => {
+ update('brutalistBg' as any, '#FFFFFF');
+ update('brutalistTextColor' as any, '#000000');
+ update('brutalistBadgeBg' as any, '#FFFFFF');
+ update('brutalistBorderColor' as any, '#000000');
+ }}
+ className="p-2 btn-primary text-[10px] font-black border-2 border-black"
+ >
                   Classic White
                 </button>
                 <button

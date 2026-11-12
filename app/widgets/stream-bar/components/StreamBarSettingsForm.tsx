@@ -119,7 +119,7 @@ export function StreamBarSettingsForm({
               <p className="text-[9px] text-gray-500">Boleh pakai <code className="bg-white/10 px-1 rounded text-white">&lt;b&gt;teks&lt;/b&gt;</code> untuk bold.</p>
             </div>
           ))}
-          <button type="button" onClick={addRule} className="w-full h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300 flex items-center justify-center gap-1.5"><Plus className="w-3 h-3" /> Tambah rule</button>
+          <button type="button" onClick={addRule} className="w-full h-8 btn-secondary border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5"><Plus className="w-3 h-3" /> Tambah rule</button>
         </div>
       </div>
 
@@ -163,8 +163,8 @@ export function StreamBarSettingsForm({
             <span className="text-[10px] text-gray-500">Kosong = ikut jam OBS dari dock. Sebelum dock mengirim durasi, dihitung sejak overlay dibuka (demo memakai contoh 1j 42m).</span>
           </label>
           <div className="flex gap-2">
-            <button type="button" onClick={() => update('start', new Date().toISOString())} className="h-8 flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Set sekarang</button>
-            <button type="button" onClick={() => update('start', '')} className="h-8 flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Kosongkan</button>
+            <button type="button" onClick={() => update('start', new Date().toISOString())} className="h-8 flex-1 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Set sekarang</button>
+            <button type="button" onClick={() => update('start', '')} className="h-8 flex-1 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Kosongkan</button>
           </div>
           <label className="block"><span className={labelClass}>Viewers awal (fallback)</span><input type="number" min={0} value={state.viewers} onChange={(e) => update('viewers', num(e.target.value, 0))} className={inputClass} /><span className="text-[10px] text-gray-500">0 = pakai data real TikTok + Streamer.bot (total semua platform). Angka ini hanya tampil sebelum data real masuk.</span></label>
         </div>
@@ -200,7 +200,7 @@ export function StreamBarSettingsForm({
               <label className="block"><span className="text-[10px] font-bold text-gray-400">Unit (contoh: followers / subs)</span><input value={goal.unit} onChange={(e) => setGoal(index, { unit: e.target.value })} className="mt-1 w-full h-8 bg-black/40 border border-white/10 rounded-lg px-2 text-[11px] text-white" /></label>
             </div>
           ))}
-          <button type="button" onClick={addGoal} className="w-full h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300 flex items-center justify-center gap-1.5"><Plus className="w-3 h-3" /> Tambah goal</button>
+          <button type="button" onClick={addGoal} className="w-full h-8 btn-secondary border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5"><Plus className="w-3 h-3" /> Tambah goal</button>
           <p className="text-[10px] text-gray-500">Tipe live menambah <b>current</b> otomatis dari event follow/sub/like/donasi real. Goal donasi juga menghitung total historis <code className="bg-white/10 px-1 rounded text-white">donation_logs</code> milik private key. Saat target tercapai, alert “Goal reached” muncul.</p>
         </div>
       </div>
@@ -227,8 +227,8 @@ export function StreamBarSettingsForm({
       </div>
 
       <div className="flex gap-2">
-        <button onClick={reset} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-        <button onClick={onCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
+        <button onClick={reset} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+        <button onClick={onCopy} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5" /> Copy URL</button>
       </div>
     </>
   );

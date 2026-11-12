@@ -22,8 +22,8 @@ export default function CleanTheme({ slides, index, font, accent, textColor, sho
         </div>
         {showArrows && (
           <div className="hidden sm:flex items-center gap-1 shrink-0">
-            <button onClick={onPrev} className="w-8 h-8 grid place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10">‹</button>
-            <button onClick={onNext} className="w-8 h-8 grid place-items-center rounded-full bg-white text-black hover:bg-zinc-100">›</button>
+            <button onClick={onPrev} className="w-8 h-8 grid place-items-center rounded-full btn-secondary border ">‹</button>
+            <button onClick={onNext} className="w-8 h-8 grid place-items-center rounded-full btn-primary ">›</button>
           </div>
         )}
       </div>

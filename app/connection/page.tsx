@@ -559,7 +559,7 @@ export default function ConfigPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <ThemeToggle />
-                        <Link href="/dock" className="px-3 py-1.5 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm"><Monitor className="w-3 h-3" /> Dock</Link>
+                        <Link href="/dock" className="px-3 py-1.5 btn-primary border rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm"><Monitor className="w-3 h-3" /> Dock</Link>
                     </div>
                 </header>
 
@@ -714,7 +714,7 @@ export default function ConfigPage() {
                             </h3>
                             <div className="flex items-center gap-2">
                                 <span className="text-[9px] font-bold text-gray-500">{mtxServers.length} server</span>
-                                <button onClick={addMtxServer} className="px-3 py-1.5 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm"><Plus className="w-3 h-3" /> Tambah Server</button>
+                                <button onClick={addMtxServer} className="px-3 py-1.5 btn-primary border rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm"><Plus className="w-3 h-3" /> Tambah Server</button>
                             </div>
                         </div>
                         <div className="p-5 space-y-4">
@@ -739,9 +739,9 @@ export default function ConfigPage() {
                                                     {srv.playerUrlBase ? <div className="text-[9px] text-gray-600 truncate">▶ {srv.playerUrlBase}</div> : null}
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0">
-                                                    <button onClick={() => setEditingMtxId(srv.id)} className="px-3 h-8 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg text-[10px] font-black uppercase shadow-sm">Edit</button>
-                                                    <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className="w-8 h-8 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg flex items-center justify-center shadow-sm disabled:opacity-50"><TestTube className="w-3.5 h-3.5" /></button>
-                                                    <a href={srv.playerUrlBase || "#"} target="_blank" className={`w-8 h-8 border rounded-lg flex items-center justify-center shadow-sm ${srv.playerUrlBase ? "bg-white text-black hover:bg-zinc-100 border-white" : "bg-white/5 border-white/10 text-gray-400 pointer-events-none"}`}><ExternalLink className="w-3.5 h-3.5" /></a>
+                                                    <button onClick={() => setEditingMtxId(srv.id)} className="px-3 h-8 btn-primary border rounded-lg text-[10px] font-black uppercase shadow-sm">Edit</button>
+                                                    <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className="w-8 h-8 btn-primary border rounded-lg flex items-center justify-center shadow-sm disabled:opacity-50"><TestTube className="w-3.5 h-3.5" /></button>
+                                                    <a href={srv.playerUrlBase || "#"} target="_blank" className={`w-8 h-8 border rounded-lg flex items-center justify-center shadow-sm ${srv.playerUrlBase ? "btn-primary " : "btn-secondary border-white/10 text-gray-400 pointer-events-none"}`}><ExternalLink className="w-3.5 h-3.5" /></a>
                                                     <button onClick={() => removeMtx(srv.id)} className="w-8 h-8 bg-white text-black hover:bg-zinc-100 border border-white rounded-lg flex items-center justify-center shadow-sm hover:text-red-600 hover:border-red-200"><Trash2 className="w-3.5 h-3.5" /></button>
                                                 </div>
                                             </div>
@@ -786,7 +786,7 @@ export default function ConfigPage() {
                                             <div className="flex gap-2">
                                                 <button onClick={() => saveMtx(srv)} disabled={saving === `mtx-${srv.id}`} className={`flex-1 ${uniformBtn}`}><Save className="w-3 h-3" /> {saving === `mtx-${srv.id}` ? "Menyimpan..." : "Simpan Server"}</button>
                                                 <button onClick={() => testMtx(srv)} disabled={testing === `mtx-${srv.id}`} className={`px-3 ${uniformBtn}`}><TestTube className="w-3 h-3" /> {testing === `mtx-${srv.id}` ? "..." : "Test API"}</button>
-                                                <a href={srv.playerUrlBase || "#"} target="_blank" className={`px-3 h-9 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 shadow-sm ${srv.playerUrlBase ? "bg-white text-black hover:bg-zinc-100 border-white" : "bg-white/5 border-white/10 text-gray-400 pointer-events-none"}`}><ExternalLink className="w-3 h-3" /> Player</a>
+                                                <a href={srv.playerUrlBase || "#"} target="_blank" className={`px-3 h-9 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 shadow-sm ${srv.playerUrlBase ? "btn-primary " : "btn-secondary border-white/10 text-gray-400 pointer-events-none"}`}><ExternalLink className="w-3 h-3" /> Player</a>
                                             </div>
                                             {srv.apiUrl && srv.playerUrlBase && (
                                                 <div className="bg-blue-600/5 border border-blue-600/10 rounded-lg p-2">
@@ -874,10 +874,10 @@ export default function ConfigPage() {
                                                     <label className="block text-[8px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1"><Link2 className="w-3 h-3" /> Webhook URL</label>
                                                     <div className="bg-black/30 border border-white/10 rounded-xl p-3 flex items-center gap-3">
                                                         <code className={`flex-1 text-[11px] font-mono break-all ${showUrl ? "text-white" : "text-white blur-[4px] select-none"}`}>{showUrl ? url : "•".repeat(32)}</code>
-                                                        <button onClick={() => { if (showUrl) setShowDonationUrl(s => ({ ...s, [plat]: false })); else setDonationConfirm({ plat, field: 'url', action: 'show' }); }} className="shrink-0 w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 hover:text-white" title={showUrl ? "Sembunyikan" : "Tampilkan (konfirmasi)"}>
+                                                        <button onClick={() => { if (showUrl) setShowDonationUrl(s => ({ ...s, [plat]: false })); else setDonationConfirm({ plat, field: 'url', action: 'show' }); }} className="shrink-0 w-8 h-8 grid place-items-center btn-secondary border rounded-lg " title={showUrl ? "Sembunyikan" : "Tampilkan (konfirmasi)"}>
                                                             {showUrl ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                                         </button>
-                                                        <button onClick={async () => { await navigator.clipboard.writeText(url); setDonationCopied(s => ({ ...s, [plat]: true })); gooeyToast.success(`URL ${platLabel} disalin`); setTimeout(() => setDonationCopied(s => ({ ...s, [plat]: false })), 1500); }} className="shrink-0 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1">
+                                                        <button onClick={async () => { await navigator.clipboard.writeText(url); setDonationCopied(s => ({ ...s, [plat]: true })); gooeyToast.success(`URL ${platLabel} disalin`); setTimeout(() => setDonationCopied(s => ({ ...s, [plat]: false })), 1500); }} className="shrink-0 px-3 py-1.5 btn-secondary border rounded-lg text-[10px] font-black uppercase flex items-center gap-1">
                                                             <Copy className="w-3 h-3" /> {donationCopied[plat] ? "Copied" : "Copy"}
                                                         </button>
                                                     </div>
@@ -897,7 +897,7 @@ export default function ConfigPage() {
                                                                 {showTok ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                             </button>
                                                         </div>
-                                                        <button onClick={() => handleDonationTest(plat)} disabled={donationTesting === plat} className="shrink-0 h-10 px-4 bg-white text-black hover:bg-zinc-100 border border-white rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm disabled:opacity-50">
+                                                        <button onClick={() => handleDonationTest(plat)} disabled={donationTesting === plat} className="shrink-0 h-10 px-4 btn-primary border rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm disabled:opacity-50">
                                                             <Play className={`w-3.5 h-3.5 ${donationTesting === plat ? 'animate-pulse' : ''}`} /> {donationTesting === plat ? '…' : 'Test'}
                                                         </button>
                                                     </div>

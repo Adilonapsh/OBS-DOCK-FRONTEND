@@ -78,10 +78,10 @@ export function DonationTimerTierEditor({
       ))}
       {safeList.length < MAX_TIMER_TIERS && (
         <button
-          type="button"
-          onClick={addTier}
-          className="w-full h-9 bg-white/5 hover:bg-white/10 border border-dashed border-white/15 rounded-xl text-[10px] font-black uppercase tracking-wider text-gray-300 hover:text-white flex items-center justify-center gap-1.5 transition-colors"
-        >
+ type="button"
+ onClick={addTier}
+ className="w-full h-9 btn-secondary border border-dashed rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
+ >
           <Plus className="w-3.5 h-3.5" /> Tambah aturan
         </button>
       )}

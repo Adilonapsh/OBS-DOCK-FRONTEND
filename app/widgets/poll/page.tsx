@@ -115,7 +115,7 @@ function PollSettingsInner(){
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={()=>shell.setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
+            <Link href="/widgets" className="p-1.5 btn-secondary border rounded-xl "><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><BarChart3 className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
               <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Poll</div>
@@ -123,9 +123,9 @@ function PollSettingsInner(){
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={()=>shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
-            <button onClick={()=>shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
-            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
+            <button onClick={()=>shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase "><RefreshCw className="w-3 h-3" /> Defaults</button>
+            <button onClick={()=>shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Load URL</button>
+            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase "><ExternalLink className="w-3 h-3" /> Preview</a>
           </div>
         </header>
 
@@ -134,13 +134,13 @@ function PollSettingsInner(){
             <div className="text-[9px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1.5"><Settings2 className="w-3 h-3" /> Widget URL - paste ke OBS Browser Source (transparent)</div>
             <div onClick={handleCopy} className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 cursor-pointer hover:border-white/20 group">
               <code className={`flex-1 text-[11px] font-mono truncate ${shell.showKey?'text-white':'text-white blur-[3px] select-none'}`}>{shell.showKey? obsUrl: obsUrl.replace(/key=[^&]+/, 'key=••••••••••••••••')}</code>
-              <button type="button" onClick={(e)=>{e.stopPropagation(); toggleShowKey(shell, obsUrl);}} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white">{shell.showKey? <EyeOff className="w-3.5 h-3.5"/>:<Eye className="w-3.5 h-3.5"/>}</button>
+              <button type="button" onClick={(e)=>{e.stopPropagation(); toggleShowKey(shell, obsUrl);}} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg btn-secondary border ">{shell.showKey? <EyeOff className="w-3.5 h-3.5"/>:<Eye className="w-3.5 h-3.5"/>}</button>
               <span className={`shrink-0 w-7 h-7 grid place-items-center rounded-lg ${shell.copied?'bg-emerald-500 text-white':'bg-white text-black group-hover:bg-zinc-100'}`}>{shell.copied? <Check className="w-3.5 h-3.5"/>:<Copy className="w-3.5 h-3.5"/>}</span>
             </div>
           </div>
           <div className="flex self-end gap-2 shrink-0">
-            <a href={obsUrl} target="_blank" className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5"/> OBS</a>
-            <a href={obsUrl} draggable onDragStart={(e)=>{e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed='copy';}} className="h-9 px-3 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5"/> Drag ke OBS</a>
+            <a href={obsUrl} target="_blank" className="h-9 px-3 btn-secondary border rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5"/> OBS</a>
+            <a href={obsUrl} draggable onDragStart={(e)=>{e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed='copy';}} className="h-9 px-3 btn-primary border border-dashed border-zinc-300 rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5"/> Drag ke OBS</a>
           </div>
         </div>
 
@@ -188,7 +188,7 @@ function PollSettingsInner(){
                 <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
                   <div className="grid grid-cols-2 gap-3">
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Accent</span><input type="color" value={state.accent} onChange={e=>update('accent', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
-                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg==='transparent'?'#000000':state.bg} onChange={e=>update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={()=>update('bg','transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg==='transparent'?'bg-white text-black border-white':'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
+                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg==='transparent'?'#000000':state.bg} onChange={e=>update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={()=>update('bg','transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg==='transparent'?'btn-primary ':'btn-secondary '}`}>Transparent</button></div></label>
                   </div>
                   <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Warna batang poll otomatis gradasi dari accent. Background transparent cocok untuk OBS.</div>
                 </div>
@@ -220,13 +220,13 @@ function PollSettingsInner(){
               <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-3">
                 <div className="text-violet-300 font-black uppercase text-[10px]">Buat Poll di Dock</div>
                 <div className="text-gray-400 text-[11px] leading-relaxed mt-1">Poll dibuat via <code className="bg-white/10 px-1 rounded text-white">/dock</code> → tombol Poll. Widget ini hanya mengatur <b className="text-white">warna/font/style</b>. Hasil vote (progress %) otomatis sinkron via socket.</div>
-                <Link href={privateKey? `/dock?key=${privateKey}`:'/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase"><BarChart3 className="w-3 h-3" /> Buka Dock</Link>
+                <Link href={privateKey? `/dock?key=${privateKey}`:'/dock'} className="mt-2 h-8 flex items-center justify-center gap-1.5 btn-primary rounded-xl text-[10px] font-black uppercase"><BarChart3 className="w-3 h-3" /> Buka Dock</Link>
                 {activePoll && <div className="mt-2 p-2 bg-black/30 border border-white/10 rounded-xl"><div className="text-white font-bold text-[11px] truncate">{activePoll.question}</div><div className="text-gray-500 text-[10px]">{activePoll.total} votes • {activePoll.options.join(' • ')}</div></div>}
               </div>
 
               <div className="flex gap-2">
-                <button onClick={()=>setState({...defaults})} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-                <button onClick={handleCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5"/> Copy URL</button>
+                <button onClick={()=>setState({...defaults})} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+                <button onClick={handleCopy} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5"/> Copy URL</button>
               </div>
             </div>
           </div>
@@ -241,9 +241,9 @@ function PollSettingsInner(){
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">Preview di sini dummy - data real hanya di OBS (<code className="bg-white/10 px-1 rounded text-white">.../poll/display?obs=1</code>) yang terhubung ke Dock + chat.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-              <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3"/> Buka OBS (real)</a>
-              <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>
-              <button onClick={()=>window.open(previewUrl,'_blank')} className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white"><ExternalLink className="w-3 h-3"/> Popout Style</button>
+              <a href={obsUrl} target="_blank" className="h-9 btn-primary rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3"/> Buka OBS (real)</a>
+              <Link href="/widgets" className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 ">Widgets</Link>
+              <button onClick={()=>window.open(previewUrl,'_blank')} className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 "><ExternalLink className="w-3 h-3"/> Popout Style</button>
             </div>
           </div>
         </div>

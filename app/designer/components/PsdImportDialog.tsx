@@ -117,12 +117,12 @@ export default function PsdImportDialog({
 
             <div className="flex gap-2">
               <button
-                onClick={() => onDone(res, suggested)}
-                className="flex items-center gap-1.5 flex-1 justify-center bg-white text-black text-xs font-black px-3 py-2.5 rounded-lg"
-              >
+ onClick={() => onDone(res, suggested)}
+ className="flex items-center gap-1.5 flex-1 justify-center btn-primary text-xs font-black px-3 py-2.5 rounded-lg"
+ >
                 <FaCheck className="w-3.5 h-3.5" /> {doneLabel}
               </button>
-              <button onClick={onClose} className="bg-white/10 text-xs font-black px-4 py-2.5 rounded-lg">
+              <button onClick={onClose} className="btn-secondary text-xs font-black px-4 py-2.5 rounded-lg">
                 Tutup
               </button>
             </div>

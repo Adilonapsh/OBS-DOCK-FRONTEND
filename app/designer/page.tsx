@@ -82,10 +82,10 @@ function DesignerList() {
               placeholder="private key (opsional)"
               className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs w-44"
             />
-            <button onClick={() => psdInputRef.current?.click()} title="Import file Photoshop (.psd/.psb) jadi title baru" className="flex items-center gap-1.5 bg-white/10 text-white text-xs font-black px-3 py-2 rounded-lg hover:bg-white/15">
+            <button onClick={() => psdInputRef.current?.click()} title="Import file Photoshop (.psd/.psb) jadi title baru" className="flex items-center gap-1.5 btn-secondary text-xs font-black px-3 py-2 rounded-lg ">
               <FaFileImport className="w-4 h-4" /> Import PSD
             </button>
-            <button onClick={() => setShowNew(true)} className="flex items-center gap-1.5 bg-white text-black text-xs font-black px-3 py-2 rounded-lg">
+            <button onClick={() => setShowNew(true)} className="flex items-center gap-1.5 btn-primary text-xs font-black px-3 py-2 rounded-lg">
               <FaPlus className="w-4 h-4" /> New Title
             </button>
           </div>
@@ -126,16 +126,16 @@ function DesignerList() {
                 <div className="font-black text-sm truncate">{d.name}</div>
                 <div className="text-[11px] text-gray-500 mt-0.5">{d.canvasW}×{d.canvasH} • {d.layers.length} layers • {new Date(d.updatedAt).toLocaleString('id-ID')}</div>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <Link href={`/designer/${d.id}`} className="flex items-center gap-1 bg-white text-black text-[11px] font-black px-3 py-1.5 rounded-lg">
+                  <Link href={`/designer/${d.id}`} className="flex items-center gap-1 btn-primary text-[11px] font-black px-3 py-1.5 rounded-lg">
                     <FaPencil className="w-3.5 h-3.5" /> Edit
                   </Link>
-                  <Link href={`/designer/display?designId=${d.id}&simulate=1`} className="flex items-center gap-1 bg-white/10 text-[11px] font-black px-3 py-1.5 rounded-lg">
+                  <Link href={`/designer/display?designId=${d.id}&simulate=1`} className="flex items-center gap-1 btn-secondary text-[11px] font-black px-3 py-1.5 rounded-lg">
                     <FaDesktop className="w-3.5 h-3.5" /> Preview
                   </Link>
-                  <button onClick={() => handleDup(d)} className="flex items-center gap-1 bg-white/10 text-[11px] font-black px-3 py-1.5 rounded-lg">
+                  <button onClick={() => handleDup(d)} className="flex items-center gap-1 btn-secondary text-[11px] font-black px-3 py-1.5 rounded-lg">
                     <FaCopy className="w-3.5 h-3.5" /> Duplikat
                   </button>
-                  <button onClick={() => handleDel(d.id)} className="flex items-center gap-1 bg-white/5 border border-white/20 text-gray-200 hover:bg-white/10 text-[11px] font-black px-3 py-1.5 rounded-lg">
+                  <button onClick={() => handleDel(d.id)} className="flex items-center gap-1 btn-secondary border text-[11px] font-black px-3 py-1.5 rounded-lg">
                     <FaTrash className="w-3.5 h-3.5" /> Hapus
                   </button>
                 </div>
@@ -152,7 +152,7 @@ function DesignerList() {
             <input value={newName} onChange={(e) => setNewName(e.target.value)} className="mt-3 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm" placeholder="Nama desain" />
             <div className="grid grid-cols-2 gap-2 mt-3">
               {PRESETS.map((p) => (
-                <button key={p.id} onClick={() => handleCreate(p.id)} className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3">
+                <button key={p.id} onClick={() => handleCreate(p.id)} className="text-left btn-secondary border rounded-xl p-3">
                   <div className="text-sm font-black">{p.title}</div>
                   <div className="text-[11px] text-gray-400">{p.desc}</div>
                 </button>

@@ -114,10 +114,10 @@ export function FlatlineSettingsSection({ state, update }: Props) {
               const active = layout === l;
               return (
                 <button
-                  key={l}
-                  onClick={() => update('flatlineLayout', l)}
-                  className={`h-9 rounded-xl text-[10px] font-black uppercase border ${active ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}
-                >
+ key={l}
+ onClick={() => update('flatlineLayout', l)}
+ className={`h-9 rounded-xl text-[10px] font-black uppercase border ${active ? 'btn-primary ' : 'btn-secondary '}`}
+ >
                   {l === 'vertical' ? 'Vertical' : 'Horizontal'}
                   <span className={`block text-[8px] font-bold normal-case tracking-normal ${active ? 'text-black/60' : 'text-gray-500'}`}>
                     {l === 'vertical' ? 'atas – bawah' : 'samping (HH : MM)'}

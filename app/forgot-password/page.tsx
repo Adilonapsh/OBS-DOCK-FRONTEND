@@ -48,7 +48,6 @@ function ForgotPasswordContent() {
     return (
         <AuthLayout
             title="Lupa Password"
-            badge="Reset"
             subtitle="Masukkan email terdaftar, kami kirim link reset."
             footer={
                 <>

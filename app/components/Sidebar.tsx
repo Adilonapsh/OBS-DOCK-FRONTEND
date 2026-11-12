@@ -103,7 +103,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/dock", label: "Dock", icon: Monitor },
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
-    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2, active: true },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
@@ -228,13 +228,13 @@ export default function Sidebar({
           <div className="space-y-1">
             {mainItems.map((item) => (
               <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
-                  item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
+ key={item.href}
+ href={item.href}
+ onClick={onClose}
+ className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+ item.active ? "btn-primary text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
+ }`}
+ >
                 <item.icon className="w-4 h-4" /> {item.label}
               </Link>
             ))}
@@ -245,13 +245,13 @@ export default function Sidebar({
               <p className="px-3 mb-1.5 text-[9px] font-black tracking-[0.18em] text-gray-500 uppercase">Tools</p>
               {toolsItems.map((item) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
-                    item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
+ key={item.href}
+ href={item.href}
+ onClick={onClose}
+ className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+ item.active ? "btn-primary text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
+ }`}
+ >
                   <item.icon className="w-4 h-4" /> {item.label}
                 </Link>
               ))}
@@ -263,13 +263,13 @@ export default function Sidebar({
               <p className="px-3 mb-1.5 text-[9px] font-black tracking-[0.18em] text-gray-500 uppercase">Setup</p>
               {setupItems.map((item) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
-                    item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
+ key={item.href}
+ href={item.href}
+ onClick={onClose}
+ className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+ item.active ? "btn-primary text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
+ }`}
+ >
                   <item.icon className="w-4 h-4" /> {item.label}
                 </Link>
               ))}
@@ -281,13 +281,13 @@ export default function Sidebar({
               <p className="px-3 mb-1.5 text-[9px] font-black tracking-[0.18em] text-gray-500 uppercase">Integrasi</p>
               {integrationItems.map((item) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
-                    item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
+ key={item.href}
+ href={item.href}
+ onClick={onClose}
+ className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+ item.active ? "btn-primary text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
+ }`}
+ >
                   <item.icon className="w-4 h-4" /> {item.label}
                 </Link>
               ))}
@@ -322,13 +322,13 @@ export default function Sidebar({
             <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
               {accountItems.map((item) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
-                    item.active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
+ key={item.href}
+ href={item.href}
+ onClick={onClose}
+ className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+ item.active ? "btn-primary text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
+ }`}
+ >
                   <item.icon className="w-4 h-4" /> {item.label}
                 </Link>
               ))}

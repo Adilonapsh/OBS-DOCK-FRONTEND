@@ -193,15 +193,15 @@ export default function AuditClient({
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Link
-              href="/admin"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300"
-            >
+ href="/admin"
+ className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-lg text-[10px] font-black uppercase "
+ >
               <ArrowLeft className="w-3 h-3" /> Role & Permission
             </Link>
             <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300"
-            >
+ onClick={handleLogout}
+ className="flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-lg text-[10px] font-black uppercase "
+ >
               <LogOut className="w-3 h-3" /> Keluar
             </button>
           </div>
@@ -242,11 +242,11 @@ export default function AuditClient({
                 </select>
               </div>
               <button
-                type="button"
-                onClick={() => load(actionFilter, page)}
-                disabled={loading}
-                className="h-10 px-4 inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300 disabled:opacity-60"
-              >
+ type="button"
+ onClick={() => load(actionFilter, page)}
+ disabled={loading}
+ className="h-10 px-4 inline-flex items-center justify-center gap-2 btn-secondary border rounded-xl text-[10px] font-black uppercase disabled:opacity-60"
+ >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                 Muat ulang
               </button>
@@ -349,24 +349,24 @@ export default function AuditClient({
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  type="button"
-                  onClick={() => goToPage(page - 1)}
-                  disabled={!canPrev}
-                  className="w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Halaman sebelumnya"
-                >
+ type="button"
+ onClick={() => goToPage(page - 1)}
+ disabled={!canPrev}
+ className="w-8 h-8 grid place-items-center btn-secondary border rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
+ aria-label="Halaman sebelumnya"
+ >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
                 <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 min-w-[70px] text-center">
                   {page + 1} / {Math.max(1, Math.ceil(total / PAGE_SIZE))}
                 </span>
                 <button
-                  type="button"
-                  onClick={() => goToPage(page + 1)}
-                  disabled={!canNext}
-                  className="w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Halaman berikutnya"
-                >
+ type="button"
+ onClick={() => goToPage(page + 1)}
+ disabled={!canNext}
+ className="w-8 h-8 grid place-items-center btn-secondary border rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
+ aria-label="Halaman berikutnya"
+ >
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>

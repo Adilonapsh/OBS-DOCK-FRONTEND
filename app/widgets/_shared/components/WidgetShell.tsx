@@ -38,7 +38,7 @@ export function WidgetShell({
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
+            <Link href="/widgets" className="p-1.5 btn-secondary border rounded-xl "><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-black border border-white/20 flex items-center justify-center">{headerIcon}</div>
             <div className="min-w-0">
               <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2">{title}</div>

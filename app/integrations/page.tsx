@@ -153,11 +153,11 @@ function ParamsEditor({ vars, params, onChange, preview }: {
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
         <button
-          type="button"
-          onClick={() => setShowPreview((v) => !v)}
-          className={`h-8 px-3 flex items-center gap-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${showPreview ? "bg-white text-black" : "text-zinc-700 dark:text-gray-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-white/5"}`}
-          title="Lihat args final yang dikirim ke Streamer.bot"
-        >
+ type="button"
+ onClick={() => setShowPreview((v) => !v)}
+ className={`h-8 px-3 flex items-center gap-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${showPreview ? "btn-primary " : "text-zinc-700 dark:text-gray-400 hover:text-zinc-950 dark:hover:text-white dark:hover:bg-white/5"}`}
+ title="Lihat args final yang dikirim ke Streamer.bot"
+ >
           {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />} Preview
         </button>
       </div>
@@ -237,11 +237,11 @@ function ParamsEditor({ vars, params, onChange, preview }: {
               className="flex-1 min-w-0 h-9 bg-white dark:bg-white/5 border border-dashed border-zinc-300 dark:border-white/15 rounded-lg px-2.5 text-[11px] font-sans text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-gray-500 focus:outline-none focus:border-violet-500/50"
             />
             <button
-              type="button"
-              onClick={addParam}
-              disabled={!newKey.trim()}
-              className="shrink-0 h-9 px-4 bg-white text-black rounded-lg text-[10px] font-black uppercase tracking-wider disabled:opacity-30 hover:bg-violet-200 transition-colors"
-            >
+ type="button"
+ onClick={addParam}
+ disabled={!newKey.trim()}
+ className="shrink-0 h-9 px-4 btn-primary rounded-lg text-[10px] font-black uppercase tracking-wider disabled:opacity-30 transition-colors"
+ >
               + Tambah
             </button>
           </div>
@@ -307,11 +307,11 @@ function EventCard({ icon: Icon, title, desc, vars, enabled, action, params, pre
           <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
         </div>
         <button
-          onClick={onTest}
-          disabled={!connected || !mapped || testing}
-          className="shrink-0 h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white text-black hover:bg-emerald-200"
-          title={!connected ? "Streamer.bot tidak terhubung" : !mapped ? "Pilih action dulu" : "Kirim DoAction percobaan"}
-        >
+ onClick={onTest}
+ disabled={!connected || !mapped || testing}
+ className="shrink-0 h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed btn-primary hover:bg-emerald-200"
+ title={!connected ? "Streamer.bot tidak terhubung" : !mapped ? "Pilih action dulu" : "Kirim DoAction percobaan"}
+ >
           <FlaskConical className={`w-3.5 h-3.5 ${testing ? "animate-pulse" : ""}`} /> {testing ? "…" : "Tes"}
         </button>
       </div>
@@ -547,7 +547,7 @@ export default function IntegrationsPage() {
             <span className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest ${statusColor}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} /> {sbStatus}
             </span>
-            <Link href="/dock" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300 transition-colors">
+            <Link href="/dock" className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase transition-colors">
               <ArrowLeft className="w-3 h-3" /> Dock
             </Link>
           </div>
@@ -576,9 +576,9 @@ export default function IntegrationsPage() {
                 </div>
               </div>
               <button
-                onClick={() => { connectSb(); show("Menghubungkan ulang ke Streamer.bot…", "info"); }}
-                className="shrink-0 h-10 px-4 bg-white text-black hover:bg-gray-200 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 transition-colors"
-              >
+ onClick={() => { connectSb(); show("Menghubungkan ulang ke Streamer.bot…", "info"); }}
+ className="shrink-0 h-10 px-4 btn-primary rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 transition-colors"
+ >
                 <RefreshCw className="w-3.5 h-3.5" /> Hubungkan
               </button>
             </div>
@@ -608,10 +608,10 @@ export default function IntegrationsPage() {
             <div className="flex gap-1.5 overflow-x-auto pb-0.5">
               {TABS.map((t) => (
                 <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  className={`shrink-0 h-10 px-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${tab === t.id ? "bg-white text-black border-white" : "bg-[#161616] text-gray-400 border-white/10 hover:text-white hover:border-white/25"}`}
-                >
+ key={t.id}
+ onClick={() => setTab(t.id)}
+ className={`shrink-0 h-10 px-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${tab === t.id ? "btn-primary " : "btn-secondary text-gray-400 border-white/10 hover:border-white/25"}`}
+ >
                   {t.label}
                 </button>
               ))}
@@ -638,9 +638,9 @@ export default function IntegrationsPage() {
               {(openGroups["tiktok"] !== false || isSearching) && (
                 <div className="px-4 md:px-5 pb-5 space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    <button onClick={() => setGroupEnabled("tiktok", TT_SB_KEYS, true)} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 transition-colors">Nyalakan semua</button>
-                    <button onClick={() => setGroupEnabled("tiktok", TT_SB_KEYS, false)} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 transition-colors">Matikan semua</button>
-                    <button onClick={() => testGroup(tiktokItems)} className="h-8 px-3 bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
+                    <button onClick={() => setGroupEnabled("tiktok", TT_SB_KEYS, true)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Nyalakan semua</button>
+                    <button onClick={() => setGroupEnabled("tiktok", TT_SB_KEYS, false)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Matikan semua</button>
+                    <button onClick={() => testGroup(tiktokItems)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
                       <Play className="w-3 h-3" /> Tes semua yg aktif
                     </button>
                   </div>
@@ -697,9 +697,9 @@ export default function IntegrationsPage() {
               {(openGroups["donation"] !== false || isSearching) && (
                 <div className="px-4 md:px-5 pb-5 space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    <button onClick={() => setGroupEnabled("donation", DONATION_SB_KEYS, true)} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 transition-colors">Nyalakan semua</button>
-                    <button onClick={() => setGroupEnabled("donation", DONATION_SB_KEYS, false)} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 transition-colors">Matikan semua</button>
-                    <button onClick={() => testGroup(donationItems)} className="h-8 px-3 bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
+                    <button onClick={() => setGroupEnabled("donation", DONATION_SB_KEYS, true)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Nyalakan semua</button>
+                    <button onClick={() => setGroupEnabled("donation", DONATION_SB_KEYS, false)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Matikan semua</button>
+                    <button onClick={() => testGroup(donationItems)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
                       <Play className="w-3 h-3" /> Tes semua yg aktif
                     </button>
                   </div>
@@ -762,9 +762,9 @@ export default function IntegrationsPage() {
                 {open && (
                   <div className="px-4 md:px-5 pb-5 space-y-3">
                     <div className="flex flex-wrap gap-2">
-                      <button onClick={() => setGroupEnabled(group.widget, group.events.map((e) => e.key), true)} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 transition-colors">Nyalakan semua</button>
-                      <button onClick={() => setGroupEnabled(group.widget, group.events.map((e) => e.key), false)} className="h-8 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 transition-colors">Matikan semua</button>
-                      <button onClick={() => testGroup(items)} className="h-8 px-3 bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-300 hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
+                      <button onClick={() => setGroupEnabled(group.widget, group.events.map((e) => e.key), true)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Nyalakan semua</button>
+                      <button onClick={() => setGroupEnabled(group.widget, group.events.map((e) => e.key), false)} className="h-8 px-3 btn-secondary border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors">Matikan semua</button>
+                      <button onClick={() => testGroup(items)} className="h-8 px-3 bg-[#DDF1FF] hover:bg-emerald-500/20 border border-[#b9e0fb] hover:border-emerald-500/40 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#005ea6] hover:text-emerald-200 flex items-center gap-1.5 transition-colors">
                         <Play className="w-3 h-3" /> Tes semua yg aktif
                       </button>
                     </div>
@@ -804,7 +804,7 @@ export default function IntegrationsPage() {
               <Search className="w-8 h-8 text-gray-600 mx-auto" />
               <div className="text-white font-black uppercase text-[12px] mt-3">Tidak ketemu</div>
               <div className="text-gray-500 text-[11px] mt-1">Coba kata kunci lain atau reset filter.</div>
-              <button onClick={() => { setSearch(""); setTab("all"); }} className="mt-4 h-9 px-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-wider">Reset pencarian</button>
+              <button onClick={() => { setSearch(""); setTab("all"); }} className="mt-4 h-9 px-4 btn-primary rounded-xl text-[10px] font-black uppercase tracking-wider">Reset pencarian</button>
             </div>
           )}
 

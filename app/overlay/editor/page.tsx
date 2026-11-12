@@ -207,7 +207,7 @@ function EditorContent() {
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <Link href="/overlay" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white">
+            <Link href="/overlay" className="p-1.5 btn-secondary border rounded-xl ">
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div className="min-w-0">
@@ -219,13 +219,13 @@ function EditorContent() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link href={previewUrl} target="_blank" className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">
+            <Link href={previewUrl} target="_blank" className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">
               <Eye className="w-3 h-3" /> Preview
             </Link>
-            <button onClick={handleSave} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${saved ? "bg-green-500 text-white border-green-500" : "bg-white text-black border-white hover:bg-gray-100"}`}>
+            <button onClick={handleSave} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${saved ? "bg-green-500 text-white border-green-500" : "btn-primary "}`}>
               {saved ? <Check className="w-3 h-3" /> : <Save className="w-3 h-3" />} {saved ? "Tersimpan" : "Simpan"}
             </button>
-            <button onClick={handleCopy} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-200 rounded-xl text-[10px] font-black uppercase text-black">
+            <button onClick={handleCopy} className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase ">
               {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} Copy OBS
             </button>
           </div>
@@ -273,7 +273,7 @@ function EditorContent() {
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 {(overlayId === "full" || ["chat", "chat-right", "vertical", "horizontal-chat"].includes(overlayId)) && (
-                  <button onClick={handleTestChat} className="h-8 bg-white text-black rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 hover:bg-gray-100">
+                  <button onClick={handleTestChat} className="h-8 btn-primary rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 ">
                     <MessageSquare className="w-3 h-3" /> Chat
                   </button>
                 )}
@@ -313,7 +313,7 @@ function EditorContent() {
                 { id: "layout", label: "Layout", icon: Monitor },
                 { id: "css", label: "CSS", icon: Code2 },
               ].map(t => (
-                <button key={t.id} onClick={() => setActiveTab(t.id as any)} className={`flex-1 min-w-[70px] h-7 flex items-center justify-center gap-1 rounded-lg text-[10px] font-black uppercase tracking-wide border ${activeTab === t.id ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10"}`}>
+                <button key={t.id} onClick={() => setActiveTab(t.id as any)} className={`flex-1 min-w-[70px] h-7 flex items-center justify-center gap-1 rounded-lg text-[10px] font-black uppercase tracking-wide border ${activeTab === t.id ? "btn-primary " : "btn-secondary "}`}>
                   <t.icon className="w-3 h-3" /> {t.label}
                 </button>
               ))}
@@ -326,7 +326,7 @@ function EditorContent() {
                     <div className="text-white font-black uppercase text-[10px] tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-yellow-400" /> Preset</div>
                     <div className="grid grid-cols-3 gap-2">
                       {Object.entries(themePresets).map(([k, p]) => (
-                        <button key={k} onClick={() => applyPreset(k)} className="h-16 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl flex flex-col items-center justify-center gap-1 hover:border-white/20">
+                        <button key={k} onClick={() => applyPreset(k)} className="h-16 btn-secondary border rounded-xl flex flex-col items-center justify-center gap-1 hover:border-[#005ea6]/30">
                           <span className="text-lg">{p.icon}</span>
                           <span className="text-[9px] font-black uppercase text-white">{p.name}</span>
                         </button>
@@ -372,10 +372,10 @@ function EditorContent() {
                           { id: "slide", label: "Geser", desc: "Slide seperti vertical" },
                         ].map(o => (
                           <button
-                            key={o.id}
-                            onClick={() => setHMode(o.id as any)}
-                            className={`p-2.5 rounded-xl border text-center transition-colors ${hMode === o.id ? "bg-white text-black border-white" : "bg-white/5 text-gray-300 border-white/10 hover:bg-white/10"}`}
-                          >
+ key={o.id}
+ onClick={() => setHMode(o.id as any)}
+ className={`p-2.5 rounded-xl border text-center transition-colors ${hMode === o.id ? "btn-primary " : "btn-secondary "}`}
+ >
                             <div className="text-[11px] font-black uppercase">{o.label}</div>
                             <div className="text-[9px] opacity-60">{o.desc}</div>
                           </button>
@@ -389,15 +389,15 @@ function EditorContent() {
                           <div className="text-white font-bold text-[10px] uppercase tracking-widest">Arah Geser</div>
                           <div className="grid grid-cols-2 gap-1.5">
                             <button
-                              onClick={() => setHDir("right")}
-                              className={`h-8 rounded-lg border text-[10px] font-black uppercase flex items-center justify-center gap-1 ${hDir === "right" ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10"}`}
-                            >
+ onClick={() => setHDir("right")}
+ className={`h-8 rounded-lg border text-[10px] font-black uppercase flex items-center justify-center gap-1 ${hDir === "right" ? "btn-primary " : "btn-secondary "}`}
+ >
                               → Kanan
                             </button>
                             <button
-                              onClick={() => setHDir("left")}
-                              className={`h-8 rounded-lg border text-[10px] font-black uppercase flex items-center justify-center gap-1 ${hDir === "left" ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10"}`}
-                            >
+ onClick={() => setHDir("left")}
+ className={`h-8 rounded-lg border text-[10px] font-black uppercase flex items-center justify-center gap-1 ${hDir === "left" ? "btn-primary " : "btn-secondary "}`}
+ >
                               ← Kiri
                             </button>
                           </div>
@@ -429,10 +429,10 @@ function EditorContent() {
                     <div className="text-white font-black uppercase text-[10px]">URL OBS (siap copy)</div>
                     <code className="block mt-2 p-2 bg-black/40 border border-white/10 rounded-lg text-[9px] font-mono text-cyan-300 break-all leading-relaxed">{obsUrl}</code>
                     <div className="mt-2 flex gap-2">
-                      <button onClick={handleCopy} className="flex-1 h-8 bg-white text-black rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1">
+                      <button onClick={handleCopy} className="flex-1 h-8 btn-primary rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1">
                         {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {copied ? "Copied" : "Copy"}
                       </button>
-                      <Link href={previewUrl} target="_blank" className="flex-1 h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 text-white">
+                      <Link href={previewUrl} target="_blank" className="flex-1 h-8 btn-secondary border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 ">
                         <ExternalLink className="w-3 h-3" /> Buka
                       </Link>
                     </div>
@@ -463,7 +463,7 @@ function EditorContent() {
                         <button
                           key={k}
                           onClick={() => setCustomCss(prev => prev ? `${prev.trim()}\n\n${s.css}` : s.css)}
-                          className="text-left p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-violet-500/30 rounded-xl transition-colors"
+                          className="text-left p-2.5 bg-[#DDF1FF] hover:bg-[#c9e9ff] border border-[#b9e0fb] text-[#005ea6] hover:border-violet-500/30 rounded-xl transition-colors"
                         >
                           <div className="text-white font-bold text-[11px]">{s.name}</div>
                           <div className="text-gray-500 text-[10px] leading-tight">{s.desc}</div>
@@ -485,10 +485,10 @@ function EditorContent() {
                       spellCheck={false}
                     />
                     <div className="flex gap-2">
-                      <button onClick={() => { setCustomCss(""); localStorage.removeItem(cssStorageKey(overlayId)); }} className="flex-1 h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-400 flex items-center justify-center gap-1">
+                      <button onClick={() => { setCustomCss(""); localStorage.removeItem(cssStorageKey(overlayId)); }} className="flex-1 h-8 btn-secondary border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1">
                         <Trash2 className="w-3 h-3" /> Clear
                       </button>
-                      <button onClick={() => { navigator.clipboard.writeText(customCss); }} className="flex-1 h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white flex items-center justify-center gap-1">
+                      <button onClick={() => { navigator.clipboard.writeText(customCss); }} className="flex-1 h-8 btn-secondary border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1">
                         <Copy className="w-3 h-3" /> Copy CSS
                       </button>
                     </div>
@@ -516,10 +516,10 @@ function EditorContent() {
             <div className="flex items-center justify-between mb-2">
               <div className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Eye className="w-4 h-4 text-cyan-400" /> Live Preview • 1920×1080</div>
               <div className="flex items-center gap-2">
-                <button onClick={handleCopy} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase">
+                <button onClick={handleCopy} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase">
                   <Copy className="w-3 h-3" /> OBS URL
                 </button>
-                <Link href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white">
+                <Link href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">
                   <ExternalLink className="w-3 h-3" /> Fullscreen
                 </Link>
               </div>
@@ -528,7 +528,7 @@ function EditorContent() {
             <div className="flex flex-wrap items-center gap-1.5 mb-3 p-2 bg-white/[0.03] border border-white/10 rounded-xl">
               <span className="text-gray-500 font-black uppercase text-[8px] tracking-widest px-1">Test:</span>
               {(overlayId === "full" || ["chat", "chat-right", "vertical", "horizontal-chat"].includes(overlayId)) && (
-                <button onClick={handleTestChat} className="h-7 px-2.5 bg-white text-black rounded-lg text-[10px] font-black uppercase flex items-center gap-1 hover:bg-gray-100">
+                <button onClick={handleTestChat} className="h-7 px-2.5 btn-primary rounded-lg text-[10px] font-black uppercase flex items-center gap-1 ">
                   <MessageSquare className="w-3 h-3" /> Chat
                 </button>
               )}
@@ -785,20 +785,20 @@ function EditorContent() {
               {/* OBS url bar */}
               <div className="border-t border-white/10 bg-[#121212] p-3 flex items-center gap-2">
                 <code className="flex-1 text-[9px] font-mono text-cyan-300 truncate bg-black/40 border border-white/10 rounded-lg px-2 py-1.5">{obsUrl}</code>
-                <button onClick={handleCopy} className="shrink-0 px-3 py-1.5 bg-white text-black rounded-lg text-[10px] font-black uppercase flex items-center gap-1">
+                <button onClick={handleCopy} className="shrink-0 px-3 py-1.5 btn-primary rounded-lg text-[10px] font-black uppercase flex items-center gap-1">
                   {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} Copy
                 </button>
               </div>
             </div>
 
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-              <Link href={previewUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5">
+              <Link href={previewUrl} target="_blank" className="h-9 btn-primary rounded-xl font-black uppercase flex items-center justify-center gap-1.5">
                 <Eye className="w-3 h-3" /> Preview Real
               </Link>
-              <Link href={`/overlay/display?key=${privateKey || ""}&${currentParams}&${themeQuery}`} target="_blank" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">
+              <Link href={`/overlay/display?key=${privateKey || ""}&${currentParams}&${themeQuery}`} target="_blank" className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 ">
                 <ExternalLink className="w-3 h-3" /> Tanpa OBS
               </Link>
-              <button onClick={handleCopy} className="h-9 bg-white hover:bg-zinc-200 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-black">
+              <button onClick={handleCopy} className="h-9 btn-primary rounded-xl font-black uppercase flex items-center justify-center gap-1.5 ">
                 <Monitor className="w-3 h-3" /> Pakai di OBS
               </button>
             </div>

@@ -48,9 +48,9 @@ export function InfoSlidesPreview({ state }: { state: InfoSlidesSettings }) {
     <div className="w-full flex flex-col items-center">
       {state.theme === 'boxed' ? <BoxedTheme {...props} /> : state.theme === 'glass' ? <GlassTheme {...props} /> : <CleanTheme {...props} />}
       <div className="mt-3 flex items-center gap-2">
-        <button onClick={prev} className="h-7 px-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-white text-[11px] font-bold">‹ Prev</button>
+        <button onClick={prev} className="h-7 px-3 btn-secondary border rounded-full text-[11px] font-bold">‹ Prev</button>
         <span className="text-gray-500 text-[11px] font-mono">{index + 1} / {total} • {state.duration}s {state.autoRotate ? '• auto' : '• manual'}</span>
-        <button onClick={next} className="h-7 px-3 bg-white text-black rounded-full text-[11px] font-black">Next ›</button>
+        <button onClick={next} className="h-7 px-3 btn-primary rounded-full text-[11px] font-black">Next ›</button>
       </div>
     </div>
   );

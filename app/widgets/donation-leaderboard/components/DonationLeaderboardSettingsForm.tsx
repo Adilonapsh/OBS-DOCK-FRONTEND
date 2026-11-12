@@ -72,9 +72,9 @@ export function DonationLeaderboardSettingsForm({
         <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="text-[11px] font-bold text-gray-300">Accent</span><input type="color" value={state.accent} onChange={(e) => update('accent', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
-            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Trans</button></div></label>
+            <label className="block"><span className="text-[11px] font-bold text-gray-300">Background</span><div className="mt-1 flex gap-1"><input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update('bg', 'transparent')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${state.bg === 'transparent' ? 'btn-primary ' : 'btn-secondary '}`}>Trans</button></div></label>
           </div>
-          <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks</span><div className="mt-1 flex gap-1"><input type="color" value={textColor || (state.theme === 'brutalist' ? '#000000' : '#ffffff')} onChange={(e) => update(textColorKey, e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update(textColorKey, '')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${!textColor ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Auto</button></div></label>
+          <label className="block"><span className="text-[11px] font-bold text-gray-300">Teks</span><div className="mt-1 flex gap-1"><input type="color" value={textColor || (state.theme === 'brutalist' ? '#000000' : '#ffffff')} onChange={(e) => update(textColorKey, e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" /><button onClick={() => update(textColorKey, '')} className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase border ${!textColor ? 'btn-primary ' : 'btn-secondary '}`}>Auto</button></div></label>
         </div>
       </div>
 
@@ -91,8 +91,8 @@ export function DonationLeaderboardSettingsForm({
       </div>
 
       <div className="flex gap-2">
-        <button onClick={reset} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-        <button onClick={onCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
+        <button onClick={reset} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+        <button onClick={onCopy} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5" /> Copy URL</button>
       </div>
     </>
   );

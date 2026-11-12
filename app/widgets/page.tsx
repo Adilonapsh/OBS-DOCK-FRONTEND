@@ -897,7 +897,7 @@ function WidgetsListing() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">
+            <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">
               <Monitor className="w-3 h-3" /> Dock
             </Link>
           </div>
@@ -932,11 +932,11 @@ function WidgetsListing() {
                       placeholder="paste private key / kosong = YOUR_PRIVATE_KEY"
                       className="w-full h-9 bg-white/5 border border-white/10 rounded-xl px-3 pr-9 text-[11px] font-mono text-white focus:outline-none focus:border-white/20 placeholder:text-gray-600"
                     />
-                    <button type="button" onClick={toggleShowKey} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white" title={showPrivateKey ? "Sembunyikan" : "Tampilkan (konfirmasi)"}>
+                    <button type="button" onClick={toggleShowKey} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 grid place-items-center rounded-lg btn-secondary " title={showPrivateKey ? "Sembunyikan" : "Tampilkan (konfirmasi)"}>
                       {showPrivateKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
-                  <Link href="/dashboard" className="shrink-0 h-9 px-3 bg-white text-black rounded-xl text-[10px] font-black uppercase flex items-center gap-1">
+                  <Link href="/dashboard" className="shrink-0 h-9 px-3 btn-primary rounded-xl text-[10px] font-black uppercase flex items-center gap-1">
                     <ExternalLink className="w-3 h-3" /> Dashboard
                   </Link>
                 </div>
@@ -960,10 +960,10 @@ function WidgetsListing() {
               <span className="hidden sm:inline-flex items-center gap-1 text-gray-500 text-[10px] font-black uppercase tracking-widest"><Filter className="w-3 h-3" /> Filter</span>
               {(["all", "chat", "alert", "counter", "progress", "info", "minimal"] as const).map(cat => (
                 <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`shrink-0 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors ${filter === cat ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"}`}
-                >
+ key={cat}
+ onClick={() => setFilter(cat)}
+ className={`shrink-0 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors ${filter === cat ? "btn-primary " : "btn-secondary "}`}
+ >
                   {cat === "all" ? <span className="flex items-center gap-1"><LayoutGrid className="w-3 h-3" /> Semua</span> : cat}
                 </button>
               ))}
@@ -997,123 +997,123 @@ function WidgetsListing() {
                     <p className="text-gray-500 text-[11px] leading-relaxed mt-1.5 line-clamp-2">{item.desc}</p>
 
                     <div className="mt-3 grid grid-cols-2 gap-1.5">
-                      <Link href={urlPreview} target="_blank" className="h-8 flex items-center justify-center gap-1 bg-white text-black rounded-xl text-[9px] font-black uppercase hover:bg-gray-100">
+                      <Link href={urlPreview} target="_blank" className="h-8 flex items-center justify-center gap-1 btn-primary rounded-xl text-[9px] font-black uppercase ">
                         <Eye className="w-3 h-3" /> Preview
                       </Link>
                       {item.id === 'timer' ? (
-                        <Link href={`/widgets/timer${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/timer${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'task' ? (
-                        <Link href={`/widgets/task${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/task${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'follow' ? (
-                        <Link href={`/widgets/follow${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/follow${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'event' ? (
-                        <Link href={`/widgets/event${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/event${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'chat' ? (
-                        <Link href={`/widgets/chat${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/chat${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'poll' ? (
-                        <Link href={`/widgets/poll${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/poll${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'games' ? (
-                        <Link href={`/games/trivia${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/games/trivia${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'pinned' ? (
-                        <Link href={`/widgets/pinned${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/pinned${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'speak' ? (
-                        <Link href={`/widgets/speak${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/speak${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'view-counter' ? (
-                        <Link href={`/widgets/view-counter${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/view-counter${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'goals' ? (
-                        <Link href={`/widgets/goals${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/goals${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'music' ? (
-                        <Link href={`/widgets/music${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/music${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'qr' ? (
-                        <Link href={`/widgets/qr${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/qr${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'clock' ? (
-                        <Link href={`/widgets/clock${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/clock${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'media-player' ? (
-                        <Link href={`/widgets/media-player${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/media-player${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'lyrics' ? (
-                        <Link href={`/widgets/lyrics${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/lyrics${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'info-slides' ? (
-                        <Link href={`/widgets/info-slides${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/info-slides${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'ticker' ? (
-                        <Link href={`/widgets/ticker${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/ticker${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'social-rotator' ? (
-                        <Link href={`/widgets/social-rotator${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/social-rotator${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'heartrate' ? (
-                        <Link href={`/widgets/heartrate${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/heartrate${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'valorant' ? (
-                        <Link href={`/widgets/valorant${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/valorant${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'donation-leaderboard' ? (
-                        <Link href={`/widgets/donation-leaderboard${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/donation-leaderboard${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'stream-bar' ? (
-                        <Link href={`/widgets/stream-bar${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/stream-bar${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : item.id === 'custom' ? (
-                        <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/editor${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Layers className="w-3 h-3" /> Open Editor
                         </Link>
                       ) : item.id === 'task' ? (
-                        <Link href={`/widgets/task${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/task${privateKey ? `?key=${privateKey}` : ''}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       ) : (
-                        <Link href={`/widgets/editor?&key=${privateKey || ""}`} className="h-8 flex items-center justify-center gap-1 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[9px] font-black uppercase">
+                        <Link href={`/widgets/editor?&key=${privateKey || ""}`} className="h-8 flex items-center justify-center gap-1 btn-primary border rounded-xl text-[9px] font-black uppercase">
                           <Cog className="w-3 h-3" /> Settings
                         </Link>
                       )}
                     </div>
                     {(item.id === 'media-player' || item.id === 'lyrics' || item.id === 'clock' || item.id === 'poll' || item.id === 'games' || item.id === 'pinned' || item.id === 'speak' || item.id === 'view-counter' || item.id === 'goals' || item.id === 'music' || item.id === 'qr' || item.id === 'heartrate' || item.id === 'valorant' || item.id === 'donation-leaderboard' || item.id === 'stream-bar' || item.id === 'chat' || item.id === 'event' || item.id === 'task' || item.id === 'timer' || item.id === 'follow' || item.id === 'info-slides' || item.id === 'ticker' || item.id === 'social-rotator' || item.id === 'custom') && (
                       <a
-                        href={urlObs}
-                        draggable
-                        onDragStart={(e) => { e.dataTransfer.setData('text/plain', urlObs); e.dataTransfer.setData('text/uri-list', urlObs); e.dataTransfer.effectAllowed = 'copy'; }}
-                        title="Tahan & drag langsung ke OBS Sources"
-                        className="mt-1.5 h-8 flex items-center justify-center gap-1.5 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl text-[9px] font-black uppercase cursor-grab active:cursor-grabbing select-none"
-                      >
+ href={urlObs}
+ draggable
+ onDragStart={(e) => { e.dataTransfer.setData('text/plain', urlObs); e.dataTransfer.setData('text/uri-list', urlObs); e.dataTransfer.effectAllowed = 'copy'; }}
+ title="Tahan & drag langsung ke OBS Sources"
+ className="mt-1.5 h-8 flex items-center justify-center gap-1.5 btn-primary border border-dashed border-zinc-300 rounded-xl text-[9px] font-black uppercase cursor-grab active:cursor-grabbing select-none"
+ >
                         <GripVertical className="w-3 h-3" /> Drag ke OBS
                       </a>
                     )}
@@ -1129,8 +1129,8 @@ function WidgetsListing() {
                 <h2 className="text-white font-black">Tampilkan Private Key?</h2>
                 <p className="text-[11px] text-gray-400 leading-relaxed">Private key bersifat <span className="text-white font-bold">rahasia</span>. Jangan bagikan ke orang lain. Yakin ingin menampilkan?</p>
                 <div className="flex gap-3">
-                  <button onClick={() => setShowKeyConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Batal</button>
-                  <button onClick={() => { setShowPrivateKey(true); setShowKeyConfirm(false); }} className="flex-1 h-9 bg-white text-black border border-white rounded-xl text-sm font-black">Tampilkan</button>
+                  <button onClick={() => setShowKeyConfirm(false)} className="flex-1 h-9 btn-secondary border rounded-xl text-sm font-bold ">Batal</button>
+                  <button onClick={() => { setShowPrivateKey(true); setShowKeyConfirm(false); }} className="flex-1 h-9 btn-primary border rounded-xl text-sm font-black">Tampilkan</button>
                 </div>
               </div>
             </div>
@@ -1141,8 +1141,8 @@ function WidgetsListing() {
                 <h2 className="text-white font-black">Tampilkan URL dengan Private Key?</h2>
                 <p className="text-[11px] text-gray-400 leading-relaxed">URL mengandung <span className="text-white font-bold">private key</span> rahasia. Yakin ingin menampilkan semua URL?</p>
                 <div className="flex gap-3">
-                  <button onClick={() => setShowUrlConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Batal</button>
-                  <button onClick={() => { setShowUrls(true); setShowUrlConfirm(false); }} className="flex-1 h-9 bg-white text-black border border-white rounded-xl text-sm font-black">Tampilkan</button>
+                  <button onClick={() => setShowUrlConfirm(false)} className="flex-1 h-9 btn-secondary border rounded-xl text-sm font-bold ">Batal</button>
+                  <button onClick={() => { setShowUrls(true); setShowUrlConfirm(false); }} className="flex-1 h-9 btn-primary border rounded-xl text-sm font-black">Tampilkan</button>
                 </div>
               </div>
             </div>
@@ -1182,7 +1182,7 @@ function WidgetsListing() {
             <div className="bg-black/30 border border-white/10 rounded-xl p-3 flex flex-col">
               <div className="text-white font-black uppercase text-[11px] flex items-center gap-2"><Palette className="w-4 h-4 text-white" /> Edit Tema Dulu</div>
               <p className="text-gray-500 text-[11px] mt-1 leading-relaxed">Klik <span className="text-white font-bold">Edit Tema</span> di card widget sebelum masuk OBS - atur warna, radius, blur, font & posisi.</p>
-              <Link href={privateKey ? `/widgets/editor?id=chat-box&key=${privateKey}` : "/widgets/editor?id=chat-box"} className="mt-3 h-8 flex items-center justify-center gap-1.5 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl text-[10px] font-black uppercase">
+              <Link href={privateKey ? `/widgets/editor?id=chat-box&key=${privateKey}` : "/widgets/editor?id=chat-box"} className="mt-3 h-8 flex items-center justify-center gap-1.5 btn-primary border rounded-xl text-[10px] font-black uppercase">
                 <Pencil className="w-3 h-3" /> Buka Editor Tema
               </Link>
             </div>

@@ -186,8 +186,8 @@ function TimerInner() {
           </AutoScale>
           {simulate && (
             <div className="flex items-center gap-2">
-              <button onClick={() => setIsRunning((v) => !v)} className="h-7 px-3 bg-white text-black rounded-full text-[10px] font-black uppercase shadow">{isRunning && !pausedByMode ? 'Pause' : 'Play'}</button>
-              <button onClick={() => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); setCurrentSession(1); }} className="h-7 px-3 bg-white/10 border border-white/10 rounded-full text-white text-[10px] font-black uppercase">Reset</button>
+              <button onClick={() => setIsRunning((v) => !v)} className="h-7 px-3 btn-primary rounded-full text-[10px] font-black uppercase shadow">{isRunning && !pausedByMode ? 'Pause' : 'Play'}</button>
+              <button onClick={() => { setIsRunning(false); setTotalSeconds(focusMinutes * 60); setCurrentSession(1); }} className="h-7 px-3 btn-secondary border rounded-full text-[10px] font-black uppercase">Reset</button>
               <span className="text-[10px] font-mono text-white/60 ml-2">SIMULATE • {String(theme).toUpperCase()} • {focusMinutes}m</span>
             </div>
           )}

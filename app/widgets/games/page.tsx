@@ -224,7 +224,7 @@ function GamesSettingsInner() {
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => shell.setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
+            <Link href="/widgets" className="p-1.5 btn-secondary border rounded-xl "><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center"><Gamepad2 className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
               <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3 text-white" /> Games / Trivia</div>
@@ -232,9 +232,9 @@ function GamesSettingsInner() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><RefreshCw className="w-3 h-3" /> Defaults</button>
-            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
-            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
+            <button onClick={() => shell.setShowDefaultsConfirm(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase "><RefreshCw className="w-3 h-3" /> Defaults</button>
+            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Load URL</button>
+            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase "><ExternalLink className="w-3 h-3" /> Preview</a>
           </div>
         </header>
 
@@ -243,13 +243,13 @@ function GamesSettingsInner() {
             <div className="text-[9px] font-black tracking-widest uppercase text-gray-500 mb-1 flex items-center gap-1.5"><Settings2 className="w-3 h-3" /> Widget URL - paste ke OBS Browser Source (transparent)</div>
             <div onClick={handleCopy} className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 cursor-pointer hover:border-white/20 group">
               <code className={`flex-1 text-[11px] font-mono truncate ${shell.showKey ? 'text-white' : 'text-white blur-[3px] select-none'}`}>{shell.showKey ? obsUrl : obsUrl.replace(/key=[^&]+/, 'key=••••••••••••••••')}</code>
-              <button type="button" onClick={(e) => { e.stopPropagation(); toggleShowKey(shell, obsUrl); }} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white">{shell.showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggleShowKey(shell, obsUrl); }} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg btn-secondary border ">{shell.showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}</button>
               <span className={`shrink-0 w-7 h-7 grid place-items-center rounded-lg ${shell.copied ? 'bg-emerald-500 text-white' : 'bg-white text-black group-hover:bg-zinc-100'}`}>{shell.copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}</span>
             </div>
           </div>
           <div className="flex self-end gap-2 shrink-0">
-            <a href={obsUrl} target="_blank" className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5" /> OBS</a>
-            <a href={obsUrl} draggable onDragStart={(e) => { e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed = 'copy'; }} className="h-9 px-3 bg-white text-black border border-dashed border-zinc-300 hover:border-white rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5" /> Drag ke OBS</a>
+            <a href={obsUrl} target="_blank" className="h-9 px-3 btn-secondary border rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5" /> OBS</a>
+            <a href={obsUrl} draggable onDragStart={(e) => { e.dataTransfer.setData('text/plain', obsUrl); e.dataTransfer.setData('text/uri-list', obsUrl); e.dataTransfer.effectAllowed = 'copy'; }} className="h-9 px-3 btn-primary border border-dashed border-zinc-300 rounded-xl font-black text-[11px] uppercase flex items-center gap-1.5 cursor-grab active:cursor-grabbing"><GripVertical className="w-3.5 h-3.5" /> Drag ke OBS</a>
           </div>
         </div>
 
@@ -269,9 +269,9 @@ function GamesSettingsInner() {
 
                   <div className="grid grid-cols-2 gap-2">
                     <button onClick={() => sendCommand('start', { topic: state.topicVote ? undefined : state.topic })} className="h-10 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-1.5"><Play className="w-4 h-4" /> Start</button>
-                    <button onClick={() => sendCommand('skip')} className="h-10 bg-white/10 hover:bg-white/15 border border-white/10 text-white rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-1.5"><SkipForward className="w-4 h-4" /> Skip</button>
-                    <button onClick={() => sendCommand('stop')} className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5"><Square className="w-3.5 h-3.5" /> Stop</button>
-                    <button onClick={() => { sendCommand('reset'); setStatus(null); }} className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5"><RotateCcw className="w-3.5 h-3.5" /> Reset</button>
+                    <button onClick={() => sendCommand('skip')} className="h-10 btn-secondary border rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-1.5"><SkipForward className="w-4 h-4" /> Skip</button>
+                    <button onClick={() => sendCommand('stop')} className="h-9 btn-secondary border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5"><Square className="w-3.5 h-3.5" /> Stop</button>
+                    <button onClick={() => { sendCommand('reset'); setStatus(null); }} className="h-9 btn-secondary border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5"><RotateCcw className="w-3.5 h-3.5" /> Reset</button>
                   </div>
 
                   <div className="rounded-xl bg-black/40 border border-white/10 p-3 space-y-2">
@@ -312,10 +312,10 @@ function GamesSettingsInner() {
                     <div className="grid grid-cols-2 gap-1.5">
                       {GAME_TOPICS.map((t) => (
                         <button
-                          key={t.id}
-                          onClick={() => startTopic(t.id)}
-                          className={`h-8 rounded-lg border text-[10px] font-black uppercase flex items-center gap-1.5 px-2 transition ${state.topic === t.id ? 'bg-white text-black border-white' : 'bg-black/30 text-gray-300 border-white/10 hover:border-white/30'}`}
-                        >
+ key={t.id}
+ onClick={() => startTopic(t.id)}
+ className={`h-8 rounded-lg border text-[10px] font-black uppercase flex items-center gap-1.5 px-2 transition ${state.topic === t.id ? 'btn-primary ' : 'btn-secondary /30'}`}
+ >
                           <span>{t.icon}</span>
                           <span className="truncate">{t.label}</span>
                         </button>
@@ -436,16 +436,16 @@ function GamesSettingsInner() {
                       <div className="mt-1 flex gap-1">
                         <input type="color" value={state.bg === 'transparent' ? '#000000' : state.bg} onChange={(e) => update('bg', e.target.value)} className="w-9 h-9 rounded-xl p-1 bg-black/40 border border-white/10" />
                         <button
-                          type="button"
-                          aria-pressed={state.bg === 'transparent'}
-                          title={state.bg === 'transparent' ? 'Aktifkan background warna' : 'Buat background transparan'}
-                          onClick={() => update('bg', state.bg === 'transparent' ? '#050508' : 'transparent')}
-                          className={`flex-1 min-w-0 h-9 rounded-xl px-2 text-[10px] font-black uppercase border inline-flex items-center justify-center gap-1.5 transition-colors ${
-                            state.bg === 'transparent'
-                              ? 'bg-emerald-400 text-black border-emerald-300'
-                              : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
-                          }`}
-                        >
+ type="button"
+ aria-pressed={state.bg === 'transparent'}
+ title={state.bg === 'transparent' ? 'Aktifkan background warna' : 'Buat background transparan'}
+ onClick={() => update('bg', state.bg === 'transparent' ? '#050508' : 'transparent')}
+ className={`flex-1 min-w-0 h-9 rounded-xl px-2 text-[10px] font-black uppercase border inline-flex items-center justify-center gap-1.5 transition-colors ${
+ state.bg === 'transparent'
+ ? 'bg-emerald-400 text-black border-emerald-300'
+ : 'btn-secondary '
+ }`}
+ >
                           <EyeOff className="w-3.5 h-3.5 shrink-0" />
                           <span className="truncate">{state.bg === 'transparent' ? 'Transparan Aktif' : 'Tanpa Background'}</span>
                         </button>
@@ -508,7 +508,7 @@ function GamesSettingsInner() {
                     <input value={state.apiUrl} onChange={(e) => update('apiUrl', e.target.value)} placeholder={TRIVIA_API_DEFAULT} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-[11px] text-white font-mono placeholder:text-gray-600" />
                     <span className="text-[10px] text-gray-500 mt-1 block">Respons JSON berisi <code className="bg-white/10 px-1 rounded text-gray-300">results[]</code>. Jika gagal, overlay otomatis memakai bank soal demo.</span>
                   </label>
-                  <button onClick={() => update('apiUrl', TRIVIA_API_DEFAULT)} className="w-full h-8 bg-black/30 hover:bg-black/50 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-400">Kembalikan URL Default</button>
+                  <button onClick={() => update('apiUrl', TRIVIA_API_DEFAULT)} className="w-full h-8 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Kembalikan URL Default</button>
                 </div>
               </Section>
 
@@ -527,8 +527,8 @@ function GamesSettingsInner() {
               </div>
 
               <div className="flex gap-2">
-                <button onClick={() => setState({ ...DEFAULT_GAME_SETTINGS })} className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase text-gray-300">Reset</button>
-                <button onClick={handleCopy} className="flex-1 h-9 bg-white hover:bg-zinc-100 rounded-xl text-black font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border border-white"><Copy className="w-3.5 h-3.5" /> Copy URL</button>
+                <button onClick={() => setState({ ...DEFAULT_GAME_SETTINGS })} className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-black uppercase ">Reset</button>
+                <button onClick={handleCopy} className="flex-1 h-9 btn-primary rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-1.5 border "><Copy className="w-3.5 h-3.5" /> Copy URL</button>
               </div>
             </div>
           </div>
@@ -543,9 +543,9 @@ function GamesSettingsInner() {
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">Preview berjalan dengan data demo. Data real hanya di OBS (<code className="bg-white/10 px-1 rounded text-white">.../games/display?obs=1</code>) yang terhubung ke chat &amp; event.</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-              <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
-              <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>
-              <button onClick={() => window.open(previewUrl, '_blank')} className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white"><ExternalLink className="w-3 h-3" /> Popout Style</button>
+              <a href={obsUrl} target="_blank" className="h-9 btn-primary rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
+              <Link href="/widgets" className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 ">Widgets</Link>
+              <button onClick={() => window.open(previewUrl, '_blank')} className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 "><ExternalLink className="w-3 h-3" /> Popout Style</button>
             </div>
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[

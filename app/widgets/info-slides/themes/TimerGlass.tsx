@@ -60,8 +60,8 @@ export default function TimerGlassTheme({ slides, index, font, bg, bgOpacity, te
         <div className="flex items-center gap-1.5 shrink-0">
           {showArrows && (
             <>
-              <button onClick={onPrev} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white grid place-items-center hover:scale-105 active:scale-95 transition-transform">‹</button>
-              <button onClick={onNext} className="w-7 h-7 rounded-full bg-white text-[#2b2b42] grid place-items-center hover:scale-105 active:scale-95 transition-transform font-black">›</button>
+              <button onClick={onPrev} className="w-7 h-7 rounded-full btn-secondary border grid place-items-center hover:scale-105 active:scale-95 transition-transform">‹</button>
+              <button onClick={onNext} className="w-7 h-7 rounded-full btn-primary text-[#2b2b42] grid place-items-center hover:scale-105 active:scale-95 transition-transform font-black">›</button>
             </>
           )}
           <span className="plus-badge px-3 py-1 sm:px-3.5 sm:py-1.5 flex items-center justify-center shrink-0">

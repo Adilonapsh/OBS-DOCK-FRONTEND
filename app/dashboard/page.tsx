@@ -86,8 +86,8 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
-                    <Link href="/dock" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black border border-white rounded-lg text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Dock</Link>
-                    <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase text-gray-300">
+                    <Link href="/dock" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary text-white border rounded-lg text-[10px] font-black uppercase"><Monitor className="w-3 h-3" /> Dock</Link>
+                    <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 btn-primary border rounded-lg text-[10px] font-black uppercase text-white transition-colors">
                         <LogOut className="w-3 h-3" /> Keluar
                     </button>
                 </div>
@@ -96,10 +96,10 @@ export default function DashboardPage() {
             <main className="flex-1 p-4 md:p-6 max-w-8xl w-full mx-auto space-y-6">
                 <div className="bg-[#161616] border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-white font-black text-[18px] tracking-tight">Halo, {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "Streamer"}</h1>
+                        <h1 className="font-black text-[18px] tracking-tight">Halo, {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "Streamer"}</h1>
                         <p className="text-gray-500 text-[11px] mt-1">Kelola dock, private key, dan akses websocket isolasi per user.</p>
                     </div>
-                    <Link href={`/dock?key=${privateKey}`} className="inline-flex items-center gap-2 px-5 py-3 bg-white text-black border border-white hover:bg-zinc-100 rounded-xl font-black text-[11px] uppercase tracking-widest">
+                    <Link href={`/dock?key=${privateKey}`} className="inline-flex items-center gap-2 px-5 py-3 btn-primary text-white border rounded-xl font-black text-[11px] uppercase tracking-widest">
                         <Monitor className="w-4 h-4" /> Buka Dock
                     </Link>
                 </div>
@@ -112,13 +112,13 @@ export default function DashboardPage() {
                         <p className="text-gray-500 text-[11px]">Dipakai sebagai <span className="text-white font-bold">room</span> Jaga kerahasiaannya.</p>
                         <div className="bg-black/30 border border-white/10 rounded-xl p-3 flex items-center gap-3">
                             <code className={`flex-1 text-[11px] font-mono-custom break-all ${showPrivate ? "text-white" : "text-white blur-[4px] select-none"}`}>{showPrivate ? (privateKey || "- belum ada -") : (privateKey ? "•".repeat(32) : "- belum ada -")}</code>
-                            <button onClick={() => { if (!showPrivate) setShowPrivateConfirm(true); else setShowPrivate(false); }} className="shrink-0 w-8 h-8 grid place-items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-400 hover:text-white" title={showPrivate ? "Sembunyikan" : "Tampilkan (konfirmasi)"}>
+                            <button onClick={() => { if (!showPrivate) setShowPrivateConfirm(true); else setShowPrivate(false); }} className="shrink-0 w-8 h-8 grid place-items-center btn-primary border rounded-lg text-white transition-colors" title={showPrivate ? "Sembunyikan" : "Tampilkan (konfirmasi)"}>
                                 {showPrivate ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                             </button>
-                            <button onClick={handleCopy} className="shrink-0 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1"><Copy className="w-3 h-3" /> {copied ? "Copied" : "Copy"}</button>
+                            <button onClick={handleCopy} className="shrink-0 px-3 py-1.5 btn-primary border rounded-lg text-[10px] font-black uppercase text-white flex items-center gap-1 transition-colors"><Copy className="w-3 h-3" /> {copied ? "Copied" : "Copy"}</button>
                         </div>
                         <div className="flex gap-2">
-                            <Link href={`/dock?key=${privateKey}`} className="flex-1 h-9 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white"><Monitor className="w-3 h-3" /> Buka Dock</Link>
+                            <Link href={`/dock?key=${privateKey}`} className="flex-1 h-9 flex items-center justify-center gap-2 btn-primary border rounded-xl text-[10px] font-black uppercase text-white transition-colors"><Monitor className="w-3 h-3" /> Buka Dock</Link>
                             <button onClick={() => setShowRegenerateConfirm(true)} className="px-3 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[10px] font-black uppercase text-red-400 flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Regenerate</button>
                         </div>
                     </div>
@@ -131,26 +131,26 @@ export default function DashboardPage() {
                             <div className="flex justify-between"><span className="text-gray-500">Username</span><span className="text-white font-bold">{(user?.user_metadata as any)?.username || "-"}</span></div>
                         </div>
                         <div className="pt-3 border-t border-white/5 flex gap-2">
-                            <Link href="/login" className="flex-1 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-[10px] font-black uppercase text-gray-300">Ganti Akun</Link>
-                            <Link href="/register" className="flex-1 h-8 flex items-center justify-center rounded-lg bg-white text-black border border-white text-[10px] font-black uppercase">Daftar Baru</Link>
+                            <Link href="/login" className="flex-1 h-8 flex items-center justify-center rounded-lg btn-primary border text-[10px] font-black uppercase text-white transition-colors">Ganti Akun</Link>
+                            <Link href="/register" className="flex-1 h-8 flex items-center justify-center rounded-lg btn-primary border text-[10px] font-black uppercase">Daftar Baru</Link>
                         </div>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Link href="/dock" className="bg-[#161616] border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
+                    <Link href="/dock" className="btn-secondary border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
                         <Monitor className="w-6 h-6 text-white" />
                         <h4 className="text-white font-black uppercase text-[11px] mt-3">Dock Control</h4>
                         <p className="text-gray-500 text-[11px] mt-1">OBS Studio Mode & Stream Tools isolasi private key.</p>
                         <span className="inline-flex items-center gap-1 mt-3 text-[10px] font-black uppercase text-white group-hover:gap-2 transition-all">Buka <ExternalLink className="w-3 h-3" /></span>
                     </Link>
-                    <Link href="/widgets" className="bg-[#161616] border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
+                    <Link href="/widgets" className="btn-secondary border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
                         <Layers className="w-6 h-6 text-white" />
                         <h4 className="text-white font-black uppercase text-[11px] mt-3">Widgets</h4>
                         <p className="text-gray-500 text-[11px] mt-1">Media Player & Lyrics - 11 themes, SMTC Bridge, LRCLIB.</p>
                         <span className="inline-flex items-center gap-1 mt-3 text-[10px] font-black uppercase text-white group-hover:gap-2 transition-all">Buka <ExternalLink className="w-3 h-3" /></span>
                     </Link>
-                    <Link href="/overlay" className="bg-[#161616] border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
+                    <Link href="/overlay" className="btn-secondary border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
                         <Palette className="w-6 h-6 text-white" />
                         <h4 className="text-white font-black uppercase text-[11px] mt-3">Overlays</h4>
                         <p className="text-gray-500 text-[11px] mt-1">Full / Chat / Gift / Like - editor tema & Browser Source.</p>
@@ -162,7 +162,7 @@ export default function DashboardPage() {
                 <div className="bg-[#161616] border border-white/10 rounded-xl p-4 flex items-center justify-between">
                     <span className="text-[10px] text-gray-600 font-bold uppercase">© 2026 Keluno</span>
                     <div className="flex items-center gap-3 text-[10px] font-black uppercase">
-                        <Link href="/dock" className="text-white hover:text-zinc-300 flex items-center gap-1"><Settings className="w-3 h-3" /> Dock</Link>
+                        <Link href="/dock" className="text-gray-200 hover:text-white flex items-center gap-1"><Settings className="w-3 h-3" /> Dock</Link>
                     </div>
                 </div>
                 {showPrivateConfirm && (
@@ -171,8 +171,8 @@ export default function DashboardPage() {
                             <h2 className="text-white font-black">Tampilkan Private Key?</h2>
                             <p className="text-[11px] text-gray-400 leading-relaxed">Private key bersifat <span className="text-white font-bold">rahasia</span>. Jangan bagikan ke orang lain.</p>
                             <div className="flex gap-3">
-                                <button onClick={() => setShowPrivateConfirm(false)} className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300">Batal</button>
-                                <button onClick={() => { setShowPrivate(true); setShowPrivateConfirm(false); }} className="flex-1 h-9 bg-white text-black border border-white rounded-xl text-sm font-black">Tampilkan</button>
+                                <button onClick={() => setShowPrivateConfirm(false)} className="flex-1 h-9 btn-secondary border rounded-xl text-sm font-bold ">Batal</button>
+                                <button onClick={() => { setShowPrivate(true); setShowPrivateConfirm(false); }} className="flex-1 h-9 btn-primary border rounded-xl text-sm font-black">Tampilkan</button>
                             </div>
                         </div>
                     </div>

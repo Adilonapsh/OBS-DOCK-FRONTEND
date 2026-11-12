@@ -271,17 +271,17 @@ export default function KeyframeTimeline({
     <div className="bg-[#121212] border border-white/5 rounded-none p-3 h-full flex flex-col min-h-0">
       <div className="flex items-center gap-2 mb-1 flex-wrap shrink-0">
         <button
-          onClick={onPlay}
-          title="Play - jalankan dari detik 0 (spasi juga bisa)"
-          className="flex items-center gap-1.5 bg-white text-black text-[11px] font-black px-3 py-1.5 rounded-none"
-        >
+ onClick={onPlay}
+ title="Play - jalankan dari detik 0 (spasi juga bisa)"
+ className="flex items-center gap-1.5 btn-primary text-[11px] font-black px-3 py-1.5 rounded-none"
+ >
           <FaPlay className="w-3 h-3" /> Play
         </button>
         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Timeline</span>
         {/* Zoom canvas - dipindah ke sini biar area canvas lega */}
         <span className="flex items-center gap-1 text-gray-400" onClick={(e) => e.stopPropagation()}>
           <span className="text-[10px] font-black uppercase tracking-widest">Zoom</span>
-          <button onClick={() => onZoomStep(-1)} title="Perkecil canvas" className="p-1 bg-white/5 hover:bg-white/10 rounded-none text-gray-300">
+          <button onClick={() => onZoomStep(-1)} title="Perkecil canvas" className="p-1 btn-secondary rounded-none ">
             <FaMinus className="w-2.5 h-2.5" />
           </button>
           <select
@@ -295,7 +295,7 @@ export default function KeyframeTimeline({
             ))}
             <option value="fit">Fit</option>
           </select>
-          <button onClick={() => onZoomStep(1)} title="Perbesar canvas" className="p-1 bg-white/5 hover:bg-white/10 rounded-none text-gray-300">
+          <button onClick={() => onZoomStep(1)} title="Perbesar canvas" className="p-1 btn-secondary rounded-none ">
             <FaPlus className="w-2.5 h-2.5" />
           </button>
           <span className="text-[10px] text-gray-500">{zoomText}</span>
@@ -303,10 +303,10 @@ export default function KeyframeTimeline({
         <label className="flex items-center gap-1 text-[10px] text-gray-400 ml-auto">
           Panjang
           <button
-            onClick={() => onDuration(Math.max(TIMELINE_MIN_SECS, Math.min(TIMELINE_MAX_SECS, durationSecs - 2)))}
-            title="Perpendek timeline 2 detik"
-            className="p-1 bg-white/5 hover:bg-white/10 rounded-none text-gray-300"
-          >
+ onClick={() => onDuration(Math.max(TIMELINE_MIN_SECS, Math.min(TIMELINE_MAX_SECS, durationSecs - 2)))}
+ title="Perpendek timeline 2 detik"
+ className="p-1 btn-secondary rounded-none "
+ >
             <FaMinus className="w-2.5 h-2.5" />
           </button>
           <input
@@ -323,10 +323,10 @@ export default function KeyframeTimeline({
             className="w-16 bg-black/40 border border-white/10 rounded-none px-2 py-1 text-[11px] text-white"
           />
           <button
-            onClick={() => onDuration(Math.max(TIMELINE_MIN_SECS, Math.min(TIMELINE_MAX_SECS, durationSecs + 2)))}
-            title="Perpanjang timeline 2 detik"
-            className="p-1 bg-white/5 hover:bg-white/10 rounded-none text-gray-300"
-          >
+ onClick={() => onDuration(Math.max(TIMELINE_MIN_SECS, Math.min(TIMELINE_MAX_SECS, durationSecs + 2)))}
+ title="Perpanjang timeline 2 detik"
+ className="p-1 btn-secondary rounded-none "
+ >
             <FaPlus className="w-2.5 h-2.5" />
           </button>
           detik

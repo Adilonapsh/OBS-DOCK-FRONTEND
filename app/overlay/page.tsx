@@ -392,10 +392,10 @@ function OverlayListing() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href={privateKey ? `/overlay/display?key=${privateKey}` : "/overlay/display"} target="_blank" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-200 rounded-xl text-[10px] font-black uppercase text-black">
+            <Link href={privateKey ? `/overlay/display?key=${privateKey}` : "/overlay/display"} target="_blank" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase ">
               <Eye className="w-3 h-3" /> Preview Full
             </Link>
-            <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">
+            <Link href={privateKey ? `/dock?key=${privateKey}` : "/dock"} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">
               <Monitor className="w-3 h-3" /> Dock
             </Link>
           </div>
@@ -428,7 +428,7 @@ function OverlayListing() {
                     placeholder="paste private key / kosong = YOUR_PRIVATE_KEY"
                     className="flex-1 h-9 bg-white/5 border border-white/10 rounded-xl px-3 text-[11px] font-mono text-cyan-300 focus:outline-none focus:border-cyan-500 placeholder:text-gray-600"
                   />
-                  <Link href="/dashboard" className="shrink-0 h-9 px-3 bg-white text-black rounded-xl text-[10px] font-black uppercase flex items-center gap-1">
+                  <Link href="/dashboard" className="shrink-0 h-9 px-3 btn-primary rounded-xl text-[10px] font-black uppercase flex items-center gap-1">
                     <ExternalLink className="w-3 h-3" /> Dashboard
                   </Link>
                 </div>
@@ -452,10 +452,10 @@ function OverlayListing() {
               <span className="hidden sm:inline-flex items-center gap-1 text-gray-500 text-[10px] font-black uppercase tracking-widest"><Filter className="w-3 h-3" /> Filter</span>
               {(["all", "full", "chat", "alert", "info", "minimal"] as const).map(cat => (
                 <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`shrink-0 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors ${filter === cat ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"}`}
-                >
+ key={cat}
+ onClick={() => setFilter(cat)}
+ className={`shrink-0 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors ${filter === cat ? "btn-primary " : "btn-secondary "}`}
+ >
                   {cat === "all" ? <span className="flex items-center gap-1"><LayoutGrid className="w-3 h-3" /> Semua</span> : cat}
                 </button>
               ))}
@@ -482,7 +482,7 @@ function OverlayListing() {
                       {item.w}×{item.h}
                     </div>
                     <div className="absolute bottom-2 right-2 hidden group-hover:flex items-center gap-1">
-                      <Link href={urlPreview} target="_blank" className="w-7 h-7 bg-white text-black rounded-full grid place-items-center hover:bg-gray-100 shadow-lg">
+                      <Link href={urlPreview} target="_blank" className="w-7 h-7 btn-primary rounded-full grid place-items-center shadow-lg">
                         <Eye className="w-3.5 h-3.5" />
                       </Link>
                       <button onClick={() => handleCopy(item.id, urlObs)} className="w-7 h-7 bg-cyan-500 text-black rounded-full grid place-items-center hover:bg-cyan-400 shadow-lg">
@@ -502,16 +502,16 @@ function OverlayListing() {
 
                     <div className="mt-3 bg-black/40 border border-white/10 rounded-xl p-2 flex items-center gap-2">
                       <code className="flex-1 text-[9px] font-mono text-cyan-300 truncate">{urlObs}</code>
-                      <button onClick={() => handleCopy(item.id, urlObs)} className="shrink-0 w-7 h-7 bg-white text-black rounded-lg grid place-items-center hover:bg-gray-100">
+                      <button onClick={() => handleCopy(item.id, urlObs)} className="shrink-0 w-7 h-7 btn-primary rounded-lg grid place-items-center ">
                         {copiedId === item.id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                       </button>
                     </div>
 
                     <div className="mt-3 grid grid-cols-3 gap-1.5">
-                      <Link href={urlPreview} target="_blank" className="h-8 flex items-center justify-center gap-1 bg-white text-black rounded-xl text-[9px] font-black uppercase hover:bg-gray-100">
+                      <Link href={urlPreview} target="_blank" className="h-8 flex items-center justify-center gap-1 btn-primary rounded-xl text-[9px] font-black uppercase ">
                         <Eye className="w-3 h-3" /> Preview
                       </Link>
-                      <Link href={`/overlay/editor?id=${item.id}&key=${privateKey || ""}`} className="h-8 flex items-center justify-center gap-1 bg-white hover:bg-zinc-200 text-black rounded-xl text-[9px] font-black uppercase">
+                      <Link href={`/overlay/editor?id=${item.id}&key=${privateKey || ""}`} className="h-8 flex items-center justify-center gap-1 btn-primary rounded-xl text-[9px] font-black uppercase">
                         <Palette className="w-3 h-3" /> Edit Tema
                       </Link>
                       <button onClick={() => handleCopy(item.id, urlObs)} className="h-8 flex items-center justify-center gap-1 bg-[#FE2C55] hover:bg-[#E62254] text-white rounded-xl text-[9px] font-black uppercase">
@@ -559,7 +559,7 @@ function OverlayListing() {
             <div className="bg-black/30 border border-white/10 rounded-xl p-3 flex flex-col">
               <div className="text-white font-black uppercase text-[11px] flex items-center gap-2"><Palette className="w-4 h-4 text-violet-400" /> Edit Tema Dulu</div>
               <p className="text-gray-500 text-[11px] mt-1 leading-relaxed">Klik <span className="text-white font-bold">Edit Tema</span> di card overlay sebelum masuk OBS - atur warna, radius, blur, font & posisi dengan live preview.</p>
-              <Link href={privateKey ? `/overlay/editor?id=full&key=${privateKey}` : "/overlay/editor?id=full"} className="mt-3 h-8 flex items-center justify-center gap-1.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-[10px] font-black uppercase">
+              <Link href={privateKey ? `/overlay/editor?id=full&key=${privateKey}` : "/overlay/editor?id=full"} className="mt-3 h-8 flex items-center justify-center gap-1.5 btn-primary rounded-xl text-[10px] font-black uppercase">
                 <Pencil className="w-3 h-3" /> Buka Editor Tema
               </Link>
             </div>

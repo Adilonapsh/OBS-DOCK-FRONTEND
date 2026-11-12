@@ -168,7 +168,7 @@ function WidgetLayerSettings({
       <div className="flex items-center gap-2">
         <Icon className="w-3.5 h-3.5 text-violet-300 shrink-0" />
         <div className="text-white font-black uppercase text-[10px] tracking-widest flex-1 truncate">Setting {preset.title}</div>
-        <button onClick={() => setReloadKey(v => v + 1)} title="Reload setting" className="shrink-0 w-6 h-6 grid place-items-center rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300"><RefreshCw className="w-3 h-3" /></button>
+        <button onClick={() => setReloadKey(v => v + 1)} title="Reload setting" className="shrink-0 w-6 h-6 grid place-items-center rounded-md btn-secondary border "><RefreshCw className="w-3 h-3" /></button>
         <Link href={settingsHref} target="_blank" className="shrink-0 inline-flex items-center gap-1 text-[9px] font-black uppercase text-violet-200 hover:text-white">
           <ExternalLink className="w-3 h-3" /> Buka
         </Link>
@@ -513,7 +513,7 @@ function EditorContent() {
         <header className="h-14 bg-[#121212] border-b border-white/5 flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
-            <Link href="/widgets" className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" /></Link>
+            <Link href="/widgets" className="p-1.5 btn-secondary border rounded-xl "><ArrowLeft className="w-4 h-4" /></Link>
             <div className="w-8 h-8 rounded-lg bg-white grid place-items-center"><Layers className="w-4 h-4 text-black" /></div>
             <div className="min-w-0">
               <div className="text-white font-black text-[12px] uppercase tracking-widest flex items-center gap-2">Custom Overlay <span className="hidden sm:inline px-2 py-0.5 bg-white text-black rounded-full text-[9px]">StreamElements-like</span></div>
@@ -522,14 +522,14 @@ function EditorContent() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => setPreviewLive(v => !v)}
-              title={previewLive ? 'Widget layer pakai data live (socket)' : 'Widget layer pakai data demo'}
-              className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${previewLive ? 'bg-green-500/15 border-green-500/40 text-green-300' : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-300'}`}
-            >
+ onClick={() => setPreviewLive(v => !v)}
+ title={previewLive ? 'Widget layer pakai data live (socket)' : 'Widget layer pakai data demo'}
+ className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${previewLive ? 'bg-green-500/15 border-green-500/40 text-green-300' : 'btn-secondary border-white/10 text-gray-300'}`}
+ >
               <RefreshCw className={`w-3 h-3 ${previewLive ? 'animate-spin [animation-duration:3s]' : ''}`} /> {previewLive ? 'Live data' : 'Demo data'}
             </button>
-            <Link href={previewUrl} target="_blank" className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300"><Eye className="w-3 h-3" /> Preview</Link>
-            <button onClick={handleSave} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${saved ? 'bg-green-500 text-white border-green-500' : 'bg-white text-black border-white'}`}>{saved ? <Check className="w-3 h-3" /> : <Save className="w-3 h-3" />} {saved ? 'Saved' : 'Save'}</button>
+            <Link href={previewUrl} target="_blank" className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase "><Eye className="w-3 h-3" /> Preview</Link>
+            <button onClick={handleSave} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${saved ? 'bg-green-500 text-white border-green-500' : 'btn-primary '}`}>{saved ? <Check className="w-3 h-3" /> : <Save className="w-3 h-3" />} {saved ? 'Saved' : 'Save'}</button>
             <button onClick={handleCopy} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 rounded-xl text-[10px] font-black uppercase text-white">{copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} Copy OBS</button>
           </div>
         </header>
@@ -538,7 +538,7 @@ function EditorContent() {
           <div className="flex gap-2 sm:items-center overflow-x-auto">
             <div className="flex-1 min-w-0 flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2">
               <code className="flex-1 text-[11px] font-mono truncate text-white/70">{obsUrl ? `${obsUrl.slice(0, 80)}…` : 'Menyiapkan URL…'}</code>
-              <button onClick={handleCopy} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg bg-white text-black">{copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}</button>
+              <button onClick={handleCopy} className="shrink-0 w-7 h-7 grid place-items-center rounded-lg btn-primary ">{copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}</button>
             </div>
             <input value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="key" className="hidden sm:block w-32 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-[11px] font-mono text-white" />
           </div>
@@ -571,9 +571,9 @@ function EditorContent() {
                               key={p.key}
                               onClick={() => addWidgetLayer(p)}
                               title={`Tambah layer ${p.title}`}
-                              className="h-11 px-1 bg-white/5 hover:bg-violet-600/25 hover:border-violet-500/50 border border-white/10 rounded-xl flex items-center gap-1.5 text-white transition-colors"
+                              className="h-11 px-1 bg-[#DDF1FF] hover:bg-violet-600/25 hover:border-violet-500/50 border border-[#b9e0fb] rounded-xl flex items-center gap-1.5 text-[#005ea6] transition-colors"
                             >
-                              <Icon className="w-4 h-4 shrink-0 text-violet-200" />
+                              <Icon className="w-4 h-4 shrink-0 text-violet-600" />
                               <span className="text-[9px] font-black uppercase leading-tight text-left truncate">{p.title}</span>
                             </button>
                           );
@@ -591,7 +591,7 @@ function EditorContent() {
                 <div className="grid grid-cols-3 gap-1.5 mt-2">
                   {(['chat','timer','clock','poll','social','custom'] as TemplateLayerType[]).map(t => {
                     const Icon = LAYER_ICON[t];
-                    return <button key={t} onClick={() => openCreate(t)} className="h-14 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl flex flex-col items-center justify-center gap-1 text-white"><Icon className="w-4 h-4" /><span className="text-[9px] font-black uppercase">{t}</span></button>;
+                    return <button key={t} onClick={() => openCreate(t)} className="h-14 btn-secondary border rounded-xl flex flex-col items-center justify-center gap-1 "><Icon className="w-4 h-4" /><span className="text-[9px] font-black uppercase">{t}</span></button>;
                   })}
                 </div>
                 <p className="mt-2 text-[10px] text-gray-500 leading-relaxed">Klik tipe → modal Template/HTML + CSS + JS → <span className="text-white font-bold">Simpan</span>.</p>
@@ -717,7 +717,7 @@ function EditorContent() {
                       <label className="block"><span className="text-[9px] font-bold text-gray-400">Z-Index</span><input type="number" min={1} max={99} value={selLayer.zIndex} onChange={e=>updateLayer(selLayer.id,{zIndex: parseInt(e.target.value)||1})} className="w-full h-7 bg-black/40 border border-white/10 rounded-lg px-2 text-xs text-white" /></label>
                       <label className="flex items-center justify-between p-2 bg-black/30 rounded-lg border border-white/5 cursor-pointer"><span className="text-[10px] font-bold text-white">Shadow</span><input type="checkbox" checked={!!selLayer.shadow} onChange={e=>updateLayer(selLayer.id,{shadow:e.target.checked})} className="w-4 h-4 accent-white" /></label>
                     </div>
-                    <label className="block"><span className="text-[9px] font-bold text-gray-400">Background</span><div className="flex gap-1.5 mt-1"><input type="color" value={selLayer.bg === 'transparent' ? '#000000' : selLayer.bg} onChange={e=>updateLayer(selLayer.id,{bg:e.target.value})} className="w-8 h-8 rounded-lg p-1 bg-black/40 border border-white/10" /><button onClick={()=>updateLayer(selLayer.id,{bg:'transparent'})} className={`flex-1 h-8 rounded-lg text-[10px] font-black uppercase border ${selLayer.bg==='transparent' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>Transparent</button></div></label>
+                    <label className="block"><span className="text-[9px] font-bold text-gray-400">Background</span><div className="flex gap-1.5 mt-1"><input type="color" value={selLayer.bg === 'transparent' ? '#000000' : selLayer.bg} onChange={e=>updateLayer(selLayer.id,{bg:e.target.value})} className="w-8 h-8 rounded-lg p-1 bg-black/40 border border-white/10" /><button onClick={()=>updateLayer(selLayer.id,{bg:'transparent'})} className={`flex-1 h-8 rounded-lg text-[10px] font-black uppercase border ${selLayer.bg==='transparent' ? 'btn-primary ' : 'btn-secondary '}`}>Transparent</button></div></label>
                   </div>
 
                   {selLayer.type === 'widget' && (() => {
@@ -736,9 +736,9 @@ function EditorContent() {
                       <div className="bg-black/40 border border-white/10 rounded-lg p-2"><div className="text-gray-500 text-[9px] font-sans font-bold uppercase">JS</div><div className="text-white truncate">{selLayer.js ? `${selLayer.js.length} char` : selLayer.anim || '-'}</div></div>
                     </div>
                     <div className="grid grid-cols-3 gap-1.5">
-                      <button onClick={()=>openEdit(selLayer.id,'template')} className="h-8 rounded-lg bg-white text-black text-[10px] font-black uppercase flex items-center justify-center gap-1"><FileCode2 className="w-3 h-3" /> HTML</button>
-                      <button onClick={()=>openEdit(selLayer.id,'css')} className="h-8 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-[10px] font-black uppercase">CSS</button>
-                      <button onClick={()=>openEdit(selLayer.id,'js')} className="h-8 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-[10px] font-black uppercase">JS</button>
+                      <button onClick={()=>openEdit(selLayer.id,'template')} className="h-8 rounded-lg btn-primary text-[10px] font-black uppercase flex items-center justify-center gap-1"><FileCode2 className="w-3 h-3" /> HTML</button>
+                      <button onClick={()=>openEdit(selLayer.id,'css')} className="h-8 rounded-lg btn-secondary border text-[10px] font-black uppercase">CSS</button>
+                      <button onClick={()=>openEdit(selLayer.id,'js')} className="h-8 rounded-lg btn-secondary border text-[10px] font-black uppercase">JS</button>
                     </div>
                     <button onClick={()=>openEdit(selLayer.id,'template')} className="w-full h-9 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase flex items-center justify-center gap-1.5"><Pencil className="w-3 h-3" /> Edit Template / CSS / JS</button>
                     <div className="bg-black border border-white/10 rounded-xl p-3">
@@ -768,7 +768,7 @@ function EditorContent() {
               </div>
               <div className="hidden md:flex items-center gap-1.5">
                 {(['template','css','js'] as ModalTab[]).map(t => (
-                  <button key={t} onClick={()=>setModalTab(t)} className={`h-8 px-4 rounded-lg text-[10px] font-black uppercase border ${modalTab===t ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                  <button key={t} onClick={()=>setModalTab(t)} className={`h-8 px-4 rounded-lg text-[10px] font-black uppercase border ${modalTab===t ? 'btn-primary ' : 'btn-secondary '}`}>
                     {t === 'template' ? 'HTML' : t.toUpperCase()}
                   </button>
                 ))}
@@ -779,12 +779,12 @@ function EditorContent() {
                 </select>
               )}
               <span className="hidden lg:inline text-[10px] font-mono text-gray-500">{draft.type} • {draft.id}</span>
-              <button onClick={closeModal} className="w-8 h-8 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300"><X className="w-4 h-4" /></button>
+              <button onClick={closeModal} className="w-8 h-8 grid place-items-center rounded-lg btn-secondary border "><X className="w-4 h-4" /></button>
             </div>
             {/* Tabs mobile */}
             <div className="md:hidden flex items-center gap-1.5 px-4 py-2 border-b border-white/5 bg-[#252526]">
               {(['template','css','js'] as ModalTab[]).map(t => (
-                <button key={t} onClick={()=>setModalTab(t)} className={`flex-1 h-8 rounded-lg text-[10px] font-black uppercase border ${modalTab===t ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/10'}`}>
+                <button key={t} onClick={()=>setModalTab(t)} className={`flex-1 h-8 rounded-lg text-[10px] font-black uppercase border ${modalTab===t ? 'btn-primary ' : 'btn-secondary '}`}>
                   {t === 'template' ? 'HTML' : t.toUpperCase()}
                 </button>
               ))}
@@ -815,7 +815,7 @@ function EditorContent() {
                       <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">{g} ({list.length})</div>
                       <div className="flex flex-wrap gap-1.5">
                         {(list as typeof TEMPLATE_VARS).map(v => (
-                          <button key={v.key} onClick={()=>insertVarModal(v.key)} title={`${v.desc} - ex: ${v.example}`} className="px-2 py-1 bg-white/10 hover:bg-violet-600 hover:border-violet-500 border border-white/10 rounded-md text-[10px] font-mono text-gray-200 transition-colors">{`{{${v.key}}}`}</button>
+                          <button key={v.key} onClick={()=>insertVarModal(v.key)} title={`${v.desc} - ex: ${v.example}`} className="px-2 py-1 bg-[#DDF1FF] hover:bg-violet-600 hover:border-violet-500 border border-[#b9e0fb] rounded-md text-[10px] font-mono text-[#005ea6] transition-colors">{`{{${v.key}}}`}</button>
                         ))}
                       </div>
                     </div>
@@ -830,7 +830,7 @@ function EditorContent() {
                         { label: 'Glass', code: '.glass{background:rgba(20,20,25,0.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:16px;}' },
                         { label: 'Outline text', code: '.txt{font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.6);}' },
                       ].filter(s => !varSearch || s.label.toLowerCase().includes(varSearch.toLowerCase())).map(s => (
-                        <button key={s.label} onClick={()=>updateDraft({ css: (draft.css ? draft.css + '\n' : '') + s.code })} className="w-full text-left px-2.5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[11px] font-mono text-gray-200">{s.label}<span className="block text-[10px] text-gray-500 truncate">{s.code}</span></button>
+                        <button key={s.label} onClick={()=>updateDraft({ css: (draft.css ? draft.css + '\n' : '') + s.code })} className="w-full text-left px-2.5 py-2 btn-secondary border rounded-lg text-[11px] font-mono ">{s.label}<span className="block text-[10px] text-gray-500 truncate">{s.code}</span></button>
                       ))}
                       <div className="text-[10px] text-gray-500 leading-relaxed pt-1">Scoped per layer via <code className="bg-white/10 px-1 rounded">&lt;style&gt;</code>.</div>
                     </div>
@@ -839,7 +839,7 @@ function EditorContent() {
                     <div className="space-y-1.5">
                       <div className="text-[9px] font-black uppercase tracking-widest text-gray-500">Preset JS - klik untuk pakai</div>
                       {JS_PRESETS.map(p => (
-                        <button key={p.label} onClick={()=>updateDraft({ js: p.code, anim: '' })} className={`w-full text-left px-2.5 py-2 border rounded-lg text-[11px] font-bold ${draft.js===p.code ? 'bg-violet-600 text-white border-violet-500' : 'bg-white/5 text-gray-200 border-white/10 hover:bg-white/10'}`}>{p.label}<span className="block text-[10px] font-mono font-normal opacity-70 truncate">{p.code.slice(0, 60)}…</span></button>
+                        <button key={p.label} onClick={()=>updateDraft({ js: p.code, anim: '' })} className={`w-full text-left px-2.5 py-2 border rounded-lg text-[11px] font-bold ${draft.js===p.code ? 'bg-violet-600 border-violet-500' : 'btn-secondary '}`}>{p.label}<span className="block text-[10px] font-mono font-normal opacity-70 truncate">{p.code.slice(0, 60)}…</span></button>
                       ))}
                       <div className="text-[10px] text-gray-500 leading-relaxed pt-1">Pakai <code className="bg-white/10 px-1 rounded">el</code> - <code className="bg-white/10 px-1 rounded">el.animate([...], {"{duration:400}"})</code>. Ketik <code className="bg-white/10 px-1 rounded">el</code> di kanan untuk autocomplete.</div>
                       {draft.js ? <button onClick={()=>updateDraft({ js:'' })} className="text-[10px] text-red-400 underline">Hapus JS, pakai CSS</button> : null}
@@ -886,7 +886,7 @@ function EditorContent() {
             </div>
 
             <div className="flex gap-2 px-4 py-3 border-t border-white/10 bg-[#252526] shrink-0">
-              <button onClick={closeModal} className="flex-1 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-black uppercase text-gray-300">Batal</button>
+              <button onClick={closeModal} className="flex-1 h-10 rounded-xl btn-secondary border text-[11px] font-black uppercase ">Batal</button>
               <button onClick={saveModal} className="flex-[2] h-10 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-black uppercase flex items-center justify-center gap-1.5"><Check className="w-4 h-4" /> {modalMode === 'create' ? 'Simpan & Tambahkan Layer' : 'Simpan Perubahan'}</button>
             </div>
           </div>

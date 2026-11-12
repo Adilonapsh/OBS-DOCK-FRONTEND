@@ -106,9 +106,9 @@ function InfoSlidesInner() {
       </div>
       {!obsMode && (
         <div className="fixed bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 backdrop-blur border border-white/10 rounded-full px-3 py-1.5">
-          <button onClick={prev} className="w-7 h-7 grid place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white">‹</button>
+          <button onClick={prev} className="w-7 h-7 grid place-items-center rounded-full btn-secondary ">‹</button>
           <span className="text-white font-black text-[11px] px-2 grid place-items-center">{index + 1} / {total} • {duration}s</span>
-          <button onClick={next} className="w-7 h-7 grid place-items-center rounded-full bg-white text-black hover:bg-zinc-100">›</button>
+          <button onClick={next} className="w-7 h-7 grid place-items-center rounded-full btn-primary ">›</button>
         </div>
       )}
     </>

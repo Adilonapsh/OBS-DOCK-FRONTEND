@@ -23,13 +23,13 @@ export function PositionPicker({
           const active = cur === p.value;
           return (
             <button
-              key={p.value}
-              type="button"
-              onClick={() => onChange(p.value)}
-              title={p.label}
-              className={`w-9 h-9 rounded-lg border text-[10px] font-black uppercase transition-all
-                ${active ? 'bg-white text-black border-white shadow' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
-            >
+ key={p.value}
+ type="button"
+ onClick={() => onChange(p.value)}
+ title={p.label}
+ className={`w-9 h-9 rounded-lg border text-[10px] font-black uppercase transition-all
+ ${active ? 'btn-primary shadow' : 'btn-secondary '}`}
+ >
               {p.value === 'center' ? '•' : p.value.toUpperCase()}
             </button>
           );

@@ -39,8 +39,8 @@ function GoalsSettingsInner() {
         subtitle="Goal progress untuk Follow / Subs / Like / Donasi - donation goal otomatis dari donation logs, live update dari livestream"
         headerActions={
           <>
-            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-gray-300">Load URL</button>
-            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-xl text-[10px] font-black uppercase hover:bg-zinc-100"><ExternalLink className="w-3 h-3" /> Preview</a>
+            <button onClick={() => shell.setShowLoadPopup(true)} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-xl text-[10px] font-black uppercase ">Load URL</button>
+            <a href={previewUrl} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 btn-primary rounded-xl text-[10px] font-black uppercase "><ExternalLink className="w-3 h-3" /> Preview</a>
           </>
         }
         urlBar={<UrlBar obsUrl={obsUrl} showKey={shell.showKey} onToggleKey={() => toggleShowKey(shell, obsUrl)} copied={shell.copied} onCopy={handleCopy} />}
@@ -56,9 +56,9 @@ function GoalsSettingsInner() {
             </div>
             <div className="mt-2 text-[10px] text-gray-500 text-center">{state.goalType === 'donation' ? <>Preview donasi memakai total <code className="bg-white/10 px-1 rounded text-white">donation logs</code> - data real di OBS (<code className="bg-white/10 px-1 rounded text-white">.../goals/display?obs=1</code>).</> : <>Live preview via iframe (<code className="bg-white/10 px-1 rounded text-white">simulate=1</code>) - data real di OBS (<code className="bg-white/10 px-1 rounded text-white">.../goals/display?obs=1</code>).</>}</div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-              <a href={obsUrl} target="_blank" className="h-9 bg-white text-black rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
-              <Link href="/widgets" className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white">Widgets</Link>
-              <button onClick={() => window.open(previewUrl, '_blank')} className="h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black uppercase flex items-center justify-center gap-1.5 text-white"><ExternalLink className="w-3 h-3" /> Popout</button>
+              <a href={obsUrl} target="_blank" className="h-9 btn-primary rounded-xl font-black uppercase flex items-center justify-center gap-1.5"><Monitor className="w-3 h-3" /> Buka OBS (real)</a>
+              <Link href="/widgets" className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 ">Widgets</Link>
+              <button onClick={() => window.open(previewUrl, '_blank')} className="h-9 btn-secondary border rounded-xl font-black uppercase flex items-center justify-center gap-1.5 "><ExternalLink className="w-3 h-3" /> Popout</button>
             </div>
           </>
         }

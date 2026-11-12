@@ -106,7 +106,6 @@ function LoginContent() {
     return (
         <AuthLayout
             title="Masuk"
-            badge="Dock"
             subtitle="Masuk dengan akun terdaftar untuk melanjutkan."
             footer={
                 <>

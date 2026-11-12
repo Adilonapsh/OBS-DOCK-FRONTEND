@@ -38,16 +38,16 @@ export default function ConfirmModal({
               <h2 className="text-white font-black text-[13px] uppercase tracking-wide">{title}</h2>
               <p className="text-[11px] text-gray-400 leading-relaxed mt-1">{description}</p>
             </div>
-            <button onClick={onClose} className="shrink-0 w-7 h-7 grid place-items-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white">
+            <button onClick={onClose} className="shrink-0 w-7 h-7 grid place-items-center rounded-full btn-secondary ">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
         <div className="px-6 py-4 bg-black/20 border-t border-white/5 flex gap-3">
           <button
-            onClick={onClose}
-            className="flex-1 h-9 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-bold text-gray-300 hover:text-white transition-colors"
-          >
+ onClick={onClose}
+ className="flex-1 h-9 btn-secondary border rounded-xl text-[11px] font-bold transition-colors"
+ >
             {cancelLabel}
           </button>
           <button
@@ -58,7 +58,7 @@ export default function ConfirmModal({
             className={`flex-1 h-9 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors ${
               variant === "danger"
                 ? "bg-red-600 hover:bg-red-500 text-white"
-                : "bg-white hover:bg-zinc-100 text-black"
+                : "btn-primary"
             }`}
           >
             {confirmLabel}

@@ -5,7 +5,6 @@ import Logo from "../../components/Logo";
 type AuthLayoutProps = {
   title: string;
   subtitle: string;
-  badge?: string;
   brandTitle?: string;
   children: ReactNode;
   footer?: ReactNode;
@@ -15,7 +14,6 @@ type AuthLayoutProps = {
 export default function AuthLayout({
   title,
   subtitle,
-  badge = "Dock",
   brandTitle = "Keluno",
   children,
   footer,
@@ -56,9 +54,6 @@ export default function AuthLayout({
         {/* Mobile Logo */}
         <div className="lg:hidden flex items-center gap-2 p-6 sm:p-8">
           <Image src="/assets/logo/Keluno_Wordmark.webp" alt={brandTitle} width={200} height={81} className="h-10 w-auto object-contain" />
-          <span className="ml-auto px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-            {badge}
-          </span>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-6 sm:px-12 lg:px-16 xl:px-24 py-8 lg:py-12">
@@ -67,9 +62,6 @@ export default function AuthLayout({
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl font-bold tracking-tight text-slate-900">{title}</h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wider border border-slate-200">
-                  {badge}
-                </span>
               </div>
               <p className="text-sm text-slate-500">{subtitle}</p>
             </div>
