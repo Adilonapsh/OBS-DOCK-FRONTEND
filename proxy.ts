@@ -13,6 +13,17 @@ import {
 } from '@/lib/auth'
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Supabase kadang mengirim ?code= ke halaman selain /auth/confirm
+  // (mis. emailRedirectTo lama = /login, atau Site URL diset ke /login).
+  // Tukar code di satu tempat saja supaya user langsung dapat session.
+  if (request.nextUrl.searchParams.has('code') && pathname !== '/auth/confirm') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/confirm'
+    return NextResponse.redirect(url)
+  }
+
   const supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -60,8 +71,6 @@ export async function proxy(request: NextRequest) {
     // Kalau kolom is_active belum ada / query error, jangan kunci user.
     isActive = error ? true : profileRow?.is_active !== false
   }
-
-  const pathname = request.nextUrl.pathname
 
   // Akun diblokir/nonaktif hanya boleh melihat halaman /blocked.
   if (user && !isActive) {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import LandingPage from "./landing-page";
 
 // Ganti dengan domain produksi bila sudah live (dipakai canonical + Open Graph).
@@ -80,7 +81,24 @@ const JSON_LD = {
   url: SITE_URL,
 };
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+
+  // Jaring pengaman: kalau Supabase tidak menemukan redirect_to yang cocok,
+  // ia membuang user (beserta ?code=) ke Site URL = root. Teruskan ke
+  // /auth/confirm supaya session tetap dibuat dan user mendarat di dashboard.
+  if (typeof params.code === "string" || typeof params.error === "string") {
+    const qs = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value === "string") qs.set(key, value);
+    }
+    redirect(`/auth/confirm?${qs.toString()}`);
+  }
+
   return (
     <>
       <script

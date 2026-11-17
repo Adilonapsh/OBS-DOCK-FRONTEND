@@ -31,10 +31,16 @@ export default function GoogleAuthButton({
         setLoading(true);
         try {
             const supabase = createClient();
+            // Tujuan setelah login disimpan di cookie, BUKAN di query string.
+            // Supabase mencocokkan redirect_to apa adanya dengan daftar
+            // "Redirect URLs"; URL tanpa query paling aman (tidak pernah
+            // jatuh ke fallback Site URL = landing page).
+            const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
+            document.cookie = `oauth_next=${encodeURIComponent(safeNext)}; Path=/; Max-Age=600; SameSite=Lax`;
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`,
+                    redirectTo: `${window.location.origin}/auth/confirm`,
                 },
             });
             if (error) {

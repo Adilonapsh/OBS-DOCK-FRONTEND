@@ -18,11 +18,26 @@ function LoginContent() {
     const next = searchParams.get("next") || "/dashboard";
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(() =>
-        searchParams.get("error") === "oauth"
-            ? "Login Google dibatalkan atau gagal. Pastikan provider Google aktif di Supabase Dashboard → Authentication → Providers, lalu coba lagi."
-            : ""
-    );
+    const [error, setError] = useState(() => {
+        const errParam = searchParams.get("error");
+        if (!errParam) return "";
+        // Detail dari Supabase (lihat app/auth/confirm/route.ts) supaya
+        // penyebab sebenarnya kelihatan, bukan cuma pesan generik.
+        const code = searchParams.get("error_code") || (errParam !== "oauth" ? errParam : "");
+        const desc = searchParams.get("error_description") || "";
+        const detail = [code && `kode: ${code}`, desc && `detail: ${desc}`].filter(Boolean).join(" • ");
+        let msg = "Login Google dibatalkan atau gagal.";
+        if (code === "access_denied") {
+            msg = "Izin Google ditolak. Kalau tadi kamu tidak menekan Cancel, berarti akun Google ini belum terdaftar sebagai Test user di OAuth consent screen (mode Testing) — tambahkan emailnya atau publish app-nya di Google Cloud Console.";
+        } else if (/Database error saving new user/i.test(desc)) {
+            msg = "Pendaftaran ditolak database: trigger handle_new_user gagal saat membuat profil. Jalankan supabase/migrations/029_fix_private_key_search_path.sql di SQL Editor Supabase.";
+        } else if (code === "server_error" || /exchange external code|invalid_client/i.test(desc)) {
+            msg = "Google berhasil, tapi Supabase gagal menukar kode. Biasanya Client Secret di Dashboard → Authentication → Providers → Google salah/kedaluwarsa.";
+        } else if (/flow_state|bad_oauth_state|code verifier/i.test(`${code} ${desc}`)) {
+            msg = "Sesi OAuth hilang (cookie pembawa verifier tidak terbaca). Pastikan buka aplikasi di origin yang sama dan cookie tidak diblokir.";
+        }
+        return detail ? `${msg} (${detail})` : msg;
+    });
     const [info, setInfo] = useState(() =>
         searchParams.get("deleted") === "1" ? "Akun kamu sudah dihapus. Sampai jumpa!" : ""
     );

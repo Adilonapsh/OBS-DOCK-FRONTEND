@@ -78,7 +78,11 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  v_private_key text := encode(gen_random_bytes(32), 'hex');
+  -- Jangan pakai gen_random_bytes() di sini: pgcrypto ada di schema
+  -- `extensions` sedangkan fungsi ini dijalankan dengan
+  -- search_path = public, pg_temp (lihat migrations/029).
+  v_private_key text := replace(gen_random_uuid()::text, '-', '')
+                     || replace(gen_random_uuid()::text, '-', '');
 begin
   insert into public.profiles as profile (id, username, email, avatar_url, private_key)
   values (

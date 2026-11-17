@@ -50,7 +50,9 @@ export default function RegisterPage() {
             password: form.password,
             options: {
                 data: { username: form.username.trim() },
-                emailRedirectTo: `${window.location.origin}/login`,
+                // Link konfirmasi email ditukar jadi session di /auth/confirm
+                // (default tujuan /dashboard), bukan berhenti di /login.
+                emailRedirectTo: `${window.location.origin}/auth/confirm`,
             },
         });
 
@@ -63,14 +65,26 @@ export default function RegisterPage() {
             return;
         }
 
+        // Supabase mengembalikan user tanpa identity kalau email sudah terdaftar
+        // (anti-enumeration) -> jangan tampilkan "berhasil daftar".
+        if (data.user && (data.user.identities?.length ?? 0) === 0) {
+            setError("Email ini sudah terdaftar. Silakan masuk lewat halaman login.");
+            setLoading(false);
+            return;
+        }
+
         // jika verifikasi email aktif, session bisa null
         if (data.user && !data.session) {
-            setSuccess("Akun berhasil dibuat. Cek email untuk konfirmasi, lalu masuk.");
+            setSuccess("Akun berhasil dibuat. Cek email untuk konfirmasi — link di email langsung mengaktifkan sesi dan membuka dashboard.");
         } else {
             localStorage.setItem("obs-login", JSON.stringify({ email: form.email.trim(), username: form.username.trim(), userId: data.user?.id, loginAt: new Date().toISOString() }));
             localStorage.setItem("isLoggedIn", "true");
             setSuccess("Registrasi berhasil! Mengalihkan ke Dashboard...");
-            setTimeout(() => router.push("/dashboard"), 800);
+            // hard navigation supaya cookie session pasti ikut terbaca middleware
+            setTimeout(() => {
+                router.replace("/dashboard");
+                setTimeout(() => { if (window.location.pathname === "/register") window.location.href = "/dashboard"; }, 800);
+            }, 400);
         }
         setLoading(false);
     };

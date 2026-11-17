@@ -40,7 +40,11 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  v_private_key text := encode(gen_random_bytes(32), 'hex');
+  -- Jangan pakai gen_random_bytes() di sini: pgcrypto ada di schema
+  -- `extensions` sedangkan fungsi ini dijalankan dengan
+  -- search_path = public, pg_temp (lihat migrations/029).
+  v_private_key text := replace(gen_random_uuid()::text, '-', '')
+                     || replace(gen_random_uuid()::text, '-', '');
 begin
   insert into public.profiles (id, username, email, avatar_url, private_key)
   values (
@@ -367,3 +371,59 @@ end;
 $$;
 
 grant execute on function public.update_highlight_viewers_by_private_key(text, text, int, timestamptz) to anon, authenticated;
+
+-- ============================================
+-- Support tickets / bug report
+-- ============================================
+create table if not exists public.support_tickets (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users(id) on delete set null,
+  name text not null default '',
+  email text not null default '',
+  category text not null default 'bug'
+    check (category in ('bug', 'account', 'widget', 'integration', 'feature', 'other')),
+  subject text not null default '',
+  message text not null default '',
+  page_url text,
+  user_agent text,
+  status text not null default 'open'
+    check (status in ('open', 'in_progress', 'resolved')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_support_tickets_created on public.support_tickets(created_at desc);
+create index if not exists idx_support_tickets_status on public.support_tickets(status);
+create index if not exists idx_support_tickets_user on public.support_tickets(user_id);
+
+alter table public.support_tickets enable row level security;
+
+drop trigger if exists trg_support_tickets_updated on public.support_tickets;
+create trigger trg_support_tickets_updated
+  before update on public.support_tickets
+  for each row execute procedure public.set_updated_at();
+
+drop policy if exists "support_tickets_insert_public" on public.support_tickets;
+create policy "support_tickets_insert_public" on public.support_tickets
+  for insert to anon, authenticated
+  with check (
+    char_length(btrim(name)) between 0 and 120
+    and char_length(btrim(email)) between 3 and 200
+    and char_length(btrim(subject)) between 3 and 200
+    and char_length(btrim(message)) between 10 and 5000
+  );
+
+drop policy if exists "support_tickets_admin_select" on public.support_tickets;
+create policy "support_tickets_admin_select" on public.support_tickets
+  for select to authenticated using (public.is_admin());
+
+drop policy if exists "support_tickets_admin_update" on public.support_tickets;
+create policy "support_tickets_admin_update" on public.support_tickets
+  for update to authenticated using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "support_tickets_owner_select" on public.support_tickets;
+create policy "support_tickets_owner_select" on public.support_tickets
+  for select to authenticated using (auth.uid() = user_id);
+
+grant insert on public.support_tickets to anon, authenticated;
+grant select, update on public.support_tickets to authenticated;
