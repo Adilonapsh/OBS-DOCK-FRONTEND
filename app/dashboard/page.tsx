@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Monitor, LayoutDashboard, LogOut, Key, Copy, RefreshCw, Users, MessageSquare, Gift, Zap, BarChart3, Settings, ExternalLink, Menu, Eye, EyeOff, Layers, Palette } from "lucide-react";
+import { Monitor, LayoutDashboard, LogOut, Key, Copy, RefreshCw, Users, MessageSquare, Gift, Zap, BarChart3, Settings, ExternalLink, Menu, Eye, EyeOff, Layers, Palette, Rocket } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { logoutToLogin } from "@/utils/logout";
 import { getOrCreatePrivateKey, regeneratePrivateKey } from "@/utils/privateKey";
 import Sidebar from "../components/Sidebar";
 import Highlights from "./components/Highlights";
+import OnboardingChecklist from "./components/OnboardingChecklist";
 import ConfirmModal from "../components/ConfirmModal";
 import ThemeToggle from "../components/ThemeToggle";
 import { gooeyToast } from "goey-toast";
@@ -66,6 +67,21 @@ export default function DashboardPage() {
         if (privateKey) { await navigator.clipboard.writeText(privateKey); setCopied(true); setTimeout(() => setCopied(false), 1500); }
     };
 
+    // Setelah register, arahkan ke /dashboard?welcome=1. Tampilkan sapaan sekali
+    // lalu bersihkan query supaya tidak muncul lagi saat refresh.
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("welcome") !== "1") return;
+
+        gooeyToast.success("Selamat datang di Keluno! Selesaikan checklist setup di bawah.");
+        window.history.replaceState({}, "", "/dashboard");
+        const timer = window.setTimeout(() => {
+            document.getElementById("onboarding")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 350);
+        return () => window.clearTimeout(timer);
+    }, []);
+
     const handleLogout = async () => {
         await logoutToLogin(supabase);
     };
@@ -94,6 +110,8 @@ export default function DashboardPage() {
             </header>
 
             <main className="flex-1 p-4 md:p-6 max-w-8xl w-full mx-auto space-y-6">
+                <OnboardingChecklist userId={user?.id} />
+
                 <div className="bg-[#161616] border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="font-black text-[18px] tracking-tight">Halo, {(user?.user_metadata as any)?.username || user?.email?.split("@")[0] || "Streamer"}</h1>
@@ -162,6 +180,13 @@ export default function DashboardPage() {
                 <div className="bg-[#161616] border border-white/10 rounded-xl p-4 flex items-center justify-between">
                     <span className="text-[10px] text-gray-600 font-bold uppercase">© 2026 Keluno</span>
                     <div className="flex items-center gap-3 text-[10px] font-black uppercase">
+                        <button
+                            type="button"
+                            onClick={() => window.dispatchEvent(new Event("keluno:onboarding-open"))}
+                            className="text-gray-200 hover:text-white flex items-center gap-1"
+                        >
+                            <Rocket className="w-3 h-3" /> Panduan
+                        </button>
                         <Link href="/dock" className="text-gray-200 hover:text-white flex items-center gap-1"><Settings className="w-3 h-3" /> Dock</Link>
                     </div>
                 </div>

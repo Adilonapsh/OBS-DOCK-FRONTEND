@@ -513,7 +513,7 @@ export default function ConfigPage() {
         try {
             const ws = new WebSocket(wsUrl);
             const timeout = setTimeout(() => { ws.close(); gooeyToast.error("OBS timeout"); setTesting(null); }, 4000);
-            ws.onopen = () => { clearTimeout(timeout); ws.close(); gooeyToast.success("OBS terhubung!"); setTesting(null); };
+            ws.onopen = () => { clearTimeout(timeout); ws.close(); gooeyToast.success("OBS terhubung!"); try { localStorage.setItem("keluno:obs-connected", "1"); } catch { } setTesting(null); };
             ws.onerror = () => { clearTimeout(timeout); gooeyToast.error("OBS gagal terhubung"); setTesting(null); };
         } catch (e: any) { gooeyToast.error(e.message); setTesting(null); }
     };
@@ -524,7 +524,7 @@ export default function ConfigPage() {
         try {
             const ws = new WebSocket(wsUrl);
             const timeout = setTimeout(() => { ws.close(); gooeyToast.error("Streamer.bot timeout"); setTesting(null); }, 4000);
-            ws.onopen = () => { clearTimeout(timeout); ws.close(); gooeyToast.success("Streamer.bot terhubung!"); setTesting(null); };
+            ws.onopen = () => { clearTimeout(timeout); ws.close(); gooeyToast.success("Streamer.bot terhubung!"); try { localStorage.setItem("keluno:streamerbot-connected", "1"); } catch { } setTesting(null); };
             ws.onerror = () => { clearTimeout(timeout); gooeyToast.error("Streamer.bot gagal"); setTesting(null); };
         } catch (e: any) { gooeyToast.error(e.message); setTesting(null); }
     };

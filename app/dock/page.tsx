@@ -7,7 +7,7 @@ import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2, Gamepad2,
     RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus, GripVertical,
-    Share2, ListPlus, ListChecks, Check, Clock, Calendar, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX, Heart
+    Share2, ListPlus, ListChecks, Check, Clock, Calendar, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -2289,6 +2289,8 @@ export default function Home() {
             tkSocketRef.current.on("tiktok-connected", (payload: any) => {
                 setTiktokStatus("CONNECTED");
                 setTiktokError(null);
+                // Penanda onboarding: akun TikTok berhasil terhubung di browser ini.
+                try { localStorage.setItem("keluno:tiktok-connected", "1"); } catch { }
                 // Catat waktu connect stabil - dipakai auto-retry untuk reset hitungan
                 // percobaan kalau koneksi sebelumnya bertahan lama.
                 tkConnectedAtRef.current = Date.now();
@@ -3195,6 +3197,8 @@ export default function Home() {
 
                 if (data.op === 2) {
                     setStatus(prev => ({ ...prev, obsStatus: "CONNECTED" }));
+                    // Penanda onboarding: OBS benar-benar terautentikasi (bukan cuma config disimpan).
+                    try { localStorage.setItem("keluno:obs-connected", "1"); } catch { }
                     socket.send(JSON.stringify({ op: 6, d: { requestType: "GetVideoSettings", requestId: "get_fps" } }));
                     socket.send(JSON.stringify({ op: 6, d: { requestType: "GetStudioModeEnabled", requestId: "get_studio_mode" } }));
                     socket.send(JSON.stringify({ op: 6, d: { requestType: "GetVirtualCamStatus", requestId: "get_virtual_cam" } }));
@@ -3985,17 +3989,6 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => {
-                            const key = privateKey || readStoredDockKey(true);
-                            const href = key && key !== "global" ? `/songs?key=${encodeURIComponent(key)}` : "/songs";
-                            window.open(href, "_blank", "noopener,noreferrer");
-                        }}
-                        title="Buka halaman Liked Songs & Blacklist"
-                        className={`${headerControlClass}`}>
-                        <Heart className="w-3 h-3 text-rose-400" />
-                        Songs
-                    </button>
                     <div className="relative z-40 inline-block text-left">
                         <button
                             onClick={() => setDropdownOpen({ ...dropdownOpen, streamTools: !dropdownOpen.streamTools })}

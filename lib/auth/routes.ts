@@ -26,6 +26,7 @@ export const ROUTE_PERMISSIONS: ReadonlyArray<{
   { path: '/donations', permission: PERMISSIONS.DONATION_READ },
   { path: '/integrations', permission: PERMISSIONS.INTEGRATION_MANAGE },
   { path: '/connection', permission: PERMISSIONS.CONNECTION_MANAGE },
+  { path: '/connections', permission: PERMISSIONS.CONNECTION_MANAGE },
   { path: '/config', permission: PERMISSIONS.CONNECTION_MANAGE },
   { path: '/account', permission: PERMISSIONS.ACCOUNT_MANAGE },
   { path: '/overlay', permission: PERMISSIONS.WIDGET_READ },

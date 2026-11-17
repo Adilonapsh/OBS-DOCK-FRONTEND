@@ -494,7 +494,7 @@ function EditorContent() {
     : '';
   const previewUrl = obsUrl ? `${obsUrl.replace('&obs=1', '')}${obsUrl.includes('?') ? '&' : '?'}simulate=1` : '#';
 
-  const handleCopy = async () => { if (!obsUrl) return; await navigator.clipboard.writeText(obsUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+  const handleCopy = async () => { if (!obsUrl) return; await navigator.clipboard.writeText(obsUrl); try { localStorage.setItem("keluno:overlay-copied", "1"); } catch { } setCopied(true); setTimeout(() => setCopied(false), 1500); };
   const handleSave = async () => {
     localStorage.setItem('custom-overlay-layers', JSON.stringify(layers));
     try {

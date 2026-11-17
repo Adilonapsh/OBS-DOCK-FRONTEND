@@ -141,6 +141,7 @@ function EditorContent() {
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(obsUrl);
+    try { localStorage.setItem("keluno:overlay-copied", "1"); } catch { }
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };

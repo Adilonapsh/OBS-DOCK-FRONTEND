@@ -375,6 +375,7 @@ function OverlayListing() {
 
   const handleCopy = async (id: string, url: string) => {
     await navigator.clipboard.writeText(url);
+    try { localStorage.setItem("keluno:overlay-copied", "1"); } catch { }
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 1500);
   };

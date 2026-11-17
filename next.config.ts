@@ -15,6 +15,17 @@ const nextConfig: NextConfig = {
         destination: "/connection/:path*",
         permanent: true,
       },
+      {
+        // Alias yang dipakai link onboarding / halaman lain.
+        source: "/connections",
+        destination: "/connection",
+        permanent: false,
+      },
+      {
+        source: "/connections/:path*",
+        destination: "/connection/:path*",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {

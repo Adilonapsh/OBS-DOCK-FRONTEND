@@ -546,6 +546,11 @@ html.light .text-gray-600 {
   color: #475569 !important;
 }
 
+/* aksen biru muda yang dipakai badge/checklist jadi biru tua di light mode */
+html.light .text-\[\#7db9e8\] {
+  color: #005ea6 !important;
+}
+
 html.light .g-stage .text-white {
   color: #fff !important;
 }

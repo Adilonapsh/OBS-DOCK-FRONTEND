@@ -1110,7 +1110,7 @@ function WidgetsListing() {
                       <a
  href={urlObs}
  draggable
- onDragStart={(e) => { e.dataTransfer.setData('text/plain', urlObs); e.dataTransfer.setData('text/uri-list', urlObs); e.dataTransfer.effectAllowed = 'copy'; }}
+ onDragStart={(e) => { try { localStorage.setItem('keluno:overlay-copied', '1'); } catch { }; e.dataTransfer.setData('text/plain', urlObs); e.dataTransfer.setData('text/uri-list', urlObs); e.dataTransfer.effectAllowed = 'copy'; }}
  title="Tahan & drag langsung ke OBS Sources"
  className="mt-1.5 h-8 flex items-center justify-center gap-1.5 btn-primary border border-dashed border-zinc-300 rounded-xl text-[9px] font-black uppercase cursor-grab active:cursor-grabbing select-none"
  >

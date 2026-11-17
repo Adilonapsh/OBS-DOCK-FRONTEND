@@ -51,8 +51,8 @@ export default function RegisterPage() {
             options: {
                 data: { username: form.username.trim() },
                 // Link konfirmasi email ditukar jadi session di /auth/confirm
-                // (default tujuan /dashboard), bukan berhenti di /login.
-                emailRedirectTo: `${window.location.origin}/auth/confirm`,
+                // (default tujuan /dashboard?welcome=1 agar checklist setup muncul).
+                emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent("/dashboard?welcome=1")}`,
             },
         });
 
@@ -82,8 +82,8 @@ export default function RegisterPage() {
             setSuccess("Registrasi berhasil! Mengalihkan ke Dashboard...");
             // hard navigation supaya cookie session pasti ikut terbaca middleware
             setTimeout(() => {
-                router.replace("/dashboard");
-                setTimeout(() => { if (window.location.pathname === "/register") window.location.href = "/dashboard"; }, 800);
+                router.replace("/dashboard?welcome=1");
+                setTimeout(() => { if (window.location.pathname === "/register") window.location.href = "/dashboard?welcome=1"; }, 800);
             }, 400);
         }
         setLoading(false);
@@ -254,7 +254,7 @@ export default function RegisterPage() {
 
             {/* Alternative Signups */}
             <div className="space-y-3">
-                <GoogleAuthButton next="/dashboard" label="Daftar dengan Google" onError={setError} />
+                <GoogleAuthButton next="/dashboard?welcome=1" label="Daftar dengan Google" onError={setError} />
 
                 <button
                     type="button"
