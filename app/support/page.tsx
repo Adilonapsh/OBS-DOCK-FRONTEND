@@ -355,7 +355,7 @@ export default function SupportPage() {
           <div className="bg-[#161616] border border-white/10 rounded-2xl p-4">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-white mb-2">Link penting</h3>
             <div className="flex flex-col gap-1.5">
-              <Link href="/#faq" className="text-[11px] font-bold text-gray-400 hover:text-white transition-colors">FAQ</Link>
+              <Link href="/faq" className="text-[11px] font-bold text-gray-400 hover:text-white transition-colors">FAQ</Link>
               <Link href="/terms" className="text-[11px] font-bold text-gray-400 hover:text-white transition-colors">Syarat & Ketentuan</Link>
               <Link href="/privacy" className="text-[11px] font-bold text-gray-400 hover:text-white transition-colors">Kebijakan Privasi</Link>
             </div>
@@ -366,7 +366,7 @@ export default function SupportPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex">
+    <div className="min-h-screen bg-[#0a0a0a] flex">
       {user && <Sidebar active="support" open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />}
 
       <div className={`flex-1 flex flex-col min-w-0 ${user ? 'lg:pl-[240px]' : ''}`}>

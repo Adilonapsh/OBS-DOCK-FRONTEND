@@ -192,6 +192,7 @@ export default function Sidebar({
       return !required || loading || can(required);
     });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [openTickets, setOpenTickets] = useState(0);
 
   // Grouping: Tools (Dock/Monitor/Widgets/Songs), Setup (Connection), Integrasi (Streamer.bot)
   const toolsHrefs = new Set(["/dock", "/monitor", "/widgets", "/songs"]);
@@ -227,6 +228,44 @@ export default function Sidebar({
     };
     loadAvatar();
   }, [supabase, user?.id, userMeta?.avatar_url]);
+
+  // Badge jumlah tiket support yang masih OPEN (khusus admin).
+  useEffect(() => {
+    if (!isAdmin || loading) {
+      setOpenTickets(0);
+      return;
+    }
+
+    let active = true;
+    let interval: number | null = null;
+
+    const loadOpenTickets = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("support_tickets")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "open");
+        if (!active || error) return;
+        setOpenTickets(count ?? 0);
+      } catch {
+        // tabel belum ada / offline - badge disembunyikan.
+      }
+    };
+
+    loadOpenTickets();
+    interval = window.setInterval(loadOpenTickets, 60_000);
+
+    const handleRefresh = () => loadOpenTickets();
+    window.addEventListener("focus", handleRefresh);
+    window.addEventListener("keluno:support-tickets-changed", handleRefresh);
+
+    return () => {
+      active = false;
+      if (interval !== null) window.clearInterval(interval);
+      window.removeEventListener("focus", handleRefresh);
+      window.removeEventListener("keluno:support-tickets-changed", handleRefresh);
+    };
+  }, [isAdmin, loading, supabase]);
 
   const handleLogout = async () => {
     await logoutToLogin(supabase);
@@ -345,6 +384,16 @@ export default function Sidebar({
                 }`}
               >
                 <LifeBuoy className="w-4 h-4" /> Support Tickets
+                {openTickets > 0 && (
+                  <span
+                    className={`ml-auto min-w-[18px] h-[18px] px-1 rounded-full grid place-items-center text-[9px] font-black leading-none ${
+                      active === "admin-support" ? "bg-black/25 text-black" : "bg-amber-400 text-black"
+                    }`}
+                    title={`${openTickets} tiket open`}
+                  >
+                    {openTickets > 99 ? "99+" : openTickets}
+                  </span>
+                )}
               </Link>
             </div>
           )}

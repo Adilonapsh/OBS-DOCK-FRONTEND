@@ -713,12 +713,30 @@ html.light .text-blue-400 {
   color: #2563eb !important;
 }
 
+/* badge status tiket support */
+html.light .text-blue-300 {
+  color: #1d4ed8 !important;
+}
+
 html.light .text-green-400 {
   color: #15803d !important;
 }
 
 html.light .text-red-400 {
   color: #dc2626 !important;
+}
+
+/* dipakai di form support / pesan status */
+html.light .text-red-300 {
+  color: #b91c1c !important;
+}
+
+html.light .text-emerald-300 {
+  color: #047857 !important;
+}
+
+html.light .text-emerald-400 {
+  color: #059669 !important;
 }
 
 html.light .text-pink-400 {

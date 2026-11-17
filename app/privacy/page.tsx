@@ -19,7 +19,7 @@ function Section({ no, title, children }: { no: string; title: string; children:
 
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <div className="min-h-screen bg-[#0a0a0a]">
             <div className="max-w-3xl mx-auto px-5 py-10 sm:py-14">
                 <Link href="/" className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors mb-8">
                     <ArrowLeft className="w-3.5 h-3.5" /> Kembali
