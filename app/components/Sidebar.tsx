@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
-import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Grid2x2, Plug, Wallet2, Shield, ScrollText } from "lucide-react";
+import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Grid2x2, Plug, Wallet2, Shield, ScrollText, Music } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { logoutToLogin } from "@/utils/logout";
 import { PERMISSIONS, type Permission } from "@/lib/auth";
@@ -19,6 +19,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
@@ -31,6 +32,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
@@ -43,6 +45,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video, active: true },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
@@ -55,6 +58,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
@@ -67,6 +71,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
@@ -80,6 +85,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
@@ -92,6 +98,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers, active: true },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
@@ -104,6 +111,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2, active: true },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
@@ -114,7 +122,19 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/dock", label: "Dock", icon: Monitor },
     { href: "/monitor", label: "Monitor", icon: Video },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2, active: true },
+    { href: "/integrations", label: "Streamer.bot", icon: Plug },
+    { href: "/account", label: "Account", icon: UserCog },
+    { href: "/connection", label: "Connection", icon: Wifi },
+  ],
+  songs: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dock", label: "Dock", icon: Monitor },
+    { href: "/monitor", label: "Monitor", icon: Video },
+    { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music, active: true },
+    { href: "/donations", label: "Donasi", icon: Wallet2 },
     { href: "/integrations", label: "Streamer.bot", icon: Plug },
     { href: "/account", label: "Account", icon: UserCog },
     { href: "/connection", label: "Connection", icon: Wifi },
@@ -125,6 +145,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/monitor", label: "Monitor", icon: Video },
     // { href: "/overlay", label: "Overlay", icon: Layers },
     { href: "/widgets", label: "Widgets", icon: Grid2x2 },
+    { href: "/songs", label: "Songs", icon: Music },
     { href: "/donations", label: "Donasi", icon: Wallet2 },
     // { href: "/designer", label: "Designer", icon: Layers },
     { href: "/integrations", label: "Streamer.bot", icon: Plug, active: true },
@@ -139,6 +160,7 @@ const NAV_PERMISSIONS: Record<string, Permission> = {
   "/dock": PERMISSIONS.DOCK_CONTROL,
   "/monitor": PERMISSIONS.WORKSPACE_VIEW,
   "/widgets": PERMISSIONS.WIDGET_READ,
+  "/songs": PERMISSIONS.DOCK_CONTROL,
   "/donations": PERMISSIONS.DONATION_READ,
   "/integrations": PERMISSIONS.INTEGRATION_MANAGE,
   "/account": PERMISSIONS.ACCOUNT_MANAGE,
@@ -152,7 +174,7 @@ export default function Sidebar({
   onClose,
   user,
 }: {
-  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "integrations" | "designer" | "donations" | "admin" | "admin-audit";
+  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "songs" | "integrations" | "designer" | "donations" | "admin" | "admin-audit";
   open: boolean;
   onClose: () => void;
   user?: Pick<User, "id" | "email" | "user_metadata"> | null;
@@ -171,15 +193,15 @@ export default function Sidebar({
     });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // Grouping: Tools (Dock/Monitor/Widgets), Setup (Connection), Integrasi (Streamer.bot)
-  const toolsHrefs = new Set(["/dock", "/monitor", "/widgets"]);
+  // Grouping: Tools (Dock/Monitor/Widgets/Songs), Setup (Connection), Integrasi (Streamer.bot)
+  const toolsHrefs = new Set(["/dock", "/monitor", "/widgets", "/songs"]);
   const setupHrefs = new Set(["/connection"]);
   const integrationHrefs = new Set(["/integrations"]);
   const mainItems = items.filter((i) => !toolsHrefs.has(i.href) && !setupHrefs.has(i.href) && !integrationHrefs.has(i.href) && i.href !== "/account");
   const toolsItems = items
     .filter((i) => toolsHrefs.has(i.href))
     .sort((a, b) => {
-      const order = ["/dock", "/monitor", "/widgets"];
+      const order = ["/dock", "/monitor", "/widgets", "/songs"];
       return order.indexOf(a.href) - order.indexOf(b.href);
     });
   const setupItems = items

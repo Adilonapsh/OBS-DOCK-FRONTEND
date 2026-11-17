@@ -165,6 +165,7 @@ export const config = {
     '/donations/:path*',
     '/overlay/:path*',
     '/widgets/:path*',
+    '/songs/:path*',
     '/designer/:path*',
     '/login',
     '/register',

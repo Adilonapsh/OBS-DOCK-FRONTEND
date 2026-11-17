@@ -1,8 +1,12 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { Play, Pause, SkipForward, SkipBack, Trash2, Plus, Music, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Trash2, Plus, Music, GripVertical, ChevronUp, ChevronDown, Heart, ExternalLink, Loader2, Ban, Search, X, History } from 'lucide-react';
 import { getSocketUrl } from '../../widgets/_shared/utils/socket';
+import { useLikedSongs } from '@/app/hooks/useLikedSongs';
+import { useSongBlacklist } from '@/app/hooks/useSongBlacklist';
+import { useSongHistory } from '@/app/hooks/useSongHistory';
+import { parseYouTubeVideoId, type LikedSong } from '@/app/lib/likedSongs';
 
 export type SongItem = {
   id: string;
@@ -97,6 +101,10 @@ export default function MusicControl({
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSearchedRef = useRef('');
   const SEARCH_DEBOUNCE_MS = 600;
+  // Filter daftar Liked Songs (judul / channel / catatan).
+  const [likedQuery, setLikedQuery] = useState('');
+  // Filter riwayat lagu yang sudah diputar.
+  const [historyQuery, setHistoryQuery] = useState('');
   const [lyrics, setLyrics] = useState<{ synced: LyricLine[]; plain: string }>({ synced: [], plain: '' });
   const [lyricsFor, setLyricsFor] = useState('');
   // Posisi drag slider (seek) - dikirim ke server saat dilepas agar tidak spam.
@@ -126,6 +134,33 @@ export default function MusicControl({
   // sehingga refresh dock tidak pernah kehilangan queue.
   // Filter by room: backend broadcast global, jadi abaikan update milik room lain.
   const room = getRoom();
+  // Liked Songs per private key (RPC) atau per akun login (RLS).
+  const {
+    songs: likedSongs,
+    loading: likedLoading,
+    saving: likedSaving,
+    error: likedError,
+    addLiked,
+    removeLiked,
+    findLiked,
+  } = useLikedSongs(room);
+  const {
+    saving: blacklistSaving,
+    error: blacklistError,
+    addBlacklisted,
+    removeBlacklisted,
+    findBlacklisted,
+    isBlacklisted,
+  } = useSongBlacklist(room);
+  const {
+    items: history,
+    loading: historyLoading,
+    saving: historySaving,
+    error: historyError,
+    refresh: refreshHistory,
+    removeEntry: removeHistoryEntry,
+    clearHistory,
+  } = useSongHistory(room);
   useEffect(() => {
     const s = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
     socketRef.current = s;
@@ -165,6 +200,31 @@ export default function MusicControl({
   const getSocket = () => socketRef.current;
 
   const current = song && song.queue.length > 0 ? song.queue[Math.min(song.currentIndex, song.queue.length - 1)] : null;
+  const currentLiked = current ? findLiked(current.url) : undefined;
+  const currentBlocked = current ? findBlacklisted(current.url, current.videoId) : undefined;
+  // Filter Liked Songs tanpa mengubah urutan asli.
+  const filteredLikedSongs = useMemo(() => {
+    const q = likedQuery.trim().toLowerCase();
+    if (!q) return likedSongs;
+    return likedSongs.filter((item) =>
+      `${item.title} ${item.channel} ${item.note}`.toLowerCase().includes(q),
+    );
+  }, [likedSongs, likedQuery]);
+  // Filter riwayat lagu.
+  const filteredHistory = useMemo(() => {
+    const q = historyQuery.trim().toLowerCase();
+    if (!q) return history;
+    return history.filter((item) =>
+      `${item.title} ${item.channel} ${item.requestedBy}`.toLowerCase().includes(q),
+    );
+  }, [history, historyQuery]);
+
+  // Server mencatat riwayat saat lagu berganti - tarik ulang tanpa spinner.
+  // Delay kecil supaya RPC pencatatan di backend selesai dulu.
+  useEffect(() => {
+    const timer = setTimeout(() => void refreshHistory({ silent: true }), 1200);
+    return () => clearTimeout(timer);
+  }, [songId, refreshHistory]);
 
   useEffect(() => {
     if (!current || lyricsFor === current.id) return;
@@ -245,6 +305,79 @@ export default function MusicControl({
     setSearching(false);
   };
 
+  // Like / unlike satu lagu (dipakai now-playing + list Choose Song + History).
+  const toggleSongLike = async (item: Pick<SongItem, 'url' | 'videoId' | 'kind' | 'title' | 'requestedBy' | 'platform'>) => {
+    if (likedSaving) return;
+    const liked = findLiked(item.url);
+    if (liked) {
+      await removeLiked(liked.id);
+      return;
+    }
+    try {
+      await addLiked({
+        url: item.url,
+        videoId: item.videoId || parseYouTubeVideoId(item.url),
+        kind: item.kind,
+        title: item.title,
+        requestedBy: item.requestedBy,
+        platform: item.platform,
+      });
+    } catch {
+      // Pesan error sudah disimpan di likedError oleh hook.
+    }
+  };
+
+  const toggleCurrentLike = async () => {
+    if (!current) return;
+    await toggleSongLike(current);
+  };
+
+  // Blacklist / unblacklist lagu yang sedang diputar.
+  const toggleCurrentBlock = async () => {
+    if (!current || blacklistSaving) return;
+    if (currentBlocked) {
+      await removeBlacklisted(currentBlocked.id);
+      return;
+    }
+    try {
+      await addBlacklisted({
+        url: current.url,
+        videoId: current.videoId || parseYouTubeVideoId(current.url),
+        title: current.title,
+        reason: 'Diblokir dari dock',
+      });
+    } catch {
+      // Pesan error sudah disimpan di blacklistError oleh hook.
+    }
+  };
+
+  // Masukkan lagu ke queue room aktif.
+  const queueLikedSong = (liked: Pick<LikedSong, 'url' | 'videoId' | 'title'>) => {
+    if (isBlacklisted(liked.url, liked.videoId)) return;
+    const s = getSocket();
+    if (!s) return;
+    s.emit('song-add', {
+      privateKey: getRoom(),
+      url: liked.url,
+      title: liked.title,
+      requestedBy: dockWho(),
+      platform: 'liked',
+    });
+  };
+
+  const openLikedPage = (tab?: 'history') => {
+    const key = getRoom();
+    const base = key && key !== 'global' ? `/songs?key=${encodeURIComponent(key)}` : '/songs';
+    const href = tab ? `${base}${base.includes('?') ? '&' : '?'}tab=${tab}` : base;
+    window.open(href, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleClearHistory = async () => {
+    if (historySaving) return;
+    if (!window.confirm('Hapus semua riwayat lagu? Tindakan ini tidak bisa dibatalkan.')) return;
+    await clearHistory();
+  };
+
   const dur = song?.duration || 0;
   // Nilai slider: saat di-drag tampilkan posisi drag, selain itu ikuti server.
   const sliderPos = seekDrag ?? Math.min(effPos, Math.max(dur, 0));
@@ -274,6 +407,42 @@ export default function MusicControl({
               </div>
             )}
           </div>
+          {current && (
+            <button
+              onClick={toggleCurrentLike}
+              disabled={likedSaving}
+              className={`shrink-0 h-7 w-7 grid place-items-center rounded-full border transition-colors ${
+                currentLiked
+                  ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
+                  : 'bg-white/5 border-white/10 text-gray-500 hover:text-rose-400 hover:border-rose-500/30'
+              } disabled:opacity-50`}
+              title={currentLiked ? 'Hapus dari Liked Songs' : 'Simpan ke Liked Songs'}
+            >
+              {likedSaving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Heart className={`w-3.5 h-3.5 ${currentLiked ? 'fill-rose-500' : ''}`} />
+              )}
+            </button>
+          )}
+          {current && (
+            <button
+              onClick={toggleCurrentBlock}
+              disabled={blacklistSaving}
+              className={`shrink-0 h-7 w-7 grid place-items-center rounded-full border transition-colors ${
+                currentBlocked
+                  ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
+                  : 'bg-white/5 border-white/10 text-gray-500 hover:text-orange-400 hover:border-orange-500/30'
+              } disabled:opacity-50`}
+              title={currentBlocked ? 'Hapus dari blacklist' : 'Blacklist lagu ini'}
+            >
+              {blacklistSaving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Ban className="w-3.5 h-3.5" />
+              )}
+            </button>
+          )}
           <span className={`text-[9px] font-black uppercase ${song?.isPlaying ? 'text-green-400' : 'text-gray-500'}`}>
             {song?.isPlaying ? 'Play' : 'Stop'}
           </span>
@@ -486,6 +655,24 @@ export default function MusicControl({
                       <ChevronDown className="w-3 h-3" />
                     </button>
                   </span>
+                  {(() => {
+                    const isLiked = !!findLiked(q.url);
+                    return (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void toggleSongLike(q);
+                        }}
+                        disabled={likedSaving}
+                        className={`shrink-0 p-1 transition-colors disabled:opacity-40 ${
+                          isLiked ? 'text-rose-400 hover:text-rose-300' : 'text-gray-600 hover:text-rose-400'
+                        }`}
+                        title={isLiked ? 'Hapus dari Liked Songs' : 'Masukkan ke Liked Songs'}
+                      >
+                        <Heart className={`w-3 h-3 ${isLiked ? 'fill-rose-500' : ''}`} />
+                      </button>
+                    );
+                  })()}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -501,6 +688,236 @@ export default function MusicControl({
             )}
           </div>
         </div>
+      </div>
+
+      {/* Liked Songs - simpan ke Supabase, bisa langsung masuk queue. */}
+      <div className="stat-card space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="text-gray-500 text-[9px] font-black uppercase flex items-center gap-1.5">
+            <Heart className="w-3 h-3 text-rose-400" /> Liked Songs ({likedSongs.length})
+          </h4>
+          <button
+            onClick={() => openLikedPage()}
+            className="flex items-center gap-1 text-[9px] font-black uppercase text-green-400 hover:text-green-300"
+            title="Buka halaman Liked Songs"
+          >
+            Buka page <ExternalLink className="w-3 h-3" />
+          </button>
+        </div>
+        {likedError && (
+          <div className="text-[9px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">
+            {likedError}
+          </div>
+        )}
+        {blacklistError && (
+          <div className="text-[9px] font-bold text-orange-300 bg-orange-500/10 border border-orange-500/20 rounded-lg px-2.5 py-1.5">
+            {blacklistError}
+          </div>
+        )}
+        {likedSongs.length > 0 && (
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
+            <input
+              value={likedQuery}
+              onChange={(e) => setLikedQuery(e.target.value)}
+              placeholder="Cari liked songs…"
+              className="w-full h-8 pl-8 pr-7 bg-white/5 border border-white/10 rounded-lg text-[10px] text-white placeholder:text-gray-600 focus:outline-none focus:border-white/20"
+            />
+            {likedQuery && (
+              <button
+                onClick={() => setLikedQuery('')}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-500 hover:text-white"
+                title="Bersihkan pencarian"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        )}
+        {likedLoading && likedSongs.length === 0 ? (
+          <div className="text-[10px] text-gray-600 italic">Memuat liked songs…</div>
+        ) : likedSongs.length === 0 ? (
+          <div className="text-[10px] text-gray-600 italic">
+            Belum ada lagu. Tekan hati pada lagu yang sedang diputar untuk menyimpannya.
+          </div>
+        ) : filteredLikedSongs.length === 0 ? (
+          <div className="text-[10px] text-gray-600 italic">
+            Tidak ada liked song yang cocok dengan “{likedQuery.trim()}”.
+          </div>
+        ) : (
+          <div className="space-y-1 max-h-[190px] overflow-y-auto custom-scrollbar">
+            {filteredLikedSongs.map((liked) => {
+              const isNowPlaying = !!currentLiked && currentLiked.id === liked.id;
+              const blocked = isBlacklisted(liked.url, liked.videoId);
+              return (
+                <div
+                  key={liked.id}
+                  className={`flex items-center gap-2 p-1.5 rounded-lg border ${
+                    isNowPlaying
+                      ? 'bg-rose-500/10 border-rose-500/25'
+                      : blocked
+                        ? 'bg-orange-500/5 border-orange-500/15'
+                        : 'bg-white/5 border-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  {liked.thumbnail ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={liked.thumbnail} alt="" className="w-9 h-9 rounded object-cover shrink-0" loading="lazy" />
+                  ) : (
+                    <span className="w-9 h-9 rounded bg-white/5 grid place-items-center shrink-0">
+                      <Music className="w-3.5 h-3.5 text-gray-500" />
+                    </span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-bold text-white truncate">{liked.title}</div>
+                    <div className={`text-[8px] truncate ${blocked ? 'text-orange-300/80' : 'text-gray-500'}`}>
+                      {blocked ? 'Diblokir — unblock dulu' : liked.channel || (liked.kind === 'audio' ? 'Audio' : 'YouTube')}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => queueLikedSong(liked)}
+                    disabled={blocked}
+                    className="shrink-0 p-1 text-gray-500 hover:text-green-400 disabled:opacity-30 disabled:hover:text-gray-500"
+                    title={blocked ? 'Lagu ada di blacklist' : 'Tambah ke queue'}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => removeLiked(liked.id)}
+                    disabled={likedSaving}
+                    className="shrink-0 p-1 text-rose-400 hover:text-rose-300 disabled:opacity-40"
+                    title="Hapus dari Liked Songs"
+                  >
+                    <Heart className="w-3 h-3 fill-rose-500" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* History - lagu yang sudah diputar. Satu URL = satu baris (tidak dobel). */}
+      <div className="stat-card space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="text-gray-500 text-[9px] font-black uppercase flex items-center gap-1.5">
+            <History className="w-3 h-3 text-cyan-400" /> History ({history.length})
+          </h4>
+          <div className="flex items-center gap-2">
+            {history.length > 0 && (
+              <button
+                onClick={() => void handleClearHistory()}
+                disabled={historySaving}
+                className="text-[8px] font-black uppercase text-gray-500 hover:text-red-400 disabled:opacity-40"
+                title="Hapus semua riwayat"
+              >
+                Hapus
+              </button>
+            )}
+            <button
+              onClick={() => openLikedPage('history')}
+              className="flex items-center gap-1 text-[9px] font-black uppercase text-green-400 hover:text-green-300"
+              title="Buka halaman riwayat lagu"
+            >
+              Buka page <ExternalLink className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+        {historyError && (
+          <div className="text-[9px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">
+            {historyError}
+          </div>
+        )}
+        {history.length > 0 && (
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
+            <input
+              value={historyQuery}
+              onChange={(e) => setHistoryQuery(e.target.value)}
+              placeholder="Cari history lagu…"
+              className="w-full h-8 pl-8 pr-7 bg-white/5 border border-white/10 rounded-lg text-[10px] text-white placeholder:text-gray-600 focus:outline-none focus:border-white/20"
+            />
+            {historyQuery && (
+              <button
+                onClick={() => setHistoryQuery('')}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-500 hover:text-white"
+                title="Bersihkan pencarian"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        )}
+        {historyLoading && history.length === 0 ? (
+          <div className="text-[10px] text-gray-600 italic">Memuat riwayat lagu…</div>
+        ) : history.length === 0 ? (
+          <div className="text-[10px] text-gray-600 italic">
+            Belum ada lagu yang diputar. Riwayat terisi otomatis saat lagu mulai main.
+          </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="text-[10px] text-gray-600 italic">
+            Tidak ada riwayat yang cocok dengan “{historyQuery.trim()}”.
+          </div>
+        ) : (
+          <div className="space-y-1 max-h-[190px] overflow-y-auto custom-scrollbar">
+            {filteredHistory.map((item) => {
+              const blocked = isBlacklisted(item.url, item.videoId);
+              const isLiked = !!findLiked(item.url);
+              return (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-2 p-1.5 rounded-lg border ${
+                    blocked ? 'bg-orange-500/5 border-orange-500/15' : 'bg-white/5 border-white/5 hover:bg-white/10'
+                  }`}
+                  title={new Date(item.playedAt).toLocaleString('id-ID')}
+                >
+                  {item.thumbnail ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={item.thumbnail} alt="" className="w-9 h-9 rounded object-cover shrink-0" loading="lazy" />
+                  ) : (
+                    <span className="w-9 h-9 rounded bg-white/5 grid place-items-center shrink-0">
+                      <Music className="w-3.5 h-3.5 text-gray-500" />
+                    </span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-bold text-white truncate">{item.title || item.url}</div>
+                    <div className={`text-[8px] truncate ${blocked ? 'text-orange-300/80' : 'text-gray-500'}`}>
+                      {blocked
+                        ? 'Diblokir — unblock dulu'
+                        : `${item.playCount || 1}× diputar${item.channel ? ` • ${item.channel}` : ''}`}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => queueLikedSong(item)}
+                    disabled={blocked}
+                    className="shrink-0 p-1 text-gray-500 hover:text-green-400 disabled:opacity-30 disabled:hover:text-gray-500"
+                    title={blocked ? 'Lagu ada di blacklist' : 'Tambah ke queue'}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => void toggleSongLike(item)}
+                    disabled={likedSaving}
+                    className={`shrink-0 p-1 disabled:opacity-40 ${
+                      isLiked ? 'text-rose-400 hover:text-rose-300' : 'text-gray-500 hover:text-rose-400'
+                    }`}
+                    title={isLiked ? 'Hapus dari Liked Songs' : 'Like lagu ini'}
+                  >
+                    <Heart className={`w-3 h-3 ${isLiked ? 'fill-rose-500' : ''}`} />
+                  </button>
+                  <button
+                    onClick={() => void removeHistoryEntry(item.id)}
+                    disabled={historySaving}
+                    className="shrink-0 p-1 text-gray-600 hover:text-red-400 disabled:opacity-40"
+                    title="Hapus dari riwayat"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -139,22 +139,22 @@ export default function DashboardPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Link href="/dock" className="btn-secondary border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
-                        <Monitor className="w-6 h-6 text-white" />
-                        <h4 className="text-white font-black uppercase text-[11px] mt-3">Dock Control</h4>
+                        <Monitor className="w-6 h-6" />
+                        <h4 className="font-black uppercase text-[11px] mt-3">Dock Control</h4>
                         <p className="text-gray-500 text-[11px] mt-1">OBS Studio Mode & Stream Tools isolasi private key.</p>
-                        <span className="inline-flex items-center gap-1 mt-3 text-[10px] font-black uppercase text-white group-hover:gap-2 transition-all">Buka <ExternalLink className="w-3 h-3" /></span>
+                        <span className="inline-flex items-center gap-1 mt-3 text-[10px] font-black uppercase group-hover:gap-2 transition-all">Buka <ExternalLink className="w-3 h-3" /></span>
                     </Link>
                     <Link href="/widgets" className="btn-secondary border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
-                        <Layers className="w-6 h-6 text-white" />
-                        <h4 className="text-white font-black uppercase text-[11px] mt-3">Widgets</h4>
+                        <Layers className="w-6 h-6" />
+                        <h4 className="font-black uppercase text-[11px] mt-3">Widgets</h4>
                         <p className="text-gray-500 text-[11px] mt-1">Media Player & Lyrics - 11 themes, SMTC Bridge, LRCLIB.</p>
-                        <span className="inline-flex items-center gap-1 mt-3 text-[10px] font-black uppercase text-white group-hover:gap-2 transition-all">Buka <ExternalLink className="w-3 h-3" /></span>
+                        <span className="inline-flex items-center gap-1 mt-3 text-[10px] font-black uppercase group-hover:gap-2 transition-all">Buka <ExternalLink className="w-3 h-3" /></span>
                     </Link>
                     <Link href="/overlay" className="btn-secondary border border-white/10 rounded-2xl p-5 hover:border-white/15 hover:bg-white/[0.03] transition-colors group">
-                        <Palette className="w-6 h-6 text-white" />
-                        <h4 className="text-white font-black uppercase text-[11px] mt-3">Overlays</h4>
+                        <Palette className="w-6 h-6" />
+                        <h4 className="font-black uppercase text-[11px] mt-3">Overlays</h4>
                         <p className="text-gray-500 text-[11px] mt-1">Full / Chat / Gift / Like - editor tema & Browser Source.</p>
-                        <span className="inline-flex items-center gap-1 mt-3 text-[10px] font-black uppercase text-white group-hover:gap-2 transition-all">Buka <ExternalLink className="w-3 h-3" /></span>
+                        <span className="inline-flex items-center gap-1 mt-3 text-[10px] font-black uppercase group-hover:gap-2 transition-all">Buka <ExternalLink className="w-3 h-3" /></span>
                     </Link>
                 </div>
 

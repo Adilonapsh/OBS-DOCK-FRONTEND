@@ -1256,6 +1256,15 @@ html.light .dock-page .btn-secondary:hover {
   color: #0f172a !important;
 }
 
+/* Light mode: teks di dalam tombol sekunder (mis. hasil pencarian lagu)
+   harus ikut gelap - hindari text-white yang tak terbaca di atas panel putih. */
+html.light .dock-page .btn-secondary .text-white,
+html.light .dock-page .btn-secondary .text-white\/90,
+html.light .dock-page .btn-secondary .text-white\/80,
+html.light .dock-page .btn-secondary .text-white\/70 {
+  color: #0f172a !important;
+}
+
 html.light .dock-page .tab-btn {
   background: #f1f5f9 !important;
   color: #334155 !important;

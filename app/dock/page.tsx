@@ -7,7 +7,7 @@ import {
     Radio, ToolCase, Video, UserCog, Monitor, MoveRight, PenLine, BarChart2, Gamepad2,
     RefreshCcw, ChevronDown, ChevronUp, Edit3, X, ChartBar, Zap, MessageSquare, Pin,
     ThumbsUp, Eye, Music, Users, Terminal, Sparkles, Plus, GripVertical,
-    Share2, ListPlus, ListChecks, Check, Clock, Calendar, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX
+    Share2, ListPlus, ListChecks, Check, Clock, Calendar, Search, Pause, Play, SkipForward, RotateCcw, Square, Trash2, EyeOff, Minimize2, Maximize2, Power, Volume2, VolumeX, Heart
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { updateTitle, createPoll } from "../actions/streamerBotActions";
@@ -91,8 +91,27 @@ function YoutubeIcon({ className }: { className?: string }) {
 const CHAT_HISTORY_KEY = "dock-chat-history";
 const CHAT_SESSION_KEY = "dock-chat-session";
 const SESSION_STATS_KEY = "dock-session-stats";
+const DOCK_ARRIVALS_KEY = "dock-arrivals";
 type ChatSession = { username: string; ended: boolean };
+type DockArrivalInfo = { platform: string; avatar?: string; initials: string; at?: number; source?: "chat" | "join" };
 const EMPTY_STATS = { follows: 0, subs: 0, gifts: 0, likes: 0, chats: 0 };
+
+// Logo platform untuk daftar "Siapa yang Datang".
+function platformLogoFor(p?: string): string {
+    const v = String(p || "").toLowerCase();
+    if (v === "twitch") return "/assets/logo/twitch.png";
+    if (v === "youtube" || v === "yt") return "/assets/logo/youtube.png";
+    if (v === "kick") return "/assets/logo/kick.png";
+    return "/assets/logo/tik-tok.png";
+}
+
+// Batasi daftar "Siapa yang Datang" agar tidak tumbuh tanpa batas selama live panjang.
+function capArrivals(data: Record<string, DockArrivalInfo>, max = 100): Record<string, DockArrivalInfo> {
+    const entries = Object.entries(data);
+    if (entries.length <= max) return data;
+    entries.sort((a, b) => (b[1].at ?? 0) - (a[1].at ?? 0));
+    return Object.fromEntries(entries.slice(0, max));
+}
 
 function readChatSession(): ChatSession | null {
     if (typeof window === "undefined") return null;
@@ -242,6 +261,7 @@ export default function Home() {
     const [sbYoutubeConnected, setSbYoutubeConnected] = useState<boolean | null>(null);
     const [twitchLive, setTwitchLive] = useState(false);
     const [twitchViewerCountSB, setTwitchViewerCountSB] = useState<number | null>(null);
+    const [kickViewerCountSB, setKickViewerCountSB] = useState<number | null>(null);
     const [twitchChartData, setTwitchChartData] = useState<Array<{ value: number }>>([
         { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
         { value: 0 }, { value: 0 }, { value: 0 }, { value: 0 },
@@ -323,7 +343,28 @@ export default function Home() {
     const [speakingExiting, setSpeakingExiting] = useState(false);
     const speakingExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const speakingAutoClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const [viewerData, setViewerData] = useState<Record<string, { platform: string; avatar?: string; initials: string }>>({});
+    const [viewerData, setViewerData] = useState<Record<string, DockArrivalInfo>>(() => {
+        if (typeof window === "undefined") return {};
+        try {
+            const raw = localStorage.getItem(DOCK_ARRIVALS_KEY);
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== "object") return {};
+            const out: Record<string, DockArrivalInfo> = {};
+            for (const [name, rawInfo] of Object.entries(parsed as Record<string, unknown>)) {
+                if (!name) continue;
+                const info = (rawInfo ?? {}) as { platform?: unknown; avatar?: unknown; initials?: unknown; at?: unknown; source?: unknown };
+                out[name] = {
+                    platform: String(info.platform || "tiktok"),
+                    avatar: typeof info.avatar === "string" && info.avatar ? info.avatar : undefined,
+                    initials: String(info.initials || name.slice(0, 2)).toUpperCase(),
+                    at: Number(info.at) || 0,
+                    source: info.source === "join" ? "join" : "chat",
+                };
+            }
+            return out;
+        } catch { return {}; }
+    });
     const [chatSearch, setChatSearch] = useState("");
     const [testChatUsername, setTestChatUsername] = useState("");
     const [testChatText, setTestChatText] = useState("");
@@ -352,6 +393,7 @@ export default function Home() {
     const startNewChatSession = (username: string) => {
         const uname = username.trim().toLowerCase();
         setChatMessages([]);
+        setViewerData({});
         setSessionStats({ ...EMPTY_STATS });
         if (typeof window !== "undefined") {
             try {
@@ -812,6 +854,16 @@ export default function Home() {
     const twitchViewerCount = Object.values(viewerData).filter(item => item.platform === "twitch").length;
     const youtubeChatViewerCount = Object.values(viewerData).filter(item => item.platform === "youtube").length;
     const tiktokViewerCount = Object.values(viewerData).filter(item => item.platform === "tiktok").length;
+    // Total penonton realtime = jumlah penonton live YouTube + Twitch + Kick + TikTok.
+    const totalRealtimeViewers =
+        (youtubeViewerCountSB ?? 0) +
+        (twitchViewerCountSB ?? 0) +
+        (kickViewerCountSB ?? 0) +
+        (tiktokRoomViewerCount ?? 0);
+    // Daftar "Siapa yang Datang" - dari chat (semua platform) + join TikTok, terbaru di atas.
+    const arrivalsList = Object.entries(viewerData)
+        .map(([user, info]) => ({ user, ...info }))
+        .sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
     const filteredChatMessages = chatSearch.trim()
         ? chatMessages.filter(m => `${m.user} ${m.text} ${m.platform}`.toLowerCase().includes(chatSearch.toLowerCase()))
         : chatMessages;
@@ -1875,8 +1927,8 @@ export default function Home() {
         setViewerData(prev => {
             const next = { ...prev };
             const safeUser = String(user || '??');
-            next[safeUser] = { platform, avatar, initials: safeUser.slice(0, 2).toUpperCase() };
-            return next;
+            next[safeUser] = { platform, avatar, initials: safeUser.slice(0, 2).toUpperCase(), at: now, source: "chat" };
+            return capArrivals(next);
         });
     }
 
@@ -2375,12 +2427,14 @@ export default function Home() {
             tkSocketRef.current.on("tiktok-member", (data: { nickname?: string; uniqueId?: string; profilePictureUrl?: string }) => {
                 const nick = data.nickname || (data as any).uniqueId || '??';
                 addActivityLog(`👋 ${nick} telah bergabung`, "tiktok");
-                setViewerData(prev => ({
+                setViewerData(prev => capArrivals({
                     ...prev,
                     [nick]: {
                         platform: "tiktok",
                         avatar: data.profilePictureUrl,
                         initials: String(nick).slice(0, 2).toUpperCase(),
+                        at: Date.now(),
+                        source: "join",
                     },
                 }));
                 addSystemLog(`👋 [TIKTOK JOIN] ${nick} telah bergabung.`, "info");
@@ -2808,6 +2862,13 @@ export default function Home() {
         if (typeof window === "undefined") return;
         try { localStorage.setItem(SESSION_STATS_KEY, JSON.stringify(sessionStats)); } catch { }
     }, [sessionStats]);
+    // Simpan daftar "Siapa yang Datang" agar tidak hilang saat dock di-refresh.
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            localStorage.setItem(DOCK_ARRIVALS_KEY, JSON.stringify(capArrivals(viewerData)));
+        } catch { }
+    }, [viewerData]);
     // Bangun ulang "Siapa yang Datang" dari history saat refresh.
     useEffect(() => {
         setViewerData((prev) => {
@@ -2821,9 +2882,15 @@ export default function Home() {
             const next = { ...prev };
             for (const m of base) {
                 const u = String(m?.user || "??");
-                if (!next[u]) next[u] = { platform: m.platform || "tiktok", avatar: m.avatar, initials: u.slice(0, 2).toUpperCase() };
+                if (!next[u]) next[u] = {
+                    platform: m.platform || "tiktok",
+                    avatar: m.avatar,
+                    initials: u.slice(0, 2).toUpperCase(),
+                    at: Number((m as any)?.id) || 0,
+                    source: "chat",
+                };
             }
-            return next;
+            return capArrivals(next);
         });
     }, []);
 
@@ -3323,10 +3390,11 @@ export default function Home() {
                     return;
                 }
 
-                // --- Response GetActiveViewers: seed awal chart YouTube/Twitch ---
+                // --- Response GetActiveViewers: seed awal chart YouTube/Twitch/Kick ---
                 if (payload.id === "dock-viewers" && payload.status === "ok" && Array.isArray(payload.viewers)) {
                     const ytCount = payload.viewers.filter((v: any) => String(v?.type || "").toLowerCase() === "youtube").length;
                     const twCount = payload.viewers.filter((v: any) => String(v?.type || "").toLowerCase() === "twitch").length;
+                    const kickCount = payload.viewers.filter((v: any) => String(v?.type || "").toLowerCase() === "kick").length;
                     if (ytCount > 0) {
                         setYoutubeViewerCountSB(ytCount);
                         setYoutubeLive(true);
@@ -3337,6 +3405,9 @@ export default function Home() {
                         setTwitchViewerCountSB(twCount);
                         setTwitchLive(true);
                         setTwitchChartData(prev => { const next = [...prev, { value: twCount }]; return next.length > 20 ? next.slice(-20) : next; });
+                    }
+                    if (kickCount > 0) {
+                        setKickViewerCountSB(kickCount);
                     }
                     return;
                 }
@@ -3424,6 +3495,8 @@ export default function Home() {
                                     setTwitchLive(true);
                                     emitSbBridge("sb-viewers", { privateKey: getTimerRoom(), platform: "twitch", viewers: count });
                                 } else {
+                                    // Kick (dan platform lain) - simpan juga lokal agar total penonton realtime ikut terhitung.
+                                    if (platform === "kick") setKickViewerCountSB(count);
                                     emitSbBridge("sb-viewers", { privateKey: getTimerRoom(), platform: platform || "twitch", viewers: count });
                                 }
                             }
@@ -3449,6 +3522,9 @@ export default function Home() {
                         if (platform === "twitch" && type === "StreamOffline") {
                             setTwitchLive(false);
                             setTwitchViewerCountSB(0);
+                        }
+                        if (platform === "kick" && type === "StreamOffline") {
+                            setKickViewerCountSB(0);
                         }
                     }
 
@@ -3744,6 +3820,17 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => {
+                            const key = privateKey || readStoredDockKey(true);
+                            const href = key && key !== "global" ? `/songs?key=${encodeURIComponent(key)}` : "/songs";
+                            window.open(href, "_blank", "noopener,noreferrer");
+                        }}
+                        title="Buka halaman Liked Songs & Blacklist"
+                        className={`${headerControlClass}`}>
+                        <Heart className="w-3 h-3 text-rose-400" />
+                        Songs
+                    </button>
                     <div className="relative z-40 inline-block text-left">
                         <button
                             onClick={() => setDropdownOpen({ ...dropdownOpen, streamTools: !dropdownOpen.streamTools })}
@@ -4307,25 +4394,68 @@ export default function Home() {
                                     <div className="flex-1 bg-[#161616] border border-white/5 rounded-xl p-4 flex flex-col overflow-hidden min-h-62.5">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-gray-400 text-[9px] font-black uppercase">Siapa yang Datang</h3>
-                                            <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[8px] font-bold"></span>
+                                            <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[8px] font-bold">{arrivalsList.length.toLocaleString("id-ID")} user</span>
                                         </div>
                                         <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
-                                            {/* <div className="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/5 animate-in slide-in-from-right-2">
-                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-black text-[10px] text-black">RI</div>
-                                            <div>
-                                                <div className="font-bold text-white text-[10px]">Rizky_JR</div>
-                                                <div className="flex items-center gap-1 text-[8px] text-gray-500 uppercase">
-                                                    <Image src="/assets/logo/twitch.png" alt="twitch" width={10} height={10} className="w-2.5 h-2.5 object-contain dark:invert" /> twitch
+                                            {arrivalsList.length === 0 ? (
+                                                <div className="h-full flex flex-col items-center justify-center text-center gap-1 py-6">
+                                                    <Users className="w-5 h-5 text-gray-600" />
+                                                    <div className="text-[8px] font-bold uppercase text-gray-600">Belum ada yang datang</div>
+                                                    <div className="text-[7px] text-gray-700">Menunggu chat &amp; join TikTok…</div>
+                                                </div>
+                                            ) : arrivalsList.map((arrival) => {
+                                                const avatarBg = arrival.platform === "twitch" ? "bg-purple-600 text-white"
+                                                    : arrival.platform === "tiktok" ? "bg-[#FE2C55] text-white"
+                                                        : arrival.platform === "youtube" ? "bg-red-600 text-white"
+                                                            : arrival.platform === "kick" ? "bg-[#53FC18] text-black"
+                                                                : "bg-zinc-600 text-white";
+                                                return (
+                                                    <div key={arrival.user} className="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/5 animate-in slide-in-from-right-2">
+                                                        <div className={`w-8 h-8 flex-none rounded-full flex items-center justify-center font-black text-[10px] overflow-hidden ${avatarBg}`}>
+                                                            {arrival.avatar
+                                                                ? <img src={arrival.avatar} alt={arrival.user} className="w-8 h-8 rounded-full object-cover" />
+                                                                : arrival.initials}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="font-bold text-white text-[10px] truncate">{arrival.user}</div>
+                                                            <div className="flex items-center gap-1 text-[8px] text-gray-500 uppercase">
+                                                                <Image src={platformLogoFor(arrival.platform)} alt={arrival.platform} width={10} height={10} className="w-2.5 h-2.5 object-contain" />
+                                                                <span className="truncate">{arrival.platform}</span>
+                                                                <span className={`ml-auto px-1 py-px rounded text-[6px] font-black shrink-0 ${arrival.source === "join" ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-gray-400"}`}>
+                                                                    {arrival.source === "join" ? "Join" : "Chat"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="mt-4 bg-blue-600 rounded-xl p-4 shadow-lg shadow-blue-900/20">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="text-[8px] font-black uppercase opacity-70">Total Penonton Chat</div>
+                                                    <div className="text-3xl font-black font-mono-custom leading-none mt-1">{totalRealtimeViewers.toLocaleString("id-ID")}</div>
+                                                </div>
+                                                <Users className="w-8 h-8 opacity-30" />
+                                            </div>
+                                            <div className="mt-3 grid grid-cols-4 gap-1.5">
+                                                <div className="bg-black/20 rounded-md px-1 py-1 text-center">
+                                                    <div className="text-[6px] font-black uppercase tracking-wide opacity-70">YouTube</div>
+                                                    <div className="text-[11px] font-black font-mono-custom leading-none mt-0.5">{(youtubeViewerCountSB ?? 0).toLocaleString("id-ID")}</div>
+                                                </div>
+                                                <div className="bg-black/20 rounded-md px-1 py-1 text-center">
+                                                    <div className="text-[6px] font-black uppercase tracking-wide opacity-70">Twitch</div>
+                                                    <div className="text-[11px] font-black font-mono-custom leading-none mt-0.5">{(twitchViewerCountSB ?? 0).toLocaleString("id-ID")}</div>
+                                                </div>
+                                                <div className="bg-black/20 rounded-md px-1 py-1 text-center">
+                                                    <div className="text-[6px] font-black uppercase tracking-wide opacity-70">Kick</div>
+                                                    <div className="text-[11px] font-black font-mono-custom leading-none mt-0.5">{(kickViewerCountSB ?? 0).toLocaleString("id-ID")}</div>
+                                                </div>
+                                                <div className="bg-black/20 rounded-md px-1 py-1 text-center">
+                                                    <div className="text-[6px] font-black uppercase tracking-wide opacity-70">TikTok</div>
+                                                    <div className="text-[11px] font-black font-mono-custom leading-none mt-0.5">{(tiktokRoomViewerCount ?? 0).toLocaleString("id-ID")}</div>
                                                 </div>
                                             </div>
-                                        </div> */}
-                                        </div>
-                                        <div className="mt-4 bg-blue-600 rounded-xl p-4 flex items-center justify-between shadow-lg shadow-blue-900/20">
-                                            <div>
-                                                <div className="text-[8px] font-black uppercase opacity-70">Total Penonton Chat</div>
-                                                <div className="text-3xl font-black font-mono-custom leading-none mt-1">1</div>
-                                            </div>
-                                            <Users className="w-8 h-8 opacity-30" />
                                         </div>
                                     </div>
                                 )}

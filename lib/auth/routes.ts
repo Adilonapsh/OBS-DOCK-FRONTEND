@@ -22,6 +22,7 @@ export const ROUTE_PERMISSIONS: ReadonlyArray<{
   { path: '/dock', permission: PERMISSIONS.DOCK_CONTROL },
   { path: '/monitor', permission: PERMISSIONS.WORKSPACE_VIEW },
   { path: '/widgets', permission: PERMISSIONS.WIDGET_READ },
+  { path: '/songs', permission: PERMISSIONS.DOCK_CONTROL },
   { path: '/donations', permission: PERMISSIONS.DONATION_READ },
   { path: '/integrations', permission: PERMISSIONS.INTEGRATION_MANAGE },
   { path: '/connection', permission: PERMISSIONS.CONNECTION_MANAGE },
