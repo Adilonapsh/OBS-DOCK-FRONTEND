@@ -13,6 +13,7 @@ import {
   Filter,
   Ghost,
   LayoutGrid,
+  LifeBuoy,
   LogOut,
   Menu,
   RefreshCw,
@@ -761,6 +762,12 @@ export default function AdminClient({
  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-lg text-[10px] font-black uppercase "
  >
               <ScrollText className="w-3 h-3" /> Audit
+            </Link>
+            <Link
+ href="/admin/support"
+ className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 btn-secondary border rounded-lg text-[10px] font-black uppercase "
+ >
+              <LifeBuoy className="w-3 h-3" /> Support
             </Link>
             <Link
  href="/dashboard"

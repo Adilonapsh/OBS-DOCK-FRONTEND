@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
-import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Grid2x2, Plug, Wallet2, Shield, ScrollText, Music } from "lucide-react";
+import { LayoutDashboard, Monitor, UserCog, LogOut, X, Wifi, Video, Grid2x2, Plug, Wallet2, Shield, ScrollText, Music, LifeBuoy } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { logoutToLogin } from "@/utils/logout";
 import { PERMISSIONS, type Permission } from "@/lib/auth";
@@ -174,7 +174,7 @@ export default function Sidebar({
   onClose,
   user,
 }: {
-  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "songs" | "integrations" | "designer" | "donations" | "admin" | "admin-audit";
+  active?: "dashboard" | "dock" | "account" | "config" | "connection" | "monitor" | "overlay" | "widgets" | "songs" | "integrations" | "designer" | "donations" | "admin" | "admin-audit" | "admin-support" | "support";
   open: boolean;
   onClose: () => void;
   user?: Pick<User, "id" | "email" | "user_metadata"> | null;
@@ -184,9 +184,9 @@ export default function Sidebar({
     | { avatar_url?: string; username?: string }
     | undefined;
   const { can, isAdmin, role, loading } = usePermissions();
-  const isAdminSection = active === "admin" || active === "admin-audit";
+  const isAdminSection = active === "admin" || active === "admin-audit" || active === "admin-support";
   const items = (NAV[active] || NAV.dashboard)
-    .map((item) => ({ ...item, active: isAdminSection ? false : item.active }))
+    .map((item) => ({ ...item, active: isAdminSection || active === "support" ? false : item.active }))
     .filter((item) => {
       const required = NAV_PERMISSIONS[item.href];
       return !required || loading || can(required);
@@ -337,6 +337,15 @@ export default function Sidebar({
               >
                 <ScrollText className="w-4 h-4" /> Audit Log
               </Link>
+              <Link
+                href="/admin/support"
+                onClick={onClose}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                  active === "admin-support" ? "bg-amber-400 text-black" : "text-amber-300 hover:text-amber-200 hover:bg-amber-500/10"
+                }`}
+              >
+                <LifeBuoy className="w-4 h-4" /> Support Tickets
+              </Link>
             </div>
           )}
 
@@ -358,6 +367,15 @@ export default function Sidebar({
           )}
 
           <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
+            <Link
+              href="/support"
+              onClick={onClose}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors ${
+                active === "support" ? "btn-primary text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <LifeBuoy className="w-4 h-4" /> Support
+            </Link>
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[11px] font-black uppercase text-red-400 hover:bg-red-500/10 text-left"
