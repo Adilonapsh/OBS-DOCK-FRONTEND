@@ -1035,6 +1035,11 @@ export default function Home() {
     // Judul yang sudah dicatat sebagai highlight pada sesi ini - mencegah dobel
     // simpan ketika judul dikirim di tiktok-connected sekaligus tiktok-title.
     const tkLoggedHighlightRef = useRef<string | null>(null);
+    // Penonton maksimum per platform selama sesi live - dipakai untuk mengisi
+    // kolom `viewers` pada highlight (dashboard "Sorotan 7 Hari Terakhir").
+    const sessionViewsRef = useRef<Record<string, number>>({});
+    const sessionViewsSyncAtRef = useRef<Record<string, number>>({});
+    const sessionViewsTimerRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
     // Username + privateKey terakhir yang diminta - dipakai handler socket agar tidak
     // pakai payload basi (stale closure) saat ganti akun / reconnect otomatis.
     const tkWantedRef = useRef<{ username: string; privateKey: string | null }>({ username: "", privateKey: null });
@@ -2316,7 +2321,7 @@ export default function Home() {
                     // Judul asli sudah tersedia - simpan langsung, tanpa placeholder.
                     if (tkLoggedHighlightRef.current !== connectedTitle) {
                         tkLoggedHighlightRef.current = connectedTitle;
-                        logHighlightForToday("tiktok", connectedTitle, null, `https://www.tiktok.com/@${connectedUser}/live`, "tiktok_live", { username: connectedUser, live: true, titleFromRoomInfo: true });
+                        enqueueHighlightLog("tiktok", connectedTitle, null, `https://www.tiktok.com/@${connectedUser}/live`, "tiktok_live", { username: connectedUser, live: true, titleFromRoomInfo: true });
                     }
                 } else if (!tkLoggedHighlightRef.current) {
                     // Judul belum ada - tunggu sebentar apakah event tiktok-title datang.
@@ -2325,7 +2330,7 @@ export default function Home() {
                         tkHighlightTimerRef.current = null;
                         const fallbackTitle = `Live TikTok @${wantUser}`;
                         tkLoggedHighlightRef.current = fallbackTitle;
-                        logHighlightForToday("tiktok", fallbackTitle, null, `https://www.tiktok.com/@${wantUser}/live`, "tiktok_live", { username: wantUser, live: true });
+                        enqueueHighlightLog("tiktok", fallbackTitle, null, `https://www.tiktok.com/@${wantUser}/live`, "tiktok_live", { username: wantUser, live: true });
                     }, 3000);
                 }
             });
@@ -2345,7 +2350,7 @@ export default function Home() {
                 if (tkLoggedHighlightRef.current === title) return;
                 tkLoggedHighlightRef.current = title;
                 // Simpan highlight hari ini dengan judul asli dari roomInfo
-                logHighlightForToday("tiktok", title, null, `https://www.tiktok.com/@${uname}/live`, "tiktok_live", { username: uname, live: true, titleFromRoomInfo: true });
+                enqueueHighlightLog("tiktok", title, null, `https://www.tiktok.com/@${uname}/live`, "tiktok_live", { username: uname, live: true, titleFromRoomInfo: true });
             });
 
             tkSocketRef.current.on("tiktok-error", (err: string) => {
@@ -2364,6 +2369,7 @@ export default function Home() {
                     clearTimeout(tkHighlightTimerRef.current);
                     tkHighlightTimerRef.current = null;
                 }
+                flushSessionViewers("tiktok");
                 setTiktokStatus("DISCONNECTED");
                 setTiktokError(null);
                 setTiktokRoomViewerCount(null);
@@ -2382,6 +2388,7 @@ export default function Home() {
                     clearTimeout(tkHighlightTimerRef.current);
                     tkHighlightTimerRef.current = null;
                 }
+                flushSessionViewers("tiktok");
                 setTiktokStatus("DISCONNECTED");
                 setTiktokError(null);
                 setTiktokRoomViewerCount(null);
@@ -2447,6 +2454,7 @@ export default function Home() {
                 const viewerCount = Number.isFinite(rawViewerCount) && rawViewerCount >= 0 ? rawViewerCount : null;
                 const totalUser = Number.isFinite(rawTotalUser) && rawTotalUser >= 0 ? rawTotalUser : null;
                 if (viewerCount !== null) {
+                    trackSessionViewers("tiktok", viewerCount);
                     setTiktokRoomViewerCount(prev => {
                         const prevNum = typeof prev === 'number' ? prev : 0;
                         const ratio = prevNum > 0 ? viewerCount / prevNum : 1;
@@ -2454,7 +2462,11 @@ export default function Home() {
                         return viewerCount;
                     });
                 }
-                if (totalUser !== null) setTiktokTotalUser(totalUser);
+                if (totalUser !== null) {
+                    setTiktokTotalUser(totalUser);
+                    // totalUser = akumulasi penonton yang bergabung selama live.
+                    trackSessionViewers("tiktok", totalUser);
+                }
             });
         } else {
             // socket sudah ada - langsung emit (isolasi per privateKey)
@@ -2671,9 +2683,104 @@ export default function Home() {
         console.log(`[${type.toUpperCase()}] ${msg}`);
     };
 
+    // Simpan jumlah penonton sesi live ke baris highlight hari ini.
+    // - Mode login: update langsung (RLS owner).
+    // - Mode private key: RPC update_highlight_viewers_by_private_key.
+    // - Guest: update cache localStorage.
+    const persistHighlightViewers = async (platform: string, viewers: number) => {
+        const value = Math.max(0, Math.floor(Number(viewers) || 0));
+        if (!Number.isFinite(value) || value <= 0) return;
+        try {
+            const effectiveKey = privateKey || (typeof window !== "undefined" ? readStoredDockKey(true) : "");
+            const supabaseLocal = createClient();
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayIso = todayStart.toISOString();
+
+            if (effectiveKey) {
+                const { error } = await (supabaseLocal as any).rpc("update_highlight_viewers_by_private_key", {
+                    p_key: effectiveKey,
+                    p_platform: platform,
+                    p_viewers: value,
+                    p_since: todayIso,
+                });
+                if (error) console.warn("highlight viewers update error", error);
+                return;
+            }
+
+            const { data: sess } = await supabaseLocal.auth.getSession();
+            const userId = sess.session?.user?.id;
+            if (userId) {
+                const { error } = await supabaseLocal
+                    .from("highlights")
+                    .update({ viewers: value } as any)
+                    .eq("user_id", userId)
+                    .eq("platform", platform)
+                    .gte("started_at", todayIso)
+                    .or(`viewers.is.null,viewers.lt.${value}`);
+                if (error) console.warn("highlight viewers update error", error);
+                return;
+            }
+
+            // Guest: update cache lokal.
+            try {
+                const cur = JSON.parse(localStorage.getItem("highlights-cache") || "[]");
+                const idx = cur.findIndex((h: any) => h.platform === platform);
+                if (idx >= 0) {
+                    const prev = Number(cur[idx].viewers) || 0;
+                    cur[idx].viewers = Math.max(prev, value);
+                    localStorage.setItem("highlights-cache", JSON.stringify(cur));
+                }
+            } catch { }
+        } catch (e) {
+            console.warn("persistHighlightViewers error", e);
+        }
+    };
+
+    // Catat penonton sesi (ambil nilai tertinggi) lalu tulis ke DB secara
+    // throttled supaya tidak spam request tiap event roomUser/statistics.
+    const trackSessionViewers = (platform: "tiktok" | "youtube" | "twitch" | "kick", viewers: number | null | undefined) => {
+        const value = Math.max(0, Math.floor(Number(viewers) || 0));
+        if (!Number.isFinite(value) || value <= 0) return;
+
+        const prev = sessionViewsRef.current[platform] ?? 0;
+        if (value <= prev) return;
+        sessionViewsRef.current[platform] = value;
+
+        const now = Date.now();
+        const lastSync = sessionViewsSyncAtRef.current[platform] ?? 0;
+        const wait = 15_000 - (now - lastSync);
+        if (wait <= 0) {
+            sessionViewsSyncAtRef.current[platform] = now;
+            void persistHighlightViewers(platform, value);
+            return;
+        }
+        if (!sessionViewsTimerRef.current[platform]) {
+            sessionViewsTimerRef.current[platform] = setTimeout(() => {
+                sessionViewsTimerRef.current[platform] = null;
+                sessionViewsSyncAtRef.current[platform] = Date.now();
+                void persistHighlightViewers(platform, sessionViewsRef.current[platform] ?? value);
+            }, wait);
+        }
+    };
+
+    // Paksa tulis nilai terakhir saat live berakhir / koneksi putus.
+    const flushSessionViewers = (platform: "tiktok" | "youtube" | "twitch" | "kick") => {
+        const timer = sessionViewsTimerRef.current[platform];
+        if (timer) {
+            clearTimeout(timer);
+            sessionViewsTimerRef.current[platform] = null;
+        }
+        const value = sessionViewsRef.current[platform] ?? 0;
+        if (value > 0) {
+            sessionViewsSyncAtRef.current[platform] = Date.now();
+            void persistHighlightViewers(platform, value);
+        }
+    };
+
     // Auto-log highlight per hari jika ada livestream (TikTok via dock connect, YouTube via StreamerBot BroadcastStarted)
     // Sesuai docs.streamer.bot: YouTube BroadcastStarted = broadcast {id,title,channelId,...}
-    const logHighlightForToday = async (
+    const enqueueHighlightLog = async (
         platform: "tiktok" | "youtube" | "twitch" | "kick" | "other",
         title: string,
         thumbnail_url: string | null,
@@ -2718,12 +2825,35 @@ export default function Home() {
                         const { data: sess } = await supabaseLocal.auth.getSession();
                         const userId = sess.session?.user?.id;
                         if (userId) {
+                            // Login: update langsung (RLS owner).
                             const { error } = await supabaseLocal
                                 .from("highlights")
                                 .update({ title, metadata } as any)
                                 .eq("id", existsId)
                                 .eq("user_id", userId);
                             if (!error) addSystemLog(`✅ [highlight] ${platform} judul diperbarui: ${title}`, "success");
+                            else console.warn("highlight title update error", error);
+                        } else if (effectiveKey) {
+                            // Mode private key: update via RPC (bypass RLS).
+                            const { error } = await (supabaseLocal as any).rpc("update_highlight_title_by_private_key", {
+                                p_key: effectiveKey,
+                                p_platform: platform,
+                                p_title: title,
+                                p_since: todayIso,
+                                p_metadata: metadata,
+                            });
+                            if (!error) addSystemLog(`✅ [highlight] ${platform} judul diperbarui: ${title}`, "success");
+                            else console.warn("highlight title update error", error);
+                        } else {
+                            // Guest: update cache lokal.
+                            try {
+                                const cur = JSON.parse(localStorage.getItem("highlights-cache") || "[]");
+                                const idx = cur.findIndex((h: any) => h.platform === platform);
+                                if (idx >= 0) {
+                                    cur[idx] = { ...cur[idx], title, metadata };
+                                    localStorage.setItem("highlights-cache", JSON.stringify(cur));
+                                }
+                            } catch { }
                         }
                     } catch { }
                 }
@@ -2752,7 +2882,17 @@ export default function Home() {
                     // guest: simpan lokal juga
                     try {
                         const cur = JSON.parse(localStorage.getItem("highlights-cache") || "[]");
-                        cur.push({ id: `local-${Date.now()}`, platform, title, thumbnail_url, video_url, started_at: startedAt, source, metadata });
+                        cur.push({
+                            id: `local-${Date.now()}`,
+                            platform,
+                            title,
+                            thumbnail_url,
+                            video_url,
+                            started_at: startedAt,
+                            source,
+                            metadata,
+                            viewers: sessionViewsRef.current[platform] ?? 0,
+                        });
                         localStorage.setItem("highlights-cache", JSON.stringify(cur.slice(-50)));
                     } catch { }
                     return;
@@ -2769,6 +2909,11 @@ export default function Home() {
                 } as any);
                 if (!error) addSystemLog(`✅ [highlight] ${platform} tersimpan: ${title}`, "success");
             }
+
+            // Kalau penonton sudah tercatat sebelum highlight dibuat, langsung
+            // sertakan nilainya (insert di atas memakai default 0).
+            const sessionViews = sessionViewsRef.current[platform] ?? 0;
+            if (sessionViews > 0) await persistHighlightViewers(platform, sessionViews);
         } catch (e) {
             console.warn("logHighlightForToday error", e);
         }
@@ -3396,17 +3541,20 @@ export default function Home() {
                     const twCount = payload.viewers.filter((v: any) => String(v?.type || "").toLowerCase() === "twitch").length;
                     const kickCount = payload.viewers.filter((v: any) => String(v?.type || "").toLowerCase() === "kick").length;
                     if (ytCount > 0) {
+                        trackSessionViewers("youtube", ytCount);
                         setYoutubeViewerCountSB(ytCount);
                         setYoutubeLive(true);
                         setYoutubeChartData(prev => { const next = [...prev, { value: ytCount }]; return next.length > 20 ? next.slice(-20) : next; });
                         setYoutubeLastUpdate(new Date().toLocaleTimeString());
                     }
                     if (twCount > 0) {
+                        trackSessionViewers("twitch", twCount);
                         setTwitchViewerCountSB(twCount);
                         setTwitchLive(true);
                         setTwitchChartData(prev => { const next = [...prev, { value: twCount }]; return next.length > 20 ? next.slice(-20) : next; });
                     }
                     if (kickCount > 0) {
+                        trackSessionViewers("kick", kickCount);
                         setKickViewerCountSB(kickCount);
                     }
                     return;
@@ -3419,6 +3567,7 @@ export default function Home() {
 
                     const pushYoutubeViewers = (v: number) => {
                         const n = Math.max(0, Number(v) || 0);
+                        trackSessionViewers("youtube", n);
                         setYoutubeViewerCountSB(n);
                         setYoutubeChartData(prev => { const next = [...prev, { value: n }]; return next.length > 20 ? next.slice(-20) : next; });
                         setYoutubeLive(true);
@@ -3449,17 +3598,17 @@ export default function Home() {
                             const title = b.title || `YouTube Live ${vid}`.trim() || "YouTube Live";
                             const thumb = vid ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg` : null;
                             const url = vid ? `https://www.youtube.com/watch?v=${vid}` : null;
-                            logHighlightForToday("youtube", title, thumb, url, "streamerbot", { broadcast: b, platform: "youtube" });
+                            enqueueHighlightLog("youtube", title, thumb, url, "streamerbot", { broadcast: b, platform: "youtube" });
                         }
                         if (platform === "twitch" && type === "StreamOnline") {
                             const tTitle = (data as any).title || `Twitch Live ${(data as any).userName || ""}`.trim() || "Twitch Live";
                             const tThumb = (data as any).thumbnailUrl || null;
                             const tUrl = (data as any).url || null;
-                            logHighlightForToday("twitch", tTitle, tThumb, tUrl, "streamerbot", { data, platform: "twitch" });
+                            enqueueHighlightLog("twitch", tTitle, tThumb, tUrl, "streamerbot", { data, platform: "twitch" });
                         }
                         if (platform === "kick" && type === "StreamOnline") {
                             const kTitle = (data as any).title || `Kick Live ${(data as any).userName || ""}`.trim() || "Kick Live";
-                            logHighlightForToday("kick", kTitle, null, null, "streamerbot", { data, platform: "kick" });
+                            enqueueHighlightLog("kick", kTitle, null, null, "streamerbot", { data, platform: "kick" });
                         }
 
                         // YouTube StatisticsUpdated: payload FLAT -> { concurrentViewers, likeCount, viewCount, ... }
@@ -3470,7 +3619,12 @@ export default function Home() {
                             const rawLike = (data as any).likeCount;
                             if (rawLike !== undefined && rawLike !== null && !Number.isNaN(Number(rawLike))) setYoutubeLikeCount(Number(rawLike));
                             const rawView = (data as any).viewCount;
-                            if (rawView !== undefined && rawView !== null && !Number.isNaN(Number(rawView))) setYoutubeViewCount(Number(rawView));
+                            if (rawView !== undefined && rawView !== null && !Number.isNaN(Number(rawView))) {
+                                const views = Number(rawView);
+                                setYoutubeViewCount(views);
+                                // viewCount YouTube adalah akumulasi penonton siaran ini.
+                                trackSessionViewers("youtube", views);
+                            }
                             // walau concurrentViewers 0, tetap update timestamp agar user tahu event jalan
                             setYoutubeLastUpdate(new Date().toLocaleTimeString());
                         }
@@ -3490,13 +3644,17 @@ export default function Home() {
                                 if (platform === "youtube") {
                                     pushYoutubeViewers(count);
                                 } else if (platform === "twitch") {
+                                    trackSessionViewers("twitch", count);
                                     setTwitchViewerCountSB(count);
                                     setTwitchChartData(prev => { const next = [...prev, { value: count }]; return next.length > 20 ? next.slice(-20) : next; });
                                     setTwitchLive(true);
                                     emitSbBridge("sb-viewers", { privateKey: getTimerRoom(), platform: "twitch", viewers: count });
                                 } else {
                                     // Kick (dan platform lain) - simpan juga lokal agar total penonton realtime ikut terhitung.
-                                    if (platform === "kick") setKickViewerCountSB(count);
+                                    if (platform === "kick") {
+                                        trackSessionViewers("kick", count);
+                                        setKickViewerCountSB(count);
+                                    }
                                     emitSbBridge("sb-viewers", { privateKey: getTimerRoom(), platform: platform || "twitch", viewers: count });
                                 }
                             }
@@ -3508,6 +3666,9 @@ export default function Home() {
                     }
 
                     if (["StreamOffline", "BroadcastEnded", "BroadcastMonitoringEnded"].includes(type)) {
+                        if (platform === "youtube" || platform === "twitch" || platform === "kick") {
+                            flushSessionViewers(platform);
+                        }
                         setStatus(prev => ({
                             ...prev,
                             sbotStatus: "CONNECTED",
@@ -3689,6 +3850,10 @@ export default function Home() {
                 clearTimeout(tkHighlightTimerRef.current);
                 tkHighlightTimerRef.current = null;
             }
+            for (const t of Object.values(sessionViewsTimerRef.current)) {
+                if (t) clearTimeout(t);
+            }
+            sessionViewsTimerRef.current = {};
             if (tkSocketRef.current) {
                 tkSocketRef.current.close();
             }
