@@ -122,11 +122,12 @@ export default function BrutalistTheme(props: LyricsThemeProps) {
     brutalistTail,
     brutalistItalic,
     brutalistUppercase,
+    lyricsTextColor,
   } = props;
 
   const safeAccent = accent && accent !== 'transparent' ? accent : '#ffe600';
   const bubbleBg = brutalistBg || '#FFFFFF';
-  const txtColor = brutalistTextColor || '#000000';
+  const txtColor = lyricsTextColor || brutalistTextColor || '#000000';
   const badgeBg = brutalistBadgeBg || '#000000';
   const borderColor = brutalistBorderColor || '#000000';
   const shadowOffset = brutalistShadow ?? 8;

@@ -26,6 +26,7 @@ const themes = [
   { value: 'color-palette', label: 'Color Palette' },
   { value: 'plain', label: 'Plain' },
   { value: 'brutalist', label: 'Brutalist' },
+  { value: 'apple-wipe', label: 'Apple Music - Karaoke Wipe' },
 ];
 const fontsList = [...WIDGET_FONTS];
 const sources = [
@@ -67,6 +68,12 @@ function buildUrl(base: string, state: any): string {
   p.set('lyricsFontSize', String(state.lyricsFontSize));
   p.set('maxLyricsLines', String(state.maxLyricsLines));
   p.set('lrclibEnabled', String(state.lrclibEnabled));
+  p.set('lyricsAltAlign', String(state.lyricsAltAlign));
+  p.set('lyricsKaraoke', String(state.lyricsKaraoke));
+  p.set('lyricsBlur', String(state.lyricsBlur));
+  p.set('lyricsGlow', String(state.lyricsGlow));
+  p.set('useLyricsTextColor', String(state.useLyricsTextColor));
+  p.set('lyricsTextColor', state.lyricsTextColor);
   p.set('pos', state.pos || 'center');
   appendBrutalistParams(p, state as unknown as Record<string, unknown>);
   return `${base}?${p.toString()}`;
@@ -104,6 +111,12 @@ const defaults = {
   lyricsFontSize: 20,
   maxLyricsLines: 3,
   lrclibEnabled: true,
+  lyricsAltAlign: true,
+  lyricsKaraoke: true,
+  lyricsBlur: true,
+  lyricsGlow: true,
+  useLyricsTextColor: false,
+  lyricsTextColor: '#ffffff',
   pos: 'center',
   ...BRUTALIST_DEFAULTS,
 };
@@ -243,7 +256,7 @@ function LyricsSettingsInner() {
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Theme</span>
                     <select value={state.theme} onChange={e => update('theme', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                      {themes.map(t => <option key={t.value} value={t.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{t.label}</option>)}
+                      {themes.map(t => <option key={t.value} value={t.value} className="bg-white text-zinc-900">{t.label}</option>)}
                     </select>
                   </label>
                   <label className="block">
@@ -256,7 +269,7 @@ function LyricsSettingsInner() {
                     <label className="block"><span className="text-[11px] font-bold text-gray-300">Max Width <span className="font-normal opacity-60">0=full</span></span><input type="number" value={state.maxWidth} onChange={e => update('maxWidth', parseInt(e.target.value)||0)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Lyrics Align</span><select value={state.lyricsAlign} onChange={e => update('lyricsAlign', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Left</option><option value="center" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Center</option><option value="right" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">Right</option></select></label>
+                    <label className="block"><span className="text-[11px] font-bold text-gray-300">Lyrics Align</span><select value={state.lyricsAlign} onChange={e => update('lyricsAlign', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value="left" className="bg-white text-zinc-900">Left</option><option value="center" className="bg-white text-zinc-900">Center</option><option value="right" className="bg-white text-zinc-900">Right</option></select></label>
                   </div>
                   <div className="bg-black/30 border border-white/5 rounded-xl p-2">
                     <PositionPicker value={(state as any).pos || 'center'} onChange={(v) => update('pos', v)} />
@@ -271,10 +284,38 @@ function LyricsSettingsInner() {
                       <label className="block"><span className="text-[11px] font-bold text-gray-300">Secondary</span><input type="color" value={state.color2} onChange={e => update('color2', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl p-1" /></label>
                     </div>
                   )}
+                  <label className="flex items-center justify-between p-2.5 bg-black/30 rounded-xl border border-white/5">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-bold text-white">Custom Text Color</div>
+                      <div className="text-[10px] text-gray-500 leading-tight">Warna teks global, berlaku untuk semua tema.</div>
+                    </div>
+                    <input type="checkbox" checked={state.useLyricsTextColor} onChange={e => update('useLyricsTextColor', e.target.checked)} className="w-4 h-4 accent-white shrink-0" />
+                  </label>
+                  {state.useLyricsTextColor && (
+                    <div className="flex items-center gap-3 animate-in slide-in">
+                      <input type="color" value={state.lyricsTextColor} onChange={e => update('lyricsTextColor', e.target.value)} className="w-12 h-9 bg-black/40 border border-white/10 rounded-xl p-1 shrink-0" />
+                      <input type="text" value={state.lyricsTextColor} onChange={e => update('lyricsTextColor', e.target.value)} className="flex-1 h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white font-mono" />
+                    </div>
+                  )}
                 </div>
               </div>
 
               {state.theme === 'brutalist' && <BrutalistSettingsSection state={state as unknown as Record<string, unknown>} update={update as unknown as (k: string, v: unknown) => void} />}
+
+              {state.theme === 'apple-wipe' && (
+                <div className="space-y-3">
+                  <h2 className="text-white font-black uppercase text-[11px] tracking-widest flex items-center gap-2"><Sparkles className="w-4 h-4 text-pink-300" /> Apple Wipe</h2>
+                  <div className="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-3">
+                    <Toggle label="Alternating Align" desc="Kiri-kanan bergantian tiap 4 baris seperti Apple Music." checked={state.lyricsAltAlign} onChange={v => update('lyricsAltAlign', v)} />
+                    <Toggle label="Karaoke Wipe" desc="Sapuan putih mengikuti progres baris aktif." checked={state.lyricsKaraoke} onChange={v => update('lyricsKaraoke', v)} />
+                    <Toggle label="Blur Non-Active" desc="Baris lain blur & meredup bertingkat." checked={state.lyricsBlur} onChange={v => update('lyricsBlur', v)} />
+                    <Toggle label="Glow" desc="Efek glow lembut di baris aktif." checked={state.lyricsGlow} onChange={v => update('lyricsGlow', v)} />
+                    <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">
+                      Tanpa background/card - hanya teks. Untuk hasil terbaik pakai 3-7 visible lines dan font tebal seperti Inter/Outfit.
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Source */}
               <div className="space-y-3">
@@ -283,7 +324,7 @@ function LyricsSettingsInner() {
                   <label className="block">
                     <span className="text-[11px] font-bold text-gray-300">Connect To</span>
                     <select value={state.source} onChange={e => update('source', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">
-                      {sources.map(s => <option key={s.value} value={s.value} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{s.label}</option>)}
+                      {sources.map(s => <option key={s.value} value={s.value} className="bg-white text-zinc-900">{s.label}</option>)}
                     </select>
                   </label>
                   {state.source === 'music' ? (
@@ -306,7 +347,7 @@ function LyricsSettingsInner() {
                     <div><div className="text-white font-bold text-[11px]">Enable LRCLIB</div><div className="text-gray-500 text-[10px]">Fetch synced lyrics dari https://lrclib.net</div></div>
                     <input type="checkbox" checked={state.lrclibEnabled} onChange={e => update('lrclibEnabled', e.target.checked)} className="w-4 h-4 accent-white shrink-0" />
                   </label>
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Visible Lines</span><select value={state.maxLyricsLines} onChange={e => update('maxLyricsLines', parseInt(e.target.value))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value={1} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">1 - current only</option><option value={2} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">2</option><option value={3} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">3 (default)</option><option value={5} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">5</option><option value={7} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">7</option></select></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Visible Lines</span><select value={state.maxLyricsLines} onChange={e => update('maxLyricsLines', parseInt(e.target.value))} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white"><option value={1} className="bg-white text-zinc-900">1 - current only</option><option value={2} className="bg-white text-zinc-900">2</option><option value={3} className="bg-white text-zinc-900">3 (default)</option><option value={5} className="bg-white text-zinc-900">5</option><option value={7} className="bg-white text-zinc-900">7</option></select></label>
                   <div className="text-[10px] text-gray-500 bg-black/30 rounded-xl p-2 border border-white/5">Hanya lirik yang tampil (cover & progress dihilangkan). Active line highlight pakai accent. Jika synced tidak ada → plain lyrics. Instrumental → ♪</div>
                 </div>
               </div>
@@ -320,8 +361,8 @@ function LyricsSettingsInner() {
                   {state.autoHide && <label className="block ml-4"><span className="text-[11px] font-bold text-gray-300">Display Duration (seconds)</span><input type="number" min={1} max={60} value={state.displayDuration} onChange={e => update('displayDuration', parseInt(e.target.value)||5)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>}
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Included Apps <span className="font-normal opacity-60">priority order, empty = focused app</span></span><span className="text-[10px] text-gray-500"> <a href="http://127.0.0.1:5000/sessions" target="_blank" className="text-gray-200 underline">View active sources</a></span><input value={state.includedApplications} onChange={e => update('includedApplications', e.target.value)} placeholder="Spotify.exe, vlc.exe" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
                   <label className="block"><span className="text-[11px] font-bold text-gray-300">Excluded Apps</span><input value={state.excludedApplications} onChange={e => update('excludedApplications', e.target.value)} placeholder="Chrome, vlc.exe" className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white" /></label>
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Show Animation</span><select value={state.showAnimation} onChange={e => update('showAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{showAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
-                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Hide Animation</span><select value={state.hideAnimation} onChange={e => update('hideAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{hideAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white">{a}</option>)}</select></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Show Animation</span><select value={state.showAnimation} onChange={e => update('showAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{showAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900">{a}</option>)}</select></label>
+                  <label className="block"><span className="text-[11px] font-bold text-gray-300">Hide Animation</span><select value={state.hideAnimation} onChange={e => update('hideAnimation', e.target.value)} className="mt-1 w-full h-9 bg-black/40 border border-white/10 rounded-xl px-3 text-sm text-white">{hideAnimations.map(a => <option key={a} value={a} className="bg-white text-zinc-900">{a}</option>)}</select></label>
                 </div>
               </div>
 

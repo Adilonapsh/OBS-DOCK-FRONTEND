@@ -1,7 +1,7 @@
 import type { LyricsThemeProps } from './types';
 import './Compact.css';
 
-function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, accent }: Pick<LyricsThemeProps,'lyrics'|'activeIndex'|'plainLyrics'|'lyricsAlign'|'lyricsFontSize'|'maxLyricsLines'|'accent'>) {
+function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, accent, lyricsTextColor }: Pick<LyricsThemeProps,'lyrics'|'activeIndex'|'plainLyrics'|'lyricsAlign'|'lyricsFontSize'|'maxLyricsLines'|'accent'|'lyricsTextColor'>) {
   const alignCls = lyricsAlign === 'center' ? 'text-center' : lyricsAlign === 'right' ? 'text-right' : 'text-left';
   if (!lyrics.length) {
     if (!plainLyrics) return <div className={`opacity-40 text-sm italic ${alignCls}`} style={{ fontSize: `${Math.max(11, lyricsFontSize - 3)}px` }}>♪ no lyrics ♪</div>;
@@ -17,18 +17,18 @@ function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFont
       {win.map(l => {
         const idx = lyrics.indexOf(l);
         const active = idx === activeIndex;
-        return <div key={idx} className={`leading-tight transition-all ${active ? 'font-bold' : 'opacity-40'}`} style={{ fontSize: active ? `${lyricsFontSize}px` : `${lyricsFontSize-3}px`, color: active ? accent : undefined }}>{l.text || '♪'}</div>;
+        return <div key={idx} className={`leading-tight transition-all ${active ? 'font-bold' : 'opacity-40'}`} style={{ fontSize: active ? `${lyricsFontSize}px` : `${lyricsFontSize-3}px`, color: lyricsTextColor || (active ? accent : undefined) }}>{l.text || '♪'}</div>;
       })}
     </div>
   );
 }
 
 export default function CompactTheme(props: LyricsThemeProps) {
-  const { palette, accent, lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines } = props;
+  const { palette, accent, lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, lyricsTextColor } = props;
   const bgColor = palette.DarkMuted;
   return (
-    <div className="compact-theme px-5 py-3 rounded-full border shadow-lg bg-zinc-900 text-white border-white/10" style={{ background: bgColor }}>
-      <LyricsLines lyrics={lyrics} activeIndex={activeIndex} plainLyrics={plainLyrics} lyricsAlign={lyricsAlign} lyricsFontSize={lyricsFontSize} maxLyricsLines={maxLyricsLines} accent={accent} />
+    <div className="compact-theme px-5 py-3 rounded-full border shadow-lg bg-zinc-900 text-white border-white/10" style={{ background: bgColor, color: lyricsTextColor || undefined }}>
+      <LyricsLines lyrics={lyrics} activeIndex={activeIndex} plainLyrics={plainLyrics} lyricsAlign={lyricsAlign} lyricsFontSize={lyricsFontSize} maxLyricsLines={maxLyricsLines} accent={accent} lyricsTextColor={lyricsTextColor} />
     </div>
   );
 }

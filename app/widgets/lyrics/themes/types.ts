@@ -8,7 +8,16 @@ export type Timeline = {
   LastUpdatedTime: string;
 } | null;
 
-export type LyricLine = { timeMs: number; text: string };
+export type LyricWord = { timeMs: number; text: string };
+
+export type LyricLine = {
+  timeMs: number;
+  text: string;
+  /** Akhir baris (ms) dari lyricsfile word-sync. */
+  endMs?: number;
+  /** Timing per kata kalau lagu punya word-sync. */
+  words?: LyricWord[];
+};
 
 export type LyricsThemeProps = {
   track: string;
@@ -51,4 +60,10 @@ export type LyricsThemeProps = {
   brutalistTail?: boolean;
   brutalistItalic?: boolean;
   brutalistUppercase?: boolean;
+  lyricsAltAlign?: boolean;
+  lyricsKaraoke?: boolean;
+  lyricsBlur?: boolean;
+  lyricsGlow?: boolean;
+  /** Global text color override (hex). Empty string = pakai warna default tema. */
+  lyricsTextColor?: string;
 };

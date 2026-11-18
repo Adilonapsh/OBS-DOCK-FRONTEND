@@ -15,7 +15,14 @@ export const GOALS_THEMES = [
   { value: 'passion', label: 'Passion - Like Goal Studio' },
   { value: 'brutalist', label: 'Brutalist' },
   { value: 'neonbar', label: 'Neon Bar - Video Progress' },
+  { value: 'gamehud', label: 'GTA 6 - Icon & Bar' },
 ] as const;
+
+export const HUD_DEFAULTS = {
+  hudIcon: 'auto' as string, // auto | heart | bolt | eye | star | coin
+  hudSegment: false as boolean,
+  hudEndCap: true as boolean,
+} as const;
 
 export const GOALS_FONTS = WIDGET_FONTS;
 
@@ -51,6 +58,7 @@ export const GOALS_DEFAULTS = {
   anim: 'elegant' as string,
   hideAnim: 'fade' as string,
   ...BRUTALIST_DEFAULTS,
+  ...HUD_DEFAULTS,
 } as const;
 
 export type GoalsSettings = typeof GOALS_DEFAULTS;
@@ -74,6 +82,9 @@ export function buildGoalsUrl(base: string, s: GoalsSettings): string {
   p.set('anim', s.anim);
   p.set('hideAnim', s.hideAnim);
   appendBrutalistParams(p, s as unknown as Record<string, unknown>);
+  p.set('hudIcon', s.hudIcon || HUD_DEFAULTS.hudIcon);
+  p.set('hudSegment', s.hudSegment ? '1' : '0');
+  p.set('hudEndCap', s.hudEndCap ? '1' : '0');
   p.set('pos', (s as unknown as { pos: string }).pos || 'center');
   const q = p.toString();
   return q ? `${base}?${q}` : base;

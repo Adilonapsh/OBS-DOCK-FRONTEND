@@ -1,11 +1,11 @@
 import type { LyricsThemeProps } from './types';
 import './Plain.css';
 
-function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines }: Pick<LyricsThemeProps, 'lyrics' | 'activeIndex' | 'plainLyrics' | 'lyricsAlign' | 'lyricsFontSize' | 'maxLyricsLines'>) {
+function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, lyricsTextColor }: Pick<LyricsThemeProps, 'lyrics' | 'activeIndex' | 'plainLyrics' | 'lyricsAlign' | 'lyricsFontSize' | 'maxLyricsLines' | 'lyricsTextColor'>) {
   const alignCls = lyricsAlign === 'center' ? 'text-center' : lyricsAlign === 'right' ? 'text-right' : 'text-left';
   if (!lyrics.length) {
-    if (!plainLyrics) return <div className={`plain-line opacity-30 text-sm italic ${alignCls} text-white/60`} style={{ fontSize: `${Math.max(12, lyricsFontSize - 2)}px` }}>♪ instrumental - no lyrics ♪</div>;
-    return <div className={`plain-line opacity-80 leading-relaxed ${alignCls} text-white/90`} style={{ fontSize: `${lyricsFontSize}px` }}>{plainLyrics.split('\n').slice(0, maxLyricsLines).join('  •  ')}</div>;
+    if (!plainLyrics) return <div className={`plain-line opacity-30 text-sm italic ${alignCls} text-white/60`} style={{ fontSize: `${Math.max(12, lyricsFontSize - 2)}px`, color: lyricsTextColor || undefined }}>♪ instrumental - no lyrics ♪</div>;
+    return <div className={`plain-line opacity-80 leading-relaxed ${alignCls} text-white/90`} style={{ fontSize: `${lyricsFontSize}px`, color: lyricsTextColor || undefined }}>{plainLyrics.split('\n').slice(0, maxLyricsLines).join('  •  ')}</div>;
   }
   const half = Math.floor(maxLyricsLines / 2);
   let start = Math.max(0, activeIndex - half);
@@ -17,17 +17,17 @@ function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFont
       {win.map((l) => {
         const idx = lyrics.indexOf(l);
         const active = idx === activeIndex;
-        return <div key={idx} className={`plain-line leading-tight ${active ? 'font-bold text-white' : 'font-normal opacity-40 text-white/60'}`} style={{ fontSize: active ? `${lyricsFontSize + 3}px` : `${lyricsFontSize - 2}px` }}>{l.text || '♪'}</div>;
+        return <div key={idx} className={`plain-line leading-tight ${active ? 'font-bold text-white' : 'font-normal opacity-40 text-white/60'}`} style={{ fontSize: active ? `${lyricsFontSize + 3}px` : `${lyricsFontSize - 2}px`, color: lyricsTextColor || undefined }}>{l.text || '♪'}</div>;
       })}
     </div>
   );
 }
 
 export default function PlainTheme(props: LyricsThemeProps) {
-  const { lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, textAlignCls } = props;
+  const { lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, textAlignCls, lyricsTextColor } = props;
   return (
     <div className={`plain-theme flex flex-col justify-center bg-transparent ${textAlignCls}`}>
-      <LyricsLines lyrics={lyrics} activeIndex={activeIndex} plainLyrics={plainLyrics} lyricsAlign={lyricsAlign} lyricsFontSize={lyricsFontSize} maxLyricsLines={maxLyricsLines} />
+      <LyricsLines lyrics={lyrics} activeIndex={activeIndex} plainLyrics={plainLyrics} lyricsAlign={lyricsAlign} lyricsFontSize={lyricsFontSize} maxLyricsLines={maxLyricsLines} lyricsTextColor={lyricsTextColor} />
     </div>
   );
 }

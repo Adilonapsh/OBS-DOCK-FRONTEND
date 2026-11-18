@@ -10,3 +10,4 @@ export { default as AlbumArt } from './AlbumArt';
 export { default as Vinyl } from './Vinyl';
 export { default as ColorPalette } from './ColorPalette';
 export { default as Plain } from './Plain';
+export { default as AppleWipe } from './AppleWipe';

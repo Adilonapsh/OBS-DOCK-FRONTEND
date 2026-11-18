@@ -100,6 +100,7 @@ const LYRICS_THEMES: [string, string][] = [
   ['compact', 'Compact'], ['compact-inverted', 'Compact (Inverted)'], ['simple', 'Simple'],
   ['classic', 'Classic'], ['card', 'Card'], ['album-art', 'Album Art'], ['vinyl', 'Vinyl'],
   ['color-palette', 'Color Palette'], ['plain', 'Plain'], ['brutalist', 'Brutalist'],
+  ['apple-wipe', 'Apple Music - Karaoke Wipe'],
 ];
 
 const MUSIC_THEMES: [string, string][] = [
@@ -128,7 +129,7 @@ export const WIDGET_LAYER_PRESETS: WidgetLayerPreset[] = [
     key: 'pinned', title: 'Pinned Chat', category: 'chat', path: '/widgets/pinned/display',
     size: { w: 30, h: 14 },
     params: { theme: 'standard', pos: 'center', fontSize: '15' },
-    fields: [themes([['standard', 'Standard - Dark Glass'], ['minimal', 'Minimal'], ['perchar', 'Per-Char'], ['monkey', 'Monkey - Keyboard'], ['island', 'Island - Dynamic Island'], ['plain', 'Plain'], ['brutalist', 'Brutalist']]), font(), fontSize(), accent(), bool('showAvatar', 'Avatar'), bool('showPlatform', 'Platform'), pos()],
+    fields: [themes([['standard', 'Standard - Dark Glass'], ['minimal', 'Minimal'], ['perchar', 'Per-Char'], ['monkey', 'Monkey - Keyboard'], ['island', 'Island - Dynamic Island'], ['plain', 'Plain'], ['brutalist', 'Brutalist'], ['gta6', 'GTA 6']]), font(), fontSize(), accent(), bool('showAvatar', 'Avatar'), bool('showPlatform', 'Platform'), pos()],
   },
   {
     key: 'speak', title: 'Speak AI', category: 'chat', path: '/widgets/speak/display',
@@ -181,7 +182,7 @@ export const WIDGET_LAYER_PRESETS: WidgetLayerPreset[] = [
     size: { w: 30, h: 20 },
     params: { theme: 'standard', pos: 'center', fontSize: '16', goalType: 'follow' },
     fields: [
-      themes([['standard', 'Standard - Card'], ['minimal', 'Minimal - Bar'], ['plain', 'Plain'], ['passion', 'Passion'], ['brutalist', 'Brutalist'], ['neonbar', 'Neon Bar']]),
+      themes([['standard', 'Standard - Card'], ['minimal', 'Minimal - Bar'], ['plain', 'Plain'], ['passion', 'Passion'], ['brutalist', 'Brutalist'], ['neonbar', 'Neon Bar'], ['gamehud', 'GTA 6']]),
       select('goalType', 'Tipe goal', [o('follow', 'Followers'), o('subs', 'Subscribers'), o('like', 'Likes'), o('donation', 'Donasi (Rp)')]),
       font(), fontSize(), accent(), num('target', 'Target', 0), num('current', 'Progress awal', 0), pos(),
     ],

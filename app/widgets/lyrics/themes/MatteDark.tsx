@@ -1,7 +1,7 @@
 import type { LyricsThemeProps } from './types';
 import './MatteDark.css';
 
-function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, accent }: Pick<LyricsThemeProps,'lyrics'|'activeIndex'|'plainLyrics'|'lyricsAlign'|'lyricsFontSize'|'maxLyricsLines'|'accent'>) {
+function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, accent, lyricsTextColor }: Pick<LyricsThemeProps,'lyrics'|'activeIndex'|'plainLyrics'|'lyricsAlign'|'lyricsFontSize'|'maxLyricsLines'|'accent'|'lyricsTextColor'>) {
   const alignCls = lyricsAlign === 'center' ? 'text-center' : lyricsAlign === 'right' ? 'text-right' : 'text-left';
   if (!lyrics.length) {
     if (!plainLyrics) return <div className={`opacity-40 text-sm italic ${alignCls}`} style={{ fontSize: `${Math.max(12, lyricsFontSize - 2)}px` }}>♪ instrumental - no lyrics ♪</div>;
@@ -17,17 +17,17 @@ function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFont
       {win.map(l => {
         const idx = lyrics.indexOf(l);
         const active = idx === activeIndex;
-        return <div key={idx} className={`leading-tight transition-all ${active ? 'font-black' : 'opacity-40 font-medium'}`} style={{ fontSize: active ? `${lyricsFontSize+2}px` : `${lyricsFontSize-2}px`, color: active ? accent : undefined }}>{l.text || '♪'}</div>;
+        return <div key={idx} className={`leading-tight transition-all ${active ? 'font-black' : 'opacity-40 font-medium'}`} style={{ fontSize: active ? `${lyricsFontSize+2}px` : `${lyricsFontSize-2}px`, color: lyricsTextColor || (active ? accent : undefined) }}>{l.text || '♪'}</div>;
       })}
     </div>
   );
 }
 
 export default function MatteDarkTheme(props: LyricsThemeProps) {
-  const { accent, lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines } = props;
+  const { accent, lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, lyricsTextColor } = props;
   return (
-    <div className="matte-dark-theme p-5 rounded-2xl bg-zinc-900 text-white shadow-xl border border-white/10">
-      <LyricsLines lyrics={lyrics} activeIndex={activeIndex} plainLyrics={plainLyrics} lyricsAlign={lyricsAlign} lyricsFontSize={lyricsFontSize} maxLyricsLines={maxLyricsLines} accent={accent} />
+    <div className="matte-dark-theme p-5 rounded-2xl bg-zinc-900 text-white shadow-xl border border-white/10" style={{ color: lyricsTextColor || undefined }}>
+      <LyricsLines lyrics={lyrics} activeIndex={activeIndex} plainLyrics={plainLyrics} lyricsAlign={lyricsAlign} lyricsFontSize={lyricsFontSize} maxLyricsLines={maxLyricsLines} accent={accent} lyricsTextColor={lyricsTextColor} />
     </div>
   );
 }

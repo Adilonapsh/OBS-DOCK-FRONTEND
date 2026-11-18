@@ -21,5 +21,8 @@ export type GoalThemeProps = {
   brutalistItalic?: boolean;
   brutalistUppercase?: boolean;
   brutalistInline?: boolean;
+  hudIcon?: string;
+  hudSegment?: boolean;
+  hudEndCap?: boolean;
   completedText?: string;
 };

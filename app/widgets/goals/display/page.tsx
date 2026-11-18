@@ -62,6 +62,9 @@ function GoalsInner() {
   const brutalistItalic = getBoolParam(params, 'brutalistItalic', true);
   const brutalistUppercase = getBoolParam(params, 'brutalistUppercase', true);
   const brutalistInline = getBoolParam(params, 'brutalistInline', false);
+  const hudIcon = getStringParam(params, 'hudIcon', 'auto');
+  const hudSegment = getBoolParam(params, 'hudSegment', false);
+  const hudEndCap = getBoolParam(params, 'hudEndCap', true);
   const pos = getStringParam(params, 'pos', 'center');
   const posStyle = getPositionStyle(pos);
 
@@ -246,7 +249,7 @@ function GoalsInner() {
       <div id="goals-display-root" className={`${obsMode ? 'fixed inset-0 w-screen h-screen bg-transparent overflow-hidden flex p-2' : 'w-full min-h-screen bg-[#0a0a0a] flex p-4'}`} style={{ ...posStyle, background: obsMode ? 'transparent' : '#0a0a0a', fontFamily: `'${font}', sans-serif` } as any}>
         {!obsMode && !connected && <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px] font-black uppercase tracking-widest">Menghubungkan… privateKey={privateKey ? `${privateKey.slice(0, 6)}…` : 'global'}</div>}
         {!obsMode && <div className="absolute top-4 right-4 px-2 py-1 bg-black/40 backdrop-blur border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-400">GOALS • {theme} • {goalType} • {simulate ? 'simulate' : connected ? 'connected' : 'offline'}</div>}
-        <AutoScale defaultBase={420} baseWidth={theme === 'minimal' ? 320 : 420}>
+        <AutoScale defaultBase={420} baseWidth={theme === 'minimal' ? 320 : theme === 'gamehud' ? 540 : 420}>
           <Theme
             title={title}
             current={current}
@@ -270,6 +273,9 @@ function GoalsInner() {
             brutalistItalic={brutalistItalic}
             brutalistUppercase={brutalistUppercase}
             brutalistInline={brutalistInline}
+            hudIcon={hudIcon}
+            hudSegment={hudSegment}
+            hudEndCap={hudEndCap}
             completedText={completedText}
           />
         </AutoScale>

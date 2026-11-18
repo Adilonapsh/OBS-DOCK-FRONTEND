@@ -25,6 +25,7 @@ export function platformLogo(p?: string): string {
 export function pinnedBaseWidth(theme: string): number {
   if (theme === 'island') return 360;
   if (theme === 'minimal' || theme === 'plain') return 560;
+  if (theme === 'gta6') return 500;
   if (theme === 'card') return 380;
   return 420;
 }

@@ -22,6 +22,7 @@ import VinylTheme from '../themes/Vinyl';
 import ColorPaletteTheme from '../themes/ColorPalette';
 import PlainTheme from '../themes/Plain';
 import BrutalistTheme from '../themes/Brutalist';
+import AppleWipeTheme from '../themes/AppleWipe';
 import type { AccentPalette, LyricLine } from '../themes/types';
 
 const PlaybackStatus = {
@@ -124,6 +125,12 @@ function LyricsDisplayInner() {
   const lyricsFontSize = getIntParam(params, 'lyricsFontSize', 16);
   const maxLyricsLines = getIntParam(params, 'maxLyricsLines', 3);
   const lrclibEnabled = getBoolParam(params, 'lrclibEnabled', true);
+  const lyricsAltAlign = getBoolParam(params, 'lyricsAltAlign', true);
+  const lyricsKaraoke = getBoolParam(params, 'lyricsKaraoke', true);
+  const lyricsBlur = getBoolParam(params, 'lyricsBlur', true);
+  const lyricsGlow = getBoolParam(params, 'lyricsGlow', true);
+  const useLyricsTextColor = getBoolParam(params, 'useLyricsTextColor', false);
+  const lyricsTextColor = useLyricsTextColor ? (params.get('lyricsTextColor') || '#ffffff') : '';
   // smtc = Media Player / any SMTC source; music = Song Request room via socket.
   const source = params.get('source') === 'music' ? 'music' : 'smtc';
   // Music Request room follows this widget's private key. No global-room fallback.
@@ -443,7 +450,7 @@ function LyricsDisplayInner() {
 
   const bgColor = useCustomColors ? color2 : palette.DarkMuted;
   const accent = useCustomColors ? color1 : palette.LightVibrant;
-  const textColor = useCustomColors ? color1 : '#ffffff';
+  const textColor = lyricsTextColor || (useCustomColors ? color1 : '#ffffff');
 
   const hasContent = Boolean(track || artist || shownLyrics.length || shownPlainLyrics || error);
   const wrapperVisible = hasContent && visible;
@@ -489,6 +496,7 @@ function LyricsDisplayInner() {
                 progressPercent, currentPos, timeline, showAlbumArt, showProgressBar, showPrimary, showSecondary,
                 isPausedOverlay, playbackStatus, textAlignCls, msToTime, error, smtcBridgeAddress, smtcBridgePort, obsMode,
                 lyrics: shownLyrics, activeIndex: shownActiveIndex, plainLyrics: shownPlainLyrics, lyricsAlign, lyricsFontSize, showLyrics, maxLyricsLines,
+                lyricsAltAlign, lyricsKaraoke, lyricsBlur, lyricsGlow, lyricsTextColor,
                 ...brutalist,
               };
               switch (theme) {
@@ -504,6 +512,7 @@ function LyricsDisplayInner() {
                 case 'color-palette': return <ColorPaletteTheme {...themeProps} />;
                 case 'plain': return <PlainTheme {...themeProps} />;
                 case 'brutalist': return <BrutalistTheme {...themeProps} />;
+                case 'apple-wipe': return <AppleWipeTheme {...themeProps} />;
                 case 'standard':
                 default: return <StandardTheme {...themeProps} />;
               }

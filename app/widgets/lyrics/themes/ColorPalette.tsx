@@ -1,7 +1,7 @@
 import type { LyricsThemeProps } from './types';
 import './ColorPalette.css';
 
-function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, accent }: Pick<LyricsThemeProps,'lyrics'|'activeIndex'|'plainLyrics'|'lyricsAlign'|'lyricsFontSize'|'maxLyricsLines'|'accent'>) {
+function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, accent, lyricsTextColor }: Pick<LyricsThemeProps,'lyrics'|'activeIndex'|'plainLyrics'|'lyricsAlign'|'lyricsFontSize'|'maxLyricsLines'|'accent'|'lyricsTextColor'>) {
   const alignCls = lyricsAlign === 'center' ? 'text-center' : lyricsAlign === 'right' ? 'text-right' : 'text-left';
   if (!lyrics.length) {
     if (!plainLyrics) return <div className={`opacity-40 text-sm italic ${alignCls}`} style={{ fontSize: `${Math.max(12, lyricsFontSize - 2)}px` }}>♪ instrumental - no lyrics ♪</div>;
@@ -17,16 +17,16 @@ function LyricsLines({ lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFont
       {win.map(l => {
         const idx = lyrics.indexOf(l);
         const active = idx === activeIndex;
-        return <div key={idx} className={`leading-tight transition-all ${active ? 'font-black' : 'opacity-40 font-medium'}`} style={{ fontSize: active ? `${lyricsFontSize+2}px` : `${lyricsFontSize-2}px`, color: active ? accent : undefined }}>{l.text || '♪'}</div>;
+        return <div key={idx} className={`leading-tight transition-all ${active ? 'font-black' : 'opacity-40 font-medium'}`} style={{ fontSize: active ? `${lyricsFontSize+2}px` : `${lyricsFontSize-2}px`, color: lyricsTextColor || (active ? accent : undefined) }}>{l.text || '♪'}</div>;
       })}
     </div>
   );
 }
 
 export default function ColorPaletteTheme(props: LyricsThemeProps) {
-  const { palette, accent, lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines } = props;
+  const { palette, accent, lyrics, activeIndex, plainLyrics, lyricsAlign, lyricsFontSize, maxLyricsLines, lyricsTextColor } = props;
   return (
-    <div className="color-palette-theme relative rounded-2xl overflow-hidden border border-white/10 shadow-xl" style={{ background: palette.DarkMuted, color: '#fff' }}>
+    <div className="color-palette-theme relative rounded-2xl overflow-hidden border border-white/10 shadow-xl" style={{ background: palette.DarkMuted, color: lyricsTextColor || '#fff' }}>
       <div className="h-1.5 w-full flex">
         <div className="flex-1" style={{ background: palette.Vibrant }} />
         <div className="flex-1" style={{ background: palette.Muted }} />
@@ -34,7 +34,7 @@ export default function ColorPaletteTheme(props: LyricsThemeProps) {
         <div className="flex-1" style={{ background: palette.LightVibrant }} />
       </div>
       <div className="p-5">
-        <LyricsLines lyrics={lyrics} activeIndex={activeIndex} plainLyrics={plainLyrics} lyricsAlign={lyricsAlign} lyricsFontSize={lyricsFontSize} maxLyricsLines={maxLyricsLines} accent={accent} />
+        <LyricsLines lyrics={lyrics} activeIndex={activeIndex} plainLyrics={plainLyrics} lyricsAlign={lyricsAlign} lyricsFontSize={lyricsFontSize} maxLyricsLines={maxLyricsLines} accent={accent} lyricsTextColor={lyricsTextColor} />
       </div>
     </div>
   );

@@ -4,6 +4,7 @@
 import type { ComponentType } from "react";
 import type { PinnedChatCardProps } from "./types";
 import BrutalistTheme from "./Brutalist";
+import Gta6Theme from "./Gta6";
 import IslandTheme from "./Island";
 import MinimalTheme from "./Minimal";
 import MonkeyTheme from "./Monkey";
@@ -13,6 +14,7 @@ import StandardTheme from "./Standard";
 
 export const pinnedThemeComponents: Record<string, ComponentType<PinnedChatCardProps>> = {
   "brutalist": BrutalistTheme,
+  "gta6": Gta6Theme,
   "island": IslandTheme,
   "minimal": MinimalTheme,
   "monkey": MonkeyTheme,
@@ -23,6 +25,7 @@ export const pinnedThemeComponents: Record<string, ComponentType<PinnedChatCardP
 
 export const PINNED_THEME_OPTIONS = [
   { value: "brutalist", label: "Brutalist" },
+  { value: "gta6", label: "GTA 6" },
   { value: "island", label: "Island - Dynamic Island" },
   { value: "minimal", label: "Minimal - Baris Bersih" },
   { value: "monkey", label: "Monkey - Teks + Keyboard Mengetik" },

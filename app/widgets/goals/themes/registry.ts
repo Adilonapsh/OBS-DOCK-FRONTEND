@@ -6,6 +6,7 @@ import Plain from './Plain';
 import Brutalist from './Brutalist';
 import Passion from './Passion';
 import NeonBar from './NeonBar';
+import GameHud from './GameHud';
 
 export const goalThemeComponents: Record<string, ComponentType<GoalThemeProps>> = {
   standard: Standard,
@@ -13,6 +14,7 @@ export const goalThemeComponents: Record<string, ComponentType<GoalThemeProps>> 
   plain: Plain,
   brutalist: Brutalist,
   neonbar: NeonBar,
+  gamehud: GameHud,
 };
 
 export const GOAL_THEME_OPTIONS = [
@@ -21,4 +23,5 @@ export const GOAL_THEME_OPTIONS = [
   { value: 'plain', label: 'Plain - Teks Polos' },
   { value: 'brutalist', label: 'Brutalist' },
   { value: 'neonbar', label: 'Neon Bar - Video Progress' },
+  { value: 'gamehud', label: 'GTA 6 - Icon & Bar' },
 ] as const;
