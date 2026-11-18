@@ -1,0 +1,22 @@
+export type ViewCounterThemeProps = {
+  counts: Record<string, number>;
+  total: number;
+  font: string;
+  fontSize: number;
+  accent: string;
+  bg: string;
+  showLabel: boolean;
+  showBreakdown: boolean;
+  inline: boolean;
+  emptyLabel: string;
+  brutalistBg?: string;
+  brutalistTextColor?: string;
+  brutalistBadgeBg?: string;
+  brutalistBorderColor?: string;
+  brutalistShadow?: number;
+  brutalistHalftone?: boolean;
+  brutalistTail?: boolean;
+  brutalistItalic?: boolean;
+  brutalistUppercase?: boolean;
+  brutalistInline?: boolean;
+};

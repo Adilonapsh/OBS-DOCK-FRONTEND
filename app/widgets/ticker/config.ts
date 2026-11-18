@@ -1,0 +1,93 @@
+import { WIDGET_FONTS } from '../_shared/constants/fonts';
+import { BRUTALIST_DEFAULTS, appendBrutalistParams } from '../_shared/constants/brutalist';
+
+// AUTO-REGISTER: daftar theme dibaca dari themes/registry.tsx (generated).
+// Tambah theme baru cukup buat file themes/NamaTema.tsx + themeMeta -
+// otomatis muncul di dropdown settings, preview, dan display (?theme=...).
+export { TICKER_THEME_OPTIONS as TICKER_THEMES, TICKER_THEME_DEFAULT } from './themes/registry';
+
+export const TICKER_FONTS = WIDGET_FONTS;
+
+export const TICKER_DIRECTIONS = [
+  { value: 'left', label: 'Kiri (←)' },
+  { value: 'right', label: 'Kanan (→)' },
+] as const;
+
+export const TICKER_SOURCES = [
+  { value: 'manual', label: 'Manual (teks saja)' },
+  { value: 'donation', label: 'Donasi (Saweria/TipTap/dll)' },
+  { value: 'mixed', label: 'Keduanya (Manual + Donasi)' },
+] as const;
+
+export const TICKER_DONATION_PERIODS = [
+  { value: 'today', label: 'Hari ini' },
+  { value: 'yesterday', label: 'Kemarin' },
+  { value: 'week', label: 'Minggu ini' },
+  { value: 'month', label: 'Bulan ini' },
+  { value: 'all', label: 'Semua' },
+] as const;
+
+export const TICKER_DEFAULTS = {
+  pos: 'b' as string,
+  theme: 'standard' as string,
+  font: 'Outfit',
+  fontSize: 16,
+  accent: '#22d3ee',
+  bg: 'transparent',
+  textColor: '', // '' = otomatis (bawaan tiap tema)
+  items: 'Selamat datang di live! 🔥\nJangan lupa follow & share ya!\nSaweria: saweria.co/username',
+  separator: '•',
+  speed: 20, // detik per sekali jalan
+  repeatDelay: 2, // jeda sebelum mulai lagi dari kanan
+  direction: 'left' as string,
+  showBadge: true,
+  badgeText: 'INFO',
+  source: 'manual' as string, // manual | donation | mixed
+  donationLimit: 10 as number,
+  donationShowMessage: true as boolean,
+  donationMinAmount: 0 as number,
+  donationPeriod: 'all' as string, // today | yesterday | week | month | all
+  ...BRUTALIST_DEFAULTS,
+} as const;
+
+export type TickerSettings = typeof TICKER_DEFAULTS;
+
+export const DEMO_TICKER_ITEMS = [
+  'Selamat datang di live! 🔥',
+  'Jangan lupa follow & share ya!',
+  'Saweria: saweria.co/username',
+];
+
+export function parseTickerItems(raw: string): string[] {
+  return raw
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export function buildTickerUrl(base: string, s: TickerSettings): string {
+  const p = new URLSearchParams();
+  p.set('theme', s.theme);
+  p.set('font', s.font);
+  p.set('fontSize', String(s.fontSize));
+  p.set('accent', s.accent);
+  if (s.bg && s.bg !== 'transparent') p.set('bg', s.bg);
+  if (s.textColor) p.set('textColor', s.textColor);
+  if (s.items) p.set('items', s.items);
+  if (s.separator) p.set('separator', s.separator);
+  p.set('speed', String(s.speed));
+  p.set('repeatDelay', String(s.repeatDelay));
+  p.set('direction', s.direction);
+  p.set('showBadge', s.showBadge ? '1' : '0');
+  if (s.badgeText) p.set('badgeText', s.badgeText);
+  p.set('source', (s as any).source || 'manual');
+  if ((s as any).source !== 'manual') {
+    p.set('donationLimit', String((s as any).donationLimit ?? 10));
+    p.set('donationShowMessage', (s as any).donationShowMessage ? '1' : '0');
+    p.set('donationMinAmount', String((s as any).donationMinAmount ?? 0));
+    p.set('donationPeriod', (s as any).donationPeriod || 'all');
+  }
+  p.set('pos', s.pos || 'b');
+  appendBrutalistParams(p, s as unknown as Record<string, unknown>);
+  return `${base}?${p.toString()}`;
+}

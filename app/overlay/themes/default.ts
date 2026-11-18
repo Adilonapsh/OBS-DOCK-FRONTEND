@@ -1,0 +1,31 @@
+import type { OverlayTheme } from "./types";
+
+// Default theme - used as fallback and base for presets via spread
+export const defaultTheme: OverlayTheme = {
+  accent: "#FE2C55",
+  accent2: "#06b6d4",
+  chatBg: "rgba(22,22,22,0.90)",
+  chatText: "#f1f1f1",
+  chatBorder: "rgba(255,255,255,0.08)",
+  chatRadius: 16,
+  chatOpacity: 90,
+  chatBlur: 12,
+  pinnedBg: "rgba(15,15,15,0.85)",
+  pinnedBorder: "rgba(6,182,212,0.5)",
+  pinnedText: "#ffffff",
+  giftBg: "rgba(26,10,15,0.95)",
+  giftBorder: "rgba(254,44,85,0.30)",
+  giftText: "#ffffff",
+  fontScale: 1,
+  fontFamily: "Outfit",
+  showAvatar: true,
+  showPlatform: true,
+  showTimestamp: true,
+  shadow: true,
+  chatPadding: 12,
+  chatGap: 8,
+  chatMargin: 0,
+  overlayPadding: 16,
+  overlayGap: 12,
+  inlineChat: false,
+};

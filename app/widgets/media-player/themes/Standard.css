@@ -1,0 +1,7 @@
+/* Standard theme - glass dark, vibrant accent */
+.standard-theme {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.standard-theme #album-art-container.is-paused {
+  filter: grayscale(1);
+}

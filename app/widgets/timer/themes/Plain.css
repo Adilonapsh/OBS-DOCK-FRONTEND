@@ -1,0 +1,11 @@
+/* Plain - teks polos di atas transparan, tanpa card/border/shadow/background */
+.timer-plain-theme {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  animation: timerPlainIn 0.4s ease both;
+}
+@keyframes timerPlainIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
